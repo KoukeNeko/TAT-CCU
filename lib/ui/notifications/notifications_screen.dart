@@ -25,12 +25,13 @@ class _Bar extends StatelessWidget implements PreferredSizeWidget {
   const _Bar();
 
   @override
-  Size get preferredSize => const Size.fromHeight(76 + 56);
+  Size get preferredSize => const Size.fromHeight(72 + 56);
 
   @override
   Widget build(BuildContext context) {
     final tone = context.tones.sun;
-    return topBar(
+    return subBar(
+      context,
       '通知',
       bottom: PreferredSize(
         preferredSize: const Size.fromHeight(56),

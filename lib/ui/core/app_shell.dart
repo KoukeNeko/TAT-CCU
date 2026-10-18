@@ -4,9 +4,7 @@ import 'dart:ui' show ImageFilter;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
-import 'package:provider/provider.dart';
 
-import '../../data/repositories/ecourse_repository.dart';
 import 'theme.dart';
 import 'widgets.dart';
 
@@ -40,19 +38,11 @@ class AppShell extends StatefulWidget {
 }
 
 class _AppShellState extends State<AppShell> {
-  late Future<int> _unread = _loadUnread();
-
   /// Where the finger went down; null when nothing is touching.
   double? _downX;
 
   /// Tab the capsule follows while dragging; null for a plain press.
   int? _hover;
-
-  Future<int> _loadUnread() async {
-    final repo = context.read<EcourseRepository>();
-    final counts = await Future.wait([repo.unreadNotices(), repo.unreadMail()]);
-    return counts[0] + counts[1];
-  }
 
   int get _shown => _hover ?? widget.shell.currentIndex;
 
@@ -96,7 +86,6 @@ class _AppShellState extends State<AppShell> {
       target,
       initialLocation: target == widget.shell.currentIndex,
     );
-    setState(() => _unread = _loadUnread());
   }
 
   @override
@@ -113,7 +102,6 @@ class _AppShellState extends State<AppShell> {
       (Icons.today_outlined, '今天', t.lilac, spikyStar),
       (Icons.calendar_view_week_outlined, '課表', t.mint, clover),
       (Icons.school_outlined, '課程', t.peach, scallop),
-      (Icons.notifications_none, '通知', t.sun, scallop),
       (Icons.apps, '更多', gray, clover),
     ];
     final light = theme.brightness == Brightness.light;
@@ -160,20 +148,16 @@ class _AppShellState extends State<AppShell> {
                     onPointerMove: (e) => _slide(e.localPosition.dx, w, n),
                     onPointerUp: (_) => _release(w, n, commit: true),
                     onPointerCancel: (_) => _release(w, n, commit: false),
-                    child: FutureBuilder<int>(
-                      future: _unread,
-                      builder: (context, snap) => Row(
-                        children: [
-                          for (final (i, tab) in tabs.indexed)
-                            _TabSlot(
-                              tab: tab,
-                              width: i == _shown ? _activeWidth : other,
-                              selected: i == _shown,
-                              pressed: pressed && i == _shown,
-                              badge: i == 3 ? snap.data ?? 0 : 0,
-                            ),
-                        ],
-                      ),
+                    child: Row(
+                      children: [
+                        for (final (i, tab) in tabs.indexed)
+                          _TabSlot(
+                            tab: tab,
+                            width: i == _shown ? _activeWidth : other,
+                            selected: i == _shown,
+                            pressed: pressed && i == _shown,
+                          ),
+                      ],
                     ),
                   );
                 },
@@ -253,13 +237,11 @@ class _TabSlot extends StatelessWidget {
     required this.width,
     required this.selected,
     required this.pressed,
-    required this.badge,
   });
 
   final _Tab tab;
   final double width;
   final bool selected, pressed;
-  final int badge;
 
   @override
   Widget build(BuildContext context) {
@@ -335,48 +317,8 @@ class _TabSlot extends StatelessWidget {
                   ),
                 ],
               ),
-              if (badge > 0)
-                Positioned(
-                  top: -8,
-                  left: selected ? 26 : 16,
-                  child: _Badge(count: badge, onSun: selected),
-                ),
             ],
           ),
-        ),
-      ),
-    );
-  }
-}
-
-class _Badge extends StatelessWidget {
-  const _Badge({required this.count, required this.onSun});
-
-  final int count;
-
-  /// On the selected 通知 capsule the yellow badge would disappear into the
-  /// same yellow, so it switches to ink.
-  final bool onSun;
-
-  @override
-  Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
-    final sun = context.tones.sun;
-    return Container(
-      constraints: const BoxConstraints(minWidth: 18),
-      height: 18,
-      padding: const EdgeInsets.symmetric(horizontal: 5),
-      alignment: Alignment.center,
-      decoration: ShapeDecoration(
-        color: onSun ? scheme.onSurface : sun.strong,
-        shape: const StadiumBorder(),
-      ),
-      child: Text(
-        count > 99 ? '99+' : '$count',
-        style: TextStyle(
-          color: onSun ? scheme.surface : sun.fill,
-          fontSize: 11,
-          fontWeight: FontWeight.w900,
         ),
       ),
     );

@@ -36,6 +36,10 @@ GoRouter buildRouter(EcourseAuthRepository auth) => GoRouter(
               builder: (_, _) => const TodayScreen(),
               routes: [
                 GoRoute(path: 'due', builder: (_, _) => const DueScreen()),
+                GoRoute(
+                  path: 'notifications',
+                  builder: (_, _) => const NotificationsScreen(),
+                ),
               ],
             ),
           ],
@@ -61,14 +65,6 @@ GoRouter buildRouter(EcourseAuthRepository auth) => GoRouter(
                   ),
                 ),
               ],
-            ),
-          ],
-        ),
-        StatefulShellBranch(
-          routes: [
-            GoRoute(
-              path: '/notifications',
-              builder: (_, _) => const NotificationsScreen(),
             ),
           ],
         ),

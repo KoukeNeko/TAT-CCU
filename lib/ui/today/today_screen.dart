@@ -83,25 +83,36 @@ class TodayScreen extends StatelessWidget {
             children: [
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 4),
-                child: Column(
+                child: Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
-                      '${weekdayNames[now.weekday - 1]} ${now.month}/${now.day}',
-                      style: TextStyle(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w700,
-                        color: theme.colorScheme.onSurfaceVariant,
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            '${weekdayNames[now.weekday - 1]} ${now.month}/${now.day}',
+                            style: TextStyle(
+                              fontSize: 14,
+                              fontWeight: FontWeight.w700,
+                              color: theme.colorScheme.onSurfaceVariant,
+                            ),
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            headline,
+                            style: const TextStyle(
+                              fontSize: 34,
+                              fontWeight: FontWeight.w900,
+                              height: 1.15,
+                            ),
+                          ),
+                        ],
                       ),
                     ),
-                    const SizedBox(height: 4),
-                    Text(
-                      headline,
-                      style: const TextStyle(
-                        fontSize: 34,
-                        fontWeight: FontWeight.w900,
-                        height: 1.15,
-                      ),
+                    _BellButton(
+                      unread: d.notices + d.mail,
+                      onTap: () => context.go('/today/notifications'),
                     ),
                   ],
                 ),
@@ -149,7 +160,7 @@ class TodayScreen extends StatelessWidget {
                       value: '${d.notices + d.mail}',
                       label: '未讀',
                       detail: '通知 ${d.notices}・信件 ${d.mail}',
-                      onTap: () => context.go('/notifications'),
+                      onTap: () => context.go('/today/notifications'),
                     ),
                   ),
                 ],
@@ -376,6 +387,67 @@ class _Tile extends StatelessWidget {
                 ),
               ),
           ],
+        ),
+      ),
+    );
+  }
+}
+
+/// Notifications live behind this bell instead of a nav tab; the badge is
+/// the same unread count as the 未讀 tile.
+class _BellButton extends StatelessWidget {
+  const _BellButton({required this.unread, required this.onTap});
+
+  final int unread;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    final sun = context.tones.sun;
+    return Semantics(
+      button: true,
+      label: unread > 0 ? '通知，$unread 則未讀' : '通知',
+      child: Material(
+        color: scheme.surfaceContainer,
+        shape: const CircleBorder(),
+        child: InkWell(
+          customBorder: const CircleBorder(),
+          onTap: onTap,
+          child: SizedBox(
+            width: 48,
+            height: 48,
+            child: Stack(
+              clipBehavior: Clip.none,
+              alignment: Alignment.center,
+              children: [
+                Icon(Icons.notifications_none, color: scheme.onSurface),
+                if (unread > 0)
+                  Positioned(
+                    top: -2,
+                    right: -4,
+                    child: Container(
+                      constraints: const BoxConstraints(minWidth: 20),
+                      height: 20,
+                      padding: const EdgeInsets.symmetric(horizontal: 5),
+                      alignment: Alignment.center,
+                      decoration: ShapeDecoration(
+                        color: sun.strong,
+                        shape: const StadiumBorder(),
+                      ),
+                      child: Text(
+                        unread > 99 ? '99+' : '$unread',
+                        style: TextStyle(
+                          color: sun.fill,
+                          fontSize: 11,
+                          fontWeight: FontWeight.w900,
+                        ),
+                      ),
+                    ),
+                  ),
+              ],
+            ),
+          ),
         ),
       ),
     );

@@ -194,7 +194,12 @@ class GlassBackdrop extends StatelessWidget {
 }
 
 /// Sub-page title with the round back button from the mockup.
-AppBar subBar(BuildContext context, String title) => AppBar(
+AppBar subBar(
+  BuildContext context,
+  String title, {
+  PreferredSizeWidget? bottom,
+}) => AppBar(
+  bottom: bottom,
   automaticallyImplyLeading: false,
   backgroundColor: Colors.transparent,
   scrolledUnderElevation: 0,
