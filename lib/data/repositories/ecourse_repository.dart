@@ -27,10 +27,43 @@ typedef MailItem = ({
   bool unread,
 });
 
-typedef Module = ({String name, String type, String? url});
+typedef ModuleFile = ({String name, int size, String url, DateTime modified});
+
+/// [id] is the course module id used in links; [instance] is the id of the
+/// assignment, quiz, etc. behind it. [due] is the assignment due date or the
+/// quiz close date.
+typedef Module = ({
+  int id,
+  int instance,
+  String name,
+  String type,
+  String? url,
+  List<ModuleFile> files,
+  DateTime? due,
+});
 typedef Section = ({String name, List<Module> modules});
 typedef Post = ({String subject, String author, DateTime time, String body});
 typedef GradeLine = ({String name, String grade, String percent});
+
+/// One student's view of an assignment. [grade] is null until graded.
+typedef Assignment = ({
+  String intro,
+  List<ModuleFile> attachments,
+  DateTime? opens,
+  DateTime? due,
+  DateTime? submittedAt,
+  List<ModuleFile> submission,
+  String? grade,
+});
+
+/// [finished] is the latest finished attempt; [grade] is null until graded.
+typedef Quiz = ({
+  String intro,
+  DateTime? opens,
+  DateTime? closes,
+  DateTime? finished,
+  String? grade,
+});
 
 DateTime _ts(Object? s) =>
     DateTime.fromMillisecondsSinceEpoch(((s as num?) ?? 0).toInt() * 1000);
@@ -150,14 +183,29 @@ class EcourseRepository {
     return [
       for (final s in r)
         (
-          name: '${s['name']}',
+          // Moodle's untranslated default name for the course-wide section.
+          name: s['section'] == 0 && s['name'] == 'General'
+              ? '一般'
+              : multilang('${s['name']}'),
           modules: [
             for (final m in s['modules'] as List)
               if (m['modname'] != 'label')
                 (
-                  name: '${m['name']}',
+                  id: (m['id'] as num).toInt(),
+                  instance: (m['instance'] as num?)?.toInt() ?? 0,
+                  name: multilang('${m['name']}'),
                   type: '${m['modname']}',
                   url: m['url'] as String?,
+                  files: [
+                    for (final f in m['contents'] as List? ?? const [])
+                      if (f['type'] == 'file') _file(f as Map),
+                  ],
+                  due: [
+                    for (final d in m['dates'] as List? ?? const [])
+                      if (d['dataid'] == 'duedate' ||
+                          d['dataid'] == 'timeclose')
+                        _ts(d['timestamp']),
+                  ].firstOrNull,
                 ),
           ],
         ),
@@ -194,6 +242,90 @@ class EcourseRepository {
     };
   }
 
+  Future<Assignment> assignment(int courseId, int instance) async {
+    final (list, status) = await (
+      _client.call('mod_assign_get_assignments', {
+        'courseids': [courseId],
+      }),
+      _currentUserId().then(
+        (user) => _client.call('mod_assign_get_submission_status', {
+          'assignid': instance,
+          'userid': user,
+        }),
+      ),
+    ).wait;
+    final a = [
+      for (final c in (list as Map)['courses'] as List)
+        for (final a in c['assignments'] as List)
+          if (a['id'] == instance) a,
+    ].first;
+    final submission = (status as Map)['lastattempt']?['submission'] as Map?;
+    final submitted = submission?['status'] == 'submitted';
+    final grade = status['feedback']?['gradefordisplay'] as String?;
+    return (
+      intro: _plain('${a['intro'] ?? ''}'),
+      attachments: [
+        for (final f in a['introattachments'] as List? ?? const [])
+          _file(f as Map),
+      ],
+      opens: _date(a['allowsubmissionsfromdate']),
+      due: _date(a['duedate']),
+      submittedAt: submitted ? _date(submission!['timemodified']) : null,
+      submission: [
+        for (final p in submission?['plugins'] as List? ?? const [])
+          for (final area in p['fileareas'] as List? ?? const [])
+            for (final f in area['files'] as List? ?? const []) _file(f as Map),
+      ],
+      // `100.00&nbsp;/&nbsp;100.00`: keep the score, the page shows the max.
+      grade: grade == null ? null : _plain(grade).split('/').first.trim(),
+    );
+  }
+
+  Future<Quiz> quiz(int courseId, int instance) async {
+    final (list, attempts, best) = await (
+      _client.call('mod_quiz_get_quizzes_by_courses', {
+        'courseids': [courseId],
+      }),
+      _client.call('mod_quiz_get_user_attempts', {
+        'quizid': instance,
+        'status': 'finished',
+      }),
+      _client.call('mod_quiz_get_user_best_grade', {'quizid': instance}),
+    ).wait;
+    final q = [
+      for (final q in (list as Map)['quizzes'] as List)
+        if (q['id'] == instance) q,
+    ].first;
+    final finished = [
+      for (final a in (attempts as Map)['attempts'] as List)
+        _date(a['timefinish']),
+    ].nonNulls.toList()..sort();
+    final grade = (best as Map)['hasgrade'] == true
+        ? (best['grade'] as num)
+        : null;
+    return (
+      intro: _plain('${q['intro'] ?? ''}'),
+      opens: _date(q['timeopen']),
+      closes: _date(q['timeclose']),
+      finished: finished.lastOrNull,
+      grade: grade == null
+          ? null
+          : grade % 1 == 0
+          ? '${grade.toInt()}'
+          : grade.toStringAsFixed(2),
+    );
+  }
+
+  /// Files under `webservice/pluginfile.php` need the token to download.
+  String fileUrl(String url) {
+    final uri = Uri.parse(url);
+    return uri
+        .replace(
+          queryParameters: {...uri.queryParameters, 'token': _client.token},
+        )
+        .toString();
+  }
+
   /// Needs the real user id: without it Moodle asks for every user's grades,
   /// which students may not view (`nopermissions`).
   Future<List<GradeLine>> gradeItems(int courseId) async {
@@ -217,6 +349,16 @@ class EcourseRepository {
     ];
   }
 }
+
+/// Moodle uses 0 for "not set".
+DateTime? _date(Object? s) => (s as num? ?? 0) == 0 ? null : _ts(s);
+
+ModuleFile _file(Map f) => (
+  name: '${f['filename']}',
+  size: (f['filesize'] as num?)?.toInt() ?? 0,
+  url: '${f['fileurl']}',
+  modified: _ts(f['timemodified']),
+);
 
 /// Moodle's multilang filter output, e.g.
 /// `<span lang="zh_tw" class="multilang">出缺席</span><span lang="en" …>`;

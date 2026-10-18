@@ -7,6 +7,7 @@ import '../../domain/models/course.dart';
 import '../core/theme.dart';
 import '../core/widgets.dart';
 import '../today/due_screen.dart';
+import 'module_screen.dart';
 
 const _moduleIcons = {
   'resource': Icons.description_outlined,
@@ -357,19 +358,25 @@ class CoursePartScreen extends StatelessWidget {
   final CoursePart part;
 
   @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      extendBodyBehindAppBar: true,
-      appBar: subBar(context, part.title),
-      body: switch (part) {
-        CoursePart.contents => _Contents(courseId: courseId),
-        CoursePart.announcements => _Announcements(courseId: courseId),
-        CoursePart.grades => _Grades(courseId: courseId),
-      },
-    );
-  }
+  Widget build(BuildContext context) => switch (part) {
+    // Contents builds its own app bar around the section shortcuts.
+    CoursePart.contents => _Contents(courseId: courseId),
+    CoursePart.announcements => _plain(
+      context,
+      _Announcements(courseId: courseId),
+    ),
+    CoursePart.grades => _plain(context, _Grades(courseId: courseId)),
+  };
+
+  Widget _plain(BuildContext context, Widget body) => Scaffold(
+    extendBodyBehindAppBar: true,
+    appBar: subBar(context, part.title),
+    body: body,
+  );
 }
 
+/// Every section in one continuous list, with a row of section shortcuts in
+/// the app bar that follows the scroll (design/round-11, variant C2-A).
 class _Contents extends StatelessWidget {
   const _Contents({required this.courseId});
 
@@ -378,41 +385,313 @@ class _Contents extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final repo = context.read<EcourseRepository>();
-    final scheme = Theme.of(context).colorScheme;
     return Loader<List<Section>>(
       load: () => repo.contents(courseId),
-      builder: (context, sections) {
-        if (sections.isEmpty) return const EmptyState('還沒有課程內容');
-        return ListView(
-          padding: scrollPadding(context, top: 0),
-          children: [
-            for (final s in sections) ...[
-              SectionLabel(s.name),
-              Card(
-                color: scheme.surfaceContainerLow,
-                clipBehavior: Clip.antiAlias,
-                child: Column(
+      builder: (context, sections) => sections.isEmpty
+          ? Scaffold(
+              appBar: subBar(context, CoursePart.contents.title),
+              body: const EmptyState('還沒有課程內容'),
+            )
+          : _SectionList(courseId: courseId, sections: sections),
+    );
+  }
+}
+
+class _SectionList extends StatefulWidget {
+  const _SectionList({required this.courseId, required this.sections});
+
+  final int courseId;
+  final List<Section> sections;
+
+  @override
+  State<_SectionList> createState() => _SectionListState();
+}
+
+class _SectionListState extends State<_SectionList> {
+  final _scroll = ScrollController();
+  late final _headers = [for (final _ in widget.sections) GlobalKey()];
+  late final _chips = [for (final _ in widget.sections) GlobalKey()];
+  int _active = 0;
+
+  /// Ignores scroll updates while a chip tap is animating to its section,
+  /// so the highlight does not flick through every section on the way.
+  bool _jumping = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _scroll.addListener(_follow);
+  }
+
+  @override
+  void dispose() {
+    _scroll.dispose();
+    super.dispose();
+  }
+
+  /// Top of the visible content: the glass app bar covers everything above.
+  double get _barBottom => MediaQuery.paddingOf(context).top;
+
+  double? _headerTop(int i) {
+    final box = _headers[i].currentContext?.findRenderObject() as RenderBox?;
+    return box?.localToGlobal(Offset.zero).dy;
+  }
+
+  void _follow() {
+    if (_jumping) return;
+    var active = 0;
+    for (var i = 0; i < _headers.length; i++) {
+      final top = _headerTop(i);
+      if (top != null && top <= _barBottom + 24) active = i;
+    }
+    if (_scroll.position.extentAfter < 1) active = _headers.length - 1;
+    _activate(active);
+  }
+
+  void _activate(int i) {
+    if (i == _active) return;
+    setState(() => _active = i);
+    final chip = _chips[i].currentContext;
+    if (chip != null) {
+      Scrollable.ensureVisible(
+        chip,
+        alignment: 0.5,
+        duration: const Duration(milliseconds: 320),
+        curve: Curves.easeOutQuart,
+      );
+    }
+  }
+
+  Future<void> _jumpTo(int i) async {
+    final top = _headerTop(i);
+    if (top == null) return;
+    _activate(i);
+    _jumping = true;
+    final target = (_scroll.offset + top - _barBottom - 4).clamp(
+      0.0,
+      _scroll.position.maxScrollExtent,
+    );
+    await _scroll.animateTo(
+      target,
+      duration: const Duration(milliseconds: 420),
+      curve: Curves.easeOutQuart,
+    );
+    _jumping = false;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final sections = widget.sections;
+    final scheme = Theme.of(context).colorScheme;
+    final course = context.tones.forCourse(widget.courseId);
+    return Scaffold(
+      extendBodyBehindAppBar: true,
+      appBar: subBar(
+        context,
+        CoursePart.contents.title,
+        bottom: PreferredSize(
+          preferredSize: const Size.fromHeight(52),
+          child: Align(
+            alignment: Alignment.centerLeft,
+            child: SizedBox(
+              height: 52,
+              child: SingleChildScrollView(
+                scrollDirection: Axis.horizontal,
+                padding: const EdgeInsets.fromLTRB(16, 0, 16, 10),
+                child: Row(
                   children: [
-                    for (final m in s.modules)
-                      ListTile(
-                        leading: Icon(
-                          _moduleIcons[m.type] ?? Icons.extension_outlined,
+                    for (final (i, s) in sections.indexed)
+                      Padding(
+                        key: _chips[i],
+                        padding: const EdgeInsets.only(right: 6),
+                        child: _SectionChip(
+                          label: s.name,
+                          selected: i == _active,
+                          tone: course,
+                          onTap: () => _jumpTo(i),
                         ),
-                        title: Text(
-                          m.name,
-                          style: const TextStyle(fontWeight: FontWeight.w700),
-                        ),
-                        onTap: m.url == null
-                            ? null
-                            : () => openExternal(m.url!),
                       ),
                   ],
                 ),
               ),
+            ),
+          ),
+        ),
+      ),
+      body: Builder(
+        builder: (context) => SingleChildScrollView(
+          controller: _scroll,
+          padding: scrollPadding(context, top: 0),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              for (final (i, s) in sections.indexed) ...[
+                Padding(
+                  key: _headers[i],
+                  padding: const EdgeInsets.fromLTRB(4, 18, 4, 8),
+                  child: Text.rich(
+                    TextSpan(
+                      children: [
+                        TextSpan(
+                          text: s.name,
+                          style: const TextStyle(
+                            fontSize: 17,
+                            fontWeight: FontWeight.w900,
+                          ),
+                        ),
+                        TextSpan(
+                          text: '  ${s.modules.length} 項',
+                          style: TextStyle(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w800,
+                            color: scheme.onSurfaceVariant,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+                Card(
+                  color: scheme.surfaceContainerLow,
+                  clipBehavior: Clip.antiAlias,
+                  child: Column(
+                    children: [
+                      for (final (j, m) in s.modules.indexed) ...[
+                        if (j > 0)
+                          Divider(height: 1, color: scheme.outlineVariant),
+                        _ModuleRow(courseId: widget.courseId, module: m),
+                      ],
+                    ],
+                  ),
+                ),
+              ],
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _SectionChip extends StatelessWidget {
+  const _SectionChip({
+    required this.label,
+    required this.selected,
+    required this.tone,
+    required this.onTap,
+  });
+
+  final String label;
+  final bool selected;
+  final Tone tone;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    return Material(
+      color: selected ? tone.strong : scheme.surfaceContainerHigh,
+      shape: const StadiumBorder(),
+      child: InkWell(
+        customBorder: const StadiumBorder(),
+        onTap: onTap,
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 200),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 9),
+            child: Text(
+              label,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: TextStyle(
+                fontSize: 13,
+                fontWeight: FontWeight.w900,
+                color: selected ? tone.fill : scheme.onSurfaceVariant,
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _ModuleRow extends StatelessWidget {
+  const _ModuleRow({required this.courseId, required this.module});
+
+  final int courseId;
+  final Module module;
+
+  @override
+  Widget build(BuildContext context) {
+    final tones = context.tones;
+    final scheme = Theme.of(context).colorScheme;
+    // Material types by function color; anything else stays neutral.
+    final tone = switch (module.type) {
+      'resource' || 'page' => tones.lilac,
+      'assign' => tones.peach,
+      'quiz' => tones.mint,
+      'folder' => tones.sun,
+      'url' => tones.identity[2],
+      _ => Tone(
+        scheme.surfaceContainerHigh,
+        scheme.onSurface,
+        scheme.onSurfaceVariant,
+      ),
+    };
+    final due = module.due;
+    final detail = due != null
+        ? '${due.month}/${due.day} 截止'
+        : module.files.length > 1
+        ? '${module.files.length} 個檔案'
+        : null;
+    final overdue = due != null && due.isBefore(DateTime.now());
+    return InkWell(
+      onTap: moduleTypesWithPage.contains(module.type)
+          ? () => context.go('/courses/$courseId/modules/${module.id}')
+          : module.url == null
+          ? null
+          : () => openExternal(module.url!),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 11),
+        child: Row(
+          children: [
+            Container(
+              width: 36,
+              height: 36,
+              decoration: BoxDecoration(
+                color: tone.fill,
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Icon(
+                _moduleIcons[module.type] ?? Icons.extension_outlined,
+                size: 20,
+                color: tone.ink,
+              ),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Text(
+                module.name,
+                style: const TextStyle(fontWeight: FontWeight.w800),
+              ),
+            ),
+            if (detail != null) ...[
+              const SizedBox(width: 8),
+              Text(
+                detail,
+                style: TextStyle(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w700,
+                  color: due != null && !overdue
+                      ? tones.peach.strong
+                      : scheme.onSurfaceVariant,
+                ),
+              ),
             ],
           ],
-        );
-      },
+        ),
+      ),
     );
   }
 }

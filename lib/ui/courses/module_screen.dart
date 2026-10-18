@@ -1,0 +1,433 @@
+import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import 'package:url_launcher/url_launcher.dart';
+
+import '../../data/repositories/ecourse_repository.dart';
+import '../core/theme.dart';
+import '../core/widgets.dart';
+
+/// Module types with a page of their own; others open on eCourse2.
+const moduleTypesWithPage = {'assign', 'quiz', 'folder', 'resource'};
+
+/// One assignment, quiz or file collection (design/round-11, variant B1):
+/// a horizontal progress card for timed work, then files and description.
+class ModuleScreen extends StatelessWidget {
+  const ModuleScreen({super.key, required this.courseId, required this.cmid});
+
+  final int courseId, cmid;
+
+  @override
+  Widget build(BuildContext context) {
+    final repo = context.read<EcourseRepository>();
+    return Loader<Module?>(
+      load: () async =>
+          [for (final s in await repo.contents(courseId)) ...s.modules]
+              .where((m) => m.id == cmid)
+              .firstOrNull,
+      builder: (context, module) => Scaffold(
+        extendBodyBehindAppBar: true,
+        appBar: subBar(context, module?.name ?? ''),
+        body: switch (module?.type) {
+          null => const EmptyState('找不到這個項目'),
+          'assign' => Loader<Assignment>(
+            load: () => repo.assignment(courseId, module!.instance),
+            builder: (context, a) => _AssignmentBody(assignment: a),
+          ),
+          'quiz' => Loader<Quiz>(
+            load: () => repo.quiz(courseId, module!.instance),
+            builder: (context, q) => _QuizBody(quiz: q),
+          ),
+          _ => _FilesBody(files: module!.files),
+        },
+      ),
+    );
+  }
+}
+
+String _day(DateTime d) => '${d.month}/${d.day}';
+String _stamp(DateTime d) => '${_day(d)} ${clock(d.hour * 60 + d.minute)}';
+
+String _size(int bytes) => switch (bytes) {
+  < 1024 => '$bytes B',
+  < 1024 * 1024 => '${(bytes / 1024).round()} KB',
+  _ => '${(bytes / 1024 / 1024).toStringAsFixed(1)} MB',
+};
+
+class _AssignmentBody extends StatelessWidget {
+  const _AssignmentBody({required this.assignment});
+
+  final Assignment assignment;
+
+  @override
+  Widget build(BuildContext context) {
+    final a = assignment;
+    final now = DateTime.now();
+    return ListView(
+      padding: scrollPadding(context),
+      children: [
+        _Progress(
+          steps: [
+            (
+              '開放',
+              a.opens == null ? '—' : _day(a.opens!),
+              a.opens?.isBefore(now) ?? true,
+            ),
+            (
+              '繳交',
+              a.submittedAt == null ? '未繳交' : _day(a.submittedAt!),
+              a.submittedAt != null,
+            ),
+            (
+              '截止',
+              a.due == null ? '—' : _day(a.due!),
+              a.due?.isBefore(now) ?? false,
+            ),
+            ('成績', a.grade ?? '—', a.grade != null),
+          ],
+        ),
+        if (a.submission.isNotEmpty) ...[
+          const SectionLabel('我的繳交'),
+          _FileList(files: a.submission, detail: (f) => _stamp(f.modified)),
+        ],
+        if (a.intro.isNotEmpty) ...[const SectionLabel('說明'), _Text(a.intro)],
+        if (a.attachments.isNotEmpty) ...[
+          const SectionLabel('附件'),
+          _FileList(files: a.attachments, detail: (f) => _size(f.size)),
+        ],
+      ],
+    );
+  }
+}
+
+class _QuizBody extends StatelessWidget {
+  const _QuizBody({required this.quiz});
+
+  final Quiz quiz;
+
+  @override
+  Widget build(BuildContext context) {
+    final q = quiz;
+    final now = DateTime.now();
+    return ListView(
+      padding: scrollPadding(context),
+      children: [
+        _Progress(
+          steps: [
+            (
+              '開放',
+              q.opens == null ? '—' : _day(q.opens!),
+              q.opens?.isBefore(now) ?? true,
+            ),
+            (
+              '作答',
+              q.finished == null ? '未作答' : _day(q.finished!),
+              q.finished != null,
+            ),
+            (
+              '關閉',
+              q.closes == null ? '—' : _day(q.closes!),
+              q.closes?.isBefore(now) ?? false,
+            ),
+            ('成績', q.grade ?? '—', q.grade != null),
+          ],
+        ),
+        if (q.intro.isNotEmpty) ...[const SectionLabel('說明'), _Text(q.intro)],
+      ],
+    );
+  }
+}
+
+class _FilesBody extends StatelessWidget {
+  const _FilesBody({required this.files});
+
+  final List<ModuleFile> files;
+
+  @override
+  Widget build(BuildContext context) {
+    if (files.isEmpty) return const EmptyState('沒有檔案');
+    final latest = files
+        .map((f) => f.modified)
+        .reduce((a, b) => a.isAfter(b) ? a : b);
+    final total = files.fold(0, (sum, f) => sum + f.size);
+    return ListView(
+      padding: scrollPadding(context),
+      children: [
+        Row(
+          children: [
+            _Fact(value: '${files.length}', label: '個檔案'),
+            const SizedBox(width: 8),
+            _Fact(value: _size(total), label: '合計'),
+            const SizedBox(width: 8),
+            _Fact(value: _day(latest), label: '最後更新'),
+          ],
+        ),
+        const SizedBox(height: 12),
+        _FileList(
+          files: files,
+          detail: (f) => '${_size(f.size)}・${_day(f.modified)} 更新',
+        ),
+      ],
+    );
+  }
+}
+
+/// Four milestones in a row. Done steps are mint checks; a done grade is the
+/// peach star the page builds up to; the first open step is outlined.
+class _Progress extends StatelessWidget {
+  const _Progress({required this.steps});
+
+  final List<(String label, String value, bool done)> steps;
+
+  @override
+  Widget build(BuildContext context) {
+    final tones = context.tones;
+    final scheme = Theme.of(context).colorScheme;
+    final current = steps.indexWhere((s) => !s.$3);
+    return Card(
+      color: scheme.surfaceContainerLow,
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(8, 16, 8, 14),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            for (final (i, (label, value, done)) in steps.indexed)
+              Expanded(
+                child: Column(
+                  children: [
+                    Row(
+                      children: [
+                        Expanded(
+                          child: i == 0
+                              ? const SizedBox()
+                              : Divider(
+                                  thickness: 2,
+                                  color: steps[i - 1].$3 && done
+                                      ? tones.mint.strong
+                                      : scheme.outlineVariant,
+                                ),
+                        ),
+                        _Dot(
+                          state: done
+                              ? (i == steps.length - 1
+                                    ? _DotState.star
+                                    : _DotState.done)
+                              : i == current
+                              ? _DotState.current
+                              : _DotState.later,
+                        ),
+                        Expanded(
+                          child: i == steps.length - 1
+                              ? const SizedBox()
+                              : Divider(
+                                  thickness: 2,
+                                  color: done && steps[i + 1].$3
+                                      ? tones.mint.strong
+                                      : scheme.outlineVariant,
+                                ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      label,
+                      style: TextStyle(
+                        fontSize: 11,
+                        fontWeight: FontWeight.w800,
+                        color: scheme.onSurfaceVariant,
+                      ),
+                    ),
+                    Text(
+                      value,
+                      style: const TextStyle(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w900,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+enum _DotState { done, star, current, later }
+
+class _Dot extends StatelessWidget {
+  const _Dot({required this.state});
+
+  final _DotState state;
+
+  @override
+  Widget build(BuildContext context) {
+    final tones = context.tones;
+    final scheme = Theme.of(context).colorScheme;
+    final (fill, ink, icon) = switch (state) {
+      _DotState.done => (tones.mint.strong, tones.mint.fill, Icons.check),
+      _DotState.star => (tones.peach.strong, tones.peach.fill, Icons.star),
+      _DotState.current => (tones.peach.fill, tones.peach.ink, null),
+      _DotState.later => (
+        scheme.surfaceContainerHigh,
+        scheme.onSurfaceVariant,
+        null,
+      ),
+    };
+    return Container(
+      width: 30,
+      height: 30,
+      decoration: BoxDecoration(color: fill, shape: BoxShape.circle),
+      child: icon == null ? null : Icon(icon, size: 18, color: ink),
+    );
+  }
+}
+
+class _Fact extends StatelessWidget {
+  const _Fact({required this.value, required this.label});
+
+  final String value, label;
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    return Expanded(
+      child: ToneBlock(
+        tone: Tone(
+          scheme.surfaceContainerHigh,
+          scheme.onSurface,
+          scheme.onSurfaceVariant,
+        ),
+        radius: 20,
+        padding: const EdgeInsets.all(12),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              value,
+              maxLines: 1,
+              style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w900),
+            ),
+            Text(
+              label,
+              style: TextStyle(
+                fontSize: 11,
+                fontWeight: FontWeight.w800,
+                color: scheme.onSurfaceVariant,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _Text extends StatelessWidget {
+  const _Text(this.text);
+
+  final String text;
+
+  @override
+  Widget build(BuildContext context) {
+    return Card(
+      color: Theme.of(context).colorScheme.surfaceContainerLow,
+      child: Padding(
+        padding: const EdgeInsets.all(14),
+        child: SelectableText(
+          text,
+          style: const TextStyle(height: 1.6, fontWeight: FontWeight.w600),
+        ),
+      ),
+    );
+  }
+}
+
+class _FileList extends StatelessWidget {
+  const _FileList({required this.files, required this.detail});
+
+  final List<ModuleFile> files;
+  final String Function(ModuleFile) detail;
+
+  @override
+  Widget build(BuildContext context) {
+    final repo = context.read<EcourseRepository>();
+    final tones = context.tones;
+    final scheme = Theme.of(context).colorScheme;
+    return Card(
+      color: scheme.surfaceContainerLow,
+      clipBehavior: Clip.antiAlias,
+      child: Column(
+        children: [
+          for (final (i, f) in files.indexed) ...[
+            if (i > 0) Divider(height: 1, color: scheme.outlineVariant),
+            ListTile(
+              leading: _FileIcon(name: f.name, tones: tones, scheme: scheme),
+              title: Text(
+                f.name,
+                style: const TextStyle(fontWeight: FontWeight.w800),
+              ),
+              subtitle: Text(detail(f)),
+              trailing: Icon(
+                Icons.download_rounded,
+                color: scheme.onSurfaceVariant,
+              ),
+              // In-app browser: the token in the URL stays out of Safari's
+              // history.
+              onTap: () => launchUrl(
+                Uri.parse(repo.fileUrl(f.url)),
+                mode: LaunchMode.inAppBrowserView,
+              ),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+}
+
+class _FileIcon extends StatelessWidget {
+  const _FileIcon({
+    required this.name,
+    required this.tones,
+    required this.scheme,
+  });
+
+  final String name;
+  final Tones tones;
+  final ColorScheme scheme;
+
+  @override
+  Widget build(BuildContext context) {
+    final ext = name.split('.').last.toLowerCase();
+    final (tone, icon) = switch (ext) {
+      'pdf' => (tones.lilac, Icons.picture_as_pdf_outlined),
+      'zip' ||
+      'gz' ||
+      'tgz' ||
+      'rar' ||
+      '7z' => (tones.sun, Icons.folder_zip_outlined),
+      'ppt' ||
+      'pptx' ||
+      'doc' ||
+      'docx' => (tones.identity[2], Icons.slideshow_outlined),
+      _ => (
+        Tone(
+          scheme.surfaceContainerHigh,
+          scheme.onSurface,
+          scheme.onSurfaceVariant,
+        ),
+        Icons.insert_drive_file_outlined,
+      ),
+    };
+    return Container(
+      width: 36,
+      height: 36,
+      decoration: BoxDecoration(
+        color: tone.fill,
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Icon(icon, size: 20, color: tone.ink),
+    );
+  }
+}

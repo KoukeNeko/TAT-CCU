@@ -5,6 +5,7 @@ import '../ui/account/account_screen.dart';
 import '../ui/core/app_shell.dart';
 import '../ui/courses/course_detail_screen.dart';
 import '../ui/courses/courses_screen.dart';
+import '../ui/courses/module_screen.dart';
 import '../ui/login/login_screen.dart';
 import '../ui/more/calendar_screen.dart';
 import '../ui/more/grades_screen.dart';
@@ -64,6 +65,13 @@ GoRouter buildRouter(EcourseAuthRepository auth) => GoRouter(
                     courseId: int.parse(state.pathParameters['id']!),
                   ),
                   routes: [
+                    GoRoute(
+                      path: 'modules/:cmid',
+                      builder: (_, state) => ModuleScreen(
+                        courseId: int.parse(state.pathParameters['id']!),
+                        cmid: int.parse(state.pathParameters['cmid']!),
+                      ),
+                    ),
                     for (final part in CoursePart.values)
                       GoRoute(
                         path: part.name,
