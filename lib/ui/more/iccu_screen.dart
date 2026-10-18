@@ -1,9 +1,8 @@
-import 'dart:async';
 import 'dart:convert';
 
 import 'package:flutter/material.dart';
-import 'package:webview_flutter/webview_flutter.dart';
 
+import '../core/campus_session.dart';
 import '../core/campus_web_screen.dart';
 import '../core/theme.dart';
 import '../core/widgets.dart';
@@ -81,8 +80,8 @@ String _script(List<String> data, List<String> seasonal) =>
     const r = await fetch(p, { credentials: 'same-origin', redirect: 'manual' });
     out.open[p] = r.type !== 'opaqueredirect' && r.ok;
   }
-  IccuData.postMessage(JSON.stringify(out));
-})().catch(e => IccuData.postMessage(JSON.stringify({ error: String(e) })));
+  Campus.postMessage(JSON.stringify(out));
+})().catch(e => Campus.postMessage(JSON.stringify({ error: String(e) })));
 ''';
 
 /// What the hub shows, taken from the arrays the script returns.
@@ -124,8 +123,6 @@ String _text(Object? v) => '${v ?? ''}'
     .replaceAll('&amp;', '&')
     .trim();
 
-enum _Phase { loading, signIn, ready }
-
 /// Design H2-B (design/round-11): what iCCU shows is read in-app as tall
 /// bars; everything else opens the website in the shared campus WebView.
 class IccuScreen extends StatefulWidget {
@@ -136,115 +133,50 @@ class IccuScreen extends StatefulWidget {
 }
 
 class _IccuScreenState extends State<IccuScreen> {
-  late final WebViewController _web;
-  var _phase = _Phase.loading;
+  final _session = GlobalKey<CampusSessionState>();
   _Snapshot? _snapshot;
   String? _error;
-  var _fetching = false;
 
-  @override
-  void initState() {
-    super.initState();
-    _web = WebViewController()
-      ..setJavaScriptMode(JavaScriptMode.unrestricted)
-      ..addJavaScriptChannel('IccuData', onMessageReceived: _received)
-      ..setNavigationDelegate(NavigationDelegate(onPageFinished: _arrived));
-    _load();
-  }
-
-  void _load() {
-    setState(() {
-      _phase = _Phase.loading;
-      _error = null;
-      _fetching = false;
-    });
-    _web.loadRequest(Uri.parse(_entry));
-  }
-
-  void _arrived(String url) {
-    final uri = Uri.parse(url);
-    if (uri.host == Uri.parse(_iccu).host) {
-      if (_fetching) return;
-      _fetching = true;
-      setState(() => _phase = _Phase.loading);
-      _web.runJavaScript(
-        _script(
-          [_courses, _changes, _programs, ..._applications.keys],
-          [..._seasonal.keys],
-        ),
-      );
-    } else if (uri.host == 'portal.ccu.edu.tw' &&
-        uri.path == '/sso_index.php') {
-      // Signing in ends on the portal home, not the system it came from.
-      _web.loadRequest(Uri.parse(_entry));
+  void _received(Map<String, dynamic> json) => setState(() {
+    if (json['error'] != null) {
+      _error = '${json['error']}';
     } else {
-      // Portal or CAS sign-in form: the user has to fill it in (Turnstile).
-      setState(() => _phase = _Phase.signIn);
+      _error = null;
+      _snapshot = _Snapshot(json);
     }
-  }
+  });
 
-  void _received(JavaScriptMessage message) {
-    final json = jsonDecode(message.message) as Map<String, dynamic>;
-    setState(() {
-      if (json['error'] != null) {
-        _error = '${json['error']}';
-      } else {
-        _snapshot = _Snapshot(json);
-      }
-      _phase = _Phase.ready;
-    });
+  void _reload() {
+    setState(() => _error = null);
+    _session.currentState?.reload();
   }
-
-  void _openWeb(String path, String title) =>
-      openCampusPage(context, '$_iccu$path', title);
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      extendBodyBehindAppBar: _phase != _Phase.signIn,
-      appBar: subBar(context, _phase == _Phase.signIn ? '登入單一入口' : '選課系統'),
-      body: Stack(
-        children: [
-          // Kept in the tree so it can load; shown only for signing in.
-          Positioned.fill(
-            child: Offstage(
-              offstage: _phase != _Phase.signIn,
-              child: Padding(
-                padding: EdgeInsets.only(
-                  bottom: MediaQuery.paddingOf(context).bottom,
-                ),
-                child: WebViewWidget(controller: _web),
-              ),
-            ),
-          ),
-          if (_phase == _Phase.loading)
-            const Center(child: CircularProgressIndicator()),
-          if (_phase == _Phase.ready)
-            Positioned.fill(
-              child: Builder(
-                builder: (context) => _error != null
-                    ? Center(
-                        child: Column(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Text(_error!, textAlign: TextAlign.center),
-                            const SizedBox(height: 12),
-                            FilledButton(
-                              onPressed: _load,
-                              child: const Text('重試'),
-                            ),
-                          ],
-                        ),
-                      )
-                    : _Hub(
-                        snapshot: _snapshot!,
-                        onRefresh: () async => _load(),
-                        openWeb: _openWeb,
-                      ),
-              ),
-            ),
-        ],
+    final snapshot = _snapshot;
+    return CampusSession(
+      key: _session,
+      title: '選課系統',
+      entry: _entry,
+      host: Uri.parse(_iccu).host,
+      script: () => _script(
+        [_courses, _changes, _programs, ..._applications.keys],
+        [..._seasonal.keys],
       ),
+      onMessage: _received,
+      child: _error != null
+          ? CampusError(message: _error!, onRetry: _reload)
+          : snapshot == null
+          ? null
+          : Builder(
+              // Reads insets from inside the session's Scaffold.
+              builder: (context) => _Hub(
+                snapshot: snapshot,
+                onRefresh: () async => _reload(),
+                openWeb: (path, title) =>
+                    openCampusPage(context, '$_iccu$path', title),
+              ),
+            ),
     );
   }
 }
