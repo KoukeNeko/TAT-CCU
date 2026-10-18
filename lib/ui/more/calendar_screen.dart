@@ -14,7 +14,7 @@ class CalendarScreen extends StatelessWidget {
     final repo = context.read<EcourseRepository>();
     return Scaffold(
       extendBodyBehindAppBar: true,
-      appBar: subBar(context, '行事曆'),
+      appBar: topBar('行事曆'),
       body: Loader<List<DueItem>>(
         load: () => repo.dueSoon(days: 30),
         builder: (context, items) {

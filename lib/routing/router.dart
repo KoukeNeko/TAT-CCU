@@ -71,13 +71,17 @@ GoRouter buildRouter(EcourseAuthRepository auth) => GoRouter(
         StatefulShellBranch(
           routes: [
             GoRoute(
+              path: '/calendar',
+              builder: (_, _) => const CalendarScreen(),
+            ),
+          ],
+        ),
+        StatefulShellBranch(
+          routes: [
+            GoRoute(
               path: '/more',
               builder: (_, _) => const MoreScreen(),
               routes: [
-                GoRoute(
-                  path: 'calendar',
-                  builder: (_, _) => const CalendarScreen(),
-                ),
                 GoRoute(
                   path: 'grades',
                   builder: (_, _) => const GradesScreen(),

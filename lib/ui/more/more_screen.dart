@@ -11,7 +11,6 @@ class MoreScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final t = context.tones;
     final entries = [
-      (t.mint, clover, '行事曆', '/more/calendar'),
       (t.lilac, spikyStar, '成績', '/more/grades'),
       (t.peach, scallop, '校務系統', '/more/portal'),
       (t.sun, spikyStar, '帳號', '/more/account'),
