@@ -93,6 +93,20 @@ final _groups = <(String, List<CampusSystem>)>[
   ),
 ];
 
+/// Every system by `linkId`, for screens that show favorites elsewhere.
+final campusSystems = {
+  for (final (_, systems) in _groups)
+    for (final s in systems) s.id: s,
+};
+
+/// Records the visit and opens [s] in the same sign-in sheet as the
+/// eCourse2 login, so the CAS sign-in made there opens systems without a
+/// password.
+void openCampusSystem(PortalPrefs prefs, CampusSystem s) {
+  prefs.opened(s.id);
+  openSignInSheet(_entryUrl(s));
+}
+
 String _entryUrl(CampusSystem s) => s.service.startsWith('http')
     ? s.service
     : 'https://portal.ccu.edu.tw/ssoService.php?service=${s.service}&linkId=${s.id}&para=';
@@ -132,12 +146,7 @@ class _PortalScreenState extends State<PortalScreen> {
       }
     }
 
-    void open(CampusSystem s) {
-      prefs.opened(s.id);
-      // Same sign-in sheet as the eCourse2 login, so the CAS sign-in made
-      // there opens systems without a password.
-      openSignInSheet(_entryUrl(s));
-    }
+    void open(CampusSystem s) => openCampusSystem(prefs, s);
 
     final q = _query.toLowerCase();
     final searching = q.isNotEmpty;
