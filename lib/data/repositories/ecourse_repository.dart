@@ -45,6 +45,18 @@ typedef Section = ({String name, List<Module> modules});
 typedef Post = ({String subject, String author, DateTime time, String body});
 typedef GradeLine = ({String name, String grade, String percent});
 
+/// A calendar entry. [cmid] links assignment and quiz events to their
+/// module page.
+typedef CalendarEvent = ({
+  String name,
+  String label,
+  String course,
+  int courseId,
+  int? cmid,
+  DateTime time,
+  String? url,
+});
+
 /// One student's view of an assignment. [grade] is null until graded.
 typedef Assignment = ({
   String intro,
@@ -127,6 +139,38 @@ class EcourseRepository {
           module: '${e['modulename'] ?? ''}',
           url: e['url'] as String?,
         ),
+    ];
+  }
+
+  /// Every event in [month], from the same feed as eCourse2's month view.
+  Future<List<CalendarEvent>> monthEvents(DateTime month) async {
+    final r = await _client.call('core_calendar_get_calendar_monthly_view', {
+      'year': month.year,
+      'month': month.month,
+    }) as Map;
+    return [
+      for (final w in r['weeks'] as List)
+        for (final d in w['days'] as List)
+          for (final e in d['events'] as List)
+            (
+              // `name` carries Moodle's suffix such as 在最近到期; the label
+              // below says the same in fewer words.
+              name: multilang('${e['activityname'] ?? e['name']}'),
+              label: _eventLabel(
+                '${e['modulename'] ?? ''}',
+                '${e['eventtype']}',
+              ),
+              course: multilang('${e['course']?['fullname'] ?? ''}'),
+              courseId: (e['course']?['id'] as num?)?.toInt() ?? 0,
+              // Only assignments and quizzes have an in-app page.
+              cmid: e['modulename'] == 'assign' || e['modulename'] == 'quiz'
+                  ? int.tryParse(
+                      Uri.tryParse('${e['url']}')?.queryParameters['id'] ?? '',
+                    )
+                  : null,
+              time: _ts(e['timestart']),
+              url: e['url'] as String?,
+            ),
     ];
   }
 
@@ -348,6 +392,27 @@ class EcourseRepository {
           ),
     ];
   }
+}
+
+String _eventLabel(String module, String type) {
+  final what = switch (module) {
+    'assign' => '作業',
+    'quiz' => '測驗',
+    '' => switch (type) {
+      'course' => '課程事件',
+      'user' => '個人事件',
+      'site' => '全校事件',
+      _ => '事件',
+    },
+    _ => '活動',
+  };
+  final when = switch (type) {
+    'due' => '到期',
+    'close' => '關閉',
+    'open' => '開放',
+    _ => '',
+  };
+  return '$what$when';
 }
 
 /// Moodle uses 0 for "not set".
