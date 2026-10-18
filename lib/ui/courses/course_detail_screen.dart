@@ -88,6 +88,9 @@ class CourseDetailScreen extends StatelessWidget {
                     tone: tones.peach,
                     value: firstDue == null ? '0' : _left(firstDue.due),
                     label: firstDue == null ? '沒有待辦' : '${firstDue.name} 到期',
+                    onTap: firstDue == null
+                        ? null
+                        : () => openDueItem(context, firstDue),
                   ),
                   const SizedBox(width: 8),
                   _Stat(

@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 
 import '../../data/repositories/ecourse_repository.dart';
 import '../core/theme.dart';
 import '../core/widgets.dart';
+import '../courses/module_screen.dart';
 
 /// Assignments, quizzes and other dated activities in the next two weeks.
 class DueScreen extends StatelessWidget {
@@ -48,7 +50,7 @@ class DueBlock extends StatelessWidget {
     return ToneBlock(
       tone: tone,
       padding: const EdgeInsets.all(14),
-      onTap: item.url == null ? null : () => openExternal(item.url!),
+      onTap: item.url == null ? null : () => openDueItem(context, item),
       child: Row(
         children: [
           CookieBadge(
@@ -88,5 +90,18 @@ class DueBlock extends StatelessWidget {
         ],
       ),
     );
+  }
+}
+
+/// Opens the in-app module page when there is one; the event URL is the
+/// module's `view.php?id=<cmid>`. Anything else opens eCourse2.
+void openDueItem(BuildContext context, DueItem item) {
+  final cmid = int.tryParse(
+    Uri.tryParse(item.url ?? '')?.queryParameters['id'] ?? '',
+  );
+  if (cmid != null && moduleTypesWithPage.contains(item.module)) {
+    context.go('/courses/${item.courseId}/modules/$cmid');
+  } else if (item.url != null) {
+    openExternal(item.url!);
   }
 }
