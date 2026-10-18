@@ -81,25 +81,26 @@ class TodayScreen extends StatelessWidget {
           return ListView(
             padding: scrollPadding(context, top: 20),
             children: [
+              // Header design A (design/round-09): date above; the headline
+              // and the bell share one line, centered on each other.
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 4),
-                child: Row(
+                child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            '${weekdayNames[now.weekday - 1]} ${now.month}/${now.day}',
-                            style: TextStyle(
-                              fontSize: 14,
-                              fontWeight: FontWeight.w700,
-                              color: theme.colorScheme.onSurfaceVariant,
-                            ),
-                          ),
-                          const SizedBox(height: 4),
-                          Text(
+                    Text(
+                      '${weekdayNames[now.weekday - 1]} ${now.month}/${now.day}',
+                      style: TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w700,
+                        color: theme.colorScheme.onSurfaceVariant,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: Text(
                             headline,
                             style: const TextStyle(
                               fontSize: 34,
@@ -107,12 +108,13 @@ class TodayScreen extends StatelessWidget {
                               height: 1.15,
                             ),
                           ),
-                        ],
-                      ),
-                    ),
-                    _BellButton(
-                      unread: d.notices + d.mail,
-                      onTap: () => context.go('/today/notifications'),
+                        ),
+                        const SizedBox(width: 12),
+                        _BellButton(
+                          unread: d.notices + d.mail,
+                          onTap: () => context.go('/today/notifications'),
+                        ),
+                      ],
                     ),
                   ],
                 ),
