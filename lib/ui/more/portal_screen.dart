@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:url_launcher/url_launcher.dart';
 import 'package:provider/provider.dart';
 
 import '../../data/repositories/portal_prefs.dart';
@@ -99,13 +100,18 @@ final campusSystems = {
     for (final s in systems) s.id: s,
 };
 
-/// Records the visit and opens [s] in the same sign-in sheet as the
-/// eCourse2 login, so the CAS sign-in made there opens systems without a
-/// password.
+/// Records the visit and opens [s] in the in-app browser.
 void openCampusSystem(PortalPrefs prefs, CampusSystem s) {
   prefs.opened(s.id);
-  openSignInSheet(_entryUrl(s));
+  openCampusPage(_entryUrl(s));
 }
+
+/// Campus pages open in the in-app browser (SFSafariViewController /
+/// Custom Tabs). Separate sign-in sheets each started without the portal's
+/// session cookie (`ccuSSO` has no expiry), so every system asked to sign
+/// in again; this tries one browser that keeps it while the app runs.
+Future<void> openCampusPage(String url) =>
+    launchUrl(Uri.parse(url), mode: LaunchMode.inAppBrowserView);
 
 String _entryUrl(CampusSystem s) => s.service.startsWith('http')
     ? s.service

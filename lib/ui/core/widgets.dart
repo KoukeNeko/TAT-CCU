@@ -2,11 +2,8 @@ import 'dart:math';
 import 'dart:ui' show ImageFilter;
 
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
-import 'package:flutter_web_auth_2/flutter_web_auth_2.dart';
 import 'package:url_launcher/url_launcher.dart';
 
-import '../../data/repositories/ecourse_auth_repository.dart';
 
 import 'theme.dart';
 
@@ -412,17 +409,3 @@ EdgeInsets scrollPadding(BuildContext context, {double top = 12}) {
   return EdgeInsets.fromLTRB(16, top + inset.top, 16, 24 + inset.bottom);
 }
 
-/// Opens a CAS-protected page in the same system sign-in sheet the eCourse2
-/// login uses (ASWebAuthenticationSession / Custom Tabs), so the CAS sign-in
-/// made there carries over. The portal never redirects to the app, so the
-/// sheet only ends when the user closes it; that is not an error.
-Future<void> openSignInSheet(String url) async {
-  try {
-    await FlutterWebAuth2.authenticate(
-      url: url,
-      callbackUrlScheme: callbackScheme,
-    );
-  } on PlatformException catch (e) {
-    if (e.code != 'CANCELED') rethrow;
-  }
-}

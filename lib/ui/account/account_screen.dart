@@ -87,7 +87,7 @@ class _AccountScreenState extends State<AccountScreen> {
                   status: '與 eCourse2 共用登入',
                   actions: [
                     FilledButton.tonal(
-                      onPressed: () => openSignInSheet(portalHome),
+                      onPressed: () => openCampusPage(portalHome),
                       child: const Text('開啟單一入口'),
                     ),
                   ],
