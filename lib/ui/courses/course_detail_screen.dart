@@ -275,7 +275,10 @@ class GradeList extends StatelessWidget {
               l.name,
               style: const TextStyle(fontWeight: FontWeight.w700),
             ),
-            subtitle: l.percent.isEmpty ? null : Text(l.percent),
+            // Ungraded items repeat `-` (or `錯誤`) in both fields.
+            subtitle: l.percent.isEmpty || l.percent == l.grade
+                ? null
+                : Text(l.percent),
             trailing: Text(
               l.grade,
               style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w900),

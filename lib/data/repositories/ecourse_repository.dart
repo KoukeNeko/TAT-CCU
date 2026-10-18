@@ -194,23 +194,38 @@ class EcourseRepository {
     };
   }
 
+  /// Needs the real user id: without it Moodle asks for every user's grades,
+  /// which students may not view (`nopermissions`).
   Future<List<GradeLine>> gradeItems(int courseId) async {
     final r = await _client.call('gradereport_user_get_grade_items', {
       'courseid': courseId,
+      'userid': await _currentUserId(),
     }) as Map;
     final users = r['usergrades'] as List;
     if (users.isEmpty) return [];
     return [
       for (final i in users.first['gradeitems'] as List)
-        if (i['itemtype'] != 'course')
+        // Course totals live in gradeOverview; categories carry no name.
+        if (i['itemtype'] == 'mod' || i['itemtype'] == 'manual')
           (
-            name: '${i['itemname'] ?? ''}',
-            grade: '${i['gradeformatted'] ?? '-'}',
-            percent: '${i['percentageformatted'] ?? ''}',
+            name: multilang('${i['itemname'] ?? ''}'),
+            // Passing grades arrive as a check icon before the number; the
+            // number alone already says it.
+            grade: _plain('${i['gradeformatted'] ?? ''}'),
+            percent: _plain('${i['percentageformatted'] ?? ''}'),
           ),
     ];
   }
 }
+
+/// Moodle's multilang filter output, e.g.
+/// `<span lang="zh_tw" class="multilang">出缺席</span><span lang="en" …>`;
+/// keeps the Traditional Chinese text, or the plain text without spans.
+String multilang(String html) =>
+    RegExp(r'<span lang="zh_tw" class="multilang">(.*?)</span>')
+        .firstMatch(html)
+        ?.group(1) ??
+    _plain(html);
 
 /// Moodle returns HTML bodies; the list views only need plain text.
 String _plain(String html) => html
