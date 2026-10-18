@@ -4,7 +4,6 @@ import 'dart:ui' show ImageFilter;
 import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
 
-
 import 'theme.dart';
 
 /// Scalloped "cookie" outline from the Material 3 Expressive shape set:
@@ -408,4 +407,3 @@ EdgeInsets scrollPadding(BuildContext context, {double top = 12}) {
   final inset = MediaQuery.paddingOf(context);
   return EdgeInsets.fromLTRB(16, top + inset.top, 16, 24 + inset.bottom);
 }
-

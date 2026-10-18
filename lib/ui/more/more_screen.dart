@@ -85,7 +85,7 @@ class _MoreScreenState extends State<MoreScreen> {
                               padding: const EdgeInsets.symmetric(
                                 horizontal: 12,
                               ),
-                              onTap: () => openCampusSystem(prefs, s),
+                              onTap: () => openCampusSystem(context, prefs, s),
                               child: Align(
                                 alignment: Alignment.centerLeft,
                                 child: Text(

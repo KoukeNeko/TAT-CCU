@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
-import 'package:url_launcher/url_launcher.dart';
+import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 
 import '../../data/repositories/portal_prefs.dart';
 import '../core/theme.dart';
+import '../core/campus_web_screen.dart';
 import '../core/widgets.dart';
 
 /// Portal home; bounces to the portal login when its session has lapsed.
@@ -100,20 +101,21 @@ final campusSystems = {
     for (final s in systems) s.id: s,
 };
 
-/// Records the visit and opens [s] in the in-app browser.
-void openCampusSystem(PortalPrefs prefs, CampusSystem s) {
+/// Records the visit and opens [s] inside the app. 選課系統 has its own
+/// page built from iCCU data, with the website a tap further.
+void openCampusSystem(BuildContext context, PortalPrefs prefs, CampusSystem s) {
   prefs.opened(s.id);
-  openCampusPage(_entryUrl(s));
+  if (s.id == iccuLinkId) {
+    context.go('/more/iccu');
+  } else {
+    openCampusPage(context, entryUrl(s), s.name);
+  }
 }
 
-/// Campus pages open in the in-app browser (SFSafariViewController /
-/// Custom Tabs). Separate sign-in sheets each started without the portal's
-/// session cookie (`ccuSSO` has no expiry), so every system asked to sign
-/// in again; this tries one browser that keeps it while the app runs.
-Future<void> openCampusPage(String url) =>
-    launchUrl(Uri.parse(url), mode: LaunchMode.inAppBrowserView);
+/// `linkId` of 選課系統 (iCCU).
+const iccuLinkId = '0075';
 
-String _entryUrl(CampusSystem s) => s.service.startsWith('http')
+String entryUrl(CampusSystem s) => s.service.startsWith('http')
     ? s.service
     : 'https://portal.ccu.edu.tw/ssoService.php?service=${s.service}&linkId=${s.id}&para=';
 
@@ -152,7 +154,7 @@ class _PortalScreenState extends State<PortalScreen> {
       }
     }
 
-    void open(CampusSystem s) => openCampusSystem(prefs, s);
+    void open(CampusSystem s) => openCampusSystem(context, prefs, s);
 
     final q = _query.toLowerCase();
     final searching = q.isNotEmpty;

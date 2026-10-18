@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 
 import '../../data/repositories/ecourse_auth_repository.dart';
 import '../core/theme.dart';
+import '../core/campus_web_screen.dart';
 import '../core/widgets.dart';
 import '../more/portal_screen.dart';
 
@@ -87,7 +88,8 @@ class _AccountScreenState extends State<AccountScreen> {
                   status: '與 eCourse2 共用登入',
                   actions: [
                     FilledButton.tonal(
-                      onPressed: () => openCampusPage(portalHome),
+                      onPressed: () =>
+                          openCampusPage(context, portalHome, '單一入口'),
                       child: const Text('開啟單一入口'),
                     ),
                   ],
