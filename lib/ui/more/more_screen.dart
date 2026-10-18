@@ -70,6 +70,9 @@ class _MoreScreenState extends State<MoreScreen> {
                       child: GridView.count(
                         crossAxisCount: 2,
                         shrinkWrap: true,
+                        // A nested GridView otherwise pads itself by the
+                        // screen's safe-area and bar insets.
+                        padding: EdgeInsets.zero,
                         physics: const NeverScrollableScrollPhysics(),
                         mainAxisSpacing: 6,
                         crossAxisSpacing: 6,
