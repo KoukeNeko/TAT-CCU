@@ -69,12 +69,16 @@ typedef Assignment = ({
 });
 
 /// [finished] is the latest finished attempt; [grade] is null until graded.
+/// [attempts] is 0 when unlimited; [pass] is null when the quiz sets none.
 typedef Quiz = ({
   String intro,
   DateTime? opens,
   DateTime? closes,
   DateTime? finished,
   String? grade,
+  int attempts,
+  String? pass,
+  String max,
 });
 
 DateTime _ts(Object? s) =>
@@ -347,16 +351,16 @@ class EcourseRepository {
     final grade = (best as Map)['hasgrade'] == true
         ? (best['grade'] as num)
         : null;
+    final pass = best['gradetopass'] as num?;
     return (
       intro: _plain('${q['intro'] ?? ''}'),
       opens: _date(q['timeopen']),
       closes: _date(q['timeclose']),
       finished: finished.lastOrNull,
-      grade: grade == null
-          ? null
-          : grade % 1 == 0
-          ? '${grade.toInt()}'
-          : grade.toStringAsFixed(2),
+      grade: grade == null ? null : _score(grade),
+      attempts: (q['attempts'] as num?)?.toInt() ?? 0,
+      pass: pass == null || pass == 0 ? null : _score(pass),
+      max: _score(q['grade'] as num? ?? 0),
     );
   }
 
@@ -414,6 +418,9 @@ String _eventLabel(String module, String type) {
   };
   return '$what$when';
 }
+
+/// `60.00` → `60`, `83.5` → `83.50`.
+String _score(num n) => n % 1 == 0 ? '${n.toInt()}' : n.toStringAsFixed(2);
 
 /// Moodle uses 0 for "not set".
 DateTime? _date(Object? s) => (s as num? ?? 0) == 0 ? null : _ts(s);

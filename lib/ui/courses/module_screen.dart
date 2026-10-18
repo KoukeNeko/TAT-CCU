@@ -47,6 +47,10 @@ class ModuleScreen extends StatelessWidget {
 String _day(DateTime d) => '${d.month}/${d.day}';
 String _stamp(DateTime d) => '${_day(d)} ${clock(d.hour * 60 + d.minute)}';
 
+/// `10/13 週二 00:00`, for settings where the hour matters.
+String _full(DateTime d) =>
+    '${_day(d)} ${weekdayNames[d.weekday - 1]} ${clock(d.hour * 60 + d.minute)}';
+
 String _size(int bytes) => switch (bytes) {
   < 1024 => '$bytes B',
   < 1024 * 1024 => '${(bytes / 1024).round()} KB',
@@ -131,6 +135,15 @@ class _QuizBody extends StatelessWidget {
             ('成績', q.grade ?? '—', q.grade != null),
           ],
         ),
+        const SectionLabel('設定'),
+        _Details(
+          rows: [
+            if (q.opens != null) ('開始', _full(q.opens!)),
+            if (q.closes != null) ('結束', _full(q.closes!)),
+            ('允許作答', q.attempts == 0 ? '不限次數' : '${q.attempts} 次'),
+            ('及格分數', q.pass == null ? '滿分 ${q.max}' : '${q.pass} / ${q.max}'),
+          ],
+        ),
         if (q.intro.isNotEmpty) ...[const SectionLabel('說明'), _Text(q.intro)],
       ],
     );
@@ -172,7 +185,9 @@ class _FilesBody extends StatelessWidget {
 }
 
 /// Four milestones in a row. Done steps are mint checks; a done grade is the
-/// peach star the page builds up to; the first open step is outlined.
+/// peach star the page builds up to. The first step after the last done one
+/// is current; an undone step before a done one was missed (e.g. a quiz that
+/// closed without an attempt).
 class _Progress extends StatelessWidget {
   const _Progress({required this.steps});
 
@@ -182,7 +197,7 @@ class _Progress extends StatelessWidget {
   Widget build(BuildContext context) {
     final tones = context.tones;
     final scheme = Theme.of(context).colorScheme;
-    final current = steps.indexWhere((s) => !s.$3);
+    final lastDone = steps.lastIndexWhere((s) => s.$3);
     return Card(
       color: scheme.surfaceContainerLow,
       child: Padding(
@@ -211,7 +226,9 @@ class _Progress extends StatelessWidget {
                               ? (i == steps.length - 1
                                     ? _DotState.star
                                     : _DotState.done)
-                              : i == current
+                              : i < lastDone
+                              ? _DotState.missed
+                              : i == lastDone + 1
                               ? _DotState.current
                               : _DotState.later,
                         ),
@@ -253,7 +270,7 @@ class _Progress extends StatelessWidget {
   }
 }
 
-enum _DotState { done, star, current, later }
+enum _DotState { done, star, current, missed, later }
 
 class _Dot extends StatelessWidget {
   const _Dot({required this.state});
@@ -268,6 +285,11 @@ class _Dot extends StatelessWidget {
       _DotState.done => (tones.mint.strong, tones.mint.fill, Icons.check),
       _DotState.star => (tones.peach.strong, tones.peach.fill, Icons.star),
       _DotState.current => (tones.peach.fill, tones.peach.ink, null),
+      _DotState.missed => (
+        scheme.surfaceContainerHigh,
+        scheme.onSurfaceVariant,
+        Icons.close,
+      ),
       _DotState.later => (
         scheme.surfaceContainerHigh,
         scheme.onSurfaceVariant,
@@ -279,6 +301,49 @@ class _Dot extends StatelessWidget {
       height: 30,
       decoration: BoxDecoration(color: fill, shape: BoxShape.circle),
       child: icon == null ? null : Icon(icon, size: 18, color: ink),
+    );
+  }
+}
+
+class _Details extends StatelessWidget {
+  const _Details({required this.rows});
+
+  final List<(String, String)> rows;
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    return Card(
+      color: scheme.surfaceContainerLow,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+        child: Column(
+          children: [
+            for (final (i, (label, value)) in rows.indexed) ...[
+              if (i > 0) Divider(height: 1, color: scheme.outlineVariant),
+              Padding(
+                padding: const EdgeInsets.symmetric(vertical: 11),
+                child: Row(
+                  children: [
+                    Text(
+                      label,
+                      style: TextStyle(
+                        fontWeight: FontWeight.w800,
+                        color: scheme.onSurfaceVariant,
+                      ),
+                    ),
+                    const Spacer(),
+                    Text(
+                      value,
+                      style: const TextStyle(fontWeight: FontWeight.w900),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ],
+        ),
+      ),
     );
   }
 }
