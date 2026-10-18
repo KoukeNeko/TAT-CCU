@@ -63,6 +63,16 @@ GoRouter buildRouter(EcourseAuthRepository auth) => GoRouter(
                   builder: (_, state) => CourseDetailScreen(
                     courseId: int.parse(state.pathParameters['id']!),
                   ),
+                  routes: [
+                    for (final part in CoursePart.values)
+                      GoRoute(
+                        path: part.name,
+                        builder: (_, state) => CoursePartScreen(
+                          courseId: int.parse(state.pathParameters['id']!),
+                          part: part,
+                        ),
+                      ),
+                  ],
                 ),
               ],
             ),
