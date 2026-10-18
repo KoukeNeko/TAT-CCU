@@ -39,3 +39,16 @@ class Course {
     );
   }
 }
+
+/// Identity-color slot per course id, assigned in enrollment order (newest
+/// semester first) so a student's courses get different colors before any
+/// repeats. Unknown ids fall back to the id itself.
+final _colorSlots = <int, int>{};
+
+void assignCourseColors(List<Course> newestFirst) {
+  _colorSlots
+    ..clear()
+    ..addAll({for (final (i, c) in newestFirst.indexed) c.id: i});
+}
+
+int courseColorSlot(int courseId) => _colorSlots[courseId] ?? courseId;

@@ -66,6 +66,7 @@ class EcourseRepository {
       for (final c in detail['courses'] as List)
         Course.fromMoodle(c as Map<String, dynamic>),
     ]..sort((a, b) => b.shortName.compareTo(a.shortName));
+    assignCourseColors(list);
     return _courses = list;
   }
 

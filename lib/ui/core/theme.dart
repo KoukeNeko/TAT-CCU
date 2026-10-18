@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../../domain/models/course.dart';
+
 // Direction C "形狀卡片" (design/設計說明.md): Material 3 Expressive color
 // blocks and rounded shapes, built on stock widgets because Flutter's
 // material library has no Expressive components yet.
@@ -20,8 +22,11 @@ class Tone {
   }
 }
 
-/// The four functional blocks: lilac = now/selected, mint = next/schedule,
-/// peach = due/attention, sun = unread.
+/// Two color roles:
+/// - four functional blocks — lilac = now/selected, mint = next/schedule,
+///   peach = due/attention, sun = unread;
+/// - ten soft identity colors for things that need to tell each other apart
+///   (courses, portal groups), chroma 24 from HCT (design/round-08, P1).
 @immutable
 class Tones extends ThemeExtension<Tones> {
   const Tones({
@@ -29,30 +34,54 @@ class Tones extends ThemeExtension<Tones> {
     required this.mint,
     required this.peach,
     required this.sun,
+    required this.identity,
   });
 
   final Tone lilac, mint, peach, sun;
+  final List<Tone> identity;
 
   List<Tone> get cycle => [lilac, mint, peach, sun];
 
   /// Stable color per course so a course keeps its color on every screen.
-  Tone forCourse(int courseId) => cycle[courseId % cycle.length];
+  Tone forCourse(int courseId) =>
+      identity[courseColorSlot(courseId) % identity.length];
 
-  /// Values are taken verbatim from design/round-02/screens.html: light
-  /// containers are pastel, dark containers are deep tones of the same hues
-  /// with the accent lifted, so badges stay the brightest thing on screen.
   factory Tones.of(Brightness b) => b == Brightness.light
       ? const Tones(
           lilac: Tone(Color(0xFFEADDFF), Color(0xFF21005D), Color(0xFF6750A4)),
           mint: Tone(Color(0xFFC4EED0), Color(0xFF0F2E1A), Color(0xFF2E7D4F)),
           peach: Tone(Color(0xFFFFDBCB), Color(0xFF2B1206), Color(0xFFB4532A)),
           sun: Tone(Color(0xFFFFE08A), Color(0xFF2A2100), Color(0xFF8A6D00)),
+          identity: [
+            Tone(Color(0xFFE9DDFF), Color(0xFF1F1635), Color(0xFF63597C)), // 紫
+            Tone(Color(0xFFDAE2FF), Color(0xFF0E1A37), Color(0xFF525E7D)), // 靛
+            Tone(Color(0xFFC8E6FF), Color(0xFF001E2E), Color(0xFF436278)), // 天藍
+            Tone(Color(0xFFBBECEA), Color(0xFF00201F), Color(0xFF386665)), // 湖綠
+            Tone(Color(0xFFC9EBC7), Color(0xFF04210B), Color(0xFF486549)), // 薄荷
+            Tone(Color(0xFFE4E6AE), Color(0xFF1B1D00), Color(0xFF5E6135)), // 橄欖
+            Tone(Color(0xFFFDDFA6), Color(0xFF261900), Color(0xFF715B2E)), // 金黃
+            Tone(Color(0xFFFFDBC8), Color(0xFF311302), Color(0xFF7F553A)), // 蜜桃
+            Tone(Color(0xFFFFDAD6), Color(0xFF33110E), Color(0xFF82524C)), // 珊瑚
+            Tone(Color(0xFFFFD9E5), Color(0xFF30111F), Color(0xFF7C5263)), // 玫瑰
+          ],
         )
       : const Tones(
           lilac: Tone(Color(0xFF4A3780), Color(0xFFEADDFF), Color(0xFFD0BCFF)),
           mint: Tone(Color(0xFF1D4A30), Color(0xFFC4EED0), Color(0xFF8DD7A4)),
           peach: Tone(Color(0xFF6A3720), Color(0xFFFFDBCB), Color(0xFFFFB596)),
           sun: Tone(Color(0xFF574400), Color(0xFFFFE08A), Color(0xFFEBC54A)),
+          identity: [
+            Tone(Color(0xFF4B4163), Color(0xFFE9DDFF), Color(0xFFCEC0E8)), // 紫
+            Tone(Color(0xFF3B4665), Color(0xFFDAE2FF), Color(0xFFBAC6EA)), // 靛
+            Tone(Color(0xFF2A4A5F), Color(0xFFC8E6FF), Color(0xFFAACBE4)), // 天藍
+            Tone(Color(0xFF1E4E4D), Color(0xFFBBECEA), Color(0xFFA0CFCD)), // 湖綠
+            Tone(Color(0xFF304D33), Color(0xFFC9EBC7), Color(0xFFAECFAD)), // 薄荷
+            Tone(Color(0xFF464920), Color(0xFFE4E6AE), Color(0xFFC7CA94)), // 橄欖
+            Tone(Color(0xFF574419), Color(0xFFFDDFA6), Color(0xFFE0C38C)), // 金黃
+            Tone(Color(0xFF643D25), Color(0xFFFFDBC8), Color(0xFFF3BB9A)), // 蜜桃
+            Tone(Color(0xFF673B36), Color(0xFFFFDAD6), Color(0xFFF5B7B0)), // 珊瑚
+            Tone(Color(0xFF623B4B), Color(0xFFFFD9E5), Color(0xFFEEB8CB)), // 玫瑰
+          ],
         );
 
   @override
