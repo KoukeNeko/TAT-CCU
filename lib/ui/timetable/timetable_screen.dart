@@ -22,6 +22,23 @@ class _TimetableScreenState extends State<TimetableScreen> {
   /// Chosen semester; null follows the newest one.
   String? _semester;
 
+  /// One page per weekday shown; rebuilt when the semester changes.
+  PageController? _pages;
+
+  @override
+  void dispose() {
+    _pages?.dispose();
+    super.dispose();
+  }
+
+  void _pickSemester(String semester) {
+    _pages?.dispose();
+    setState(() {
+      _semester = semester;
+      _pages = null;
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     final repo = context.read<EcourseRepository>();
@@ -42,6 +59,11 @@ class _TimetableScreenState extends State<TimetableScreen> {
             for (var d = 1; d <= 7; d++)
               if (d <= 5 || days.contains(d)) d,
           ];
+          // A weekend day without classes falls back to the last day shown.
+          final page = weekdays.contains(_day)
+              ? weekdays.indexOf(_day)
+              : weekdays.length - 1;
+          final pages = _pages ??= PageController(initialPage: page);
           return Scaffold(
             extendBodyBehindAppBar: true,
             appBar: topBar(
@@ -57,7 +79,7 @@ class _TimetableScreenState extends State<TimetableScreen> {
                         for (final s in semesters)
                           s: all.where((c) => c.semester == s).length,
                       },
-                      onSelected: (s) => setState(() => _semester = s),
+                      onSelected: _pickSemester,
                     ),
                   ),
               ],
@@ -68,15 +90,19 @@ class _TimetableScreenState extends State<TimetableScreen> {
                   padding: const EdgeInsets.fromLTRB(13, 0, 13, 10),
                   child: Row(
                     children: [
-                      for (final d in weekdays)
+                      for (final (i, d) in weekdays.indexed)
                         Expanded(
                           child: Padding(
                             padding: const EdgeInsets.symmetric(horizontal: 3),
                             child: _DayPill(
                               label: weekdayNames[d - 1].substring(1),
-                              selected: d == _day,
+                              selected: i == page,
                               busy: days.contains(d),
-                              onTap: () => setState(() => _day = d),
+                              onTap: () => pages.animateToPage(
+                                i,
+                                duration: const Duration(milliseconds: 420),
+                                curve: Curves.easeOutQuart,
+                              ),
                             ),
                           ),
                         ),
@@ -86,56 +112,58 @@ class _TimetableScreenState extends State<TimetableScreen> {
               ),
             ),
             body: Builder(
-              builder: (context) {
-                final slots = [
-                  for (final c in courses)
-                    for (final s in c.sessions)
-                      if (s.weekday == _day) (course: c, session: s),
-                ]..sort((a, b) => a.session.start.compareTo(b.session.start));
-                final theme = Theme.of(context);
-                return ListView(
-                  padding: scrollPadding(context),
-                  children: [
-                    if (slots.isEmpty)
-                      Padding(
-                        padding: const EdgeInsets.only(top: 80),
-                        child: Center(
-                          child: Text(
-                            '這天沒有課',
-                            style: theme.textTheme.titleMedium,
-                          ),
-                        ),
-                      ),
-                    for (final s in slots)
-                      Padding(
-                        padding: const EdgeInsets.only(bottom: 10),
-                        child: _ClassBlock(
-                          course: s.course,
-                          start: s.session.start,
-                          end: s.session.end,
-                          periods: s.session.periods,
-                        ),
-                      ),
-                    if (courses.any((c) => c.sessions.isEmpty)) ...[
-                      const SectionLabel('未排時間'),
-                      for (final c in courses.where((c) => c.sessions.isEmpty))
-                        Padding(
-                          padding: const EdgeInsets.only(bottom: 8),
-                          child: Text(
-                            c.fullName,
-                            style: theme.textTheme.bodyMedium,
-                          ),
-                        ),
-                    ],
-                  ],
-                );
-              },
+              builder: (context) => PageView(
+                controller: pages,
+                onPageChanged: (i) => setState(() => _day = weekdays[i]),
+                children: [
+                  for (final d in weekdays) _dayList(context, courses, d),
+                ],
+              ),
             ),
           );
         },
       ),
     );
   }
+}
+
+Widget _dayList(BuildContext context, List<Course> courses, int day) {
+  final slots = [
+    for (final c in courses)
+      for (final s in c.sessions)
+        if (s.weekday == day) (course: c, session: s),
+  ]..sort((a, b) => a.session.start.compareTo(b.session.start));
+  final theme = Theme.of(context);
+  return ListView(
+    padding: scrollPadding(context),
+    children: [
+      if (slots.isEmpty)
+        Padding(
+          padding: const EdgeInsets.only(top: 80),
+          child: Center(
+            child: Text('這天沒有課', style: theme.textTheme.titleMedium),
+          ),
+        ),
+      for (final s in slots)
+        Padding(
+          padding: const EdgeInsets.only(bottom: 10),
+          child: _ClassBlock(
+            course: s.course,
+            start: s.session.start,
+            end: s.session.end,
+            periods: s.session.periods,
+          ),
+        ),
+      if (courses.any((c) => c.sessions.isEmpty)) ...[
+        const SectionLabel('未排時間'),
+        for (final c in courses.where((c) => c.sessions.isEmpty))
+          Padding(
+            padding: const EdgeInsets.only(bottom: 8),
+            child: Text(c.fullName, style: theme.textTheme.bodyMedium),
+          ),
+      ],
+    ],
+  );
 }
 
 class _DayPill extends StatelessWidget {
