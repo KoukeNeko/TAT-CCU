@@ -52,3 +52,18 @@ void assignCourseColors(List<Course> newestFirst) {
 }
 
 int courseColorSlot(int courseId) => _colorSlots[courseId] ?? courseId;
+
+/// `115_1` → `115 學年上學期`.
+String semesterLabel(String semester) {
+  final parts = semester.split('_');
+  if (parts.length < 2) return semester;
+  final term = switch (parts[1]) {
+    '1' => '上學期',
+    '2' => '下學期',
+    _ => '暑期',
+  };
+  return '${parts[0]} 學年$term';
+}
+
+/// `115_1` → `115-1`, for tight spots like the app bar.
+String semesterShort(String semester) => semester.replaceAll('_', '-');

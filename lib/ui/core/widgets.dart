@@ -149,7 +149,12 @@ ShapeBorder courseShape(int courseId) =>
     const [spikyStar, clover, scallop][courseId % 3];
 
 /// Top-level tab title: large, no back button.
-AppBar topBar(String title, {PreferredSizeWidget? bottom}) => AppBar(
+AppBar topBar(
+  String title, {
+  PreferredSizeWidget? bottom,
+  List<Widget>? actions,
+}) => AppBar(
+  actions: actions,
   automaticallyImplyLeading: false,
   backgroundColor: Colors.transparent,
   scrolledUnderElevation: 0,

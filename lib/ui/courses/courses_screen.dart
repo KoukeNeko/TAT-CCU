@@ -55,7 +55,7 @@ class _CoursesScreenState extends State<CoursesScreen> {
                   child: Center(child: Text('沒有符合的課程')),
                 ),
               for (final entry in semesters.entries) ...[
-                SectionLabel(_semesterLabel(entry.key)),
+                SectionLabel(semesterLabel(entry.key)),
                 for (final c in entry.value)
                   Padding(
                     padding: const EdgeInsets.only(bottom: 10),
@@ -68,18 +68,6 @@ class _CoursesScreenState extends State<CoursesScreen> {
       ),
     );
   }
-}
-
-/// `115_1` → `115 學年上學期`.
-String _semesterLabel(String semester) {
-  final parts = semester.split('_');
-  if (parts.length < 2) return semester;
-  final term = switch (parts[1]) {
-    '1' => '上學期',
-    '2' => '下學期',
-    _ => '暑期',
-  };
-  return '${parts[0]} 學年$term';
 }
 
 class _CourseBlock extends StatelessWidget {
