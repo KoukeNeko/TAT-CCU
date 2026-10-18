@@ -1,3 +1,4 @@
+import 'dart:math' as math;
 import 'dart:ui' show ImageFilter;
 
 import 'package:flutter/material.dart';
@@ -105,48 +106,52 @@ class _AppShellState extends State<AppShell> {
       extendBody: true,
       backgroundColor: scheme.surface,
       body: widget.shell,
-      bottomNavigationBar: SafeArea(
-        top: false,
-        child: Padding(
-          padding: const EdgeInsets.fromLTRB(12, 0, 12, 8),
-          child: AnimatedScale(
-            // Press: the bar lifts slightly; release springs back.
-            scale: pressed ? 1.035 : 1,
-            duration: const Duration(milliseconds: 260),
-            curve: pressed ? Curves.easeOutCubic : Curves.elasticOut,
-            child: _GlassBar(
-              pressed: pressed,
-              light: light,
-              outline: scheme.outlineVariant,
-              child: LayoutBuilder(
-                builder: (context, box) {
-                  final w = box.maxWidth;
-                  final n = tabs.length;
-                  final other = (w - _activeWidth) / (n - 1);
-                  return Listener(
-                    behavior: HitTestBehavior.opaque,
-                    onPointerDown: (e) => _press(e.localPosition.dx, w, n),
-                    onPointerMove: (e) => _slide(e.localPosition.dx, w, n),
-                    onPointerUp: (_) => _release(commit: true),
-                    onPointerCancel: (_) => _release(commit: false),
-                    child: FutureBuilder<int>(
-                      future: _unread,
-                      builder: (context, snap) => Row(
-                        children: [
-                          for (final (i, tab) in tabs.indexed)
-                            _TabSlot(
-                              tab: tab,
-                              width: i == _shown ? _activeWidth : other,
-                              selected: i == _shown,
-                              pressed: pressed && i == _shown,
-                              badge: i == 3 ? snap.data ?? 0 : 0,
-                            ),
-                        ],
-                      ),
+      bottomNavigationBar: Padding(
+        // Sit inside the home-indicator zone like the iOS floating tab bar
+        // instead of stacking a full safe-area inset under it.
+        padding: EdgeInsets.fromLTRB(
+          12,
+          0,
+          12,
+          math.max(8, MediaQuery.viewPaddingOf(context).bottom - 18),
+        ),
+        child: AnimatedScale(
+          // Press: the bar lifts slightly; release springs back.
+          scale: pressed ? 1.035 : 1,
+          duration: const Duration(milliseconds: 260),
+          curve: pressed ? Curves.easeOutCubic : Curves.elasticOut,
+          child: _GlassBar(
+            pressed: pressed,
+            light: light,
+            outline: scheme.outlineVariant,
+            child: LayoutBuilder(
+              builder: (context, box) {
+                final w = box.maxWidth;
+                final n = tabs.length;
+                final other = (w - _activeWidth) / (n - 1);
+                return Listener(
+                  behavior: HitTestBehavior.opaque,
+                  onPointerDown: (e) => _press(e.localPosition.dx, w, n),
+                  onPointerMove: (e) => _slide(e.localPosition.dx, w, n),
+                  onPointerUp: (_) => _release(commit: true),
+                  onPointerCancel: (_) => _release(commit: false),
+                  child: FutureBuilder<int>(
+                    future: _unread,
+                    builder: (context, snap) => Row(
+                      children: [
+                        for (final (i, tab) in tabs.indexed)
+                          _TabSlot(
+                            tab: tab,
+                            width: i == _shown ? _activeWidth : other,
+                            selected: i == _shown,
+                            pressed: pressed && i == _shown,
+                            badge: i == 3 ? snap.data ?? 0 : 0,
+                          ),
+                      ],
                     ),
-                  );
-                },
-              ),
+                  ),
+                );
+              },
             ),
           ),
         ),
