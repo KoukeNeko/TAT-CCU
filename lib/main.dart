@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 
 import 'data/repositories/ecourse_auth_repository.dart';
 import 'data/repositories/ecourse_repository.dart';
+import 'data/repositories/portal_prefs.dart';
 import 'routing/router.dart';
 import 'ui/core/theme.dart';
 
@@ -26,6 +27,7 @@ Future<void> main() async {
     MultiProvider(
       providers: [
         ChangeNotifierProvider.value(value: auth),
+        ChangeNotifierProvider(create: (_) => PortalPrefs()..load()),
         ProxyProvider<EcourseAuthRepository, EcourseRepository>(
           update: (_, auth, _) => EcourseRepository(auth.client()),
         ),
