@@ -14,7 +14,14 @@ typedef _Tab = (IconData icon, String label, Tone tone, ShapeBorder shape);
 
 const _barHeight = 72.0;
 const _activeWidth = 100.0;
-const _move = Duration(milliseconds: 340);
+// Tuned toward SwiftUI's default spring: unhurried, settles without a
+// visible bounce.
+const _move = Duration(milliseconds: 480);
+const _settle = Curves.easeOutQuart;
+
+/// Finger travel before a press turns into a drag, so a tap never makes the
+/// capsule jump around.
+const _dragSlop = 12.0;
 
 /// Floating nav bar, variant C3 "色塊膠囊" (design/round-04): only the
 /// selected tab has color; it stretches into a capsule of its own function
@@ -35,7 +42,10 @@ class AppShell extends StatefulWidget {
 class _AppShellState extends State<AppShell> {
   late Future<int> _unread = _loadUnread();
 
-  /// Tab under the finger while pressed; null when nothing is touching.
+  /// Where the finger went down; null when nothing is touching.
+  double? _downX;
+
+  /// Tab the capsule follows while dragging; null for a plain press.
   int? _hover;
 
   Future<int> _loadUnread() async {
@@ -58,23 +68,30 @@ class _AppShellState extends State<AppShell> {
     return count - 1;
   }
 
-  void _press(double x, double width, int count) {
-    HapticFeedback.lightImpact();
-    setState(() => _hover = _indexAt(x, width, count));
-  }
+  void _press(double x) => setState(() => _downX = x);
 
   void _slide(double x, double width, int count) {
+    final down = _downX;
+    if (down == null) return;
+    if (_hover == null && (x - down).abs() < _dragSlop) return;
     final i = _indexAt(x.clamp(0, width - 1), width, count);
     if (i == _hover) return;
-    HapticFeedback.selectionClick();
+    if (_hover != null || i != widget.shell.currentIndex) {
+      HapticFeedback.selectionClick();
+    }
     setState(() => _hover = i);
   }
 
-  void _release({required bool commit}) {
-    final target = _hover;
-    setState(() => _hover = null);
+  void _release(double width, int count, {required bool commit}) {
+    final down = _downX;
+    final target =
+        _hover ?? (down == null ? null : _indexAt(down, width, count));
+    setState(() {
+      _downX = null;
+      _hover = null;
+    });
     if (!commit || target == null) return;
-    HapticFeedback.lightImpact();
+    if (target != widget.shell.currentIndex) HapticFeedback.selectionClick();
     widget.shell.goBranch(
       target,
       initialLocation: target == widget.shell.currentIndex,
@@ -100,7 +117,7 @@ class _AppShellState extends State<AppShell> {
       (Icons.apps, '更多', gray, clover),
     ];
     final light = theme.brightness == Brightness.light;
-    final pressed = _hover != null;
+    final pressed = _downX != null;
     return Scaffold(
       // Content scrolls underneath; screens pad by the bottom media inset.
       extendBody: true,
@@ -117,9 +134,9 @@ class _AppShellState extends State<AppShell> {
         ),
         child: AnimatedScale(
           // Press: the bar lifts slightly; release springs back.
-          scale: pressed ? 1.035 : 1,
-          duration: const Duration(milliseconds: 260),
-          curve: pressed ? Curves.easeOutCubic : Curves.elasticOut,
+          scale: pressed ? 1.02 : 1,
+          duration: _move,
+          curve: _settle,
           child: _GlassBar(
             pressed: pressed,
             light: light,
@@ -131,10 +148,10 @@ class _AppShellState extends State<AppShell> {
                 final other = (w - _activeWidth) / (n - 1);
                 return Listener(
                   behavior: HitTestBehavior.opaque,
-                  onPointerDown: (e) => _press(e.localPosition.dx, w, n),
+                  onPointerDown: (e) => _press(e.localPosition.dx),
                   onPointerMove: (e) => _slide(e.localPosition.dx, w, n),
-                  onPointerUp: (_) => _release(commit: true),
-                  onPointerCancel: (_) => _release(commit: false),
+                  onPointerUp: (_) => _release(w, n, commit: true),
+                  onPointerCancel: (_) => _release(w, n, commit: false),
                   child: FutureBuilder<int>(
                     future: _unread,
                     builder: (context, snap) => Row(
@@ -246,7 +263,7 @@ class _TabSlot extends StatelessWidget {
       child: AnimatedContainer(
         duration: _move,
         // No overshoot here: the slot widths must always sum to the bar.
-        curve: Curves.easeOutCubic,
+        curve: _settle,
         width: width,
         height: 52,
         // The capsule fills its slot so its inset matches the bar's, and the
@@ -261,9 +278,9 @@ class _TabSlot extends StatelessWidget {
           shape: const StadiumBorder(),
         ),
         child: AnimatedScale(
-          scale: pressed ? 1.06 : 1,
+          scale: pressed ? 1.03 : 1,
           duration: _move,
-          curve: Curves.easeOutBack,
+          curve: _settle,
           alignment: Alignment.centerLeft,
           child: Stack(
             clipBehavior: Clip.none,
@@ -273,7 +290,7 @@ class _TabSlot extends StatelessWidget {
                 children: [
                   AnimatedContainer(
                     duration: _move,
-                    curve: Curves.easeOutBack,
+                    curve: _settle,
                     width: selected ? 38 : 28,
                     height: selected ? 38 : 28,
                     decoration: ShapeDecoration(
@@ -289,7 +306,7 @@ class _TabSlot extends StatelessWidget {
                   ClipRect(
                     child: AnimatedSize(
                       duration: _move,
-                      curve: Curves.easeOutCubic,
+                      curve: _settle,
                       child: selected
                           ? Padding(
                               padding: const EdgeInsets.only(left: 8),
