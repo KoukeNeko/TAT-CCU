@@ -77,10 +77,10 @@ class _AccountScreenState extends State<AccountScreen> {
             // cannot inspect; see docs/登入狀態設計.md.
             signedIn: null,
             title: '單一入口（CAS）',
-            status: '於系統瀏覽器登入',
+            status: '與 eCourse2 共用登入',
             actions: [
               FilledButton.tonal(
-                onPressed: () => openExternal(portalHome),
+                onPressed: () => openSignInSheet(portalHome),
                 child: const Text('開啟單一入口'),
               ),
             ],

@@ -4,7 +4,6 @@ import 'package:provider/provider.dart';
 import '../../data/repositories/ecourse_auth_repository.dart';
 import '../core/theme.dart';
 import '../core/widgets.dart';
-import '../more/portal_screen.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -70,15 +69,11 @@ class _LoginScreenState extends State<LoginScreen> {
               const SizedBox(height: 24),
               Text('TAT CCU', style: Theme.of(context).textTheme.displaySmall),
               const Spacer(),
+              // One CAS sign-in covers both: the eCourse2 launch flow signs
+              // in to CAS in the system sheet, then returns to the app with
+              // the token, and campus systems reuse that CAS session.
               FilledButton(
                 onPressed: _busy ? null : _signIn,
-                child: const Text('以 eCourse2 登入'),
-              ),
-              const SizedBox(height: 12),
-              // CAS is optional and lives in the system browser; signing in
-              // there first also spares the password in the eCourse2 step.
-              FilledButton.tonal(
-                onPressed: _busy ? null : () => openExternal(portalHome),
                 child: const Text('以單一入口登入'),
               ),
             ],

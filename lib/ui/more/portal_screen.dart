@@ -6,6 +6,9 @@ import '../core/widgets.dart';
 /// Portal home; bounces to the portal login when its session has lapsed.
 const portalHome = 'https://portal.ccu.edu.tw/sso_index.php';
 
+/// Goes straight to the CAS form (or through it when already signed in).
+const portalCasLogin = 'https://portal.ccu.edu.tw/login_check_cas.php';
+
 typedef _System = (String linkId, String name, String service);
 
 /// Portal tiles and the `ssoService.php` service each one hands off to,
@@ -107,9 +110,9 @@ class PortalScreen extends StatelessWidget {
                       horizontal: 8,
                       vertical: 10,
                     ),
-                    // System browser: it shares the CAS sign-in made during
-                    // the eCourse2 login, so systems open without a password.
-                    onPressed: () => openExternal(_entryUrl(s)),
+                    // Same sign-in sheet as the eCourse2 login, so the CAS
+                    // sign-in made there opens systems without a password.
+                    onPressed: () => openSignInSheet(_entryUrl(s)),
                   ),
               ],
             ),
