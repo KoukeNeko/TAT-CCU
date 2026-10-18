@@ -101,19 +101,20 @@ final campusSystems = {
     for (final s in systems) s.id: s,
 };
 
-/// Records the visit and opens [s] inside the app. 選課系統 has its own
-/// page built from iCCU data, with the website a tap further.
+/// Records the visit and opens [s] inside the app: systems with their own
+/// page go there (the website is a tap further), the rest open the website.
 void openCampusSystem(BuildContext context, PortalPrefs prefs, CampusSystem s) {
   prefs.opened(s.id);
-  if (s.id == iccuLinkId) {
-    context.go('/more/iccu');
-  } else {
-    openCampusPage(context, entryUrl(s), s.name);
+  switch (inAppPages[s.id]) {
+    case final path?:
+      context.go(path);
+    case null:
+      openCampusPage(context, entryUrl(s), s.name);
   }
 }
 
-/// `linkId` of 選課系統 (iCCU).
-const iccuLinkId = '0075';
+/// `linkId` → in-app page: 選課系統 (iCCU) and 學籍系統.
+const inAppPages = {'0075': '/more/iccu', '0004': '/more/academic'};
 
 String entryUrl(CampusSystem s) => s.service.startsWith('http')
     ? s.service
