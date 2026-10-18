@@ -50,43 +50,51 @@ class _AccountScreenState extends State<AccountScreen> {
         : '已登入，未驗證';
 
     return Scaffold(
+      extendBodyBehindAppBar: true,
       appBar: subBar(context, '帳號'),
-      body: ListView(
-        padding: scrollPadding(context, top: 16),
-        children: [
-          _SessionCard(
-            tone: context.tones.lilac,
-            signedIn: ecourse.isSignedIn && _ecourseError == null,
-            title: 'eCourse2',
-            status: ecourseStatus,
-            detail: _ecourseError,
-            actions: [
-              if (ecourse.isSignedIn) ...[
-                FilledButton.tonal(
-                  onPressed: _checking ? null : _verifyEcourse,
-                  child: const Text('驗證'),
+      body: // Builder: the list must read insets from inside this Scaffold,
+          // where the glass app bar's height is part of the padding.
+          Builder(
+            builder: (context) => ListView(
+              padding: scrollPadding(context),
+              children: [
+                _SessionCard(
+                  tone: context.tones.lilac,
+                  signedIn: ecourse.isSignedIn && _ecourseError == null,
+                  title: 'eCourse2',
+                  status: ecourseStatus,
+                  detail: _ecourseError,
+                  actions: [
+                    if (ecourse.isSignedIn) ...[
+                      FilledButton.tonal(
+                        onPressed: _checking ? null : _verifyEcourse,
+                        child: const Text('驗證'),
+                      ),
+                      TextButton(
+                        onPressed: ecourse.signOut,
+                        child: const Text('登出'),
+                      ),
+                    ],
+                  ],
                 ),
-                TextButton(onPressed: ecourse.signOut, child: const Text('登出')),
+                const SizedBox(height: 12),
+                _SessionCard(
+                  tone: context.tones.mint,
+                  // The CAS sign-in lives in the system browser, which the app
+                  // cannot inspect; see docs/登入狀態設計.md.
+                  signedIn: null,
+                  title: '單一入口（CAS）',
+                  status: '與 eCourse2 共用登入',
+                  actions: [
+                    FilledButton.tonal(
+                      onPressed: () => openSignInSheet(portalHome),
+                      child: const Text('開啟單一入口'),
+                    ),
+                  ],
+                ),
               ],
-            ],
+            ),
           ),
-          const SizedBox(height: 12),
-          _SessionCard(
-            tone: context.tones.mint,
-            // The CAS sign-in lives in the system browser, which the app
-            // cannot inspect; see docs/登入狀態設計.md.
-            signedIn: null,
-            title: '單一入口（CAS）',
-            status: '與 eCourse2 共用登入',
-            actions: [
-              FilledButton.tonal(
-                onPressed: () => openSignInSheet(portalHome),
-                child: const Text('開啟單一入口'),
-              ),
-            ],
-          ),
-        ],
-      ),
     );
   }
 }

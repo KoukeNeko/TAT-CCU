@@ -13,6 +13,7 @@ class CalendarScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final repo = context.read<EcourseRepository>();
     return Scaffold(
+      extendBodyBehindAppBar: true,
       appBar: subBar(context, '行事曆'),
       body: Loader<List<DueItem>>(
         load: () => repo.dueSoon(days: 30),
@@ -25,7 +26,7 @@ class CalendarScreen extends StatelessWidget {
           }
           final tones = context.tones;
           return ListView(
-            padding: scrollPadding(context, top: 4),
+            padding: scrollPadding(context),
             children: [
               for (final entry in days.entries)
                 Padding(

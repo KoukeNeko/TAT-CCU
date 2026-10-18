@@ -55,110 +55,108 @@ class TodayScreen extends StatelessWidget {
     final repo = context.read<EcourseRepository>();
     final now = DateTime.now();
     return Scaffold(
-      body: SafeArea(
-        bottom: false,
-        child: Loader<_Today>(
-          load: () => _load(repo),
-          builder: (context, d) {
-            final minute = now.hour * 60 + now.minute;
-            final remaining = d.slots
-                .where((s) => s.session.end > minute)
-                .toList();
-            final current = remaining
-                .where((s) => s.session.start <= minute)
-                .firstOrNull;
-            final next = remaining
-                .where((s) => s.session.start > minute)
-                .firstOrNull;
-            final theme = Theme.of(context);
-            final tones = context.tones;
-            final n = remaining.length;
-            final headline = d.slots.isEmpty
-                ? '今天沒有課'
-                : n == 0
-                ? '今天的課結束了'
-                : '今天還有${n < _counts.length ? _counts[n] : '$n '}堂課';
-            final firstDue = d.due.firstOrNull;
-            return ListView(
-              padding: scrollPadding(context, top: 20),
-              children: [
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 4),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        '${weekdayNames[now.weekday - 1]} ${now.month}/${now.day}',
-                        style: TextStyle(
-                          fontSize: 14,
-                          fontWeight: FontWeight.w700,
-                          color: theme.colorScheme.onSurfaceVariant,
-                        ),
-                      ),
-                      const SizedBox(height: 4),
-                      Text(
-                        headline,
-                        style: const TextStyle(
-                          fontSize: 34,
-                          fontWeight: FontWeight.w900,
-                          height: 1.15,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                const SizedBox(height: 16),
-                if (current != null)
-                  _Hero(
-                    slot: current,
-                    label: '上課中',
-                    detail: '到 ${clock(current.session.end)}',
-                    minutes: current.session.end - minute,
-                    unit: '分鐘',
-                  )
-                else if (next != null)
-                  _Hero(
-                    slot: next,
-                    label: '下一堂',
-                    detail: '${clock(next.session.start)} 開始',
-                    minutes: next.session.start - minute,
-                    unit: '分鐘後',
-                  ),
-                if (current != null && next != null) ...[
-                  const SizedBox(height: 12),
-                  _NextPill(slot: next),
-                ],
-                const SizedBox(height: 12),
-                Row(
+      // Edge to edge: the list itself pads past the status bar.
+      body: Loader<_Today>(
+        load: () => _load(repo),
+        builder: (context, d) {
+          final minute = now.hour * 60 + now.minute;
+          final remaining = d.slots
+              .where((s) => s.session.end > minute)
+              .toList();
+          final current = remaining
+              .where((s) => s.session.start <= minute)
+              .firstOrNull;
+          final next = remaining
+              .where((s) => s.session.start > minute)
+              .firstOrNull;
+          final theme = Theme.of(context);
+          final tones = context.tones;
+          final n = remaining.length;
+          final headline = d.slots.isEmpty
+              ? '今天沒有課'
+              : n == 0
+              ? '今天的課結束了'
+              : '今天還有${n < _counts.length ? _counts[n] : '$n '}堂課';
+          final firstDue = d.due.firstOrNull;
+          return ListView(
+            padding: scrollPadding(context, top: 20),
+            children: [
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 4),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Expanded(
-                      child: _Tile(
-                        tone: tones.peach,
-                        value: '${d.due.length}',
-                        label: '本週到期',
-                        detail: firstDue == null
-                            ? null
-                            : '${firstDue.name} ${weekdayNames[firstDue.due.weekday - 1]} '
-                                  '${clock(firstDue.due.hour * 60 + firstDue.due.minute)}',
-                        onTap: () => context.go('/today/due'),
+                    Text(
+                      '${weekdayNames[now.weekday - 1]} ${now.month}/${now.day}',
+                      style: TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w700,
+                        color: theme.colorScheme.onSurfaceVariant,
                       ),
                     ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: _Tile(
-                        tone: tones.sun,
-                        value: '${d.notices + d.mail}',
-                        label: '未讀',
-                        detail: '通知 ${d.notices}・信件 ${d.mail}',
-                        onTap: () => context.go('/notifications'),
+                    const SizedBox(height: 4),
+                    Text(
+                      headline,
+                      style: const TextStyle(
+                        fontSize: 34,
+                        fontWeight: FontWeight.w900,
+                        height: 1.15,
                       ),
                     ),
                   ],
                 ),
+              ),
+              const SizedBox(height: 16),
+              if (current != null)
+                _Hero(
+                  slot: current,
+                  label: '上課中',
+                  detail: '到 ${clock(current.session.end)}',
+                  minutes: current.session.end - minute,
+                  unit: '分鐘',
+                )
+              else if (next != null)
+                _Hero(
+                  slot: next,
+                  label: '下一堂',
+                  detail: '${clock(next.session.start)} 開始',
+                  minutes: next.session.start - minute,
+                  unit: '分鐘後',
+                ),
+              if (current != null && next != null) ...[
+                const SizedBox(height: 12),
+                _NextPill(slot: next),
               ],
-            );
-          },
-        ),
+              const SizedBox(height: 12),
+              Row(
+                children: [
+                  Expanded(
+                    child: _Tile(
+                      tone: tones.peach,
+                      value: '${d.due.length}',
+                      label: '本週到期',
+                      detail: firstDue == null
+                          ? null
+                          : '${firstDue.name} ${weekdayNames[firstDue.due.weekday - 1]} '
+                                '${clock(firstDue.due.hour * 60 + firstDue.due.minute)}',
+                      onTap: () => context.go('/today/due'),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: _Tile(
+                      tone: tones.sun,
+                      value: '${d.notices + d.mail}',
+                      label: '未讀',
+                      detail: '通知 ${d.notices}・信件 ${d.mail}',
+                      onTap: () => context.go('/notifications'),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          );
+        },
       ),
     );
   }

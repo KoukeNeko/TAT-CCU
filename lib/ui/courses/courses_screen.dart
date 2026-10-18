@@ -21,6 +21,7 @@ class _CoursesScreenState extends State<CoursesScreen> {
   Widget build(BuildContext context) {
     final repo = context.read<EcourseRepository>();
     return Scaffold(
+      extendBodyBehindAppBar: true,
       appBar: topBar('課程'),
       body: Loader<List<Course>>(
         load: () => repo.courses(),
@@ -40,7 +41,7 @@ class _CoursesScreenState extends State<CoursesScreen> {
             semesters.putIfAbsent(c.semester, () => []).add(c);
           }
           return ListView(
-            padding: scrollPadding(context, top: 4),
+            padding: scrollPadding(context),
             children: [
               SearchBar(
                 hintText: '搜尋課程',

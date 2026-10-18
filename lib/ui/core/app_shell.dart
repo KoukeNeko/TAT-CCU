@@ -118,57 +118,66 @@ class _AppShellState extends State<AppShell> {
     ];
     final light = theme.brightness == Brightness.light;
     final pressed = _downX != null;
-    return Scaffold(
-      // Content scrolls underneath; screens pad by the bottom media inset.
-      extendBody: true,
-      backgroundColor: scheme.surface,
-      body: widget.shell,
-      bottomNavigationBar: Padding(
-        // Sit inside the home-indicator zone like the iOS floating tab bar
-        // instead of stacking a full safe-area inset under it.
-        padding: EdgeInsets.fromLTRB(
-          12,
-          0,
-          12,
-          math.max(8, MediaQuery.viewPaddingOf(context).bottom - 18),
-        ),
-        child: AnimatedScale(
-          // Press: the bar lifts slightly; release springs back.
-          scale: pressed ? 1.02 : 1,
-          duration: _move,
-          curve: _settle,
-          child: _GlassBar(
-            pressed: pressed,
-            light: light,
-            outline: scheme.outlineVariant,
-            child: LayoutBuilder(
-              builder: (context, box) {
-                final w = box.maxWidth;
-                final n = tabs.length;
-                final other = (w - _activeWidth) / (n - 1);
-                return Listener(
-                  behavior: HitTestBehavior.opaque,
-                  onPointerDown: (e) => _press(e.localPosition.dx),
-                  onPointerMove: (e) => _slide(e.localPosition.dx, w, n),
-                  onPointerUp: (_) => _release(w, n, commit: true),
-                  onPointerCancel: (_) => _release(w, n, commit: false),
-                  child: FutureBuilder<int>(
-                    future: _unread,
-                    builder: (context, snap) => Row(
-                      children: [
-                        for (final (i, tab) in tabs.indexed)
-                          _TabSlot(
-                            tab: tab,
-                            width: i == _shown ? _activeWidth : other,
-                            selected: i == _shown,
-                            pressed: pressed && i == _shown,
-                            badge: i == 3 ? snap.data ?? 0 : 0,
-                          ),
-                      ],
+    // Pages without an app bar (Today) still need status bar icons that
+    // contrast with the edge-to-edge background.
+    return AnnotatedRegion<SystemUiOverlayStyle>(
+      value: (light ? SystemUiOverlayStyle.dark : SystemUiOverlayStyle.light)
+          .copyWith(
+            statusBarColor: Colors.transparent,
+            systemNavigationBarColor: Colors.transparent,
+          ),
+      child: Scaffold(
+        // Content scrolls underneath; screens pad by the bottom media inset.
+        extendBody: true,
+        backgroundColor: scheme.surface,
+        body: widget.shell,
+        bottomNavigationBar: Padding(
+          // Sit inside the home-indicator zone like the iOS floating tab bar
+          // instead of stacking a full safe-area inset under it.
+          padding: EdgeInsets.fromLTRB(
+            12,
+            0,
+            12,
+            math.max(8, MediaQuery.viewPaddingOf(context).bottom - 18),
+          ),
+          child: AnimatedScale(
+            // Press: the bar lifts slightly; release springs back.
+            scale: pressed ? 1.02 : 1,
+            duration: _move,
+            curve: _settle,
+            child: _GlassBar(
+              pressed: pressed,
+              light: light,
+              outline: scheme.outlineVariant,
+              child: LayoutBuilder(
+                builder: (context, box) {
+                  final w = box.maxWidth;
+                  final n = tabs.length;
+                  final other = (w - _activeWidth) / (n - 1);
+                  return Listener(
+                    behavior: HitTestBehavior.opaque,
+                    onPointerDown: (e) => _press(e.localPosition.dx),
+                    onPointerMove: (e) => _slide(e.localPosition.dx, w, n),
+                    onPointerUp: (_) => _release(w, n, commit: true),
+                    onPointerCancel: (_) => _release(w, n, commit: false),
+                    child: FutureBuilder<int>(
+                      future: _unread,
+                      builder: (context, snap) => Row(
+                        children: [
+                          for (final (i, tab) in tabs.indexed)
+                            _TabSlot(
+                              tab: tab,
+                              width: i == _shown ? _activeWidth : other,
+                              selected: i == _shown,
+                              pressed: pressed && i == _shown,
+                              badge: i == 3 ? snap.data ?? 0 : 0,
+                            ),
+                        ],
+                      ),
                     ),
-                  ),
-                );
-              },
+                  );
+                },
+              ),
             ),
           ),
         ),

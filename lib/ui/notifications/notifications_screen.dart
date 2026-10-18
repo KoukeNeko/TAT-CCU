@@ -13,6 +13,7 @@ class NotificationsScreen extends StatelessWidget {
     return const DefaultTabController(
       length: 2,
       child: Scaffold(
+        extendBodyBehindAppBar: true,
         appBar: _Bar(),
         body: TabBarView(children: [_Notices(), _Mail()]),
       ),
@@ -74,7 +75,7 @@ class _Notices extends StatelessWidget {
       builder: (context, items) {
         if (items.isEmpty) return const EmptyState('沒有通知');
         return ListView.separated(
-          padding: scrollPadding(context, top: 16),
+          padding: scrollPadding(context),
           itemCount: items.length,
           separatorBuilder: (_, _) => const SizedBox(height: 8),
           itemBuilder: (context, i) {
@@ -103,7 +104,7 @@ class _Mail extends StatelessWidget {
       builder: (context, items) {
         if (items.isEmpty) return const EmptyState('沒有信件');
         return ListView.separated(
-          padding: scrollPadding(context, top: 16),
+          padding: scrollPadding(context),
           itemCount: items.length,
           separatorBuilder: (_, _) => const SizedBox(height: 8),
           itemBuilder: (context, i) {

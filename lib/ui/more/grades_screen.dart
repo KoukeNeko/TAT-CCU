@@ -16,6 +16,7 @@ class GradesScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final repo = context.read<EcourseRepository>();
     return Scaffold(
+      extendBodyBehindAppBar: true,
       appBar: subBar(context, '成績'),
       body: Loader<(List<Course>, Map<int, String>)>(
         load: () async => (await repo.courses(), await repo.gradeOverview()),
@@ -27,7 +28,7 @@ class GradesScreen extends StatelessWidget {
           if (graded.isEmpty) return const EmptyState('還沒有成績');
           final tones = context.tones;
           return ListView.separated(
-            padding: scrollPadding(context, top: 16),
+            padding: scrollPadding(context),
             itemCount: graded.length,
             separatorBuilder: (_, _) => const SizedBox(height: 10),
             itemBuilder: (context, i) {

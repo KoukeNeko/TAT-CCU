@@ -187,7 +187,7 @@ class _Due extends StatelessWidget {
       builder: (context, items) {
         if (items.isEmpty) return const EmptyState('沒有待辦');
         return ListView.separated(
-          padding: scrollPadding(context, top: 16),
+          padding: scrollPadding(context),
           itemCount: items.length,
           separatorBuilder: (_, _) => const SizedBox(height: 10),
           itemBuilder: (context, i) => DueBlock(item: items[i]),
@@ -211,7 +211,7 @@ class _Announcements extends StatelessWidget {
       builder: (context, posts) {
         if (posts.isEmpty) return const EmptyState('沒有公告');
         return ListView.separated(
-          padding: scrollPadding(context, top: 16),
+          padding: scrollPadding(context),
           itemCount: posts.length,
           separatorBuilder: (_, _) => const SizedBox(height: 10),
           itemBuilder: (context, i) {
@@ -263,7 +263,7 @@ class GradeList extends StatelessWidget {
     if (lines.isEmpty) return const EmptyState('還沒有成績項目');
     final scheme = Theme.of(context).colorScheme;
     return ListView.separated(
-      padding: scrollPadding(context, top: 16),
+      padding: scrollPadding(context),
       itemCount: lines.length,
       separatorBuilder: (_, _) => const SizedBox(height: 8),
       itemBuilder: (context, i) {

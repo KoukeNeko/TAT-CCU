@@ -1,4 +1,5 @@
 import 'dart:math';
+import 'dart:ui' show ImageFilter;
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -150,6 +151,9 @@ ShapeBorder courseShape(int courseId) =>
 /// Top-level tab title: large, no back button.
 AppBar topBar(String title, {PreferredSizeWidget? bottom}) => AppBar(
   automaticallyImplyLeading: false,
+  backgroundColor: Colors.transparent,
+  scrolledUnderElevation: 0,
+  flexibleSpace: const GlassBackdrop(),
   toolbarHeight: 76,
   title: Text(
     title,
@@ -158,9 +162,43 @@ AppBar topBar(String title, {PreferredSizeWidget? bottom}) => AppBar(
   bottom: bottom,
 );
 
+/// Frosted surface behind the shared app bars, matching the nav bar's
+/// liquid-glass look. Screens extend their body behind the bar so content
+/// scrolls underneath it.
+class GlassBackdrop extends StatelessWidget {
+  const GlassBackdrop({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    // Expand: a childless box would size itself to zero in the app bar.
+    return SizedBox.expand(
+      child: ClipRect(
+        child: BackdropFilter(
+          filter: ImageFilter.blur(sigmaX: 20, sigmaY: 20),
+          child: DecoratedBox(
+            decoration: BoxDecoration(
+              color: scheme.surface.withValues(alpha: 0.72),
+              border: Border(
+                bottom: BorderSide(
+                  color: scheme.outlineVariant.withValues(alpha: 0.6),
+                  width: 0.5,
+                ),
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
 /// Sub-page title with the round back button from the mockup.
 AppBar subBar(BuildContext context, String title) => AppBar(
   automaticallyImplyLeading: false,
+  backgroundColor: Colors.transparent,
+  scrolledUnderElevation: 0,
+  flexibleSpace: const GlassBackdrop(),
   titleSpacing: 16,
   title: Row(
     children: [
@@ -355,8 +393,14 @@ Future<void> openExternal(String url) =>
 
 /// Scroll padding that clears the floating nav bar: the shell extends its
 /// body under the bar, so the bar's height arrives as bottom media padding.
-EdgeInsets scrollPadding(BuildContext context, {double top = 16}) =>
-    EdgeInsets.fromLTRB(16, top, 16, 24 + MediaQuery.paddingOf(context).bottom);
+/// [top] is the gap below the app bar; one value so every page starts at
+/// the same height.
+EdgeInsets scrollPadding(BuildContext context, {double top = 12}) {
+  // Both bars float: the nav bar below and the glass app bar above arrive
+  // as media padding when the body extends behind them.
+  final inset = MediaQuery.paddingOf(context);
+  return EdgeInsets.fromLTRB(16, top + inset.top, 16, 24 + inset.bottom);
+}
 
 /// Opens a CAS-protected page in the same system sign-in sheet the eCourse2
 /// login uses (ASWebAuthenticationSession / Custom Tabs), so the CAS sign-in

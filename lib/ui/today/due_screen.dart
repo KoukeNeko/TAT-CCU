@@ -13,13 +13,14 @@ class DueScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final repo = context.read<EcourseRepository>();
     return Scaffold(
+      extendBodyBehindAppBar: true,
       appBar: subBar(context, '待辦'),
       body: Loader<List<DueItem>>(
         load: () => repo.dueSoon(),
         builder: (context, items) {
           if (items.isEmpty) return const EmptyState('14 天內沒有到期項目');
           return ListView.separated(
-            padding: scrollPadding(context, top: 16),
+            padding: scrollPadding(context),
             itemCount: items.length,
             separatorBuilder: (_, _) => const SizedBox(height: 10),
             itemBuilder: (context, i) => DueBlock(item: items[i]),

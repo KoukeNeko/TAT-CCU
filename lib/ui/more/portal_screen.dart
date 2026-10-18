@@ -86,39 +86,44 @@ class PortalScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final tones = context.tones.cycle;
     return Scaffold(
+      extendBodyBehindAppBar: true,
       appBar: subBar(context, '校務系統'),
-      body: ListView(
-        padding: scrollPadding(context, top: 0),
-        children: [
-          for (final (i, (group, systems)) in _groups.indexed) ...[
-            SectionLabel(group),
-            Wrap(
-              spacing: 8,
-              runSpacing: 8,
+      body: // Builder: the list must read insets from inside this Scaffold,
+          // where the glass app bar's height is part of the padding.
+          Builder(
+            builder: (context) => ListView(
+              padding: scrollPadding(context, top: 0),
               children: [
-                for (final s in systems)
-                  ActionChip(
-                    label: Text(s.$2),
-                    labelStyle: TextStyle(
-                      color: tones[i % tones.length].ink,
-                      fontWeight: FontWeight.w800,
-                    ),
-                    backgroundColor: tones[i % tones.length].fill,
-                    side: BorderSide.none,
-                    shape: const StadiumBorder(),
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 8,
-                      vertical: 10,
-                    ),
-                    // Same sign-in sheet as the eCourse2 login, so the CAS
-                    // sign-in made there opens systems without a password.
-                    onPressed: () => openSignInSheet(_entryUrl(s)),
+                for (final (i, (group, systems)) in _groups.indexed) ...[
+                  SectionLabel(group),
+                  Wrap(
+                    spacing: 8,
+                    runSpacing: 8,
+                    children: [
+                      for (final s in systems)
+                        ActionChip(
+                          label: Text(s.$2),
+                          labelStyle: TextStyle(
+                            color: tones[i % tones.length].ink,
+                            fontWeight: FontWeight.w800,
+                          ),
+                          backgroundColor: tones[i % tones.length].fill,
+                          side: BorderSide.none,
+                          shape: const StadiumBorder(),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 8,
+                            vertical: 10,
+                          ),
+                          // Same sign-in sheet as the eCourse2 login, so the CAS
+                          // sign-in made there opens systems without a password.
+                          onPressed: () => openSignInSheet(_entryUrl(s)),
+                        ),
+                    ],
                   ),
+                ],
               ],
             ),
-          ],
-        ],
-      ),
+          ),
     );
   }
 }

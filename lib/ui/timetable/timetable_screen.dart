@@ -21,6 +21,7 @@ class _TimetableScreenState extends State<TimetableScreen> {
   Widget build(BuildContext context) {
     final repo = context.read<EcourseRepository>();
     return Scaffold(
+      extendBodyBehindAppBar: true,
       appBar: topBar('課表'),
       body: Loader<List<Course>>(
         load: () => repo.currentCourses(),
@@ -40,7 +41,7 @@ class _TimetableScreenState extends State<TimetableScreen> {
           ]..sort((a, b) => a.session.start.compareTo(b.session.start));
           final theme = Theme.of(context);
           return ListView(
-            padding: scrollPadding(context, top: 4),
+            padding: scrollPadding(context),
             children: [
               Row(
                 children: [

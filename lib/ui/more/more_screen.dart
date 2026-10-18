@@ -17,43 +17,48 @@ class MoreScreen extends StatelessWidget {
       (t.sun, spikyStar, '帳號', '/more/account'),
     ];
     return Scaffold(
+      extendBodyBehindAppBar: true,
       appBar: topBar('更多'),
-      body: GridView.count(
-        padding: scrollPadding(context, top: 0),
-        crossAxisCount: 2,
-        mainAxisSpacing: 12,
-        crossAxisSpacing: 12,
-        childAspectRatio: 0.98,
-        children: [
-          for (final (tone, shape, label, path) in entries)
-            ToneBlock(
-              tone: tone,
-              radius: 32,
-              onTap: () => context.go(path),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Container(
-                    width: 56,
-                    height: 56,
-                    decoration: ShapeDecoration(
-                      color: tone.strong,
-                      shape: shape,
+      body: // Builder: the list must read insets from inside this Scaffold,
+          // where the glass app bar's height is part of the padding.
+          Builder(
+            builder: (context) => GridView.count(
+              padding: scrollPadding(context),
+              crossAxisCount: 2,
+              mainAxisSpacing: 12,
+              crossAxisSpacing: 12,
+              childAspectRatio: 0.98,
+              children: [
+                for (final (tone, shape, label, path) in entries)
+                  ToneBlock(
+                    tone: tone,
+                    radius: 32,
+                    onTap: () => context.go(path),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Container(
+                          width: 56,
+                          height: 56,
+                          decoration: ShapeDecoration(
+                            color: tone.strong,
+                            shape: shape,
+                          ),
+                        ),
+                        Text(
+                          label,
+                          style: const TextStyle(
+                            fontSize: 20,
+                            fontWeight: FontWeight.w900,
+                          ),
+                        ),
+                      ],
                     ),
                   ),
-                  Text(
-                    label,
-                    style: const TextStyle(
-                      fontSize: 20,
-                      fontWeight: FontWeight.w900,
-                    ),
-                  ),
-                ],
-              ),
+              ],
             ),
-        ],
-      ),
+          ),
     );
   }
 }
