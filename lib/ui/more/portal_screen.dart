@@ -116,12 +116,11 @@ class _PortalScreenState extends State<PortalScreen> {
     final prefs = context.watch<PortalPrefs>();
     final t = context.tones;
     final scheme = Theme.of(context).colorScheme;
-    final gray = Tone(
-      scheme.surfaceContainerHigh,
-      scheme.onSurface,
-      scheme.onSurfaceVariant,
-    );
-    final groupTones = [t.lilac, t.mint, t.peach, gray, t.sun];
+    // Groups use identity colors (靛、湖綠、珊瑚、橄欖、金黃), not the
+    // functional ones, so they never read as "due" or "unread".
+    final groupTones = [
+      for (final i in [1, 3, 8, 5, 6]) t.identity[i],
+    ];
 
     // Each system keeps its group's color and its slot's silhouette.
     final look = <String, (Tone, ShapeBorder)>{};
