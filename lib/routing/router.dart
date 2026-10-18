@@ -9,6 +9,7 @@ import '../ui/courses/module_screen.dart';
 import '../ui/login/login_screen.dart';
 import '../ui/more/calendar_screen.dart';
 import '../ui/more/grades_screen.dart';
+import '../ui/more/iccu_screen.dart';
 import '../ui/more/more_screen.dart';
 import '../ui/more/portal_screen.dart';
 import '../ui/notifications/notifications_screen.dart';
@@ -104,6 +105,7 @@ GoRouter buildRouter(EcourseAuthRepository auth) => GoRouter(
                   path: 'grades',
                   builder: (_, _) => const GradesScreen(),
                 ),
+                GoRoute(path: 'iccu', builder: (_, _) => const IccuScreen()),
                 GoRoute(
                   path: 'portal',
                   builder: (_, _) => const PortalScreen(),
