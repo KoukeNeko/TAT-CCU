@@ -102,7 +102,7 @@ class _AppShellState extends State<AppShell> {
       (Icons.today_outlined, '今天', t.lilac, spikyStar),
       (Icons.calendar_view_week_outlined, '課表', t.mint, clover),
       (Icons.school_outlined, '課程', t.peach, scallop),
-      (Icons.event_outlined, '行事曆', t.sun, scallop),
+      (Icons.event_outlined, '日曆', t.sun, scallop),
       (Icons.apps, '更多', gray, clover),
     ];
     final light = theme.brightness == Brightness.light;
