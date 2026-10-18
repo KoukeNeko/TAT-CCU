@@ -45,7 +45,7 @@ typedef _Detail = ({
   String mobile,
 });
 
-/// Design C1 "票券占滿首屏" (design/round-11): saved 在學證明書 as tickets
+/// Design C1 "票券佔滿螢幕" (design/round-11): saved 在學證明書 as tickets
 /// you swipe through, newest first, then the record and website links.
 /// Saved certificates open without a connection.
 class AcademicScreen extends StatefulWidget {
@@ -58,10 +58,11 @@ class AcademicScreen extends StatefulWidget {
 class _AcademicScreenState extends State<AcademicScreen> {
   final _session = GlobalKey<CampusSessionState>();
   final _store = CertificateStore();
-  final _pages = PageController(viewportFraction: 0.9);
+  final _pages = PageController(viewportFraction: 0.92);
   List<Certificate>? _certificates;
   _Detail? _detail;
   var _printing = false;
+  var _page = 0;
   String? _error;
 
   @override
@@ -106,12 +107,43 @@ class _AcademicScreenState extends State<AcademicScreen> {
           await _store.save(base64Decode('${json['data']}'), DateTime.now());
           await _refreshList();
           if (_pages.hasClients) _pages.jumpToPage(0);
+          _page = 0;
         } catch (e) {
           setState(() => _error = '$e');
         } finally {
           if (mounted) setState(() => _printing = false);
         }
     }
+  }
+
+  Widget _tickets(List<Certificate> certificates) {
+    final tickets = [
+      if (certificates.isEmpty)
+        _Ticket(certificate: null, printing: _printing, onPrint: _print),
+      for (final (i, c) in certificates.indexed)
+        _Ticket(
+          certificate: c,
+          printing: _printing,
+          // Only the newest offers to print again.
+          onPrint: i == 0 ? _print : null,
+        ),
+    ];
+    if (tickets.length == 1) {
+      return Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 16),
+        child: tickets.single,
+      );
+    }
+    // Older copies peek in from the right.
+    return PageView(
+      controller: _pages,
+      padEnds: false,
+      onPageChanged: (i) => setState(() => _page = i),
+      children: [
+        for (final t in tickets)
+          Padding(padding: const EdgeInsets.only(left: 16), child: t),
+      ],
+    );
   }
 
   @override
@@ -135,26 +167,31 @@ class _AcademicScreenState extends State<AcademicScreen> {
               height: 520,
               child: certificates == null
                   ? const Center(child: CircularProgressIndicator())
-                  : PageView(
-                      controller: _pages,
-                      padEnds: false,
-                      children: [
-                        if (certificates.isEmpty)
-                          _Ticket(
-                            certificate: null,
-                            printing: _printing,
-                            onPrint: _print,
-                          ),
-                        for (final (i, c) in certificates.indexed)
-                          _Ticket(
-                            certificate: c,
-                            // Only the newest offers to print again.
-                            printing: _printing,
-                            onPrint: i == 0 ? _print : null,
-                          ),
-                      ],
-                    ),
+                  : _tickets(certificates),
             ),
+            if ((certificates?.length ?? 0) > 1)
+              Padding(
+                padding: const EdgeInsets.only(top: 12),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    for (var i = 0; i < certificates!.length; i++)
+                      AnimatedContainer(
+                        duration: const Duration(milliseconds: 320),
+                        curve: Curves.easeOutQuart,
+                        width: i == _page ? 20 : 6,
+                        height: 6,
+                        margin: const EdgeInsets.symmetric(horizontal: 3),
+                        decoration: BoxDecoration(
+                          color: i == _page
+                              ? scheme.onSurfaceVariant
+                              : scheme.outlineVariant,
+                          borderRadius: BorderRadius.circular(3),
+                        ),
+                      ),
+                  ],
+                ),
+              ),
             if (_error != null)
               Padding(
                 padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
@@ -167,22 +204,28 @@ class _AcademicScreenState extends State<AcademicScreen> {
                 children: [
                   if (detail != null) ...[
                     const SectionLabel('學籍資料'),
-                    GridView.count(
-                      crossAxisCount: 2,
-                      shrinkWrap: true,
-                      // A nested GridView otherwise pads itself by the
-                      // screen insets.
-                      padding: EdgeInsets.zero,
-                      physics: const NeverScrollableScrollPhysics(),
-                      mainAxisSpacing: 8,
-                      crossAxisSpacing: 8,
-                      childAspectRatio: 2.4,
-                      children: [
-                        _Field('學號', detail.studentNo),
-                        _Field('英文姓名', detail.englishName),
-                        _Field('電子郵件', detail.email),
-                        _Field('行動電話', detail.mobile),
-                      ],
+                    Card(
+                      color: scheme.surfaceContainerLow,
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 16),
+                        child: Column(
+                          children: [
+                            for (final (i, (label, value)) in [
+                              ('學號', detail.studentNo),
+                              ('英文姓名', detail.englishName),
+                              ('電子郵件', detail.email),
+                              ('行動電話', detail.mobile),
+                            ].indexed) ...[
+                              if (i > 0)
+                                Divider(
+                                  height: 1,
+                                  color: scheme.outlineVariant,
+                                ),
+                              _Field(label, value),
+                            ],
+                          ],
+                        ),
+                      ),
                     ),
                   ],
                   const SectionLabel('在學校網站辦理'),
@@ -278,120 +321,185 @@ class _Ticket extends StatelessWidget {
         if (c != null) _Action('開啟', onTap: () => _open(context, c)),
       ],
     ];
-    return Padding(
-      padding: const EdgeInsets.only(left: 16),
-      child: Material(
-        color: scheme.surfaceContainerLow,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(32)),
-        clipBehavior: Clip.antiAlias,
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Container(
-              color: tone.fill,
-              padding: const EdgeInsets.fromLTRB(14, 14, 16, 14),
-              child: Row(
-                children: [
-                  CookieBadge(
-                    value: semester,
+    return Material(
+      color: scheme.surfaceContainerLow,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(32)),
+      clipBehavior: Clip.antiAlias,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Container(
+            color: tone.fill,
+            padding: const EdgeInsets.fromLTRB(14, 14, 16, 14),
+            child: Row(
+              children: [
+                Container(
+                  width: 56,
+                  height: 56,
+                  // Inset so `115-1` stays inside the star's points.
+                  padding: const EdgeInsets.all(11),
+                  decoration: ShapeDecoration(
                     color: tone.strong,
-                    ink: tone.fill,
-                    size: 54,
                     shape: spikyStar,
                   ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: DefaultTextStyle.merge(
-                      style: TextStyle(color: tone.ink),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          const Text(
-                            '在學證明書',
-                            style: TextStyle(
-                              fontSize: 17,
-                              fontWeight: FontWeight.w900,
-                            ),
-                          ),
-                          Text(
-                            c == null
-                                ? '本學期尚未產生'
-                                : '${current ? '有效' : '已過期'}・列印日 ${_md(c.printedAt)}',
-                            style: const TextStyle(
-                              fontSize: 12,
-                              fontWeight: FontWeight.w800,
-                            ),
-                          ),
-                        ],
+                  child: FittedBox(
+                    child: Text(
+                      semester,
+                      style: TextStyle(
+                        color: tone.fill,
+                        fontWeight: FontWeight.w900,
                       ),
                     ),
                   ),
-                ],
-              ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: DefaultTextStyle.merge(
+                    style: TextStyle(color: tone.ink),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Text(
+                          '在學證明書',
+                          style: TextStyle(
+                            fontSize: 17,
+                            fontWeight: FontWeight.w900,
+                          ),
+                        ),
+                        Text(
+                          c == null
+                              ? '本學期尚未產生'
+                              : '${current ? '有效' : '已過期'}・列印日 ${_md(c.printedAt)}',
+                          style: const TextStyle(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w800,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ],
             ),
-            Expanded(
-              child: Container(
-                color: scheme.surfaceContainerHigh,
-                padding: const EdgeInsets.symmetric(vertical: 14),
-                child: c == null
-                    ? Icon(
-                        Icons.description_outlined,
-                        size: 56,
-                        color: scheme.onSurfaceVariant,
-                      )
-                    : GestureDetector(
-                        onTap: () => _open(context, c),
-                        child: PdfDocumentViewBuilder.file(
-                          c.file.path,
-                          builder: (context, document) => PdfPageView(
-                            document: document,
-                            pageNumber: 1,
-                            alignment: Alignment.center,
+          ),
+          Expanded(
+            child: Container(
+              color: scheme.surfaceContainerHigh,
+              padding: const EdgeInsets.symmetric(vertical: 14),
+              child: c == null
+                  ? Center(
+                      child: AspectRatio(
+                        aspectRatio: 595 / 842,
+                        child: DecoratedBox(
+                          decoration: BoxDecoration(
+                            color: Colors.white.withValues(alpha: 0.35),
+                            borderRadius: BorderRadius.circular(6),
                           ),
                         ),
                       ),
-              ),
+                    )
+                  : GestureDetector(
+                      onTap: () => _open(context, c),
+                      child: PdfDocumentViewBuilder.file(
+                        c.file.path,
+                        builder: (context, document) => PdfPageView(
+                          document: document,
+                          pageNumber: 1,
+                          alignment: Alignment.center,
+                        ),
+                      ),
+                    ),
             ),
-            if (c != null)
-              Padding(
-                padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
-                child: Row(
-                  children: [
-                    Text(
-                      '已存到裝置 ${_md(c.printedAt)} ${clock(c.printedAt.hour * 60 + c.printedAt.minute)}',
-                      style: const TextStyle(
-                        fontSize: 12,
-                        fontWeight: FontWeight.w800,
-                      ),
-                    ),
-                    const Spacer(),
-                    Text(
-                      'PDF・${(c.size / 1024).round()} KB',
-                      style: TextStyle(
-                        fontSize: 12,
-                        fontWeight: FontWeight.w800,
-                        color: scheme.onSurfaceVariant,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
+          ),
+          if (c != null)
             Padding(
-              padding: const EdgeInsets.all(12),
+              padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
               child: Row(
                 children: [
-                  for (final (i, b) in buttons.indexed) ...[
-                    if (i > 0) const SizedBox(width: 8),
-                    Expanded(child: b),
-                  ],
+                  Text(
+                    '已存到裝置 ${_md(c.printedAt)} ${clock(c.printedAt.hour * 60 + c.printedAt.minute)}',
+                    style: const TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w800,
+                    ),
+                  ),
+                  const Spacer(),
+                  Text(
+                    'PDF・${(c.size / 1024).round()} KB',
+                    style: TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w800,
+                      color: scheme.onSurfaceVariant,
+                    ),
+                  ),
                 ],
               ),
             ),
-          ],
-        ),
+          // Ticket stub: punched notches and a perforation.
+          SizedBox(
+            height: 24,
+            child: Stack(
+              clipBehavior: Clip.none,
+              alignment: Alignment.center,
+              children: [
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 18),
+                  child: CustomPaint(
+                    size: const Size(double.infinity, 2),
+                    painter: _Perforation(scheme.outlineVariant),
+                  ),
+                ),
+                for (final left in [true, false])
+                  Positioned(
+                    left: left ? -10 : null,
+                    right: left ? null : -10,
+                    child: Container(
+                      width: 20,
+                      height: 20,
+                      decoration: BoxDecoration(
+                        color: scheme.surface,
+                        shape: BoxShape.circle,
+                      ),
+                    ),
+                  ),
+              ],
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.fromLTRB(12, 0, 12, 12),
+            child: Row(
+              children: [
+                for (final (i, b) in buttons.indexed) ...[
+                  if (i > 0) const SizedBox(width: 8),
+                  Expanded(child: b),
+                ],
+              ],
+            ),
+          ),
+        ],
       ),
     );
   }
+}
+
+class _Perforation extends CustomPainter {
+  const _Perforation(this.color);
+
+  final Color color;
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final paint = Paint()
+      ..color = color
+      ..strokeWidth = 2
+      ..strokeCap = StrokeCap.round;
+    for (var x = 0.0; x < size.width; x += 10) {
+      canvas.drawLine(Offset(x, 1), Offset(x + 4, 1), paint);
+    }
+  }
+
+  @override
+  bool shouldRepaint(_Perforation old) => old.color != color;
 }
 
 class _Action extends StatelessWidget {
@@ -405,14 +513,20 @@ class _Action extends StatelessWidget {
   Widget build(BuildContext context) {
     final style = FilledButton.styleFrom(
       minimumSize: const Size.fromHeight(48),
+      // Three buttons share the ticket; 重新產生 must fit on one line.
+      padding: const EdgeInsets.symmetric(horizontal: 8),
       textStyle: const TextStyle(fontWeight: FontWeight.w900),
     );
     return primary
-        ? FilledButton(onPressed: onTap, style: style, child: Text(label))
+        ? FilledButton(
+            onPressed: onTap,
+            style: style,
+            child: Text(label, maxLines: 1, softWrap: false),
+          )
         : FilledButton.tonal(
             onPressed: onTap,
             style: style,
-            child: Text(label),
+            child: Text(label, maxLines: 1, softWrap: false),
           );
   }
 }
@@ -425,30 +539,28 @@ class _Field extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
-    return Card(
-      color: scheme.surfaceContainerLow,
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Text(
-              label,
-              style: TextStyle(
-                fontSize: 11,
-                fontWeight: FontWeight.w800,
-                color: scheme.onSurfaceVariant,
-              ),
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 13),
+      child: Row(
+        children: [
+          Text(
+            label,
+            style: TextStyle(
+              fontWeight: FontWeight.w800,
+              color: scheme.onSurfaceVariant,
             ),
-            Text(
+          ),
+          const SizedBox(width: 16),
+          Expanded(
+            child: Text(
               value.isEmpty ? '—' : value,
+              textAlign: TextAlign.end,
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
               style: const TextStyle(fontWeight: FontWeight.w900),
             ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
