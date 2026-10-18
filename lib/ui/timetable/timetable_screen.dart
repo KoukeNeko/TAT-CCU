@@ -1,3 +1,5 @@
+import 'dart:ui' show ImageFilter;
+
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
@@ -265,8 +267,8 @@ class _ClassBlock extends StatelessWidget {
   }
 }
 
-/// App bar capsule showing the semester being viewed; opens a menu of every
-/// semester with its course count (design/round-10, variant A).
+/// App bar capsule showing the semester being viewed; opens a glass list of
+/// every semester with its course count (design/round-11, variant M1).
 class _SemesterMenu extends StatelessWidget {
   const _SemesterMenu({
     required this.semesters,
@@ -280,77 +282,204 @@ class _SemesterMenu extends StatelessWidget {
   final Map<String, int> counts;
   final ValueChanged<String> onSelected;
 
+  Future<void> _open(BuildContext context) async {
+    final box = context.findRenderObject()! as RenderBox;
+    final anchor = box.localToGlobal(box.size.bottomRight(Offset.zero));
+    final screen = MediaQuery.sizeOf(context);
+    final picked = await showGeneralDialog<String>(
+      context: context,
+      barrierDismissible: true,
+      barrierLabel: '關閉',
+      barrierColor: Colors.black.withValues(alpha: 0.12),
+      transitionDuration: const Duration(milliseconds: 240),
+      // No FadeTransition: an opacity layer above BackdropFilter keeps the
+      // blur from painting until the fade ends. The panel fades itself.
+      transitionBuilder: (context, animation, _, child) => ScaleTransition(
+        scale: Tween(begin: 0.92, end: 1.0).animate(
+          CurvedAnimation(parent: animation, curve: Curves.easeOutQuart),
+        ),
+        alignment: Alignment.topRight,
+        child: child,
+      ),
+      pageBuilder: (context, animation, _) => Stack(
+        children: [
+          Positioned(
+            top: anchor.dy + 8,
+            right: screen.width - anchor.dx,
+            child: _SemesterPanel(
+              reveal: CurvedAnimation(
+                parent: animation,
+                curve: Curves.easeOutQuart,
+              ),
+              semesters: semesters,
+              selected: selected,
+              counts: counts,
+            ),
+          ),
+        ],
+      ),
+    );
+    if (picked != null) onSelected(picked);
+  }
+
   @override
   Widget build(BuildContext context) {
     final tone = context.tones.lilac;
-    final scheme = Theme.of(context).colorScheme;
-    return PopupMenuButton<String>(
-      tooltip: '切換學期',
-      initialValue: selected,
-      onSelected: onSelected,
-      position: PopupMenuPosition.under,
-      // Keeps the pressed-item highlight inside the rounded corners.
-      clipBehavior: Clip.antiAlias,
-      offset: const Offset(0, 8),
-      color: scheme.surfaceContainerLow,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.all(Radius.circular(24)),
-      ),
-      itemBuilder: (context) => [
-        for (final s in semesters)
-          PopupMenuItem(
-            value: s,
+    return Semantics(
+      button: true,
+      label: '切換學期',
+      child: Material(
+        color: tone.fill,
+        shape: const StadiumBorder(),
+        child: InkWell(
+          customBorder: const StadiumBorder(),
+          onTap: () => _open(context),
+          child: Container(
+            height: 40,
+            padding: const EdgeInsets.only(left: 14, right: 8),
             child: Row(
+              mainAxisSize: MainAxisSize.min,
               children: [
-                Expanded(
-                  child: Text(
-                    semesterLabel(s),
-                    style: TextStyle(
-                      fontWeight: s == selected
-                          ? FontWeight.w900
-                          : FontWeight.w700,
-                    ),
-                  ),
-                ),
-                const SizedBox(width: 16),
                 Text(
-                  '${counts[s]} 門課',
+                  semesterShort(selected),
                   style: TextStyle(
-                    fontSize: 12,
-                    fontWeight: FontWeight.w700,
-                    color: scheme.onSurfaceVariant,
+                    color: tone.ink,
+                    fontSize: 14,
+                    fontWeight: FontWeight.w900,
                   ),
                 ),
-                SizedBox(
-                  width: 28,
-                  child: s == selected
-                      ? Icon(Icons.check, size: 18, color: tone.strong)
-                      : null,
-                ),
+                Icon(Icons.arrow_drop_down, color: tone.ink),
               ],
             ),
           ),
-      ],
-      child: Container(
-        height: 40,
-        padding: const EdgeInsets.only(left: 14, right: 8),
-        decoration: ShapeDecoration(
-          color: tone.fill,
-          shape: const StadiumBorder(),
         ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text(
-              semesterShort(selected),
-              style: TextStyle(
-                color: tone.ink,
-                fontSize: 14,
-                fontWeight: FontWeight.w900,
+      ),
+    );
+  }
+}
+
+/// Frosted panel matching the nav bar; the chosen row is an inset capsule so
+/// selection and press highlights never touch the panel edge.
+class _SemesterPanel extends StatelessWidget {
+  const _SemesterPanel({
+    required this.reveal,
+    required this.semesters,
+    required this.selected,
+    required this.counts,
+  });
+
+  final Animation<double> reveal;
+  final List<String> semesters;
+  final String selected;
+  final Map<String, int> counts;
+
+  @override
+  Widget build(BuildContext context) => AnimatedBuilder(
+    animation: reveal,
+    builder: (context, _) => _panel(context),
+  );
+
+  Widget _panel(BuildContext context) {
+    final t = reveal.value;
+    final theme = Theme.of(context);
+    final scheme = theme.colorScheme;
+    final tone = context.tones.lilac;
+    final light = theme.brightness == Brightness.light;
+    const radius = BorderRadius.all(Radius.circular(28));
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        borderRadius: radius,
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.2 * t),
+            blurRadius: 36,
+            offset: const Offset(0, 16),
+          ),
+        ],
+      ),
+      child: ClipRRect(
+        borderRadius: radius,
+        child: BackdropFilter(
+          filter: ImageFilter.blur(sigmaX: 24 * t, sigmaY: 24 * t),
+          child: Opacity(
+            opacity: t,
+            child: Container(
+              width: 260,
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                borderRadius: radius,
+                color: light
+                    ? Colors.white.withValues(alpha: 0.78)
+                    : const Color(0x9E3A2F2B),
+                border: Border.all(
+                  color: Colors.white.withValues(alpha: light ? 0.95 : 0.14),
+                ),
+              ),
+              child: Material(
+                type: MaterialType.transparency,
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    for (final s in semesters)
+                      _row(context, s, s == selected, tone, scheme),
+                  ],
+                ),
               ),
             ),
-            Icon(Icons.arrow_drop_down, color: tone.ink),
-          ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _row(
+    BuildContext context,
+    String semester,
+    bool chosen,
+    Tone tone,
+    ColorScheme scheme,
+  ) {
+    final ink = chosen ? tone.ink : scheme.onSurface;
+    return Material(
+      color: chosen ? tone.fill : Colors.transparent,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.all(Radius.circular(20)),
+      ),
+      clipBehavior: Clip.antiAlias,
+      child: InkWell(
+        onTap: () => Navigator.of(context).pop(semester),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 13),
+          child: Row(
+            children: [
+              Expanded(
+                child: Text(
+                  semesterLabel(semester),
+                  style: TextStyle(
+                    color: ink,
+                    fontSize: 15,
+                    fontWeight: chosen ? FontWeight.w900 : FontWeight.w700,
+                  ),
+                ),
+              ),
+              Text(
+                '${counts[semester]} 門課',
+                style: TextStyle(
+                  color: chosen
+                      ? tone.ink.withValues(alpha: 0.7)
+                      : scheme.onSurfaceVariant,
+                  fontSize: 12,
+                  fontWeight: FontWeight.w800,
+                ),
+              ),
+              SizedBox(
+                width: 26,
+                child: chosen
+                    ? Icon(Icons.check, size: 18, color: tone.strong)
+                    : null,
+              ),
+            ],
+          ),
         ),
       ),
     );
