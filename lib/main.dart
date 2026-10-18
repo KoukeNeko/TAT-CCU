@@ -5,6 +5,7 @@ import 'package:provider/provider.dart';
 import 'data/repositories/ecourse_auth_repository.dart';
 import 'data/repositories/ecourse_repository.dart';
 import 'data/repositories/portal_prefs.dart';
+import 'data/services/campus_cookies.dart';
 import 'routing/router.dart';
 import 'ui/core/theme.dart';
 
@@ -22,7 +23,9 @@ Future<void> main() async {
     ),
   );
   final auth = EcourseAuthRepository();
-  await auth.load();
+  await (auth.load(), CampusCookies.restore()).wait;
+  // iOS may end a backgrounded app without notice, so save on the way out.
+  AppLifecycleListener(onHide: CampusCookies.save);
   runApp(
     MultiProvider(
       providers: [
