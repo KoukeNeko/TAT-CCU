@@ -107,7 +107,7 @@ class _AccountScreenState extends State<AccountScreen> {
                   status: [
                     context.l10n.sharedWithEcourse,
                     if (_casSaved) context.l10n.autoSignIn,
-                  ].join('・'),
+                  ].join('\n'),
                   actions: [
                     FilledButton.tonal(
                       onPressed: () => openCampusPage(
