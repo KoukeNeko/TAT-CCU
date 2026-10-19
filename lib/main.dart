@@ -46,10 +46,14 @@ Future<void> main() async {
   // iOS may end a backgrounded app without notice, so save on the way out.
   AppLifecycleListener(
     onHide: CampusCookies.save,
-    onResume: () => _remind(auth, settings),
+    onResume: () {
+      _remind(auth, settings);
+      _prefetch(auth);
+    },
   );
   await Workmanager().initialize(reminderTask);
   unawaited(_remind(auth, settings));
+  unawaited(_prefetch(auth));
   runApp(
     MultiProvider(
       providers: [
@@ -109,5 +113,24 @@ Future<void> _remind(EcourseAuthRepository auth, AppSettings settings) async {
   } catch (e) {
     // Offline or signed out: the reminders already scheduled stay.
     debugPrint('reminders: $e');
+  }
+}
+
+DateTime? _prefetchedAt;
+
+/// At launch, then on coming back after half an hour: what was saved this
+/// recently is still current enough.
+Future<void> _prefetch(EcourseAuthRepository auth) async {
+  final last = _prefetchedAt;
+  if (!auth.isSignedIn ||
+      last != null && DateTime.now().difference(last).inMinutes < 30) {
+    return;
+  }
+  _prefetchedAt = DateTime.now();
+  try {
+    await EcourseRepository(auth.client()).prefetch();
+  } catch (e) {
+    // Offline or a stalled request: the screens load what they need.
+    debugPrint('prefetch: $e');
   }
 }

@@ -333,6 +333,26 @@ class EcourseRepository {
     ].where((s) => s.modules.isNotEmpty).toList();
   }
 
+  /// Saves the answers the timetable reads beside each class (deadlines,
+  /// grades, every current course's notices), so its cards open with data.
+  /// Two requests at a time; the first failure ends the run.
+  Future<void> prefetch() async {
+    final courses = await currentCourses();
+    final jobs = <Future<Object?> Function()>[
+      () => dueSoon(days: 60),
+      gradeOverview,
+      for (final c in courses) () => announcements(c.id),
+    ];
+    var next = 0;
+    Future<void> worker() async {
+      while (next < jobs.length) {
+        await jobs[next++]();
+      }
+    }
+
+    await (worker(), worker()).wait;
+  }
+
   /// The course's 公佈欄 (the news forum).
   Future<List<Discussion>> announcements(int courseId) async {
     final forums = await _client.call('mod_forum_get_forums_by_courses', {

@@ -62,4 +62,41 @@ void main() {
     expect(await repo().unreadNotices(), 2);
     expect(calls, ['message_popup_get_unread_popup_notification_count']);
   });
+
+  test('prefetch saves what the timetable reads for each course', () async {
+    final dir = await Directory.systemTemp.createTemp('cache');
+    addTearDown(() => dir.delete(recursive: true));
+    final client = MoodleClient(
+      siteUrl: Uri.parse('https://example.test/'),
+      token: 't',
+      cache: ResponseCache('t', dir: dir),
+      newHttpClient: () => MockClient((request) async {
+        final answer = switch (request.bodyFields['wsfunction']) {
+          'core_webservice_get_site_info' => {'userid': 7},
+          'core_enrol_get_users_courses' => [
+            {'id': 3},
+          ],
+          'core_course_get_courses_by_field' => {
+            'courses': [
+              {'id': 3, 'shortname': '115_1_1_01', 'fullname': 'c'},
+            ],
+          },
+          'core_calendar_get_action_events_by_timesort' => {'events': []},
+          'gradereport_overview_get_course_grades' => {'grades': []},
+          'mod_forum_get_forums_by_courses' => [
+            {'id': 9, 'type': 'news'},
+          ],
+          'mod_forum_get_forum_discussions' => {'discussions': []},
+          _ => throw StateError('unexpected ${request.bodyFields}'),
+        };
+        return http.Response(jsonEncode(answer), 200);
+      }),
+    );
+    await EcourseRepository(client).prefetch();
+
+    // Answered from the saved files alone.
+    final saved = EcourseRepository(client.offline());
+    expect(await saved.announcements(3), isEmpty);
+    expect(await saved.gradeOverview(), isEmpty);
+  });
 }
