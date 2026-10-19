@@ -45,7 +45,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get nothingDueSoon => 'Nothing due in the next 14 days';
 
   @override
-  String get unitHours => 'hrs';
+  String get unitHours => 'hr';
 
   @override
   String get unitDays => 'days';
@@ -55,6 +55,9 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get unitMinutesLater => 'min';
+
+  @override
+  String get unitHoursLater => 'hr';
 
   @override
   String get todayNoClasses => 'No classes today';

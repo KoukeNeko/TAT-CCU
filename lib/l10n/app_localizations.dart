@@ -190,6 +190,12 @@ abstract class AppLocalizations {
   /// **'分鐘後'**
   String get unitMinutesLater;
 
+  /// No description provided for @unitHoursLater.
+  ///
+  /// In zh, this message translates to:
+  /// **'小時後'**
+  String get unitHoursLater;
+
   /// No description provided for @todayNoClasses.
   ///
   /// In zh, this message translates to:

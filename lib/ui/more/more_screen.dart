@@ -146,7 +146,7 @@ class _MoreScreenState extends State<MoreScreen> {
                 data: i,
                 feedback: SizedBox(
                   width: constraints.maxWidth,
-                  height: _StatusTile.height,
+                  height: StatusTile.height,
                   child: Transform.scale(
                     scale: 1.04,
                     child: PhysicalShape(
@@ -263,8 +263,6 @@ class _StatusTile extends StatelessWidget {
     required this.leave,
   });
 
-  static const height = 120.0;
-
   final _Page page;
   final Future<Map<int, String>> grades;
   final Future<CachedPage?> library, leave;
@@ -285,22 +283,11 @@ class _StatusTile extends StatelessWidget {
       '/more/library' => FutureBuilder(
         future: library,
         builder: (context, snap) {
-          final loans = snap.data == null
-              ? const <Loan>[]
-              : loansOf(snap.data!.json);
-          if (loans.isEmpty) return _face(context, page.tone, null);
-          final now = DateTime.now();
-          final days = loans.first.due
-              .difference(DateTime(now.year, now.month, now.day))
-              .inDays;
+          final loan = loanStatus(l10n, snap.data);
           return _face(
             context,
-            days < 0 ? tones.peach : page.tone,
-            days < 0
-                ? l10n.daysOverdue(-days)
-                : days == 0
-                ? l10n.dueToday
-                : l10n.loanDaysLeft(days),
+            loan?.overdue == true ? tones.peach : page.tone,
+            loan?.text,
           );
         },
       ),
@@ -316,62 +303,16 @@ class _StatusTile extends StatelessWidget {
       ),
       _ => _face(context, page.tone, null),
     };
-    return SizedBox(height: height, child: status);
+    return status;
   }
 
-  Widget _face(BuildContext context, Tone tone, String? status) {
-    final light = Theme.of(context).brightness == Brightness.light;
-    return ToneBlock(
-      tone: tone,
-      padding: const EdgeInsets.all(14),
-      onTap: () => context.push(page.path),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Container(
-                width: 36,
-                height: 36,
-                decoration: BoxDecoration(
-                  color: Colors.white.withValues(alpha: light ? 0.6 : 0.12),
-                  borderRadius: BorderRadius.circular(Corners.small),
-                ),
-                child: Icon(page.icon, size: 20, color: tone.ink),
-              ),
-              const Spacer(),
-              Icon(Icons.chevron_right, color: tone.ink.withValues(alpha: 0.6)),
-            ],
-          ),
-          const Spacer(),
-          Text(
-            status ?? page.title,
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-            style: const TextStyle(
-              fontSize: 22,
-              fontWeight: FontWeight.w900,
-              height: 1.1,
-            ),
-          ),
-          if (status != null)
-            Padding(
-              padding: const EdgeInsets.only(top: 2),
-              child: Text(
-                page.title,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: TextStyle(
-                  color: tone.ink.withValues(alpha: 0.8),
-                  fontSize: 13,
-                  fontWeight: FontWeight.w900,
-                ),
-              ),
-            ),
-        ],
-      ),
-    );
-  }
+  Widget _face(BuildContext context, Tone tone, String? status) => StatusTile(
+    tone: tone,
+    icon: page.icon,
+    title: page.title,
+    status: status,
+    onTap: () => context.push(page.path),
+  );
 }
 
 class _Row extends StatelessWidget {

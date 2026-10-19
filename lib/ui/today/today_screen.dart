@@ -4,15 +4,17 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 
+import '../../data/repositories/campus_cache.dart';
 import '../../data/repositories/ecourse_repository.dart';
 import '../../domain/models/course.dart';
 import '../../domain/models/timetable.dart';
 import '../core/theme.dart';
 import '../core/widgets.dart';
+import '../more/library_screen.dart';
 import '../../l10n/l10n.dart';
 
-// Layout follows design/round-01/c-deck.html: headline, one hero block,
-// a pill for the next class, two count tiles.
+// Layout follows design/round-11/today-c-variants.html C1: headline, one
+// hero block, a pill for the class after it, then four status tiles.
 
 typedef _Slot = ({Course course, ClassSession session});
 
@@ -21,6 +23,7 @@ typedef _Today = ({
   List<DueItem> due,
   int notices,
   int mail,
+  CachedPage? library,
 });
 
 /// `創新大樓 322` → `322`; the pill only has room for the room number.
@@ -77,6 +80,7 @@ class _TodayScreenState extends State<TodayScreen> {
       due: results[1] as List<DueItem>,
       notices: results[2] as int,
       mail: results[3] as int,
+      library: await CampusCache.read(LibraryScreen.cacheKey),
     );
   }
 
@@ -112,7 +116,11 @@ class _TodayScreenState extends State<TodayScreen> {
               : n == 0
               ? l10n.todayClassesOver
               : l10n.todayClassesLeft('$n');
-          final firstDue = d.due.firstOrNull;
+          final hero = current ?? next;
+          final after = hero == null
+              ? null
+              : remaining.skipWhile((s) => s != hero).skip(1).firstOrNull;
+          final loan = loanStatus(l10n, d.library);
           return ListView(
             padding: scrollPadding(context),
             children: [
@@ -161,7 +169,7 @@ class _TodayScreenState extends State<TodayScreen> {
                   label: l10n.inClass,
                   detail: l10n.untilTime(clock(current.session.end)),
                   minutes: current.session.end - minute,
-                  unit: l10n.unitMinutes,
+                  later: false,
                 )
               else if (next != null)
                 _Hero(
@@ -169,39 +177,55 @@ class _TodayScreenState extends State<TodayScreen> {
                   label: l10n.nextClass,
                   detail: l10n.startsAt(clock(next.session.start)),
                   minutes: next.session.start - minute,
-                  unit: l10n.unitMinutesLater,
+                  later: true,
                 ),
-              if (current != null && next != null) ...[
-                const SizedBox(height: 12),
-                _NextPill(slot: next),
+              if (after != null) ...[
+                const SizedBox(height: 10),
+                _AfterPill(slot: after),
               ],
-              const SizedBox(height: 12),
-              Row(
-                children: [
-                  Expanded(
-                    child: _Tile(
-                      tone: tones.peach,
-                      value: '${d.due.length}',
-                      label: l10n.dueThisWeek,
-                      detail: firstDue == null
-                          ? null
-                          : '${firstDue.name} ${weekdayName(context, firstDue.due.weekday)} '
-                                '${clock(firstDue.due.hour * 60 + firstDue.due.minute)}',
-                      onTap: () => context.push('/today/due'),
-                    ),
+              const SizedBox(height: rowGap),
+              for (final (i, row) in [
+                [
+                  StatusTile(
+                    tone: tones.peach,
+                    icon: Icons.assignment_outlined,
+                    title: l10n.dueThisWeek,
+                    status: '${d.due.length}',
+                    onTap: () => context.push('/today/due'),
                   ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: _Tile(
-                      tone: tones.sun,
-                      value: '${d.notices + d.mail}',
-                      label: l10n.unread,
-                      detail: l10n.unreadDetail(d.notices, d.mail),
-                      onTap: () => context.push('/today/notifications'),
-                    ),
+                  StatusTile(
+                    tone: tones.sun,
+                    icon: Icons.notifications_none,
+                    title: l10n.unread,
+                    status: '${d.notices + d.mail}',
+                    onTap: () => context.push('/today/notifications'),
                   ),
                 ],
-              ),
+                [
+                  StatusTile(
+                    tone: loan?.overdue == true ? tones.peach : tones.mint,
+                    icon: Icons.menu_book_outlined,
+                    title: l10n.library,
+                    status: loan?.text,
+                    onTap: () => context.push('/more/library'),
+                  ),
+                  StatusTile(
+                    tone: tones.lilac,
+                    icon: Icons.qr_code_2,
+                    title: l10n.studySpace,
+                    onTap: () => context.push('/more/space'),
+                  ),
+                ],
+              ].indexed) ...[
+                if (i > 0) const SizedBox(height: rowGap),
+                Row(
+                  children: [
+                    Expanded(child: row[0]),
+                    const SizedBox(width: rowGap),
+                    Expanded(child: row[1]),
+                  ],
+                ),
+              ],
             ],
           );
         },
@@ -216,16 +240,29 @@ class _Hero extends StatelessWidget {
     required this.label,
     required this.detail,
     required this.minutes,
-    required this.unit,
+    required this.later,
   });
 
   final _Slot slot;
-  final String label, detail, unit;
+  final String label, detail;
   final int minutes;
+
+  /// Counting down to the start rather than to the end.
+  final bool later;
 
   @override
   Widget build(BuildContext context) {
     final tone = context.tones.lilac;
+    final l10n = context.l10n;
+    // Past an hour, minutes are hard to read: 557 → 9 小時後.
+    final hours = minutes >= 60;
+    final count = hours ? minutes ~/ 60 : minutes;
+    final unit = switch ((hours, later)) {
+      (true, true) => l10n.unitHoursLater,
+      (true, false) => l10n.unitHours,
+      (false, true) => l10n.unitMinutesLater,
+      (false, false) => l10n.unitMinutes,
+    };
     return Material(
       color: tone.fill,
       shape: RoundedRectangleBorder(
@@ -267,7 +304,7 @@ class _Hero extends StatelessWidget {
                   textBaseline: TextBaseline.alphabetic,
                   children: [
                     Text(
-                      '$minutes',
+                      '$count',
                       style: TextStyle(
                         color: tone.fill,
                         fontSize: 34,
@@ -312,7 +349,7 @@ class _Hero extends StatelessWidget {
                     ),
                     const SizedBox(height: 12),
                     Text(
-                      slot.course.fullName,
+                      context.courseName(slot.course),
                       maxLines: 3,
                       overflow: TextOverflow.ellipsis,
                       style: TextStyle(
@@ -342,93 +379,52 @@ class _Hero extends StatelessWidget {
   }
 }
 
-class _NextPill extends StatelessWidget {
-  const _NextPill({required this.slot});
+/// The class after the hero's: its time, name and room on one line.
+class _AfterPill extends StatelessWidget {
+  const _AfterPill({required this.slot});
 
   final _Slot slot;
 
   @override
   Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
     const bold = TextStyle(fontSize: 14, fontWeight: FontWeight.w800);
-    return ToneBlock(
-      tone: context.tones.mint,
-      radius: 999,
-      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
-      onTap: () => context.push('/courses/${slot.course.id}'),
-      child: Row(
-        children: [
-          Text(context.l10n.nextClass, style: bold),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Text(
-              slot.course.fullName,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              style: bold,
-            ),
-          ),
-          const SizedBox(width: 12),
-          Text(
-            '${clock(slot.session.start)}・${_roomNumber(slot.course.room)}',
-            style: bold,
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _Tile extends StatelessWidget {
-  const _Tile({
-    required this.tone,
-    required this.value,
-    required this.label,
-    this.detail,
-    this.onTap,
-  });
-
-  final Tone tone;
-  final String value, label;
-  final String? detail;
-  final VoidCallback? onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    return ToneBlock(
-      tone: tone,
-      radius: Corners.card,
-      padding: const EdgeInsets.all(16),
-      onTap: onTap,
-      child: SizedBox(
-        height: 88,
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              value,
-              style: const TextStyle(
-                fontSize: 40,
-                fontWeight: FontWeight.w900,
-                height: 1,
-              ),
-            ),
-            const SizedBox(height: 6),
-            Text(
-              label,
-              style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w800),
-            ),
-            if (detail != null)
-              Text(
-                detail!,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: TextStyle(
-                  fontSize: 12,
-                  fontWeight: FontWeight.w700,
-                  color: tone.ink.withValues(alpha: 0.75),
+    return Material(
+      color: scheme.surfaceContainerLow,
+      shape: const StadiumBorder(),
+      clipBehavior: Clip.antiAlias,
+      child: InkWell(
+        onTap: () => context.push('/courses/${slot.course.id}'),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 13),
+          child: Row(
+            children: [
+              Container(
+                width: 8,
+                height: 8,
+                decoration: BoxDecoration(
+                  color: context.tones.forCourse(slot.course.id).strong,
+                  shape: BoxShape.circle,
                 ),
               ),
-          ],
+              const SizedBox(width: 10),
+              Text(clock(slot.session.start), style: bold),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Text(
+                  context.courseName(slot.course),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: bold,
+                ),
+              ),
+              const SizedBox(width: 10),
+              Text(
+                _roomNumber(slot.course.room),
+                style: bold.copyWith(color: scheme.onSurfaceVariant),
+              ),
+            ],
+          ),
         ),
       ),
     );

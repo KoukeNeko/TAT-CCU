@@ -622,6 +622,88 @@ class _RoundBackButtonState extends State<RoundBackButton> {
 }
 
 /// Rounded color block; the basic surface of direction C.
+/// A status tile: the page's state large, its name small; the name alone
+/// when there is no state to show. Shared by 今天 and 更多.
+class StatusTile extends StatelessWidget {
+  const StatusTile({
+    super.key,
+    required this.tone,
+    required this.icon,
+    required this.title,
+    required this.onTap,
+    this.status,
+  });
+
+  static const height = 120.0;
+
+  final Tone tone;
+  final IconData icon;
+  final String title;
+  final String? status;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final light = Theme.of(context).brightness == Brightness.light;
+    return SizedBox(
+      height: height,
+      child: ToneBlock(
+        tone: tone,
+        padding: const EdgeInsets.all(14),
+        onTap: onTap,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Container(
+                  width: 36,
+                  height: 36,
+                  decoration: BoxDecoration(
+                    color: Colors.white.withValues(alpha: light ? 0.6 : 0.12),
+                    borderRadius: BorderRadius.circular(Corners.small),
+                  ),
+                  child: Icon(icon, size: 20, color: tone.ink),
+                ),
+                const Spacer(),
+                Icon(
+                  Icons.chevron_right,
+                  color: tone.ink.withValues(alpha: 0.6),
+                ),
+              ],
+            ),
+            const Spacer(),
+            Text(
+              status ?? title,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: const TextStyle(
+                fontSize: 22,
+                fontWeight: FontWeight.w900,
+                height: 1.1,
+              ),
+            ),
+            if (status != null)
+              Padding(
+                padding: const EdgeInsets.only(top: 2),
+                child: Text(
+                  title,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                    color: tone.ink.withValues(alpha: 0.8),
+                    fontSize: 13,
+                    fontWeight: FontWeight.w900,
+                  ),
+                ),
+              ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
 class ToneBlock extends StatelessWidget {
   const ToneBlock({
     super.key,

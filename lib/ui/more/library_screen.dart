@@ -126,6 +126,28 @@ DateTime? _date(String s) {
   return t == null ? null : DateTime(t.year, t.month, t.day);
 }
 
+/// The most urgent loan as a status line, from the page's saved data; null
+/// when nothing is on loan or the page has not been opened yet.
+({String text, bool overdue})? loanStatus(
+  AppLocalizations l10n,
+  CachedPage? cached,
+) {
+  final loan = cached == null ? null : loansOf(cached.json).firstOrNull;
+  if (loan == null) return null;
+  final now = DateTime.now();
+  final days = loan.due
+      .difference(DateTime(now.year, now.month, now.day))
+      .inDays;
+  return (
+    text: days < 0
+        ? l10n.daysOverdue(-days)
+        : days == 0
+        ? l10n.dueToday
+        : l10n.loanDaysLeft(days),
+    overdue: days < 0,
+  );
+}
+
 /// Loans sorted most urgent first; loans without a readable due date are
 /// left out rather than shown as due at a wrong time.
 List<Loan> loansOf(Map<String, dynamic> json) {

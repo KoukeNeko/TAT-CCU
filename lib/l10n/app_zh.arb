@@ -22,6 +22,8 @@
   "unitDays": "天",
   "unitMinutes": "分鐘",
   "unitMinutesLater": "分鐘後",
+  "unitHours": "小時",
+  "unitHoursLater": "小時後",
   "todayNoClasses": "今天沒有課",
   "todayClassesOver": "今天的課結束了",
   "todayClassesLeft": "今天還有{count, select, 1{一} 2{兩} 3{三} 4{四} 5{五} 6{六} 7{七} 8{八} 9{九} 10{十} other{ {count} }}堂課",

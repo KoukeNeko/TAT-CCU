@@ -57,6 +57,9 @@ class AppLocalizationsJa extends AppLocalizations {
   String get unitMinutesLater => '分後';
 
   @override
+  String get unitHoursLater => '時間後';
+
+  @override
   String get todayNoClasses => '今日は授業がありません';
 
   @override

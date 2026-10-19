@@ -15,6 +15,8 @@
   "unitDays": "days",
   "unitMinutes": "min",
   "unitMinutesLater": "min",
+  "unitHours": "hr",
+  "unitHoursLater": "hr",
   "todayNoClasses": "No classes today",
   "todayClassesOver": "Today's classes are over",
   "todayClassesLeft": "{count, select, 1{1 class left today} other{{count} classes left today}}",

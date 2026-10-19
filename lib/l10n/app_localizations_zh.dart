@@ -57,6 +57,9 @@ class AppLocalizationsZh extends AppLocalizations {
   String get unitMinutesLater => '分鐘後';
 
   @override
+  String get unitHoursLater => '小時後';
+
+  @override
   String get todayNoClasses => '今天沒有課';
 
   @override
