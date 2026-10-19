@@ -1167,6 +1167,42 @@ abstract class AppLocalizations {
   /// In zh, this message translates to:
   /// **'剩 {count} 天'**
   String loanDaysLeft(int count);
+
+  /// No description provided for @rememberPasswordTitle.
+  ///
+  /// In zh, this message translates to:
+  /// **'記住密碼？'**
+  String get rememberPasswordTitle;
+
+  /// No description provided for @rememberPasswordBody.
+  ///
+  /// In zh, this message translates to:
+  /// **'下次需要登入單一入口時自動填入並送出。密碼加密存在這台裝置上。'**
+  String get rememberPasswordBody;
+
+  /// No description provided for @notNow.
+  ///
+  /// In zh, this message translates to:
+  /// **'不要'**
+  String get notNow;
+
+  /// No description provided for @remember.
+  ///
+  /// In zh, this message translates to:
+  /// **'記住'**
+  String get remember;
+
+  /// No description provided for @autoSignIn.
+  ///
+  /// In zh, this message translates to:
+  /// **'自動登入'**
+  String get autoSignIn;
+
+  /// No description provided for @deleteSavedPassword.
+  ///
+  /// In zh, this message translates to:
+  /// **'刪除儲存的密碼'**
+  String get deleteSavedPassword;
 }
 
 class _AppLocalizationsDelegate

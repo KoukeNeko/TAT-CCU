@@ -667,4 +667,23 @@ class AppLocalizationsJa extends AppLocalizations {
   String loanDaysLeft(int count) {
     return '残り $count 日';
   }
+
+  @override
+  String get rememberPasswordTitle => 'パスワードを保存しますか？';
+
+  @override
+  String get rememberPasswordBody =>
+      '次回 CAS のログインで自動入力して送信します。パスワードはこの端末に暗号化して保存されます。';
+
+  @override
+  String get notNow => '保存しない';
+
+  @override
+  String get remember => '保存';
+
+  @override
+  String get autoSignIn => '自動ログイン';
+
+  @override
+  String get deleteSavedPassword => '保存したパスワードを削除';
 }

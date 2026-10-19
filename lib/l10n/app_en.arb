@@ -177,5 +177,11 @@
   "loansAndRenewals": "Loans & renewals",
   "catalogSearch": "Catalog search",
   "loanDue": "Due {date}",
-  "loanDaysLeft": "{count, plural, =1{1 day left} other{{count} days left}}"
+  "loanDaysLeft": "{count, plural, =1{1 day left} other{{count} days left}}",
+  "rememberPasswordTitle": "Remember password?",
+  "rememberPasswordBody": "Next time CAS asks you to sign in, the app fills it in and sends it. The password is stored encrypted on this device.",
+  "notNow": "Not now",
+  "remember": "Remember",
+  "autoSignIn": "Auto sign-in",
+  "deleteSavedPassword": "Delete saved password"
 }

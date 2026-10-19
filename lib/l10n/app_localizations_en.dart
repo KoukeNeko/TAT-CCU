@@ -756,4 +756,23 @@ class AppLocalizationsEn extends AppLocalizations {
     );
     return '$_temp0';
   }
+
+  @override
+  String get rememberPasswordTitle => 'Remember password?';
+
+  @override
+  String get rememberPasswordBody =>
+      'Next time CAS asks you to sign in, the app fills it in and sends it. The password is stored encrypted on this device.';
+
+  @override
+  String get notNow => 'Not now';
+
+  @override
+  String get remember => 'Remember';
+
+  @override
+  String get autoSignIn => 'Auto sign-in';
+
+  @override
+  String get deleteSavedPassword => 'Delete saved password';
 }

@@ -680,4 +680,22 @@ class AppLocalizationsZh extends AppLocalizations {
   String loanDaysLeft(int count) {
     return '剩 $count 天';
   }
+
+  @override
+  String get rememberPasswordTitle => '記住密碼？';
+
+  @override
+  String get rememberPasswordBody => '下次需要登入單一入口時自動填入並送出。密碼加密存在這台裝置上。';
+
+  @override
+  String get notNow => '不要';
+
+  @override
+  String get remember => '記住';
+
+  @override
+  String get autoSignIn => '自動登入';
+
+  @override
+  String get deleteSavedPassword => '刪除儲存的密碼';
 }

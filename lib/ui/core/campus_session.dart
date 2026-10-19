@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:webview_flutter/webview_flutter.dart';
 
 import '../../data/services/campus_cookies.dart';
+import 'cas_autofill.dart';
 import 'widgets.dart';
 import '../../l10n/l10n.dart';
 
@@ -48,6 +49,7 @@ class CampusSession extends StatefulWidget {
 
 class CampusSessionState extends State<CampusSession> {
   late final WebViewController _web;
+  late final CasAutofill _cas;
   var _signingIn = false;
   String? _ranOn;
   Completer<void>? _pending;
@@ -59,6 +61,7 @@ class CampusSessionState extends State<CampusSession> {
       ..setJavaScriptMode(JavaScriptMode.unrestricted)
       ..addJavaScriptChannel('Campus', onMessageReceived: _received)
       ..setNavigationDelegate(NavigationDelegate(onPageFinished: _arrived));
+    _cas = CasAutofill(_web, context);
     if (widget.loadOnStart) reload();
   }
 
@@ -80,6 +83,7 @@ class CampusSessionState extends State<CampusSession> {
   Future<void> run(String script) => _web.runJavaScript(script);
 
   void _arrived(String url) {
+    _cas.pageFinished(url);
     final uri = Uri.parse(url);
     if (widget.via.any('${uri.host}${uri.path}'.startsWith)) return;
     if (uri.host == widget.host) {

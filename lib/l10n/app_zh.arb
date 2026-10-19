@@ -502,5 +502,11 @@
         "type": "int"
       }
     }
-  }
+  },
+  "rememberPasswordTitle": "記住密碼？",
+  "rememberPasswordBody": "下次需要登入單一入口時自動填入並送出。密碼加密存在這台裝置上。",
+  "notNow": "不要",
+  "remember": "記住",
+  "autoSignIn": "自動登入",
+  "deleteSavedPassword": "刪除儲存的密碼"
 }

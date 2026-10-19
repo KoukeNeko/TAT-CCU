@@ -177,5 +177,11 @@
   "loansAndRenewals": "貸出と延長",
   "catalogSearch": "蔵書検索",
   "loanDue": "{date} 返却",
-  "loanDaysLeft": "残り {count} 日"
+  "loanDaysLeft": "残り {count} 日",
+  "rememberPasswordTitle": "パスワードを保存しますか？",
+  "rememberPasswordBody": "次回 CAS のログインで自動入力して送信します。パスワードはこの端末に暗号化して保存されます。",
+  "notNow": "保存しない",
+  "remember": "保存",
+  "autoSignIn": "自動ログイン",
+  "deleteSavedPassword": "保存したパスワードを削除"
 }

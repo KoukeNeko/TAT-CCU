@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:webview_flutter/webview_flutter.dart';
 
+import 'cas_autofill.dart';
 import 'widgets.dart';
 
 /// Opens a campus system inside the app. Every campus page uses this one
@@ -24,12 +25,24 @@ class CampusWebScreen extends StatefulWidget {
 }
 
 class _CampusWebScreenState extends State<CampusWebScreen> {
-  late final _controller = WebViewController()
-    ..setJavaScriptMode(JavaScriptMode.unrestricted)
-    ..setNavigationDelegate(
-      NavigationDelegate(onProgress: (p) => setState(() => _progress = p)),
-    )
-    ..loadRequest(Uri.parse(widget.url));
+  late final WebViewController _controller;
+  late final CasAutofill _cas;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = WebViewController()
+      ..setJavaScriptMode(JavaScriptMode.unrestricted)
+      ..setNavigationDelegate(
+        NavigationDelegate(
+          onProgress: (p) => setState(() => _progress = p),
+          onPageFinished: (url) => _cas.pageFinished(url),
+        ),
+      );
+    // The channel must exist before the first page loads.
+    _cas = CasAutofill(_controller, context);
+    _controller.loadRequest(Uri.parse(widget.url));
+  }
 
   int _progress = 0;
 

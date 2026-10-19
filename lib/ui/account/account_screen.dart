@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../../data/repositories/ecourse_auth_repository.dart';
+import '../../data/services/cas_credentials.dart';
 import '../core/theme.dart';
 import '../core/campus_web_screen.dart';
 import '../core/widgets.dart';
@@ -25,6 +26,20 @@ class _AccountScreenState extends State<AccountScreen> {
   String? _ecourseError;
   DateTime? _ecourseCheckedAt;
   var _checking = false;
+  var _casSaved = false;
+
+  @override
+  void initState() {
+    super.initState();
+    CasCredentials.read().then((login) {
+      if (mounted) setState(() => _casSaved = login != null);
+    });
+  }
+
+  Future<void> _deleteCas() async {
+    await CasCredentials.delete();
+    if (mounted) setState(() => _casSaved = false);
+  }
 
   Future<void> _verifyEcourse() async {
     setState(() => _checking = true);
@@ -89,7 +104,10 @@ class _AccountScreenState extends State<AccountScreen> {
                   // cannot inspect; see docs/登入狀態設計.md.
                   signedIn: null,
                   title: context.l10n.portalCas,
-                  status: context.l10n.sharedWithEcourse,
+                  status: [
+                    context.l10n.sharedWithEcourse,
+                    if (_casSaved) context.l10n.autoSignIn,
+                  ].join('・'),
                   actions: [
                     FilledButton.tonal(
                       onPressed: () => openCampusPage(
@@ -99,6 +117,11 @@ class _AccountScreenState extends State<AccountScreen> {
                       ),
                       child: Text(context.l10n.openPortal),
                     ),
+                    if (_casSaved)
+                      TextButton(
+                        onPressed: _deleteCas,
+                        child: Text(context.l10n.deleteSavedPassword),
+                      ),
                   ],
                 ),
               ],
