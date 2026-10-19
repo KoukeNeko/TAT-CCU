@@ -12,7 +12,16 @@ import '../../l10n/l10n.dart';
 typedef _Tab = (IconData icon, String label, Tone tone, ShapeBorder shape);
 
 const _barHeight = 72.0;
-const _activeWidth = 100.0;
+
+/// Selected label style; the capsule is sized from it.
+const _labelStyle = TextStyle(fontSize: 15, fontWeight: FontWeight.w900);
+
+/// Left inset, icon, gap and right inset around the selected label; the
+/// icon sits as far from the capsule edge as from its top: (52 - 38) / 2.
+const _capsuleChrome = 7.0 + 38 + 8 + 16;
+
+/// Narrowest an unselected slot gets, so long labels never squeeze icons.
+const _minSlot = 44.0;
 // Tuned toward SwiftUI's default spring: unhurried, settles without a
 // visible bounce.
 const _move = Duration(milliseconds: 480);
@@ -47,25 +56,37 @@ class _AppShellState extends State<AppShell> {
 
   int get _shown => _hover ?? widget.shell.currentIndex;
 
+  /// Width of each tab's capsule when selected, from its label in the
+  /// current language and text size; set on every layout.
+  List<double> _capsules = const [];
+
+  /// Slot widths with [selected] widened to its capsule.
+  List<double> _slots(double width, int selected) {
+    final n = _capsules.length;
+    final active = _capsules[selected];
+    final other = (width - active) / (n - 1);
+    return [for (var i = 0; i < n; i++) i == selected ? active : other];
+  }
+
   /// Tab slot under [x]; slots are laid out for the tab currently shown, so
   /// the widened capsule stays under the finger and does not flicker back.
-  int _indexAt(double x, double width, int count) {
-    final other = (width - _activeWidth) / (count - 1);
+  int _indexAt(double x, double width) {
     var edge = 0.0;
-    for (var i = 0; i < count; i++) {
-      edge += i == _shown ? _activeWidth : other;
+    final slots = _slots(width, _shown);
+    for (final (i, w) in slots.indexed) {
+      edge += w;
       if (x < edge) return i;
     }
-    return count - 1;
+    return slots.length - 1;
   }
 
   void _press(double x) => setState(() => _downX = x);
 
-  void _slide(double x, double width, int count) {
+  void _slide(double x, double width) {
     final down = _downX;
     if (down == null) return;
     if (_hover == null && (x - down).abs() < _dragSlop) return;
-    final i = _indexAt(x.clamp(0, width - 1), width, count);
+    final i = _indexAt(x.clamp(0, width - 1), width);
     if (i == _hover) return;
     if (_hover != null || i != widget.shell.currentIndex) {
       HapticFeedback.selectionClick();
@@ -73,10 +94,9 @@ class _AppShellState extends State<AppShell> {
     setState(() => _hover = i);
   }
 
-  void _release(double width, int count, {required bool commit}) {
+  void _release(double width, {required bool commit}) {
     final down = _downX;
-    final target =
-        _hover ?? (down == null ? null : _indexAt(down, width, count));
+    final target = _hover ?? (down == null ? null : _indexAt(down, width));
     setState(() {
       _downX = null;
       _hover = null;
@@ -148,19 +168,35 @@ class _AppShellState extends State<AppShell> {
                 builder: (context, box) {
                   final w = box.maxWidth;
                   final n = tabs.length;
-                  final other = (w - _activeWidth) / (n - 1);
+                  final style = DefaultTextStyle.of(context).style
+                      .merge(_labelStyle);
+                  final scaler = MediaQuery.textScalerOf(context);
+                  _capsules = [
+                    for (final (_, label, _, _) in tabs)
+                      (TextPainter(
+                            text: TextSpan(text: label, style: style),
+                            textDirection: Directionality.of(context),
+                            textScaler: scaler,
+                            maxLines: 1,
+                          )..layout()).width.ceilToDouble().clamp(
+                            0,
+                            w - (n - 1) * _minSlot - _capsuleChrome,
+                          ) +
+                          _capsuleChrome,
+                  ];
+                  final slots = _slots(w, _shown);
                   return Listener(
                     behavior: HitTestBehavior.opaque,
                     onPointerDown: (e) => _press(e.localPosition.dx),
-                    onPointerMove: (e) => _slide(e.localPosition.dx, w, n),
-                    onPointerUp: (_) => _release(w, n, commit: true),
-                    onPointerCancel: (_) => _release(w, n, commit: false),
+                    onPointerMove: (e) => _slide(e.localPosition.dx, w),
+                    onPointerUp: (_) => _release(w, commit: true),
+                    onPointerCancel: (_) => _release(w, commit: false),
                     child: Row(
                       children: [
                         for (final (i, tab) in tabs.indexed)
                           _TabSlot(
                             tab: tab,
-                            width: i == _shown ? _activeWidth : other,
+                            width: slots[i],
                             selected: i == _shown,
                             pressed: pressed && i == _shown,
                           ),
@@ -312,11 +348,10 @@ class _TabSlot extends StatelessWidget {
                                 label,
                                 maxLines: 1,
                                 softWrap: false,
-                                style: TextStyle(
-                                  color: tone.ink,
-                                  fontSize: 15,
-                                  fontWeight: FontWeight.w900,
-                                ),
+                                // Clips rather than wraps if the bar is too
+                                // narrow for the whole label.
+                                overflow: TextOverflow.fade,
+                                style: _labelStyle.copyWith(color: tone.ink),
                               ),
                             )
                           : const SizedBox.shrink(),
