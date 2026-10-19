@@ -584,4 +584,33 @@ class AppLocalizationsJa extends AppLocalizations {
     });
     return '$_temp0';
   }
+
+  @override
+  String get leave => '休暇';
+
+  @override
+  String get leaveApproved => '承認済み';
+
+  @override
+  String get leavePending => '審査中';
+
+  @override
+  String get leaveCancelled => '取り消し済み';
+
+  @override
+  String get myLeaves => '休暇申請';
+
+  @override
+  String get noLeaves => '休暇申請はありません';
+
+  @override
+  String get applyLeave => '休暇を申請';
+
+  @override
+  String get cancelLeave => '休暇を取り消す';
+
+  @override
+  String recordCount(int count) {
+    return '$count 件';
+  }
 }

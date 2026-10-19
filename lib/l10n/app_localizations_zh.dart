@@ -597,4 +597,33 @@ class AppLocalizationsZh extends AppLocalizations {
     });
     return '$_temp0';
   }
+
+  @override
+  String get leave => '請假';
+
+  @override
+  String get leaveApproved => '已核准';
+
+  @override
+  String get leavePending => '審核中';
+
+  @override
+  String get leaveCancelled => '已銷假';
+
+  @override
+  String get myLeaves => '假單';
+
+  @override
+  String get noLeaves => '沒有假單';
+
+  @override
+  String get applyLeave => '請假申請';
+
+  @override
+  String get cancelLeave => '銷假申請';
+
+  @override
+  String recordCount(int count) {
+    return '$count 筆';
+  }
 }

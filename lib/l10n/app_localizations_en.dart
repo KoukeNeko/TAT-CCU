@@ -643,4 +643,39 @@ class AppLocalizationsEn extends AppLocalizations {
     });
     return '$_temp0';
   }
+
+  @override
+  String get leave => 'Leave';
+
+  @override
+  String get leaveApproved => 'Approved';
+
+  @override
+  String get leavePending => 'Pending';
+
+  @override
+  String get leaveCancelled => 'Cancelled';
+
+  @override
+  String get myLeaves => 'Leave requests';
+
+  @override
+  String get noLeaves => 'No leave requests';
+
+  @override
+  String get applyLeave => 'Request leave';
+
+  @override
+  String get cancelLeave => 'Cancel leave';
+
+  @override
+  String recordCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count requests',
+      one: '1 request',
+    );
+    return '$_temp0';
+  }
 }

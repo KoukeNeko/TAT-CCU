@@ -154,5 +154,14 @@
   "sectionGeneral": "一般",
   "eventLabel": "{kind, select, assign{課題} quiz{小テスト} course{コースの予定} user{個人の予定} site{全学の予定} other{活動}}{action, select, due{締切} close{終了} open{開始} other{}}",
   "weekdayShort": "{day, select, 1{月} 2{火} 3{水} 4{木} 5{金} 6{土} 7{日} other{}}",
-  "weekdayFull": "{day, select, 1{月曜} 2{火曜} 3{水曜} 4{木曜} 5{金曜} 6{土曜} 7{日曜} other{}}"
+  "weekdayFull": "{day, select, 1{月曜} 2{火曜} 3{水曜} 4{木曜} 5{金曜} 6{土曜} 7{日曜} other{}}",
+  "leave": "休暇",
+  "leaveApproved": "承認済み",
+  "leavePending": "審査中",
+  "leaveCancelled": "取り消し済み",
+  "myLeaves": "休暇申請",
+  "noLeaves": "休暇申請はありません",
+  "applyLeave": "休暇を申請",
+  "cancelLeave": "休暇を取り消す",
+  "recordCount": "{count} 件"
 }

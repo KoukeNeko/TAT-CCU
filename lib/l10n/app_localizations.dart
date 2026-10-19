@@ -1029,6 +1029,60 @@ abstract class AppLocalizations {
   /// In zh, this message translates to:
   /// **'{day, select, 1{週一} 2{週二} 3{週三} 4{週四} 5{週五} 6{週六} 7{週日} other{}}'**
   String weekdayFull(String day);
+
+  /// No description provided for @leave.
+  ///
+  /// In zh, this message translates to:
+  /// **'請假'**
+  String get leave;
+
+  /// No description provided for @leaveApproved.
+  ///
+  /// In zh, this message translates to:
+  /// **'已核准'**
+  String get leaveApproved;
+
+  /// No description provided for @leavePending.
+  ///
+  /// In zh, this message translates to:
+  /// **'審核中'**
+  String get leavePending;
+
+  /// No description provided for @leaveCancelled.
+  ///
+  /// In zh, this message translates to:
+  /// **'已銷假'**
+  String get leaveCancelled;
+
+  /// No description provided for @myLeaves.
+  ///
+  /// In zh, this message translates to:
+  /// **'假單'**
+  String get myLeaves;
+
+  /// No description provided for @noLeaves.
+  ///
+  /// In zh, this message translates to:
+  /// **'沒有假單'**
+  String get noLeaves;
+
+  /// No description provided for @applyLeave.
+  ///
+  /// In zh, this message translates to:
+  /// **'請假申請'**
+  String get applyLeave;
+
+  /// No description provided for @cancelLeave.
+  ///
+  /// In zh, this message translates to:
+  /// **'銷假申請'**
+  String get cancelLeave;
+
+  /// No description provided for @recordCount.
+  ///
+  /// In zh, this message translates to:
+  /// **'{count} 筆'**
+  String recordCount(int count);
 }
 
 class _AppLocalizationsDelegate

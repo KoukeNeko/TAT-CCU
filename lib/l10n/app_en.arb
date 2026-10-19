@@ -154,5 +154,14 @@
   "sectionGeneral": "General",
   "eventLabel": "{kind, select, assign{Assignment} quiz{Quiz} course{Course event} user{Personal event} site{Campus event} other{Activity}}{action, select, due{ due} close{ closes} open{ opens} other{}}",
   "weekdayShort": "{day, select, 1{Mon} 2{Tue} 3{Wed} 4{Thu} 5{Fri} 6{Sat} 7{Sun} other{}}",
-  "weekdayFull": "{day, select, 1{Mon} 2{Tue} 3{Wed} 4{Thu} 5{Fri} 6{Sat} 7{Sun} other{}}"
+  "weekdayFull": "{day, select, 1{Mon} 2{Tue} 3{Wed} 4{Thu} 5{Fri} 6{Sat} 7{Sun} other{}}",
+  "leave": "Leave",
+  "leaveApproved": "Approved",
+  "leavePending": "Pending",
+  "leaveCancelled": "Cancelled",
+  "myLeaves": "Leave requests",
+  "noLeaves": "No leave requests",
+  "applyLeave": "Request leave",
+  "cancelLeave": "Cancel leave",
+  "recordCount": "{count, plural, =1{1 request} other{{count} requests}}"
 }
