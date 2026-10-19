@@ -93,33 +93,54 @@ class EcourseRepository {
   EcourseRepository(this._client);
 
   final MoodleClient _client;
-  List<Course>? _courses;
-  int? _userId;
+  Future<List<Course>>? _courses;
+  Future<int>? _userId;
 
-  Future<int> _currentUserId() async => _userId ??=
-      ((await _client.call('core_webservice_get_site_info') as Map)['userid']
-              as num)
-          .toInt();
+  /// Shared by every caller, so screens loading at once ask eCourse2 once.
+  /// A failed request is dropped so the next call tries again.
+  Future<T> _once<T>(
+    Future<T>? Function() get,
+    void Function(Future<T>?) set,
+    Future<T> Function() load,
+  ) {
+    final pending = get();
+    if (pending != null) return pending;
+    final future = load();
+    set(future);
+    // Callers still see the error; only the cache forgets it.
+    future.then((_) {}, onError: (Object _) => set(null));
+    return future;
+  }
+
+  Future<int> _currentUserId() => _once(
+    () => _userId,
+    (f) => _userId = f,
+    () async =>
+        ((await _client.call('core_webservice_get_site_info') as Map)['userid']
+                as num)
+            .toInt(),
+  );
 
   /// Enrolled courses with timetable custom fields, newest semester first.
   /// Cached for the session; pass [refresh] to refetch.
-  Future<List<Course>> courses({bool refresh = false}) async {
-    if (_courses != null && !refresh) return _courses!;
-    final info = await _client.call('core_webservice_get_site_info') as Map;
-    final enrolled = await _client.call('core_enrol_get_users_courses', {
-      'userid': info['userid'],
-    }) as List;
-    if (enrolled.isEmpty) return _courses = [];
-    final detail = await _client.call('core_course_get_courses_by_field', {
-      'field': 'ids',
-      'value': enrolled.map((c) => c['id']).join(','),
-    }) as Map;
-    final list = [
-      for (final c in detail['courses'] as List)
-        Course.fromMoodle(c as Map<String, dynamic>),
-    ]..sort((a, b) => b.shortName.compareTo(a.shortName));
-    assignCourseColors(list);
-    return _courses = list;
+  Future<List<Course>> courses({bool refresh = false}) {
+    if (refresh) _courses = null;
+    return _once(() => _courses, (f) => _courses = f, () async {
+      final enrolled = await _client.call('core_enrol_get_users_courses', {
+        'userid': await _currentUserId(),
+      }) as List;
+      if (enrolled.isEmpty) return <Course>[];
+      final detail = await _client.call('core_course_get_courses_by_field', {
+        'field': 'ids',
+        'value': enrolled.map((c) => c['id']).join(','),
+      }) as Map;
+      final list = [
+        for (final c in detail['courses'] as List)
+          Course.fromMoodle(c as Map<String, dynamic>),
+      ]..sort((a, b) => b.shortName.compareTo(a.shortName));
+      assignCourseColors(list);
+      return list;
+    });
   }
 
   /// Courses of the newest semester, which is what the timetable shows.
