@@ -53,6 +53,7 @@ class CampusSessionState extends State<CampusSession> {
   var _signingIn = false;
   String? _ranOn;
   Completer<void>? _pending;
+  Timer? _stuck;
 
   @override
   void initState() {
@@ -84,8 +85,18 @@ class CampusSessionState extends State<CampusSession> {
 
   void _arrived(String url) {
     _cas.pageFinished(url);
+    _stuck?.cancel();
     final uri = Uri.parse(url);
-    if (widget.via.any('${uri.host}${uri.path}'.startsWith)) return;
+    if (widget.via.any('${uri.host}${uri.path}'.startsWith)) {
+      // These pages move on by themselves; one that stays is showing the
+      // user something (an error or a form), so show it.
+      _stuck = Timer(const Duration(seconds: 8), () {
+        if (!mounted) return;
+        setState(() => _signingIn = true);
+        _settle();
+      });
+      return;
+    }
     if (uri.host == widget.host) {
       setState(() => _signingIn = false);
       // Once per page: a redirect or SAML page on the host drops the
@@ -110,6 +121,12 @@ class CampusSessionState extends State<CampusSession> {
     if (json['error'] == null) CampusCookies.save();
     widget.onMessage(json);
     _settle();
+  }
+
+  @override
+  void dispose() {
+    _stuck?.cancel();
+    super.dispose();
   }
 
   @override
