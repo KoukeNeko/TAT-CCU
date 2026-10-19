@@ -31,4 +31,36 @@ void main() {
     count = 5;
     expect(await repo().watch((r) => r.unreadMail()).toList(), [3, 5]);
   });
+
+  test('a saved site_info answers the user id without the network', () async {
+    final dir = await Directory.systemTemp.createTemp('cache');
+    addTearDown(() => dir.delete(recursive: true));
+    final calls = <String>[];
+    EcourseRepository repo() => EcourseRepository(
+      MoodleClient(
+        siteUrl: Uri.parse('https://example.test/'),
+        token: 't',
+        cache: ResponseCache('t', dir: dir),
+        httpClient: MockClient((request) async {
+          final function = request.bodyFields['wsfunction']!;
+          calls.add(function);
+          return http.Response(
+            jsonEncode(
+              function == 'core_webservice_get_site_info' ? {'userid': 7} : 2,
+            ),
+            200,
+          );
+        }),
+      ),
+    );
+
+    // First launch asks eCourse2 who the user is.
+    await repo().unreadNotices();
+    expect(calls, contains('core_webservice_get_site_info'));
+
+    // The next launch reuses the saved answer.
+    calls.clear();
+    expect(await repo().unreadNotices(), 2);
+    expect(calls, ['message_popup_get_unread_popup_notification_count']);
+  });
 }

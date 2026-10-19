@@ -129,14 +129,18 @@ class EcourseRepository {
     return future;
   }
 
-  Future<int> _currentUserId() => _once(
-    () => _userId,
-    (f) => _userId = f,
-    () async =>
-        ((await _client.call('core_webservice_get_site_info') as Map)['userid']
-                as num)
-            .toInt(),
-  );
+  /// A token belongs to one user, so a saved site_info answers this without
+  /// waiting for eCourse2; every chain that needs the id starts at once.
+  Future<int> _currentUserId() =>
+      _once(() => _userId, (f) => _userId = f, () async {
+        Object? info;
+        try {
+          info = await _client.offline().call('core_webservice_get_site_info');
+        } on CacheMiss {
+          info = await _client.call('core_webservice_get_site_info');
+        }
+        return ((info as Map)['userid'] as num).toInt();
+      });
 
   /// Enrolled courses with timetable custom fields, newest semester first.
   /// Cached for the session; pass [refresh] to refetch.
