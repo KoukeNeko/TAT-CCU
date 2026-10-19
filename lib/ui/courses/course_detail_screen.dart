@@ -608,12 +608,10 @@ class _ModuleRow extends StatelessWidget {
         ? context.l10n.fileCount(module.files.length)
         : null;
     final overdue = due != null && due.isBefore(DateTime.now());
+    final path = modulePath(courseId, module);
     return InkWell(
-      onTap: moduleTypesWithPage.contains(module.type)
-          ? () => context.push(
-              '/courses/$courseId/modules/${module.id}',
-              extra: module.name,
-            )
+      onTap: path != null
+          ? () => context.push(path, extra: module.name)
           : module.url == null
           ? null
           : () => openExternal(module.url!),

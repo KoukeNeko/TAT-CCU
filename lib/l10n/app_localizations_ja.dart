@@ -1404,4 +1404,75 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get incomeNone => '所得データなし';
+
+  @override
+  String get attendanceRate => '出席率';
+
+  @override
+  String attendancePoints(String points) {
+    return '点数 $points';
+  }
+
+  @override
+  String get attendanceTakenUnit => '回記録済み';
+
+  @override
+  String get attendanceSessions => '授業回';
+
+  @override
+  String get attendanceNotTaken => '未記録';
+
+  @override
+  String get noAttendance => '出席記録はありません';
+
+  @override
+  String get absenceHistory => '自分の欠席届';
+
+  @override
+  String get noAbsences => '欠席届はありません';
+
+  @override
+  String get absenceNew => '欠席届を書く';
+
+  @override
+  String get absenceCourse => '科目';
+
+  @override
+  String get absenceDate => '日付';
+
+  @override
+  String get absenceType => '種類';
+
+  @override
+  String get absenceType0 => '私用';
+
+  @override
+  String get absenceType1 => '病気';
+
+  @override
+  String get absenceType2 => '公欠';
+
+  @override
+  String get absenceType3 => '忌引';
+
+  @override
+  String get absenceType4 => '出産';
+
+  @override
+  String get absenceMode => '授業形態';
+
+  @override
+  String get absenceInPerson => '対面';
+
+  @override
+  String get absenceOnline => '同期オンライン';
+
+  @override
+  String get absenceRemark => '備考';
+
+  @override
+  String get absenceWarning => '担当教員への連絡のみで、正式な欠席手続きの代わりにはなりません。';
+
+  @override
+  String get absenceSubmitTitle => 'この欠席届を送信しますか？';
 }

@@ -2529,6 +2529,144 @@ abstract class AppLocalizations {
   /// In zh, this message translates to:
   /// **'沒有所得資料'**
   String get incomeNone;
+
+  /// No description provided for @attendanceRate.
+  ///
+  /// In zh, this message translates to:
+  /// **'出席率'**
+  String get attendanceRate;
+
+  /// No description provided for @attendancePoints.
+  ///
+  /// In zh, this message translates to:
+  /// **'分數 {points}'**
+  String attendancePoints(String points);
+
+  /// No description provided for @attendanceTakenUnit.
+  ///
+  /// In zh, this message translates to:
+  /// **'次已記錄'**
+  String get attendanceTakenUnit;
+
+  /// No description provided for @attendanceSessions.
+  ///
+  /// In zh, this message translates to:
+  /// **'上課時段'**
+  String get attendanceSessions;
+
+  /// No description provided for @attendanceNotTaken.
+  ///
+  /// In zh, this message translates to:
+  /// **'尚未點名'**
+  String get attendanceNotTaken;
+
+  /// No description provided for @noAttendance.
+  ///
+  /// In zh, this message translates to:
+  /// **'還沒有點名紀錄'**
+  String get noAttendance;
+
+  /// No description provided for @absenceHistory.
+  ///
+  /// In zh, this message translates to:
+  /// **'個人請假表'**
+  String get absenceHistory;
+
+  /// No description provided for @noAbsences.
+  ///
+  /// In zh, this message translates to:
+  /// **'沒有請假紀錄'**
+  String get noAbsences;
+
+  /// No description provided for @absenceNew.
+  ///
+  /// In zh, this message translates to:
+  /// **'填寫請假單'**
+  String get absenceNew;
+
+  /// No description provided for @absenceCourse.
+  ///
+  /// In zh, this message translates to:
+  /// **'課程'**
+  String get absenceCourse;
+
+  /// No description provided for @absenceDate.
+  ///
+  /// In zh, this message translates to:
+  /// **'請假日期'**
+  String get absenceDate;
+
+  /// No description provided for @absenceType.
+  ///
+  /// In zh, this message translates to:
+  /// **'請假類型'**
+  String get absenceType;
+
+  /// No description provided for @absenceType0.
+  ///
+  /// In zh, this message translates to:
+  /// **'事假'**
+  String get absenceType0;
+
+  /// No description provided for @absenceType1.
+  ///
+  /// In zh, this message translates to:
+  /// **'病假'**
+  String get absenceType1;
+
+  /// No description provided for @absenceType2.
+  ///
+  /// In zh, this message translates to:
+  /// **'公假'**
+  String get absenceType2;
+
+  /// No description provided for @absenceType3.
+  ///
+  /// In zh, this message translates to:
+  /// **'喪假'**
+  String get absenceType3;
+
+  /// No description provided for @absenceType4.
+  ///
+  /// In zh, this message translates to:
+  /// **'娩假'**
+  String get absenceType4;
+
+  /// No description provided for @absenceMode.
+  ///
+  /// In zh, this message translates to:
+  /// **'課程類型'**
+  String get absenceMode;
+
+  /// No description provided for @absenceInPerson.
+  ///
+  /// In zh, this message translates to:
+  /// **'面授'**
+  String get absenceInPerson;
+
+  /// No description provided for @absenceOnline.
+  ///
+  /// In zh, this message translates to:
+  /// **'同步課程'**
+  String get absenceOnline;
+
+  /// No description provided for @absenceRemark.
+  ///
+  /// In zh, this message translates to:
+  /// **'備註'**
+  String get absenceRemark;
+
+  /// No description provided for @absenceWarning.
+  ///
+  /// In zh, this message translates to:
+  /// **'只通知授課教師，不能取代學校的正式請假流程。'**
+  String get absenceWarning;
+
+  /// No description provided for @absenceSubmitTitle.
+  ///
+  /// In zh, this message translates to:
+  /// **'送出請假單？'**
+  String get absenceSubmitTitle;
 }
 
 class _AppLocalizationsDelegate

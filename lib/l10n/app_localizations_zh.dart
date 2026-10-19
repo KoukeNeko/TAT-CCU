@@ -1415,4 +1415,75 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get incomeNone => '沒有所得資料';
+
+  @override
+  String get attendanceRate => '出席率';
+
+  @override
+  String attendancePoints(String points) {
+    return '分數 $points';
+  }
+
+  @override
+  String get attendanceTakenUnit => '次已記錄';
+
+  @override
+  String get attendanceSessions => '上課時段';
+
+  @override
+  String get attendanceNotTaken => '尚未點名';
+
+  @override
+  String get noAttendance => '還沒有點名紀錄';
+
+  @override
+  String get absenceHistory => '個人請假表';
+
+  @override
+  String get noAbsences => '沒有請假紀錄';
+
+  @override
+  String get absenceNew => '填寫請假單';
+
+  @override
+  String get absenceCourse => '課程';
+
+  @override
+  String get absenceDate => '請假日期';
+
+  @override
+  String get absenceType => '請假類型';
+
+  @override
+  String get absenceType0 => '事假';
+
+  @override
+  String get absenceType1 => '病假';
+
+  @override
+  String get absenceType2 => '公假';
+
+  @override
+  String get absenceType3 => '喪假';
+
+  @override
+  String get absenceType4 => '娩假';
+
+  @override
+  String get absenceMode => '課程類型';
+
+  @override
+  String get absenceInPerson => '面授';
+
+  @override
+  String get absenceOnline => '同步課程';
+
+  @override
+  String get absenceRemark => '備註';
+
+  @override
+  String get absenceWarning => '只通知授課教師，不能取代學校的正式請假流程。';
+
+  @override
+  String get absenceSubmitTitle => '送出請假單？';
 }

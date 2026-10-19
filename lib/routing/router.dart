@@ -4,6 +4,8 @@ import 'package:go_router/go_router.dart';
 import '../data/repositories/ecourse_auth_repository.dart';
 import '../ui/account/account_screen.dart';
 import '../ui/core/app_shell.dart';
+import '../ui/courses/absence_screen.dart';
+import '../ui/courses/attendance_screen.dart';
 import '../ui/courses/course_detail_screen.dart';
 import '../ui/courses/courses_screen.dart';
 import '../ui/courses/forum_screen.dart';
@@ -89,6 +91,20 @@ GoRouter buildRouter(EcourseAuthRepository auth) => GoRouter(
                       path: 'modules/:cmid',
                       builder: (_, state) => ModuleScreen(
                         courseId: int.parse(state.pathParameters['id']!),
+                        cmid: int.parse(state.pathParameters['cmid']!),
+                        title: state.extra as String?,
+                      ),
+                    ),
+                    GoRoute(
+                      path: 'attendance/:cmid',
+                      builder: (_, state) => AttendanceScreen(
+                        cmid: int.parse(state.pathParameters['cmid']!),
+                        title: state.extra as String?,
+                      ),
+                    ),
+                    GoRoute(
+                      path: 'absence/:cmid',
+                      builder: (_, state) => AbsenceScreen(
                         cmid: int.parse(state.pathParameters['cmid']!),
                         title: state.extra as String?,
                       ),

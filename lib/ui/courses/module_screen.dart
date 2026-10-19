@@ -11,6 +11,15 @@ import 'forum_screen.dart';
 /// Module types with a page of their own; others open on eCourse2.
 const moduleTypesWithPage = {'assign', 'quiz', 'folder', 'resource', 'forum'};
 
+/// Where [m] opens in the app, or null when only eCourse2's page has it.
+String? modulePath(int courseId, Module m) => switch (m.type) {
+  'attendance' => '/courses/$courseId/attendance/${m.id}',
+  'absenceform' => '/courses/$courseId/absence/${m.id}',
+  _ when moduleTypesWithPage.contains(m.type) =>
+    '/courses/$courseId/modules/${m.id}',
+  _ => null,
+};
+
 /// One assignment, quiz or file collection (design/round-11, variant B1):
 /// a horizontal progress card for timed work, then files and description.
 class ModuleScreen extends StatelessWidget {

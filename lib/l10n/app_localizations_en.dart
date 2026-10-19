@@ -1512,4 +1512,76 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get incomeNone => 'No income records';
+
+  @override
+  String get attendanceRate => 'Attendance';
+
+  @override
+  String attendancePoints(String points) {
+    return 'Points $points';
+  }
+
+  @override
+  String get attendanceTakenUnit => 'recorded';
+
+  @override
+  String get attendanceSessions => 'Sessions';
+
+  @override
+  String get attendanceNotTaken => 'Not taken yet';
+
+  @override
+  String get noAttendance => 'No sessions recorded';
+
+  @override
+  String get absenceHistory => 'My requests';
+
+  @override
+  String get noAbsences => 'No requests';
+
+  @override
+  String get absenceNew => 'New request';
+
+  @override
+  String get absenceCourse => 'Course';
+
+  @override
+  String get absenceDate => 'Date';
+
+  @override
+  String get absenceType => 'Type';
+
+  @override
+  String get absenceType0 => 'Personal';
+
+  @override
+  String get absenceType1 => 'Sick';
+
+  @override
+  String get absenceType2 => 'Official';
+
+  @override
+  String get absenceType3 => 'Bereavement';
+
+  @override
+  String get absenceType4 => 'Maternity';
+
+  @override
+  String get absenceMode => 'Class';
+
+  @override
+  String get absenceInPerson => 'In person';
+
+  @override
+  String get absenceOnline => 'Online';
+
+  @override
+  String get absenceRemark => 'Note';
+
+  @override
+  String get absenceWarning =>
+      'This only tells the instructor; it does not replace the school\'s leave process.';
+
+  @override
+  String get absenceSubmitTitle => 'Send this request?';
 }

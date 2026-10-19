@@ -787,5 +787,35 @@
   "incomePension": "勞退自提",
   "incomeDetail": "所得明細表",
   "incomeWithholding": "扣繳憑單",
-  "incomeNone": "沒有所得資料"
+  "incomeNone": "沒有所得資料",
+  "attendanceRate": "出席率",
+  "attendancePoints": "分數 {points}",
+  "@attendancePoints": {
+    "placeholders": {
+      "points": {
+        "type": "String"
+      }
+    }
+  },
+  "attendanceTakenUnit": "次已記錄",
+  "attendanceSessions": "上課時段",
+  "attendanceNotTaken": "尚未點名",
+  "noAttendance": "還沒有點名紀錄",
+  "absenceHistory": "個人請假表",
+  "noAbsences": "沒有請假紀錄",
+  "absenceNew": "填寫請假單",
+  "absenceCourse": "課程",
+  "absenceDate": "請假日期",
+  "absenceType": "請假類型",
+  "absenceType0": "事假",
+  "absenceType1": "病假",
+  "absenceType2": "公假",
+  "absenceType3": "喪假",
+  "absenceType4": "娩假",
+  "absenceMode": "課程類型",
+  "absenceInPerson": "面授",
+  "absenceOnline": "同步課程",
+  "absenceRemark": "備註",
+  "absenceWarning": "只通知授課教師，不能取代學校的正式請假流程。",
+  "absenceSubmitTitle": "送出請假單？"
 }
