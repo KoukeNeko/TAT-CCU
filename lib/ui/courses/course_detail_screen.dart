@@ -121,7 +121,7 @@ class CourseDetailScreen extends StatelessWidget {
                 SectionLabel(context.l10n.toDo),
                 for (final d in summary.due)
                   Padding(
-                    padding: const EdgeInsets.only(bottom: 10),
+                    padding: const EdgeInsets.only(bottom: rowGap),
                     child: DueBlock(item: d),
                   ),
               ],
@@ -200,7 +200,7 @@ class _Hero extends StatelessWidget {
     return Material(
       color: tone.fill,
       shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.all(Radius.circular(32)),
+        borderRadius: BorderRadius.all(Radius.circular(Corners.card)),
       ),
       clipBehavior: Clip.antiAlias,
       child: Stack(
@@ -290,7 +290,7 @@ class _Stat extends StatelessWidget {
     return Expanded(
       child: ToneBlock(
         tone: tone,
-        radius: 22,
+        radius: Corners.row,
         padding: const EdgeInsets.all(12),
         onTap: onTap,
         child: Column(
@@ -519,14 +519,14 @@ class _SectionListState extends State<_SectionList> {
       body: Builder(
         builder: (context) => SingleChildScrollView(
           controller: _scroll,
-          padding: scrollPadding(context, top: 0),
+          padding: scrollPadding(context),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               for (final (i, s) in sections.indexed) ...[
                 Padding(
                   key: _headers[i],
-                  padding: const EdgeInsets.fromLTRB(4, 18, 4, 8),
+                  padding: const EdgeInsets.fromLTRB(4, 20, 4, 10),
                   child: Text.rich(
                     TextSpan(
                       children: [
@@ -620,7 +620,7 @@ class _ModuleRow extends StatelessWidget {
               height: 36,
               decoration: BoxDecoration(
                 color: tone.fill,
-                borderRadius: BorderRadius.circular(12),
+                borderRadius: BorderRadius.circular(Corners.small),
               ),
               child: Icon(
                 _moduleIcons[module.type] ?? Icons.extension_outlined,

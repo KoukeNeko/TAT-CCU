@@ -184,7 +184,7 @@ class _Body extends StatelessWidget {
               Expanded(
                 child: ToneBlock(
                   tone: tone,
-                  radius: 22,
+                  radius: Corners.row,
                   padding: const EdgeInsets.all(12),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -210,28 +210,9 @@ class _Body extends StatelessWidget {
             ],
           ],
         ),
-        Padding(
-          padding: const EdgeInsets.fromLTRB(4, 20, 4, 10),
-          child: Row(
-            children: [
-              Text(
-                l10n.myLeaves,
-                style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                  fontWeight: FontWeight.w800,
-                  color: scheme.onSurfaceVariant,
-                ),
-              ),
-              const Spacer(),
-              if (requests.isNotEmpty)
-                Text(
-                  l10n.recordCount(requests.length),
-                  style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                    fontWeight: FontWeight.w800,
-                    color: scheme.onSurfaceVariant,
-                  ),
-                ),
-            ],
-          ),
+        SectionLabel(
+          l10n.myLeaves,
+          detail: requests.isEmpty ? null : l10n.recordCount(requests.length),
         ),
         if (requests.isEmpty)
           Padding(
@@ -296,7 +277,9 @@ class _RequestRow extends StatelessWidget {
     };
     return Material(
       color: scheme.surfaceContainerLow,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(22)),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(Corners.row),
+      ),
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
         child: Row(

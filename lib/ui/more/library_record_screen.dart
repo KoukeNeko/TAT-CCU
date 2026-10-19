@@ -5,6 +5,7 @@ import 'package:share_plus/share_plus.dart';
 import '../../data/services/primo_client.dart';
 import '../../l10n/l10n.dart';
 import '../core/campus_web_screen.dart';
+import '../core/theme.dart';
 import '../core/widgets.dart';
 import 'library_search_screen.dart';
 
@@ -89,7 +90,7 @@ class LibraryRecordScreen extends StatelessWidget {
                   child: Material(
                     color: scheme.surfaceContainerLow,
                     shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(22),
+                      borderRadius: BorderRadius.circular(Corners.row),
                     ),
                     child: Padding(
                       padding: const EdgeInsets.all(14),

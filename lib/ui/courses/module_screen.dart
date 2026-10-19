@@ -379,7 +379,7 @@ class _Fact extends StatelessWidget {
           scheme.onSurface,
           scheme.onSurfaceVariant,
         ),
-        radius: 20,
+        radius: Corners.row,
         padding: const EdgeInsets.all(12),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -506,7 +506,7 @@ class _FileIcon extends StatelessWidget {
       height: 36,
       decoration: BoxDecoration(
         color: tone.fill,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(Corners.small),
       ),
       child: Icon(icon, size: 20, color: tone.ink),
     );

@@ -84,7 +84,7 @@ class _MoreScreenState extends State<MoreScreen> {
                           for (final s in favorites)
                             ToneBlock(
                               tone: t.peach,
-                              radius: 16,
+                              radius: Corners.inset,
                               padding: const EdgeInsets.symmetric(
                                 horizontal: 12,
                               ),
@@ -124,7 +124,7 @@ class _AccountCard extends StatelessWidget {
     final signedIn = context.watch<EcourseAuthRepository>().isSignedIn;
     return ToneBlock(
       tone: tone,
-      radius: 28,
+      radius: Corners.card,
       padding: const EdgeInsets.all(16),
       onTap: () => context.push('/more/account'),
       child: Column(
@@ -189,7 +189,7 @@ class _Status extends StatelessWidget {
         padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 9),
         decoration: BoxDecoration(
           color: Colors.white.withValues(alpha: light ? 0.55 : 0.1),
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: BorderRadius.circular(Corners.inset),
         ),
         child: Row(
           children: [
@@ -244,7 +244,7 @@ class _Row extends StatelessWidget {
         height: 36,
         decoration: BoxDecoration(
           color: tone.fill,
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(Corners.small),
         ),
         child: Icon(icon, size: 20, color: tone.ink),
       ),

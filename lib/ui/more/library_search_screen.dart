@@ -298,7 +298,7 @@ class _Browse extends StatelessWidget {
                 for (final (i, c) in shelves.others.indexed)
                   ToneBlock(
                     tone: tones.cycle[(i + 3) % tones.cycle.length],
-                    radius: 20,
+                    radius: Corners.row,
                     padding: const EdgeInsets.all(12),
                     onTap: () =>
                         context.push('/more/library/collection/${c.id}'),
@@ -318,7 +318,7 @@ class _Browse extends StatelessWidget {
               ],
             ),
             Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16),
+              padding: const EdgeInsets.symmetric(horizontal: pageMargin),
               child: SectionLabel(l10n.onSchoolWebsite),
             ),
             Card(
@@ -395,7 +395,7 @@ class _CarouselState extends State<_Carousel> {
                 padding: const EdgeInsets.only(left: 16),
                 child: ToneBlock(
                   tone: tone,
-                  radius: 26,
+                  radius: Corners.card,
                   padding: const EdgeInsets.all(16),
                   onTap: () => context.push(
                     '/more/library/record',
@@ -493,29 +493,15 @@ class _ShelfHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
+    // The page has no side padding (shelves run to the edge); add it here.
     return Padding(
-      padding: const EdgeInsets.fromLTRB(20, 16, 12, 4),
-      child: Row(
-        children: [
-          Expanded(
-            child: Text(
-              title,
-              style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                fontWeight: FontWeight.w800,
-                color: scheme.onSurfaceVariant,
-              ),
-            ),
-          ),
-          TextButton(
-            onPressed: onAll,
-            style: TextButton.styleFrom(
-              visualDensity: VisualDensity.compact,
-              textStyle: const TextStyle(fontWeight: FontWeight.w900),
-            ),
-            child: Text(all ?? context.l10n.viewAll),
-          ),
-        ],
+      padding: const EdgeInsets.symmetric(horizontal: pageMargin),
+      child: SectionLabel(
+        title,
+        action: TextButton(
+          onPressed: onAll,
+          child: Text(all ?? context.l10n.viewAll),
+        ),
       ),
     );
   }
@@ -884,7 +870,9 @@ class RecordRow extends StatelessWidget {
     );
     return Material(
       color: scheme.surfaceContainerLow,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(22)),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(Corners.row),
+      ),
       clipBehavior: Clip.antiAlias,
       child: InkWell(
         onTap: () => context.push(

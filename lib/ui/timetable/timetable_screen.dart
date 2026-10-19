@@ -150,7 +150,7 @@ Widget _dayList(BuildContext context, List<Course> courses, int day) {
         ),
       for (final s in slots)
         Padding(
-          padding: const EdgeInsets.only(bottom: 10),
+          padding: const EdgeInsets.only(bottom: rowGap),
           child: _ClassBlock(
             course: s.course,
             start: s.session.start,
@@ -417,7 +417,7 @@ class _SemesterPanel extends StatelessWidget {
     final scheme = theme.colorScheme;
     final tone = context.tones.lilac;
     final light = theme.brightness == Brightness.light;
-    const radius = BorderRadius.all(Radius.circular(28));
+    const radius = BorderRadius.all(Radius.circular(Corners.card));
     return DecoratedBox(
       decoration: BoxDecoration(
         borderRadius: radius,
@@ -475,7 +475,7 @@ class _SemesterPanel extends StatelessWidget {
     return Material(
       color: chosen ? tone.fill : Colors.transparent,
       shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.all(Radius.circular(20)),
+        borderRadius: BorderRadius.all(Radius.circular(Corners.row)),
       ),
       clipBehavior: Clip.antiAlias,
       child: InkWell(

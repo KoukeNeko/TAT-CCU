@@ -114,7 +114,7 @@ class _TodayScreenState extends State<TodayScreen> {
               : l10n.todayClassesLeft('$n');
           final firstDue = d.due.firstOrNull;
           return ListView(
-            padding: scrollPadding(context, top: 20),
+            padding: scrollPadding(context),
             children: [
               // Header design A (design/round-09): date above; the headline
               // and the bell share one line, centered on each other.
@@ -228,7 +228,9 @@ class _Hero extends StatelessWidget {
     final tone = context.tones.lilac;
     return Material(
       color: tone.fill,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(36)),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(Corners.card),
+      ),
       clipBehavior: Clip.antiAlias,
       child: InkWell(
         onTap: () => context.push('/courses/${slot.course.id}'),
@@ -394,7 +396,7 @@ class _Tile extends StatelessWidget {
   Widget build(BuildContext context) {
     return ToneBlock(
       tone: tone,
-      radius: 28,
+      radius: Corners.card,
       padding: const EdgeInsets.all(16),
       onTap: onTap,
       child: SizedBox(

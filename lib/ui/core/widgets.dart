@@ -389,7 +389,7 @@ class ToneBlock extends StatelessWidget {
     required this.tone,
     required this.child,
     this.onTap,
-    this.radius = 28,
+    this.radius = Corners.card,
     this.padding = const EdgeInsets.all(18),
   });
 
@@ -562,20 +562,53 @@ class StatusPill extends StatelessWidget {
 }
 
 class SectionLabel extends StatelessWidget {
-  const SectionLabel(this.text, {super.key});
+  const SectionLabel(this.text, {super.key, this.detail, this.action});
 
   final String text;
+
+  /// Right-aligned, in the label's style: a count.
+  final String? detail;
+
+  /// Right-aligned button, such as 全部 or 編輯.
+  final Widget? action;
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final style = theme.textTheme.titleSmall?.copyWith(
+      fontWeight: FontWeight.w800,
+      color: theme.colorScheme.onSurfaceVariant,
+    );
     return Padding(
-      padding: const EdgeInsets.fromLTRB(4, 20, 4, 10),
-      child: Text(
-        text,
-        style: theme.textTheme.titleSmall?.copyWith(
-          fontWeight: FontWeight.w800,
-          color: theme.colorScheme.onSurfaceVariant,
+      padding: const EdgeInsets.fromLTRB(4, sectionAbove, 4, sectionBelow),
+      // One height with or without a button, so sections line up.
+      child: SizedBox(
+        height: 24,
+        child: Row(
+          children: [
+            Expanded(
+              child: Text(
+                text,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: style,
+              ),
+            ),
+            if (detail case final d?) Text(d, style: style),
+            if (action case final a?)
+              TextButtonTheme(
+                data: TextButtonThemeData(
+                  style: TextButton.styleFrom(
+                    visualDensity: VisualDensity.compact,
+                    padding: const EdgeInsets.symmetric(horizontal: 4),
+                    minimumSize: Size.zero,
+                    tapTargetSize: MaterialTapTargetSize.padded,
+                    textStyle: const TextStyle(fontWeight: FontWeight.w900),
+                  ),
+                ),
+                child: a,
+              ),
+          ],
         ),
       ),
     );
@@ -757,9 +790,14 @@ Future<void> openExternal(String url) =>
 /// body under the bar, so the bar's height arrives as bottom media padding.
 /// [top] is the gap below the app bar; one value so every page starts at
 /// the same height.
-EdgeInsets scrollPadding(BuildContext context, {double top = 12}) {
+EdgeInsets scrollPadding(BuildContext context, {double top = pageTop}) {
   // Both bars float: the nav bar below and the glass app bar above arrive
   // as media padding when the body extends behind them.
   final inset = MediaQuery.paddingOf(context);
-  return EdgeInsets.fromLTRB(16, top + inset.top, 16, 24 + inset.bottom);
+  return EdgeInsets.fromLTRB(
+    pageMargin,
+    top + inset.top,
+    pageMargin,
+    24 + inset.bottom,
+  );
 }

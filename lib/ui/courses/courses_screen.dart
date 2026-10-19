@@ -59,7 +59,7 @@ class _CoursesScreenState extends State<CoursesScreen> {
                 SectionLabel(semesterName(context, entry.key)),
                 for (final c in entry.value)
                   Padding(
-                    padding: const EdgeInsets.only(bottom: 10),
+                    padding: const EdgeInsets.only(bottom: rowGap),
                     child: _CourseBlock(course: c),
                   ),
               ],

@@ -185,9 +185,9 @@ class _PortalScreenState extends State<PortalScreen> {
               onChanged: (v) => setState(() => _query = v.trim()),
             ),
             if (!searching && favorites.isNotEmpty) ...[
-              _Label(
+              SectionLabel(
                 context.l10n.favorites,
-                trailing: TextButton(
+                action: TextButton(
                   onPressed: () => _editFavorites(context, prefs),
                   child: Text(context.l10n.edit),
                 ),
@@ -212,7 +212,7 @@ class _PortalScreenState extends State<PortalScreen> {
               ),
             ],
             if (!searching && recent.isNotEmpty) ...[
-              _Label(context.l10n.recentlyOpened),
+              SectionLabel(context.l10n.recentlyOpened),
               SizedBox(
                 height: 40,
                 child: ListView.separated(
@@ -233,13 +233,10 @@ class _PortalScreenState extends State<PortalScreen> {
                       .where((s) => s.name.toLowerCase().contains(q))
                       .toList()
                   case final shown when shown.isNotEmpty) ...[
-                _Label(group, count: shown.length),
+                SectionLabel(group, detail: '${shown.length}'),
                 Card(
                   color: scheme.surfaceContainerLow,
                   clipBehavior: Clip.antiAlias,
-                  shape: const RoundedRectangleBorder(
-                    borderRadius: BorderRadius.all(Radius.circular(24)),
-                  ),
                   child: Column(
                     children: [
                       for (final (i, s) in shown.indexed) ...[
@@ -308,55 +305,6 @@ class _PortalScreenState extends State<PortalScreen> {
   }
 }
 
-class _Label extends StatelessWidget {
-  const _Label(this.text, {this.count, this.trailing});
-
-  final String text;
-  final int? count;
-  final Widget? trailing;
-
-  @override
-  Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(4, 18, 0, 10),
-      child: SizedBox(
-        height: 28,
-        child: Row(
-          children: [
-            Text(
-              text,
-              style: TextStyle(
-                fontSize: 13,
-                fontWeight: FontWeight.w800,
-                color: scheme.onSurfaceVariant,
-              ),
-            ),
-            const Spacer(),
-            if (count != null)
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                decoration: ShapeDecoration(
-                  color: scheme.surfaceContainerHigh,
-                  shape: const StadiumBorder(),
-                ),
-                child: Text(
-                  '$count',
-                  style: TextStyle(
-                    fontSize: 12,
-                    fontWeight: FontWeight.w800,
-                    color: scheme.onSurfaceVariant,
-                  ),
-                ),
-              ),
-            ?trailing,
-          ],
-        ),
-      ),
-    );
-  }
-}
-
 class _Mark extends StatelessWidget {
   const _Mark({
     required this.text,
@@ -406,7 +354,7 @@ class _FavoriteTile extends StatelessWidget {
   Widget build(BuildContext context) {
     return ToneBlock(
       tone: tone,
-      radius: 24,
+      radius: Corners.row,
       padding: const EdgeInsets.fromLTRB(4, 12, 4, 8),
       onTap: onTap,
       child: Column(

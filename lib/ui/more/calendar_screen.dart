@@ -399,28 +399,11 @@ class _DayEvents extends StatelessWidget {
         return Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            Padding(
-              padding: const EdgeInsets.fromLTRB(4, 20, 4, 10),
-              child: Row(
-                children: [
-                  Text(
-                    '${day.month}/${day.day} ${weekdayName(context, day.weekday)}',
-                    style: theme.textTheme.titleSmall?.copyWith(
-                      fontWeight: FontWeight.w800,
-                      color: theme.colorScheme.onSurfaceVariant,
-                    ),
-                  ),
-                  const Spacer(),
-                  if (events.isNotEmpty)
-                    Text(
-                      context.l10n.itemCount(events.length),
-                      style: theme.textTheme.titleSmall?.copyWith(
-                        fontWeight: FontWeight.w800,
-                        color: theme.colorScheme.onSurfaceVariant,
-                      ),
-                    ),
-                ],
-              ),
+            SectionLabel(
+              '${day.month}/${day.day} ${weekdayName(context, day.weekday)}',
+              detail: events.isEmpty
+                  ? null
+                  : context.l10n.itemCount(events.length),
             ),
             if (snap.hasError)
               Text('${snap.error}', textAlign: TextAlign.center)
@@ -440,7 +423,7 @@ class _DayEvents extends StatelessWidget {
                 padding: const EdgeInsets.only(bottom: 8),
                 child: ToneBlock(
                   tone: tones.forCourse(e.courseId),
-                  radius: 22,
+                  radius: Corners.row,
                   padding: const EdgeInsets.all(14),
                   onTap: e.cmid != null && e.courseId != 0
                       ? () => context.push(

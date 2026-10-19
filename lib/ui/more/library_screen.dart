@@ -328,8 +328,6 @@ class _Body extends StatelessWidget {
     final now = DateTime.now();
     final today = DateTime(now.year, now.month, now.day);
     int daysTo(DateTime due) => due.difference(today).inDays;
-    final labelStyle = Theme.of(context).textTheme.titleSmall
-        ?.copyWith(fontWeight: FontWeight.w800, color: scheme.onSurfaceVariant);
     return ListView(
       padding: scrollPadding(context),
       children: [
@@ -347,29 +345,16 @@ class _Body extends StatelessWidget {
               : tones.sun,
         ),
         if (loans.isNotEmpty) ...[
-          Padding(
-            padding: const EdgeInsets.fromLTRB(4, 20, 4, 10),
-            child: Row(
-              children: [
-                Text(
-                  '${l10n.onLoan}・${l10n.bookCount(loans.length)}',
-                  style: labelStyle,
-                ),
-                const Spacer(),
-                TextButton(
-                  onPressed: onRenewAll,
-                  style: TextButton.styleFrom(
-                    visualDensity: VisualDensity.compact,
-                    textStyle: const TextStyle(fontWeight: FontWeight.w900),
-                  ),
-                  child: Text(l10n.renewAll),
-                ),
-              ],
+          SectionLabel(
+            '${l10n.onLoan}・${l10n.bookCount(loans.length)}',
+            action: TextButton(
+              onPressed: onRenewAll,
+              child: Text(l10n.renewAll),
             ),
           ),
           for (final loan in loans)
             Padding(
-              padding: const EdgeInsets.only(bottom: 8),
+              padding: const EdgeInsets.only(bottom: rowGap),
               child: _LoanRow(
                 loan: loan,
                 days: daysTo(loan.due),
@@ -379,16 +364,10 @@ class _Body extends StatelessWidget {
             ),
         ],
         if (holds.isNotEmpty) ...[
-          Padding(
-            padding: const EdgeInsets.fromLTRB(4, 20, 4, 10),
-            child: Text(
-              '${l10n.holds}・${l10n.recordCount(holds.length)}',
-              style: labelStyle,
-            ),
-          ),
+          SectionLabel('${l10n.holds}・${l10n.recordCount(holds.length)}'),
           for (final hold in holds)
             Padding(
-              padding: const EdgeInsets.only(bottom: 8),
+              padding: const EdgeInsets.only(bottom: rowGap),
               child: _HoldRow(
                 hold: hold,
                 onTap: () => _confirmCancel(context, hold, onCancel),
@@ -483,7 +462,7 @@ class _Hero extends StatelessWidget {
     }
     return ToneBlock(
       tone: tone,
-      radius: 28,
+      radius: Corners.card,
       padding: const EdgeInsets.all(18),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -499,7 +478,7 @@ class _Hero extends StatelessWidget {
                       ? .1
                       : .55,
                 ),
-                borderRadius: BorderRadius.circular(18),
+                borderRadius: BorderRadius.circular(Corners.inset),
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -552,7 +531,9 @@ class _LoanRow extends StatelessWidget {
         : (days <= 3 ? tones.sun : tones.mint, l10n.loanDaysLeft(days));
     return Material(
       color: scheme.surfaceContainerLow,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(22)),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(Corners.row),
+      ),
       clipBehavior: Clip.antiAlias,
       child: InkWell(
         onTap: onTap,
@@ -617,7 +598,9 @@ class _HoldRow extends StatelessWidget {
     ].join('・');
     return Material(
       color: scheme.surfaceContainerLow,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(22)),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(Corners.row),
+      ),
       clipBehavior: Clip.antiAlias,
       child: InkWell(
         onTap: onTap,

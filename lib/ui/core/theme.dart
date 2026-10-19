@@ -99,6 +99,33 @@ extension TonesContext on BuildContext {
 /// LINE Seed, bundled under the SIL OFL (assets/fonts). Japanese uses the
 /// JP cut so kanji take Japanese shapes; everything else uses the TW cut,
 /// which also covers Latin.
+/// Corner radii every surface picks from.
+abstract final class Corners {
+  /// Icon tiles and small marks.
+  static const small = 12.0;
+
+  /// Pieces inside a card: a QR frame, a strip in a hero, grid tiles.
+  static const inset = 18.0;
+
+  /// List rows and small cards.
+  static const row = 22.0;
+
+  /// Cards and hero blocks; also the Card theme.
+  static const card = 28.0;
+}
+
+/// Gap between the rows of a list.
+const rowGap = 8.0;
+
+/// Side margin of every page.
+const pageMargin = 16.0;
+
+/// Space between the app bar and a page's first content.
+const pageTop = 20.0;
+
+/// Space above and below a section label.
+const sectionAbove = 20.0, sectionBelow = 10.0;
+
 const fontTw = 'LINESeedTW';
 const fontJp = 'LINESeedJP';
 
@@ -167,7 +194,7 @@ ThemeData buildTheme(Brightness brightness, {String fontFamily = fontTw}) {
       elevation: 0,
       margin: EdgeInsets.zero,
       shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.all(Radius.circular(28)),
+        borderRadius: BorderRadius.all(Radius.circular(Corners.card)),
       ),
     ),
     filledButtonTheme: FilledButtonThemeData(
@@ -179,7 +206,7 @@ ThemeData buildTheme(Brightness brightness, {String fontFamily = fontTw}) {
     ),
     dialogTheme: const DialogThemeData(
       shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.all(Radius.circular(28)),
+        borderRadius: BorderRadius.all(Radius.circular(Corners.card)),
       ),
     ),
     navigationBarTheme: NavigationBarThemeData(

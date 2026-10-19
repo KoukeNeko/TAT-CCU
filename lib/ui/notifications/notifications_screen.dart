@@ -138,7 +138,7 @@ class _Row extends StatelessWidget {
         : Tone(scheme.surfaceContainerLow, scheme.onSurface, scheme.primary);
     return ToneBlock(
       tone: tone,
-      radius: 24,
+      radius: Corners.row,
       padding: const EdgeInsets.all(14),
       onTap: onTap,
       child: Row(

@@ -378,7 +378,7 @@ class _Bar extends StatelessWidget {
       padding: const EdgeInsets.only(bottom: 8),
       child: ToneBlock(
         tone: tone,
-        radius: 24,
+        radius: Corners.row,
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
         onTap: onTap,
         child: Row(
@@ -449,7 +449,9 @@ class _WebTile extends StatelessWidget {
       opacity: closed ? 0.55 : 1,
       child: Material(
         color: scheme.surfaceContainerLow,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(Corners.inset),
+        ),
         clipBehavior: Clip.antiAlias,
         child: InkWell(
           onTap: onTap,
