@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 
 import 'package:flutter/material.dart';
@@ -22,9 +23,13 @@ class CampusSession extends StatefulWidget {
     required this.script,
     required this.onMessage,
     required this.child,
+    this.loadOnStart = true,
   });
 
   final String title, entry, host;
+
+  /// False for pages that show cached data first and load on [reload].
+  final bool loadOnStart;
   final String Function() script;
   final void Function(Map<String, dynamic> json) onMessage;
 
@@ -39,6 +44,7 @@ class CampusSessionState extends State<CampusSession> {
   late final WebViewController _web;
   var _signingIn = false;
   var _ran = false;
+  Completer<void>? _pending;
 
   @override
   void initState() {
@@ -47,13 +53,21 @@ class CampusSessionState extends State<CampusSession> {
       ..setJavaScriptMode(JavaScriptMode.unrestricted)
       ..addJavaScriptChannel('Campus', onMessageReceived: _received)
       ..setNavigationDelegate(NavigationDelegate(onPageFinished: _arrived));
-    reload();
+    if (widget.loadOnStart) reload();
   }
 
   /// Goes through the hand-off again and reruns [CampusSession.script].
-  void reload() {
+  /// Completes when the script answers or the user is asked to sign in.
+  Future<void> reload() {
     _ran = false;
+    final pending = _pending ??= Completer<void>();
     _web.loadRequest(Uri.parse(widget.entry));
+    return pending.future;
+  }
+
+  void _settle() {
+    _pending?.complete();
+    _pending = null;
   }
 
   /// Runs another script in the signed-in page; it answers like the first.
@@ -73,6 +87,7 @@ class CampusSessionState extends State<CampusSession> {
     } else {
       // Portal or CAS sign-in form: the user fills it in (Turnstile).
       setState(() => _signingIn = true);
+      _settle();
     }
   }
 
@@ -81,6 +96,7 @@ class CampusSessionState extends State<CampusSession> {
     // Signed in: keep this session for the next launch.
     if (json['error'] == null) CampusCookies.save();
     widget.onMessage(json);
+    _settle();
   }
 
   @override
@@ -133,6 +149,29 @@ class CampusError extends StatelessWidget {
             const SizedBox(height: 12),
             FilledButton(onPressed: onRetry, child: const Text('重試')),
           ],
+        ),
+      ),
+    );
+  }
+}
+
+/// Footer saying when a cached campus page last read the school.
+class UpdatedAt extends StatelessWidget {
+  const UpdatedAt(this.time, {super.key});
+
+  final DateTime time;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.only(top: 20),
+      child: Text(
+        '更新於 ${time.month}/${time.day} ${clock(time.hour * 60 + time.minute)}',
+        textAlign: TextAlign.center,
+        style: TextStyle(
+          fontSize: 12,
+          fontWeight: FontWeight.w700,
+          color: Theme.of(context).colorScheme.onSurfaceVariant,
         ),
       ),
     );

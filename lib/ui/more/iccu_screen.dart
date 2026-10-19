@@ -2,6 +2,7 @@ import 'dart:convert';
 
 import 'package:flutter/material.dart';
 
+import '../../data/repositories/campus_cache.dart';
 import '../core/campus_session.dart';
 import '../core/campus_web_screen.dart';
 import '../core/theme.dart';
@@ -133,22 +134,47 @@ class IccuScreen extends StatefulWidget {
 }
 
 class _IccuScreenState extends State<IccuScreen> {
+  static const _cacheKey = 'iccu';
   final _session = GlobalKey<CampusSessionState>();
   _Snapshot? _snapshot;
+  DateTime? _savedAt;
   String? _error;
 
-  void _received(Map<String, dynamic> json) => setState(() {
+  @override
+  void initState() {
+    super.initState();
+    // Selections change rarely: show the last read and fetch only when
+    // there is none or the user pulls to refresh.
+    CampusCache.read(_cacheKey).then((cached) {
+      if (!mounted) return;
+      if (cached == null) {
+        _session.currentState?.reload();
+      } else {
+        setState(() {
+          _snapshot = _Snapshot(cached.json);
+          _savedAt = cached.savedAt;
+        });
+      }
+    });
+  }
+
+  Future<void> _received(Map<String, dynamic> json) async {
     if (json['error'] != null) {
-      _error = '${json['error']}';
-    } else {
+      setState(() => _error = '${json['error']}');
+      return;
+    }
+    final savedAt = await CampusCache.write(_cacheKey, json);
+    if (!mounted) return;
+    setState(() {
       _error = null;
       _snapshot = _Snapshot(json);
-    }
-  });
+      _savedAt = savedAt;
+    });
+  }
 
-  void _reload() {
+  Future<void> _reload() async {
     setState(() => _error = null);
-    _session.currentState?.reload();
+    await _session.currentState?.reload();
   }
 
   @override
@@ -159,6 +185,7 @@ class _IccuScreenState extends State<IccuScreen> {
       title: '選課系統',
       entry: _entry,
       host: Uri.parse(_iccu).host,
+      loadOnStart: false,
       script: () => _script(
         [_courses, _changes, _programs, ..._applications.keys],
         [..._seasonal.keys],
@@ -172,7 +199,8 @@ class _IccuScreenState extends State<IccuScreen> {
               // Reads insets from inside the session's Scaffold.
               builder: (context) => _Hub(
                 snapshot: snapshot,
-                onRefresh: () async => _reload(),
+                savedAt: _savedAt,
+                onRefresh: _reload,
                 openWeb: (path, title) =>
                     openCampusPage(context, '$_iccu$path', title),
               ),
@@ -184,11 +212,13 @@ class _IccuScreenState extends State<IccuScreen> {
 class _Hub extends StatelessWidget {
   const _Hub({
     required this.snapshot,
+    required this.savedAt,
     required this.onRefresh,
     required this.openWeb,
   });
 
   final _Snapshot snapshot;
+  final DateTime? savedAt;
   final Future<void> Function() onRefresh;
   final void Function(String path, String title) openWeb;
 
@@ -309,6 +339,7 @@ class _Hub extends StatelessWidget {
                 _WebTile(title: name, onTap: () => openWeb(path, name)),
             ],
           ),
+          if (savedAt case final time?) UpdatedAt(time),
         ],
       ),
     );

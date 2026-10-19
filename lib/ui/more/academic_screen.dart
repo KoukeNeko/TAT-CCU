@@ -5,6 +5,7 @@ import 'package:pdfrx/pdfrx.dart';
 import 'package:share_plus/share_plus.dart';
 
 import '../../data/repositories/certificate_store.dart';
+import '../../data/repositories/campus_cache.dart';
 import '../core/campus_session.dart';
 import '../core/campus_web_screen.dart';
 import '../core/theme.dart';
@@ -64,12 +65,39 @@ class _AcademicScreenState extends State<AcademicScreen> {
   var _printing = false;
   var _page = 0;
   String? _error;
+  DateTime? _savedAt;
+
+  /// Whether the session reached the school this visit; printing needs it.
+  var _signedIn = false;
+  var _printWhenSignedIn = false;
+
+  static const _cacheKey = 'academic';
 
   @override
   void initState() {
     super.initState();
     _refreshList();
+    // The record rarely changes: show the last read and fetch only when
+    // there is none or the user pulls to refresh.
+    CampusCache.read(_cacheKey).then((cached) {
+      if (!mounted) return;
+      if (cached == null) {
+        _session.currentState?.reload();
+      } else {
+        setState(() {
+          _detail = _detailOf(cached.json);
+          _savedAt = cached.savedAt;
+        });
+      }
+    });
   }
+
+  static _Detail _detailOf(Map<String, dynamic> json) => (
+    studentNo: '${json['studentNo']}',
+    englishName: '${json['englishName']}',
+    email: '${json['email']}',
+    mobile: '${json['mobile']}',
+  );
 
   @override
   void dispose() {
@@ -87,20 +115,29 @@ class _AcademicScreenState extends State<AcademicScreen> {
       _printing = true;
       _error = null;
     });
-    _session.currentState?.run(_fetchCertificate);
+    if (_signedIn) {
+      _session.currentState?.run(_fetchCertificate);
+    } else {
+      // Sign in through the hand-off first; printing follows the record.
+      _printWhenSignedIn = true;
+      _session.currentState?.reload();
+    }
   }
 
   Future<void> _received(Map<String, dynamic> json) async {
     switch (json['kind']) {
       case 'detail':
-        setState(
-          () => _detail = (
-            studentNo: '${json['studentNo']}',
-            englishName: '${json['englishName']}',
-            email: '${json['email']}',
-            mobile: '${json['mobile']}',
-          ),
-        );
+        _signedIn = true;
+        final savedAt = await CampusCache.write(_cacheKey, json);
+        if (!mounted) return;
+        setState(() {
+          _detail = _detailOf(json);
+          _savedAt = savedAt;
+        });
+        if (_printWhenSignedIn) {
+          _printWhenSignedIn = false;
+          _session.currentState?.run(_fetchCertificate);
+        }
       case 'pdf':
         try {
           if (json['error'] != null) throw Exception(json['error']);
@@ -157,106 +194,111 @@ class _AcademicScreenState extends State<AcademicScreen> {
       entry: _entry,
       host: _host,
       script: () => _readDetail,
+      loadOnStart: false,
       onMessage: _received,
       // Always shown, so saved certificates open offline.
       child: Builder(
-        builder: (context) => ListView(
-          padding: scrollPadding(context).copyWith(left: 0, right: 0),
-          children: [
-            SizedBox(
-              height: 520,
-              child: certificates == null
-                  ? const Center(child: CircularProgressIndicator())
-                  : _tickets(certificates),
-            ),
-            if ((certificates?.length ?? 0) > 1)
+        builder: (context) => RefreshIndicator(
+          onRefresh: () async => _session.currentState?.reload(),
+          child: ListView(
+            padding: scrollPadding(context).copyWith(left: 0, right: 0),
+            children: [
+              SizedBox(
+                height: 520,
+                child: certificates == null
+                    ? const Center(child: CircularProgressIndicator())
+                    : _tickets(certificates),
+              ),
+              if ((certificates?.length ?? 0) > 1)
+                Padding(
+                  padding: const EdgeInsets.only(top: 12),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      for (var i = 0; i < certificates!.length; i++)
+                        AnimatedContainer(
+                          duration: const Duration(milliseconds: 320),
+                          curve: Curves.easeOutQuart,
+                          width: i == _page ? 20 : 6,
+                          height: 6,
+                          margin: const EdgeInsets.symmetric(horizontal: 3),
+                          decoration: BoxDecoration(
+                            color: i == _page
+                                ? scheme.onSurfaceVariant
+                                : scheme.outlineVariant,
+                            borderRadius: BorderRadius.circular(3),
+                          ),
+                        ),
+                    ],
+                  ),
+                ),
+              if (_error != null)
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
+                  child: Text(_error!, style: TextStyle(color: scheme.error)),
+                ),
               Padding(
-                padding: const EdgeInsets.only(top: 12),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    for (var i = 0; i < certificates!.length; i++)
-                      AnimatedContainer(
-                        duration: const Duration(milliseconds: 320),
-                        curve: Curves.easeOutQuart,
-                        width: i == _page ? 20 : 6,
-                        height: 6,
-                        margin: const EdgeInsets.symmetric(horizontal: 3),
-                        decoration: BoxDecoration(
-                          color: i == _page
-                              ? scheme.onSurfaceVariant
-                              : scheme.outlineVariant,
-                          borderRadius: BorderRadius.circular(3),
+                    if (detail != null) ...[
+                      const SectionLabel('學籍資料'),
+                      Card(
+                        color: scheme.surfaceContainerLow,
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 16),
+                          child: Column(
+                            children: [
+                              for (final (i, (label, value)) in [
+                                ('學號', detail.studentNo),
+                                ('英文姓名', detail.englishName),
+                                ('電子郵件', detail.email),
+                                ('行動電話', detail.mobile),
+                              ].indexed) ...[
+                                if (i > 0)
+                                  Divider(
+                                    height: 1,
+                                    color: scheme.outlineVariant,
+                                  ),
+                                _Field(label, value),
+                              ],
+                            ],
+                          ),
                         ),
                       ),
+                    ],
+                    const SectionLabel('在學校網站辦理'),
+                    Card(
+                      color: scheme.surfaceContainerLow,
+                      clipBehavior: Clip.antiAlias,
+                      child: Column(
+                        children: [
+                          for (final title in ['修改英文姓名與聯絡資料', '學生照片'])
+                            ListTile(
+                              title: Text(
+                                title,
+                                style: const TextStyle(
+                                  fontWeight: FontWeight.w800,
+                                ),
+                              ),
+                              trailing: Icon(
+                                Icons.north_east,
+                                size: 18,
+                                color: scheme.onSurfaceVariant,
+                              ),
+                              onTap: () =>
+                                  openCampusPage(context, _detailUrl, '學籍系統'),
+                            ),
+                        ],
+                      ),
+                    ),
+                    if (_savedAt case final time?) UpdatedAt(time),
                   ],
                 ),
               ),
-            if (_error != null)
-              Padding(
-                padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
-                child: Text(_error!, style: TextStyle(color: scheme.error)),
-              ),
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  if (detail != null) ...[
-                    const SectionLabel('學籍資料'),
-                    Card(
-                      color: scheme.surfaceContainerLow,
-                      child: Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 16),
-                        child: Column(
-                          children: [
-                            for (final (i, (label, value)) in [
-                              ('學號', detail.studentNo),
-                              ('英文姓名', detail.englishName),
-                              ('電子郵件', detail.email),
-                              ('行動電話', detail.mobile),
-                            ].indexed) ...[
-                              if (i > 0)
-                                Divider(
-                                  height: 1,
-                                  color: scheme.outlineVariant,
-                                ),
-                              _Field(label, value),
-                            ],
-                          ],
-                        ),
-                      ),
-                    ),
-                  ],
-                  const SectionLabel('在學校網站辦理'),
-                  Card(
-                    color: scheme.surfaceContainerLow,
-                    clipBehavior: Clip.antiAlias,
-                    child: Column(
-                      children: [
-                        for (final title in ['修改英文姓名與聯絡資料', '學生照片'])
-                          ListTile(
-                            title: Text(
-                              title,
-                              style: const TextStyle(
-                                fontWeight: FontWeight.w800,
-                              ),
-                            ),
-                            trailing: Icon(
-                              Icons.north_east,
-                              size: 18,
-                              color: scheme.onSurfaceVariant,
-                            ),
-                            onTap: () =>
-                                openCampusPage(context, _detailUrl, '學籍系統'),
-                          ),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );
