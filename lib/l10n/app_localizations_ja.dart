@@ -936,4 +936,7 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get loadingShelves => '新着とベストセラーを読み込み中';
+
+  @override
+  String get replaceWith => '入れ替え';
 }

@@ -1683,6 +1683,12 @@ abstract class AppLocalizations {
   /// In zh, this message translates to:
   /// **'讀取新書與暢銷榜'**
   String get loadingShelves;
+
+  /// No description provided for @replaceWith.
+  ///
+  /// In zh, this message translates to:
+  /// **'換成'**
+  String get replaceWith;
 }
 
 class _AppLocalizationsDelegate

@@ -128,7 +128,6 @@ DateTime? _date(String s) {
 
 /// Loans sorted most urgent first; loans without a readable due date are
 /// left out rather than shown as due at a wrong time.
-@visibleForTesting
 List<Loan> loansOf(Map<String, dynamic> json) {
   final loans = <Loan>[
     for (final item in (json['loans'] as List? ?? const []).whereType<Map>())
@@ -179,6 +178,8 @@ List<Hold> readyHoldsOf(Map<String, dynamic> json) => [
 /// Design B1-A (design/round-11): one card with the most urgent due date
 /// and holds to pick up, the loans by due date, then the library website.
 class LibraryScreen extends StatefulWidget {
+  static const cacheKey = 'library';
+
   const LibraryScreen({super.key});
 
   @override
@@ -186,7 +187,6 @@ class LibraryScreen extends StatefulWidget {
 }
 
 class _LibraryScreenState extends State<LibraryScreen> {
-  static const _cacheKey = 'library';
   final _session = GlobalKey<CampusSessionState>();
   Map<String, dynamic>? _account;
   DateTime? _savedAt;
@@ -199,7 +199,7 @@ class _LibraryScreenState extends State<LibraryScreen> {
   void initState() {
     super.initState();
     // Show the last read at once; due dates still count from today.
-    CampusCache.read(_cacheKey).then((cached) {
+    CampusCache.read(LibraryScreen.cacheKey).then((cached) {
       if (!mounted) return;
       if (cached == null) {
         _session.currentState?.reload();
@@ -219,7 +219,7 @@ class _LibraryScreenState extends State<LibraryScreen> {
     }
     final result = json.remove('result');
     _action = null;
-    final savedAt = await CampusCache.write(_cacheKey, json);
+    final savedAt = await CampusCache.write(LibraryScreen.cacheKey, json);
     if (!mounted) return;
     setState(() {
       _error = null;

@@ -263,5 +263,6 @@
   "dlRoleUnread": "Unread",
   "aboutApp": "App",
   "loadingCollections": "Loading collections",
-  "loadingShelves": "Loading new books and best sellers"
+  "loadingShelves": "Loading new books and best sellers",
+  "replaceWith": "Replace with"
 }

@@ -1031,4 +1031,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get loadingShelves => 'Loading new books and best sellers';
+
+  @override
+  String get replaceWith => 'Replace with';
 }

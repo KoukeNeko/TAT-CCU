@@ -948,4 +948,7 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get loadingShelves => '讀取新書與暢銷榜';
+
+  @override
+  String get replaceWith => '換成';
 }

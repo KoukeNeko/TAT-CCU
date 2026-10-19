@@ -72,9 +72,15 @@ List<_Request> _requestsOf(Map<String, dynamic> json) => [
       ),
 ];
 
+/// Requests still under review, for the More page's tile.
+int pendingLeaveCount(Map<String, dynamic> json) =>
+    _requestsOf(json).where((r) => r.status == _Status.pending).length;
+
 /// Design L3-A (design/round-11): counts by status, the semester's requests,
 /// then the school website for filing or cancelling a request.
 class LeaveScreen extends StatefulWidget {
+  static const cacheKey = 'leave';
+
   const LeaveScreen({super.key});
 
   @override
@@ -82,7 +88,6 @@ class LeaveScreen extends StatefulWidget {
 }
 
 class _LeaveScreenState extends State<LeaveScreen> {
-  static const _cacheKey = 'leave';
   final _session = GlobalKey<CampusSessionState>();
   List<_Request>? _requests;
   DateTime? _savedAt;
@@ -93,7 +98,7 @@ class _LeaveScreenState extends State<LeaveScreen> {
     super.initState();
     // Requests change rarely: show the last read and fetch only when there
     // is none or the user pulls to refresh.
-    CampusCache.read(_cacheKey).then((cached) {
+    CampusCache.read(LeaveScreen.cacheKey).then((cached) {
       if (!mounted) return;
       if (cached == null) {
         _session.currentState?.reload();
@@ -111,7 +116,7 @@ class _LeaveScreenState extends State<LeaveScreen> {
       setState(() => _error = '${json['error']}');
       return;
     }
-    final savedAt = await CampusCache.write(_cacheKey, json);
+    final savedAt = await CampusCache.write(LeaveScreen.cacheKey, json);
     if (!mounted) return;
     setState(() {
       _error = null;

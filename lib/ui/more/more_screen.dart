@@ -1,17 +1,25 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 
 import '../../data/repositories/ecourse_auth_repository.dart';
+import '../../data/repositories/campus_cache.dart';
 import '../../data/repositories/ecourse_repository.dart';
 import '../../data/repositories/portal_prefs.dart';
 import '../core/theme.dart';
 import '../core/widgets.dart';
+import 'leave_screen.dart';
+import 'library_screen.dart';
 import 'portal_screen.dart';
 import '../../l10n/l10n.dart';
 
-/// Design X1-B "雙登入狀態卡" (design/round-11): an account card with both
-/// sign-in states, then grouped rows with favorite campus systems inline.
+/// A native page the More page can show as a status tile or a row.
+typedef _Page = ({String path, IconData icon, Tone tone, String title});
+
+/// Design B1 "狀態優先" with E3 "長按單格" (design/round-11): four status
+/// tiles the student picks (long-press to replace, drag to reorder), the
+/// remaining native pages, campus systems with favorites, then the app.
 class MoreScreen extends StatefulWidget {
   const MoreScreen({super.key});
 
@@ -22,13 +30,164 @@ class MoreScreen extends StatefulWidget {
 class _MoreScreenState extends State<MoreScreen> {
   /// Fetched once; the row only shows a count and skips it on failure.
   late final _grades = context.read<EcourseRepository>().gradeOverview();
+  // shortcut: the tiles read each page's last saved data once, so they lag
+  // until the More page is rebuilt; listen to the cache if that shows.
+  final _library = CampusCache.read(LibraryScreen.cacheKey);
+  final _leave = CampusCache.read(LeaveScreen.cacheKey);
+  final _slots = List.generate(4, (_) => GlobalKey());
+
+  Map<String, _Page> _pages(BuildContext context) {
+    final t = context.tones;
+    final l10n = context.l10n;
+    return {
+      for (final p in <_Page>[
+        (
+          path: '/more/space',
+          icon: Icons.qr_code_2,
+          tone: t.lilac,
+          title: l10n.studySpace,
+        ),
+        (
+          path: '/more/library',
+          icon: Icons.menu_book_outlined,
+          tone: t.mint,
+          title: l10n.library,
+        ),
+        (
+          path: '/more/grades',
+          icon: Icons.grading_outlined,
+          tone: t.sun,
+          title: l10n.grades,
+        ),
+        (
+          path: '/more/leave',
+          icon: Icons.event_busy_outlined,
+          tone: t.peach,
+          title: l10n.leave,
+        ),
+        (
+          path: '/more/iccu',
+          icon: Icons.edit_calendar_outlined,
+          tone: t.sun,
+          title: l10n.courseSelection,
+        ),
+        (
+          path: '/more/academic',
+          icon: Icons.badge_outlined,
+          tone: t.lilac,
+          title: l10n.academicRecord,
+        ),
+        (
+          path: '/more/library/search',
+          icon: Icons.travel_explore,
+          tone: t.mint,
+          title: l10n.libraryDiscovery,
+        ),
+      ])
+        p.path: p,
+    };
+  }
+
+  Future<void> _replace(
+    PortalPrefs prefs,
+    Map<String, _Page> pages,
+    int i,
+  ) async {
+    final box = _slots[i].currentContext!.findRenderObject()! as RenderBox;
+    final path = await showGlassMenu<String>(
+      context,
+      anchor: box.localToGlobal(Offset.zero) & box.size,
+      title: context.l10n.replaceWith,
+      items: [
+        for (final p in pages.values)
+          if (!prefs.tiles.contains(p.path))
+            (
+              value: p.path,
+              tone: p.tone,
+              icon: p.icon,
+              title: p.title,
+              detail: null,
+            ),
+      ],
+    );
+    if (path == null) return;
+    prefs.setTiles([...prefs.tiles]..[i] = path);
+  }
+
+  void _swap(PortalPrefs prefs, int from, int to) {
+    final tiles = [...prefs.tiles];
+    final moved = tiles[from];
+    tiles[from] = tiles[to];
+    tiles[to] = moved;
+    HapticFeedback.selectionClick();
+    prefs.setTiles(tiles);
+  }
+
+  Widget _slot(PortalPrefs prefs, Map<String, _Page> pages, int i) {
+    final page = pages[prefs.tiles[i]]!;
+    return Expanded(
+      child: KeyedSubtree(
+        key: _slots[i],
+        child: LayoutBuilder(
+          builder: (context, constraints) {
+            final tile = _StatusTile(
+              page: page,
+              grades: _grades,
+              library: _library,
+              leave: _leave,
+            );
+            return DragTarget<int>(
+              // Dropped where it started: a long press without a drag.
+              onAcceptWithDetails: (d) => d.data == i
+                  ? _replace(prefs, pages, i)
+                  : _swap(prefs, d.data, i),
+              builder: (context, hovering, _) => LongPressDraggable<int>(
+                data: i,
+                feedback: SizedBox(
+                  width: constraints.maxWidth,
+                  height: _StatusTile.height,
+                  child: Transform.scale(
+                    scale: 1.04,
+                    child: PhysicalShape(
+                      clipper: ShapeBorderClipper(
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(Corners.card),
+                        ),
+                      ),
+                      color: Colors.transparent,
+                      elevation: 12,
+                      child: tile,
+                    ),
+                  ),
+                ),
+                childWhenDragging: Opacity(opacity: 0.3, child: tile),
+                child: AnimatedScale(
+                  scale: hovering.any((from) => from != i) ? 0.94 : 1,
+                  duration: const Duration(milliseconds: 200),
+                  curve: Curves.easeOutQuart,
+                  child: tile,
+                ),
+              ),
+            );
+          },
+        ),
+      ),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
     final t = context.tones;
     final prefs = context.watch<PortalPrefs>();
+    final pages = _pages(context);
     final favorites = [for (final id in prefs.favorites) ?campusSystems[id]];
     final scheme = Theme.of(context).colorScheme;
+    final signedIn = context.watch<EcourseAuthRepository>().isSignedIn;
+    Widget group(List<Widget> rows) => Card(
+      color: scheme.surfaceContainerLow,
+      clipBehavior: Clip.antiAlias,
+      child: Column(children: rows),
+    );
     return Scaffold(
       extendBodyBehindAppBar: true,
       appBar: topBar(context.l10n.navMore),
@@ -37,88 +196,93 @@ class _MoreScreenState extends State<MoreScreen> {
         builder: (context) => ListView(
           padding: scrollPadding(context),
           children: [
-            const _AccountCard(),
-            SectionLabel(context.l10n.academics),
-            Card(
-              color: scheme.surfaceContainerLow,
-              clipBehavior: Clip.antiAlias,
-              child: FutureBuilder<Map<int, String>>(
-                future: _grades,
-                builder: (context, snap) => _Row(
-                  tone: t.lilac,
-                  icon: Icons.grading_outlined,
-                  title: context.l10n.grades,
-                  detail: snap.hasData
-                      ? context.l10n.courseCount(snap.data!.length)
-                      : null,
-                  onTap: () => context.push('/more/grades'),
-                ),
-              ),
-            ),
-            SectionLabel(context.l10n.campus),
-            Card(
-              color: scheme.surfaceContainerLow,
-              clipBehavior: Clip.antiAlias,
-              child: Column(
+            for (final row in [0, 2]) ...[
+              if (row > 0) const SizedBox(height: rowGap),
+              Row(
                 children: [
-                  _Row(
-                    tone: t.peach,
-                    icon: Icons.apps,
-                    title: context.l10n.allCampusSystems,
-                    onTap: () => context.push('/more/portal'),
-                  ),
-                  if (favorites.isNotEmpty)
-                    Padding(
-                      padding: const EdgeInsets.fromLTRB(10, 0, 10, 10),
-                      child: GridView.count(
-                        crossAxisCount: 2,
-                        shrinkWrap: true,
-                        // A nested GridView otherwise pads itself by the
-                        // screen's safe-area and bar insets.
-                        padding: EdgeInsets.zero,
-                        physics: const NeverScrollableScrollPhysics(),
-                        mainAxisSpacing: 6,
-                        crossAxisSpacing: 6,
-                        childAspectRatio: 3.4,
-                        children: [
-                          for (final s in favorites)
-                            ToneBlock(
-                              tone: t.peach,
-                              radius: Corners.inset,
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 12,
-                              ),
-                              onTap: () => openCampusSystem(context, prefs, s),
-                              child: Align(
-                                alignment: Alignment.centerLeft,
-                                child: Text(
-                                  s.name.replaceAll('系統', ''),
-                                  maxLines: 1,
-                                  overflow: TextOverflow.ellipsis,
-                                  style: const TextStyle(
-                                    fontSize: 13,
-                                    fontWeight: FontWeight.w900,
-                                  ),
-                                ),
-                              ),
-                            ),
-                        ],
-                      ),
-                    ),
+                  _slot(prefs, pages, row),
+                  const SizedBox(width: rowGap),
+                  _slot(prefs, pages, row + 1),
                 ],
               ),
-            ),
+            ],
+            SectionLabel(context.l10n.academics),
+            group([
+              for (final p in pages.values)
+                if (!prefs.tiles.contains(p.path))
+                  _Row(
+                    tone: p.tone,
+                    icon: p.icon,
+                    title: p.title,
+                    onTap: () => context.push(p.path),
+                  ),
+            ]),
+            SectionLabel(context.l10n.campus),
+            group([
+              _Row(
+                tone: t.peach,
+                icon: Icons.apps,
+                title: context.l10n.allCampusSystems,
+                onTap: () => context.push('/more/portal'),
+              ),
+              if (favorites.isNotEmpty)
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(10, 0, 10, 10),
+                  child: GridView.count(
+                    crossAxisCount: 2,
+                    shrinkWrap: true,
+                    // A nested GridView otherwise pads itself by the
+                    // screen's safe-area and bar insets.
+                    padding: EdgeInsets.zero,
+                    physics: const NeverScrollableScrollPhysics(),
+                    mainAxisSpacing: 6,
+                    crossAxisSpacing: 6,
+                    childAspectRatio: 3.4,
+                    children: [
+                      for (final s in favorites)
+                        ToneBlock(
+                          tone: t.peach,
+                          radius: Corners.inset,
+                          padding: const EdgeInsets.symmetric(horizontal: 12),
+                          onTap: () => openCampusSystem(context, prefs, s),
+                          child: Align(
+                            alignment: Alignment.centerLeft,
+                            child: Text(
+                              s.name.replaceAll('系統', ''),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: const TextStyle(
+                                fontSize: 13,
+                                fontWeight: FontWeight.w900,
+                              ),
+                            ),
+                          ),
+                        ),
+                    ],
+                  ),
+                ),
+            ]),
             SectionLabel(context.l10n.aboutApp),
-            Card(
-              color: scheme.surfaceContainerLow,
-              clipBehavior: Clip.antiAlias,
-              child: _Row(
+            group([
+              _Row(
+                tone: t.lilac,
+                icon: Icons.person_outline,
+                title: context.l10n.account,
+                trailing: StatusPill(
+                  tone: signedIn ? t.mint : t.peach,
+                  label: signedIn
+                      ? context.l10n.ecourseSignedIn
+                      : context.l10n.ecourseSignedOut,
+                ),
+                onTap: () => context.push('/more/account'),
+              ),
+              _Row(
                 tone: t.sun,
                 icon: Icons.palette_outlined,
                 title: context.l10n.designLanguage,
                 onTap: () => context.push('/more/design'),
               ),
-            ),
+            ]),
           ],
         ),
       ),
@@ -126,106 +290,122 @@ class _MoreScreenState extends State<MoreScreen> {
   }
 }
 
-class _AccountCard extends StatelessWidget {
-  const _AccountCard();
+/// A status tile: the page's state large, its name small; the name alone
+/// when there is no state to show.
+class _StatusTile extends StatelessWidget {
+  const _StatusTile({
+    required this.page,
+    required this.grades,
+    required this.library,
+    required this.leave,
+  });
+
+  static const height = 120.0;
+
+  final _Page page;
+  final Future<Map<int, String>> grades;
+  final Future<CachedPage?> library, leave;
 
   @override
   Widget build(BuildContext context) {
-    final tone = context.tones.lilac;
-    final signedIn = context.watch<EcourseAuthRepository>().isSignedIn;
+    final l10n = context.l10n;
+    final tones = context.tones;
+    final status = switch (page.path) {
+      '/more/grades' => FutureBuilder(
+        future: grades,
+        builder: (context, snap) => _face(
+          context,
+          page.tone,
+          snap.hasData ? l10n.courseCount(snap.data!.length) : null,
+        ),
+      ),
+      '/more/library' => FutureBuilder(
+        future: library,
+        builder: (context, snap) {
+          final loans = snap.data == null
+              ? const <Loan>[]
+              : loansOf(snap.data!.json);
+          if (loans.isEmpty) return _face(context, page.tone, null);
+          final now = DateTime.now();
+          final days = loans.first.due
+              .difference(DateTime(now.year, now.month, now.day))
+              .inDays;
+          return _face(
+            context,
+            days < 0 ? tones.peach : page.tone,
+            days < 0
+                ? l10n.daysOverdue(-days)
+                : days == 0
+                ? l10n.dueToday
+                : l10n.loanDaysLeft(days),
+          );
+        },
+      ),
+      '/more/leave' => FutureBuilder(
+        future: leave,
+        builder: (context, snap) => _face(
+          context,
+          page.tone,
+          snap.data != null && pendingLeaveCount(snap.data!.json) > 0
+              ? l10n.leavePending
+              : null,
+        ),
+      ),
+      _ => _face(context, page.tone, null),
+    };
+    return SizedBox(height: height, child: status);
+  }
+
+  Widget _face(BuildContext context, Tone tone, String? status) {
+    final light = Theme.of(context).brightness == Brightness.light;
     return ToneBlock(
       tone: tone,
-      radius: Corners.card,
-      padding: const EdgeInsets.all(16),
-      onTap: () => context.push('/more/account'),
+      padding: const EdgeInsets.all(14),
+      onTap: () => context.push(page.path),
       child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
             children: [
               Container(
-                width: 48,
-                height: 48,
-                decoration: ShapeDecoration(
-                  color: tone.strong,
-                  shape: spikyStar,
+                width: 36,
+                height: 36,
+                decoration: BoxDecoration(
+                  color: Colors.white.withValues(alpha: light ? 0.6 : 0.12),
+                  borderRadius: BorderRadius.circular(Corners.small),
                 ),
-                child: Icon(Icons.check, color: tone.fill),
+                child: Icon(page.icon, size: 20, color: tone.ink),
               ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Text(
-                  context.l10n.account,
-                  style: const TextStyle(
-                    fontSize: 17,
-                    fontWeight: FontWeight.w900,
-                  ),
-                ),
-              ),
-              const Icon(Icons.chevron_right),
+              const Spacer(),
+              Icon(Icons.chevron_right, color: tone.ink.withValues(alpha: 0.6)),
             ],
           ),
-          const SizedBox(height: 12),
-          Row(
-            children: [
-              _Status(
-                on: signedIn,
-                label: signedIn
-                    ? context.l10n.ecourseSignedIn
-                    : context.l10n.ecourseSignedOut,
-              ),
-              const SizedBox(width: 6),
-              // The app does not track the CAS session; it can only say it
-              // is shared with the eCourse2 sign-in.
-              _Status(on: true, label: context.l10n.portalShared),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _Status extends StatelessWidget {
-  const _Status({required this.on, required this.label});
-
-  final bool on;
-  final String label;
-
-  @override
-  Widget build(BuildContext context) {
-    final light = Theme.of(context).brightness == Brightness.light;
-    final mint = context.tones.mint;
-    return Expanded(
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 9),
-        decoration: BoxDecoration(
-          color: Colors.white.withValues(alpha: light ? 0.55 : 0.1),
-          borderRadius: BorderRadius.circular(Corners.inset),
-        ),
-        child: Row(
-          children: [
-            Container(
-              width: 8,
-              height: 8,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                color: on ? mint.strong : context.tones.peach.strong,
-              ),
+          const Spacer(),
+          Text(
+            status ?? page.title,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: const TextStyle(
+              fontSize: 22,
+              fontWeight: FontWeight.w900,
+              height: 1.1,
             ),
-            const SizedBox(width: 6),
-            Flexible(
+          ),
+          if (status != null)
+            Padding(
+              padding: const EdgeInsets.only(top: 2),
               child: Text(
-                label,
+                page.title,
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
-                style: const TextStyle(
-                  fontSize: 12,
+                style: TextStyle(
+                  color: tone.ink.withValues(alpha: 0.8),
+                  fontSize: 13,
                   fontWeight: FontWeight.w900,
                 ),
               ),
             ),
-          ],
-        ),
+        ],
       ),
     );
   }
@@ -237,13 +417,13 @@ class _Row extends StatelessWidget {
     required this.icon,
     required this.title,
     required this.onTap,
-    this.detail,
+    this.trailing,
   });
 
   final Tone tone;
   final IconData icon;
   final String title;
-  final String? detail;
+  final Widget? trailing;
   final VoidCallback onTap;
 
   @override
@@ -263,14 +443,7 @@ class _Row extends StatelessWidget {
       trailing: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          if (detail != null)
-            Text(
-              detail!,
-              style: TextStyle(
-                color: scheme.onSurfaceVariant,
-                fontWeight: FontWeight.w700,
-              ),
-            ),
+          ?trailing,
           Icon(Icons.chevron_right, color: scheme.onSurfaceVariant),
         ],
       ),

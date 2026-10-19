@@ -263,5 +263,6 @@
   "dlRoleUnread": "未読",
   "aboutApp": "アプリ",
   "loadingCollections": "コレクションを読み込み中",
-  "loadingShelves": "新着とベストセラーを読み込み中"
+  "loadingShelves": "新着とベストセラーを読み込み中",
+  "replaceWith": "入れ替え"
 }
