@@ -7,6 +7,7 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:flutter_web_auth_2/flutter_web_auth_2.dart';
 
 import '../services/moodle_client.dart';
+import '../services/response_cache.dart';
 
 /// eCourse2 site root; the mobile launch flow hashes it exactly as written.
 const eCourse2Url = 'https://ecourse2.ccu.edu.tw';
@@ -29,8 +30,11 @@ class EcourseAuthRepository extends ChangeNotifier {
   String? get token => _token;
   bool get isSignedIn => _token != null;
 
-  MoodleClient client() =>
-      MoodleClient(siteUrl: Uri.parse('$eCourse2Url/'), token: _token ?? '');
+  MoodleClient client() => MoodleClient(
+    siteUrl: Uri.parse('$eCourse2Url/'),
+    token: _token ?? '',
+    cache: _token == null ? null : ResponseCache(_token!),
+  );
 
   Future<void> load() async {
     _token = await _storage.read(key: _tokenKey);
@@ -84,6 +88,7 @@ class EcourseAuthRepository extends ChangeNotifier {
 
   Future<void> signOut() async {
     await _storage.delete(key: _tokenKey);
+    await ResponseCache.clear();
     _token = null;
     notifyListeners();
   }

@@ -2,6 +2,8 @@ import 'dart:convert';
 
 import 'package:http/http.dart' as http;
 
+import 'response_cache.dart';
+
 /// Raised when eCourse2 answers with a Moodle exception instead of data.
 class MoodleException implements Exception {
   MoodleException(this.errorCode, this.message);
@@ -25,11 +27,19 @@ class MoodleClient {
     required this.siteUrl,
     required this.token,
     http.Client? httpClient,
+    this.cache,
   }) : _http = httpClient ?? http.Client();
 
   final Uri siteUrl;
   final String token;
   final http.Client _http;
+
+  /// Every answer is saved here, for [offline] to read back.
+  final ResponseCache? cache;
+
+  /// A client that only answers from [cache], for showing the last data
+  /// before the network answers.
+  MoodleClient offline() => _OfflineMoodleClient(this);
 
   Future<dynamic> call(
     String function, [
@@ -60,7 +70,33 @@ class MoodleClient {
     if (decoded is Map && decoded['exception'] != null) {
       throw MoodleException('${decoded['errorcode']}', '${decoded['message']}');
     }
+    await cache?.write(
+      ResponseCache.keyOf(function, flattenParams(params)),
+      decoded,
+    );
     return decoded;
+  }
+}
+
+/// Thrown by an [MoodleClient.offline] client for a request never answered.
+class CacheMiss implements Exception {
+  const CacheMiss();
+}
+
+class _OfflineMoodleClient extends MoodleClient {
+  _OfflineMoodleClient(MoodleClient online)
+    : super(siteUrl: online.siteUrl, token: online.token, cache: online.cache);
+
+  @override
+  Future<dynamic> call(
+    String function, [
+    Map<String, Object?> params = const {},
+  ]) async {
+    final saved = await cache?.read(
+      ResponseCache.keyOf(function, flattenParams(params)),
+    );
+    if (saved == null) throw const CacheMiss();
+    return saved;
   }
 }
 

@@ -86,8 +86,8 @@ class _TodayScreenState extends State<TodayScreen> {
     final now = DateTime.now();
     return Scaffold(
       // Edge to edge: the list itself pads past the status bar.
-      body: Loader<_Today>(
-        load: () => _load(repo),
+      body: Loader<_Today>.watch(
+        watch: () => repo.watch(_load),
         builder: (context, d) {
           // Today's classes from the current day, so midnight moves on too.
           final slots = [

@@ -42,8 +42,8 @@ class CourseDetailScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final repo = context.read<EcourseRepository>();
     return Scaffold(
-      body: Loader<(Course?, _Summary)>(
-        load: () async {
+      body: Loader<(Course?, _Summary)>.watch(
+        watch: () => repo.watch((repo) async {
           final course = (await repo.courses())
               .where((c) => c.id == courseId)
               .firstOrNull;
@@ -64,7 +64,7 @@ class CourseDetailScreen extends StatelessWidget {
               sections: sections.length,
             ),
           );
-        },
+        }),
         builder: (context, data) {
           final (course, summary) = data;
           if (course == null) return EmptyState(context.l10n.courseNotFound);

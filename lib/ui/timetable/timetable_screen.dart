@@ -44,8 +44,8 @@ class _TimetableScreenState extends State<TimetableScreen> {
   Widget build(BuildContext context) {
     final repo = context.read<EcourseRepository>();
     return Scaffold(
-      body: Loader<List<Course>>(
-        load: () => repo.courses(),
+      body: Loader<List<Course>>.watch(
+        watch: () => repo.watch((repo) => repo.courses()),
         builder: (context, all) {
           // Courses come newest first; a set keeps that order.
           final semesters = {for (final c in all) c.semester}.toList();

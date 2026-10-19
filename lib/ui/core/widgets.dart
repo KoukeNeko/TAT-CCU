@@ -1,9 +1,10 @@
+import 'dart:async';
 import 'dart:math';
 import 'dart:ui' show ImageFilter;
 
 import 'package:flutter/material.dart';
-import 'package:url_launcher/url_launcher.dart';
 import 'package:flutter/services.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import 'theme.dart';
 import '../../l10n/l10n.dart';
@@ -225,7 +226,6 @@ class RoundBackButton extends StatefulWidget {
   final Color? color, iconColor;
 
   @override
-  @override
   State<RoundBackButton> createState() => _RoundBackButtonState();
 }
 
@@ -234,6 +234,7 @@ class _RoundBackButtonState extends State<RoundBackButton> {
 
   void _press(bool down) => setState(() => _pressed = down);
 
+  @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
     final fill = widget.color ?? scheme.surfaceContainer;
@@ -336,12 +337,21 @@ class SectionLabel extends StatelessWidget {
   }
 }
 
-/// Loads [load] and renders [builder]; handles loading, error with retry and
+/// Loads data and renders [builder]; handles loading, error with retry and
 /// pull-to-refresh so every screen behaves the same way.
+///
+/// [Loader.watch] takes a stream instead, such as
+/// [EcourseRepository.watch]'s saved result followed by the fresh one: the
+/// screen shows the first value at once and updates when the next arrives.
+/// If refreshing fails after something is shown, it stays and a snack bar
+/// says so.
 class Loader<T> extends StatefulWidget {
-  const Loader({super.key, required this.load, required this.builder});
+  Loader({super.key, required Future<T> Function() load, required this.builder})
+    : watch = (() => Stream.fromFuture(load()));
 
-  final Future<T> Function() load;
+  const Loader.watch({super.key, required this.watch, required this.builder});
+
+  final Stream<T> Function() watch;
   final Widget Function(BuildContext context, T data) builder;
 
   @override
@@ -349,52 +359,96 @@ class Loader<T> extends StatefulWidget {
 }
 
 class _LoaderState<T> extends State<Loader<T>> {
-  late Future<T> _future = widget.load();
+  StreamSubscription<T>? _sub;
+  T? _data;
+  var _hasData = false;
+  Object? _error;
 
-  Future<void> _reload() async {
-    final next = widget.load();
-    setState(() => _future = next);
-    await next.catchError((_) => null as T);
+  @override
+  void initState() {
+    super.initState();
+    _start();
+  }
+
+  @override
+  void dispose() {
+    _sub?.cancel();
+    super.dispose();
+  }
+
+  Future<void> _start() {
+    _sub?.cancel();
+    final done = Completer<void>();
+    void finish() {
+      if (!done.isCompleted) done.complete();
+    }
+
+    _sub = widget.watch().listen(
+      (value) => setState(() {
+        _data = value;
+        _hasData = true;
+        _error = null;
+      }),
+      onError: (Object e) {
+        if (!mounted) return;
+        if (_hasData) {
+          ScaffoldMessenger.maybeOf(context)
+              ?.showSnackBar(SnackBar(content: Text(context.l10n.loadFailed)));
+        } else {
+          setState(() => _error = e);
+        }
+        finish();
+      },
+      onDone: finish,
+      cancelOnError: true,
+    );
+    return done.future;
+  }
+
+  void _retry() {
+    setState(() => _error = null);
+    _start();
   }
 
   @override
   Widget build(BuildContext context) {
-    return FutureBuilder<T>(
-      future: _future,
-      builder: (context, snap) {
-        if (snap.connectionState != ConnectionState.done) {
-          return const Center(child: CircularProgressIndicator());
-        }
-        if (snap.hasError) {
-          return Center(
-            child: Padding(
-              padding: const EdgeInsets.all(32),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Text(
-                    context.l10n.loadFailed,
-                    style: Theme.of(context).textTheme.titleMedium,
+    final error = _error;
+    // Some routes are a bare Loader until their data arrives; an opaque
+    // surface keeps the previous page from showing through the incoming
+    // route's transition.
+    if (!_hasData) {
+      return Material(
+        color: Theme.of(context).colorScheme.surface,
+        child: Center(
+          child: error == null
+              ? const CircularProgressIndicator()
+              : Padding(
+                  padding: const EdgeInsets.all(32),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                        context.l10n.loadFailed,
+                        style: Theme.of(context).textTheme.titleMedium,
+                      ),
+                      const SizedBox(height: 4),
+                      Text('$error', textAlign: TextAlign.center),
+                      const SizedBox(height: 16),
+                      FilledButton.tonal(
+                        onPressed: _retry,
+                        child: Text(context.l10n.retry),
+                      ),
+                    ],
                   ),
-                  const SizedBox(height: 4),
-                  Text('${snap.error}', textAlign: TextAlign.center),
-                  const SizedBox(height: 16),
-                  FilledButton.tonal(
-                    onPressed: _reload,
-                    child: Text(context.l10n.retry),
-                  ),
-                ],
-              ),
-            ),
-          );
-        }
-        return RefreshIndicator(
-          // Bodies extend under the glass app bar; start the spinner below it.
-          edgeOffset: MediaQuery.paddingOf(context).top,
-          onRefresh: _reload,
-          child: widget.builder(context, snap.data as T),
-        );
-      },
+                ),
+        ),
+      );
+    }
+    return RefreshIndicator(
+      // Bodies extend under the glass app bar; start the spinner below it.
+      edgeOffset: MediaQuery.paddingOf(context).top,
+      onRefresh: _start,
+      child: widget.builder(context, _data as T),
     );
   }
 }

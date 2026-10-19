@@ -92,6 +92,23 @@ DateTime _ts(Object? s) =>
 class EcourseRepository {
   EcourseRepository(this._client);
 
+  /// Same reads answered only from saved responses.
+  late final _saved = EcourseRepository(_client.offline());
+
+  /// The last saved result of [load] first, when every request it makes
+  /// was answered before, then the result from eCourse2.
+  Stream<T> watch<T>(Future<T> Function(EcourseRepository repo) load) async* {
+    T? saved;
+    try {
+      saved = await load(_saved);
+    } catch (_) {
+      // Usually a CacheMiss (possibly wrapped by Future.wait): something was
+      // never saved. Either way the network answer follows.
+    }
+    if (saved != null) yield saved;
+    yield await load(this);
+  }
+
   final MoodleClient _client;
   Future<List<Course>>? _courses;
   Future<int>? _userId;
@@ -152,12 +169,16 @@ class EcourseRepository {
   }
 
   Future<List<DueItem>> dueSoon({int days = 14}) async {
-    final now = DateTime.now().millisecondsSinceEpoch ~/ 1000;
+    // Asks from the start of today so the request, and its saved answer,
+    // stay the same all day; anything already past is dropped below.
+    final now = DateTime.now();
+    final from =
+        DateTime(now.year, now.month, now.day).millisecondsSinceEpoch ~/ 1000;
     final r = await _client.call(
       'core_calendar_get_action_events_by_timesort',
-      {'timesortfrom': now, 'timesortto': now + days * 86400, 'limitnum': 50},
+      {'timesortfrom': from, 'timesortto': from + days * 86400, 'limitnum': 50},
     ) as Map;
-    return [
+    final list = <DueItem>[
       for (final e in r['events'] as List)
         (
           name: '${e['activityname'] ?? e['name']}',
@@ -167,6 +188,10 @@ class EcourseRepository {
           module: '${e['modulename'] ?? ''}',
           url: e['url'] as String?,
         ),
+    ];
+    return [
+      for (final d in list)
+        if (d.due.isAfter(now)) d,
     ];
   }
 
