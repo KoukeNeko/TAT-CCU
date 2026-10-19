@@ -6,6 +6,7 @@ import '../../data/repositories/portal_prefs.dart';
 import '../core/theme.dart';
 import '../core/campus_web_screen.dart';
 import '../core/widgets.dart';
+import '../../l10n/l10n.dart';
 
 /// Portal home; bounces to the portal login when its session has lapsed.
 const portalHome = 'https://portal.ccu.edu.tw/sso_index.php';
@@ -164,23 +165,23 @@ class _PortalScreenState extends State<PortalScreen> {
 
     return Scaffold(
       extendBodyBehindAppBar: true,
-      appBar: subBar(context, '校務系統'),
+      appBar: subBar(context, context.l10n.campusSystems),
       body: Builder(
         // Reads insets from inside this Scaffold, below the glass app bar.
         builder: (context) => ListView(
           padding: scrollPadding(context),
           children: [
             SearchBar(
-              hintText: '搜尋系統',
+              hintText: context.l10n.searchSystems,
               leading: const Icon(Icons.search),
               onChanged: (v) => setState(() => _query = v.trim()),
             ),
             if (!searching && favorites.isNotEmpty) ...[
               _Label(
-                '常用',
+                context.l10n.favorites,
                 trailing: TextButton(
                   onPressed: () => _editFavorites(context, prefs),
-                  child: const Text('編輯'),
+                  child: Text(context.l10n.edit),
                 ),
               ),
               GridView.count(
@@ -203,7 +204,7 @@ class _PortalScreenState extends State<PortalScreen> {
               ),
             ],
             if (!searching && recent.isNotEmpty) ...[
-              const _Label('最近開啟'),
+              _Label(context.l10n.recentlyOpened),
               SizedBox(
                 height: 40,
                 child: ListView.separated(
@@ -272,7 +273,10 @@ class _PortalScreenState extends State<PortalScreen> {
               Padding(
                 padding: const EdgeInsets.fromLTRB(20, 0, 20, 8),
                 child: Text(
-                  '常用（${picked.length}/${PortalPrefs.maxFavorites}）',
+                  context.l10n.favoritesCount(
+                    picked.length,
+                    PortalPrefs.maxFavorites,
+                  ),
                   style: Theme.of(context).textTheme.titleMedium,
                 ),
               ),

@@ -3,6 +3,11 @@ import 'dart:typed_data';
 
 import 'package:path_provider/path_provider.dart';
 
+/// The school answered with something other than a PDF.
+class NotPdfException implements Exception {
+  const NotPdfException();
+}
+
 /// A saved 在學證明書 PDF. The school regenerates it on every request; the
 /// print date decides which semester it proves.
 typedef Certificate = ({File file, DateTime printedAt, int size});
@@ -47,7 +52,7 @@ class CertificateStore {
   Future<Certificate> save(Uint8List bytes, DateTime printedAt) async {
     if (bytes.length < 5 ||
         String.fromCharCodes(bytes.sublist(0, 5)) != '%PDF-') {
-      throw const FormatException('學校回傳的不是 PDF');
+      throw const NotPdfException();
     }
     final file = File('${(await _dir()).path}/${_name(printedAt)}.pdf');
     await file.writeAsBytes(bytes, flush: true);

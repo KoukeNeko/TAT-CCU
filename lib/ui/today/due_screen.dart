@@ -6,6 +6,7 @@ import '../../data/repositories/ecourse_repository.dart';
 import '../core/theme.dart';
 import '../core/widgets.dart';
 import '../courses/module_screen.dart';
+import '../../l10n/l10n.dart';
 
 /// Assignments, quizzes and other dated activities in the next two weeks.
 class DueScreen extends StatelessWidget {
@@ -16,11 +17,11 @@ class DueScreen extends StatelessWidget {
     final repo = context.read<EcourseRepository>();
     return Scaffold(
       extendBodyBehindAppBar: true,
-      appBar: subBar(context, '待辦'),
+      appBar: subBar(context, context.l10n.toDo),
       body: Loader<List<DueItem>>(
         load: () => repo.dueSoon(),
         builder: (context, items) {
-          if (items.isEmpty) return const EmptyState('14 天內沒有到期項目');
+          if (items.isEmpty) return EmptyState(context.l10n.nothingDueSoon);
           return ListView.separated(
             padding: scrollPadding(context),
             itemCount: items.length,
@@ -46,7 +47,9 @@ class DueBlock extends StatelessWidget {
     final urgent = left.inHours < 48;
     final tone = urgent ? tones.peach : tones.forCourse(item.courseId);
     final value = left.inHours < 24 ? '${left.inHours}' : '${left.inDays}';
-    final unit = left.inHours < 24 ? '小時' : '天';
+    final unit = left.inHours < 24
+        ? context.l10n.unitHours
+        : context.l10n.unitDays;
     return ToneBlock(
       tone: tone,
       padding: const EdgeInsets.all(14),
@@ -81,7 +84,7 @@ class DueBlock extends StatelessWidget {
                   style: const TextStyle(fontSize: 12),
                 ),
                 Text(
-                  dateTimeLabel(item.due),
+                  dateTimeLabel(context, item.due),
                   style: const TextStyle(fontWeight: FontWeight.w800),
                 ),
               ],

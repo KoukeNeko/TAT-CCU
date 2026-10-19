@@ -1,0 +1,646 @@
+// ignore: unused_import
+import 'package:intl/intl.dart' as intl;
+
+import 'app_localizations.dart';
+
+// ignore_for_file: type=lint
+
+/// The translations for English (`en`).
+class AppLocalizationsEn extends AppLocalizations {
+  AppLocalizationsEn([String locale = 'en']) : super(locale);
+
+  @override
+  String get navToday => 'Today';
+
+  @override
+  String get navTimetable => 'Timetable';
+
+  @override
+  String get navCourses => 'Courses';
+
+  @override
+  String get navCalendar => 'Calendar';
+
+  @override
+  String get navMore => 'More';
+
+  @override
+  String get signInPortal => 'Sign in to CCU Portal';
+
+  @override
+  String get retry => 'Retry';
+
+  @override
+  String updatedAt(String time) {
+    return 'Updated $time';
+  }
+
+  @override
+  String get loadFailed => 'Couldn\'t load';
+
+  @override
+  String get toDo => 'To do';
+
+  @override
+  String get nothingDueSoon => 'Nothing due in the next 14 days';
+
+  @override
+  String get unitHours => 'hrs';
+
+  @override
+  String get unitDays => 'days';
+
+  @override
+  String get unitMinutes => 'min';
+
+  @override
+  String get unitMinutesLater => 'min';
+
+  @override
+  String get todayNoClasses => 'No classes today';
+
+  @override
+  String get todayClassesOver => 'Today\'s classes are over';
+
+  @override
+  String todayClassesLeft(String count) {
+    String _temp0 = intl.Intl.selectLogic(count, {
+      '1': '1 class left today',
+      'other': '$count classes left today',
+    });
+    return '$_temp0';
+  }
+
+  @override
+  String get inClass => 'In class';
+
+  @override
+  String untilTime(String time) {
+    return 'Until $time';
+  }
+
+  @override
+  String get nextClass => 'Next';
+
+  @override
+  String startsAt(String time) {
+    return 'Starts $time';
+  }
+
+  @override
+  String get dueThisWeek => 'Due this week';
+
+  @override
+  String get unread => 'Unread';
+
+  @override
+  String unreadDetail(int notices, int mail) {
+    return '$notices notifications · $mail mail';
+  }
+
+  @override
+  String get notifications => 'Notifications';
+
+  @override
+  String notificationsUnread(int count) {
+    return 'Notifications, $count unread';
+  }
+
+  @override
+  String get mail => 'Mail';
+
+  @override
+  String get noNotifications => 'No notifications';
+
+  @override
+  String get noMail => 'No mail';
+
+  @override
+  String monthTitle(String month) {
+    String _temp0 = intl.Intl.selectLogic(month, {
+      '1': 'January',
+      '2': 'February',
+      '3': 'March',
+      '4': 'April',
+      '5': 'May',
+      '6': 'June',
+      '7': 'July',
+      '8': 'August',
+      '9': 'September',
+      '10': 'October',
+      '11': 'November',
+      '12': 'December',
+      'other': '$month',
+    });
+    return '$_temp0';
+  }
+
+  @override
+  String yearMonthTitle(int year, String month) {
+    String _temp0 = intl.Intl.selectLogic(month, {
+      '1': 'January',
+      '2': 'February',
+      '3': 'March',
+      '4': 'April',
+      '5': 'May',
+      '6': 'June',
+      '7': 'July',
+      '8': 'August',
+      '9': 'September',
+      '10': 'October',
+      '11': 'November',
+      '12': 'December',
+      'other': '$month',
+    });
+    return '$_temp0 $year';
+  }
+
+  @override
+  String get goToToday => 'Today';
+
+  @override
+  String itemCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count items',
+      one: '1 item',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get noEventsThisDay => 'No events on this day';
+
+  @override
+  String get academicSystem => 'Student Records';
+
+  @override
+  String get academicRecord => 'Student record';
+
+  @override
+  String get studentNo => 'Student ID';
+
+  @override
+  String get englishName => 'English name';
+
+  @override
+  String get email => 'Email';
+
+  @override
+  String get mobile => 'Mobile';
+
+  @override
+  String get onSchoolWebsite => 'On the school website';
+
+  @override
+  String get editNameContact => 'Edit English name and contacts';
+
+  @override
+  String get studentPhoto => 'Student photo';
+
+  @override
+  String get enrollmentCertificate => 'Certificate of Enrollment';
+
+  @override
+  String get generating => 'Generating';
+
+  @override
+  String get generate => 'Generate';
+
+  @override
+  String get regenerate => 'Regenerate';
+
+  @override
+  String get open => 'Open';
+
+  @override
+  String get share => 'Share';
+
+  @override
+  String get notYetThisSemester => 'Not generated this semester';
+
+  @override
+  String validPrinted(String date) {
+    return 'Valid · printed $date';
+  }
+
+  @override
+  String expiredPrinted(String date) {
+    return 'Expired · printed $date';
+  }
+
+  @override
+  String savedToDevice(String time) {
+    return 'Saved $time';
+  }
+
+  @override
+  String get notPdf => 'The school didn\'t return a PDF';
+
+  @override
+  String get courseSelection => 'Course Selection';
+
+  @override
+  String get viewInApp => 'In the app';
+
+  @override
+  String courseCountShort(int count) {
+    return '$count';
+  }
+
+  @override
+  String get selectionQuery => 'My courses';
+
+  @override
+  String thisSemesterCredits(String credits) {
+    return 'This semester · $credits credits';
+  }
+
+  @override
+  String typeCredits(String type, String credits) {
+    return '$type · $credits credits';
+  }
+
+  @override
+  String get courseChanges => 'Course changes';
+
+  @override
+  String get schoolwideChanges => 'All changes this semester';
+
+  @override
+  String get myApplications => 'My applications';
+
+  @override
+  String get applicationsHint =>
+      'Add, underload, cross-school, withdrawal, programs';
+
+  @override
+  String kindCount(String kind, int count) {
+    return '$kind $count';
+  }
+
+  @override
+  String get programs => 'Interdisciplinary programs';
+
+  @override
+  String get programsDetail => 'Programs and offering units';
+
+  @override
+  String get notOpen => 'Not open';
+
+  @override
+  String get noData => 'No data';
+
+  @override
+  String get academics => 'Academics';
+
+  @override
+  String get grades => 'Grades';
+
+  @override
+  String courseCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count courses',
+      one: '1 course',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get campus => 'Campus';
+
+  @override
+  String get allCampusSystems => 'All campus systems';
+
+  @override
+  String get account => 'Account';
+
+  @override
+  String get ecourseSignedIn => 'eCourse2 signed in';
+
+  @override
+  String get ecourseSignedOut => 'eCourse2 signed out';
+
+  @override
+  String get portalShared => 'Portal shared';
+
+  @override
+  String get campusSystems => 'Campus systems';
+
+  @override
+  String get searchSystems => 'Search systems';
+
+  @override
+  String get favorites => 'Favorites';
+
+  @override
+  String get edit => 'Edit';
+
+  @override
+  String get recentlyOpened => 'Recent';
+
+  @override
+  String favoritesCount(int count, int max) {
+    return 'Favorites ($count/$max)';
+  }
+
+  @override
+  String get noGrades => 'No grades yet';
+
+  @override
+  String get itemNotFound => 'Item not found';
+
+  @override
+  String get stepOpens => 'Opens';
+
+  @override
+  String get stepSubmitted => 'Submitted';
+
+  @override
+  String get notSubmitted => 'Not submitted';
+
+  @override
+  String get stepDue => 'Due';
+
+  @override
+  String get stepGrade => 'Grade';
+
+  @override
+  String get mySubmission => 'My submission';
+
+  @override
+  String get description => 'Description';
+
+  @override
+  String get attachments => 'Attachments';
+
+  @override
+  String get stepAttempted => 'Attempted';
+
+  @override
+  String get notAttempted => 'Not attempted';
+
+  @override
+  String get stepCloses => 'Closes';
+
+  @override
+  String get quizSettings => 'Settings';
+
+  @override
+  String get quizStart => 'Opens';
+
+  @override
+  String get quizEnd => 'Closes';
+
+  @override
+  String get attemptsAllowed => 'Attempts allowed';
+
+  @override
+  String get unlimited => 'Unlimited';
+
+  @override
+  String attemptCount(int count) {
+    return '$count';
+  }
+
+  @override
+  String get passGrade => 'Passing grade';
+
+  @override
+  String fullMarks(String max) {
+    return 'Out of $max';
+  }
+
+  @override
+  String get noFiles => 'No files';
+
+  @override
+  String get filesLabel => 'files';
+
+  @override
+  String get total => 'Total';
+
+  @override
+  String get lastUpdated => 'Last updated';
+
+  @override
+  String fileUpdated(String size, String date) {
+    return '$size · updated $date';
+  }
+
+  @override
+  String get courseNotFound => 'Course not found';
+
+  @override
+  String get nothingDue => 'Nothing due';
+
+  @override
+  String nameDue(String name) {
+    return '$name due';
+  }
+
+  @override
+  String get announcementsUnit => 'announcements';
+
+  @override
+  String get currentGrade => 'Current grade';
+
+  @override
+  String get courseSection => 'Course';
+
+  @override
+  String get allSections => 'All sections';
+
+  @override
+  String sectionCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count sections',
+      one: '1 section',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get announcements => 'Announcements';
+
+  @override
+  String postCount(int count) {
+    return '$count';
+  }
+
+  @override
+  String hoursLeft(int count) {
+    return '$count hrs';
+  }
+
+  @override
+  String daysLeft(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count days',
+      one: '1 day',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get today => 'Today';
+
+  @override
+  String get tomorrow => 'Tomorrow';
+
+  @override
+  String nextClassAt(String when) {
+    return 'Next class $when';
+  }
+
+  @override
+  String get noContents => 'No content yet';
+
+  @override
+  String dueOn(String date) {
+    return 'Due $date';
+  }
+
+  @override
+  String fileCount(int count) {
+    return '$count files';
+  }
+
+  @override
+  String get noAnnouncements => 'No announcements';
+
+  @override
+  String get noGradeItems => 'No grade items yet';
+
+  @override
+  String get searchCourses => 'Search courses';
+
+  @override
+  String get noMatchingCourses => 'No matching courses';
+
+  @override
+  String verifiedAt(String time) {
+    return 'verified $time';
+  }
+
+  @override
+  String get signedOut => 'Signed out';
+
+  @override
+  String get verifyFailed => 'Verification failed';
+
+  @override
+  String signedInAs(String name) {
+    return 'Signed in: $name';
+  }
+
+  @override
+  String get signedInUnverified => 'Signed in, not verified';
+
+  @override
+  String get verify => 'Verify';
+
+  @override
+  String get signOut => 'Sign out';
+
+  @override
+  String get portalCas => 'CCU Portal (CAS)';
+
+  @override
+  String get sharedWithEcourse => 'Shares the eCourse2 sign-in';
+
+  @override
+  String get portal => 'CCU Portal';
+
+  @override
+  String get openPortal => 'Open CCU Portal';
+
+  @override
+  String signInFailed(String error) {
+    return 'Sign-in failed: $error';
+  }
+
+  @override
+  String get signInWithPortal => 'Sign in with CCU Portal';
+
+  @override
+  String get noClassesThisDay => 'No classes this day';
+
+  @override
+  String get unscheduled => 'Unscheduled';
+
+  @override
+  String get close => 'Close';
+
+  @override
+  String get switchSemester => 'Switch semester';
+
+  @override
+  String semesterLabel(String year, String term) {
+    String _temp0 = intl.Intl.selectLogic(term, {
+      '1': 'Fall',
+      '2': 'Spring',
+      'other': 'Summer',
+    });
+    return '$_temp0 of year $year';
+  }
+
+  @override
+  String get sectionGeneral => 'General';
+
+  @override
+  String eventLabel(String kind, String action) {
+    String _temp0 = intl.Intl.selectLogic(kind, {
+      'assign': 'Assignment',
+      'quiz': 'Quiz',
+      'course': 'Course event',
+      'user': 'Personal event',
+      'site': 'Campus event',
+      'other': 'Activity',
+    });
+    String _temp1 = intl.Intl.selectLogic(action, {
+      'due': ' due',
+      'close': ' closes',
+      'open': ' opens',
+      'other': '',
+    });
+    return '$_temp0$_temp1';
+  }
+
+  @override
+  String weekdayShort(String day) {
+    String _temp0 = intl.Intl.selectLogic(day, {
+      '1': 'Mon',
+      '2': 'Tue',
+      '3': 'Wed',
+      '4': 'Thu',
+      '5': 'Fri',
+      '6': 'Sat',
+      '7': 'Sun',
+      'other': '',
+    });
+    return '$_temp0';
+  }
+
+  @override
+  String weekdayFull(String day) {
+    String _temp0 = intl.Intl.selectLogic(day, {
+      '1': 'Mon',
+      '2': 'Tue',
+      '3': 'Wed',
+      '4': 'Thu',
+      '5': 'Fri',
+      '6': 'Sat',
+      '7': 'Sun',
+      'other': '',
+    });
+    return '$_temp0';
+  }
+}

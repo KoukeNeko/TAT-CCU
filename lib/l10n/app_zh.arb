@@ -1,0 +1,434 @@
+{
+  "@@locale": "zh",
+  "navToday": "今天",
+  "navTimetable": "課表",
+  "navCourses": "課程",
+  "navCalendar": "日曆",
+  "navMore": "更多",
+  "signInPortal": "登入單一入口",
+  "retry": "重試",
+  "updatedAt": "更新於 {time}",
+  "@updatedAt": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "loadFailed": "無法載入",
+  "toDo": "待辦",
+  "nothingDueSoon": "14 天內沒有到期項目",
+  "unitHours": "小時",
+  "unitDays": "天",
+  "unitMinutes": "分鐘",
+  "unitMinutesLater": "分鐘後",
+  "todayNoClasses": "今天沒有課",
+  "todayClassesOver": "今天的課結束了",
+  "todayClassesLeft": "今天還有{count, select, 1{一} 2{兩} 3{三} 4{四} 5{五} 6{六} 7{七} 8{八} 9{九} 10{十} other{ {count} }}堂課",
+  "@todayClassesLeft": {
+    "placeholders": {
+      "count": {
+        "type": "String"
+      }
+    }
+  },
+  "inClass": "上課中",
+  "untilTime": "到 {time}",
+  "@untilTime": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "nextClass": "下一堂",
+  "startsAt": "{time} 開始",
+  "@startsAt": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "dueThisWeek": "本週到期",
+  "unread": "未讀",
+  "unreadDetail": "通知 {notices}・信件 {mail}",
+  "@unreadDetail": {
+    "placeholders": {
+      "notices": {
+        "type": "int"
+      },
+      "mail": {
+        "type": "int"
+      }
+    }
+  },
+  "notifications": "通知",
+  "notificationsUnread": "通知，{count} 則未讀",
+  "@notificationsUnread": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "mail": "信件",
+  "noNotifications": "沒有通知",
+  "noMail": "沒有信件",
+  "monthTitle": "{month} 月",
+  "@monthTitle": {
+    "placeholders": {
+      "month": {
+        "type": "String"
+      }
+    }
+  },
+  "yearMonthTitle": "{year} 年 {month} 月",
+  "@yearMonthTitle": {
+    "placeholders": {
+      "year": {
+        "type": "int"
+      },
+      "month": {
+        "type": "String"
+      }
+    }
+  },
+  "goToToday": "今天",
+  "itemCount": "{count} 項",
+  "@itemCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "noEventsThisDay": "這天沒有事件",
+  "academicSystem": "學籍系統",
+  "academicRecord": "學籍資料",
+  "studentNo": "學號",
+  "englishName": "英文姓名",
+  "email": "電子郵件",
+  "mobile": "行動電話",
+  "onSchoolWebsite": "在學校網站辦理",
+  "editNameContact": "修改英文姓名與聯絡資料",
+  "studentPhoto": "學生照片",
+  "enrollmentCertificate": "在學證明書",
+  "generating": "產生中",
+  "generate": "產生",
+  "regenerate": "重新產生",
+  "open": "開啟",
+  "share": "分享",
+  "notYetThisSemester": "本學期尚未產生",
+  "validPrinted": "有效・列印日 {date}",
+  "@validPrinted": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "expiredPrinted": "已過期・列印日 {date}",
+  "@expiredPrinted": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "savedToDevice": "已存到裝置 {time}",
+  "@savedToDevice": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "notPdf": "學校回傳的不是 PDF",
+  "courseSelection": "選課系統",
+  "viewInApp": "在 App 查看",
+  "courseCountShort": "{count} 門",
+  "@courseCountShort": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "selectionQuery": "選課查詢",
+  "thisSemesterCredits": "本學期・{credits} 學分",
+  "@thisSemesterCredits": {
+    "placeholders": {
+      "credits": {
+        "type": "String"
+      }
+    }
+  },
+  "typeCredits": "{type} {credits} 學分",
+  "@typeCredits": {
+    "placeholders": {
+      "type": {
+        "type": "String"
+      },
+      "credits": {
+        "type": "String"
+      }
+    }
+  },
+  "courseChanges": "開排課異動查詢",
+  "schoolwideChanges": "全校本學期異動",
+  "myApplications": "我的申請",
+  "applicationsHint": "加簽、超短修、校際、棄選、學程",
+  "kindCount": "{kind} {count} 筆",
+  "@kindCount": {
+    "placeholders": {
+      "kind": {
+        "type": "String"
+      },
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "programs": "跨領域學程",
+  "programsDetail": "學程與開設單位",
+  "notOpen": "未開放",
+  "noData": "沒有資料",
+  "academics": "學業",
+  "grades": "成績",
+  "courseCount": "{count} 門課",
+  "@courseCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "campus": "校園",
+  "allCampusSystems": "全部校務系統",
+  "account": "帳號",
+  "ecourseSignedIn": "eCourse2 已登入",
+  "ecourseSignedOut": "eCourse2 未登入",
+  "portalShared": "單一入口共用",
+  "campusSystems": "校務系統",
+  "searchSystems": "搜尋系統",
+  "favorites": "常用",
+  "edit": "編輯",
+  "recentlyOpened": "最近開啟",
+  "favoritesCount": "常用（{count}/{max}）",
+  "@favoritesCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      },
+      "max": {
+        "type": "int"
+      }
+    }
+  },
+  "noGrades": "還沒有成績",
+  "itemNotFound": "找不到這個項目",
+  "stepOpens": "開放",
+  "stepSubmitted": "繳交",
+  "notSubmitted": "未繳交",
+  "stepDue": "截止",
+  "stepGrade": "成績",
+  "mySubmission": "我的繳交",
+  "description": "說明",
+  "attachments": "附件",
+  "stepAttempted": "作答",
+  "notAttempted": "未作答",
+  "stepCloses": "關閉",
+  "quizSettings": "設定",
+  "quizStart": "開始",
+  "quizEnd": "結束",
+  "attemptsAllowed": "允許作答",
+  "unlimited": "不限次數",
+  "attemptCount": "{count} 次",
+  "@attemptCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "passGrade": "及格分數",
+  "fullMarks": "滿分 {max}",
+  "@fullMarks": {
+    "placeholders": {
+      "max": {
+        "type": "String"
+      }
+    }
+  },
+  "noFiles": "沒有檔案",
+  "filesLabel": "個檔案",
+  "total": "合計",
+  "lastUpdated": "最後更新",
+  "fileUpdated": "{size}・{date} 更新",
+  "@fileUpdated": {
+    "placeholders": {
+      "size": {
+        "type": "String"
+      },
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "courseNotFound": "找不到這門課",
+  "nothingDue": "沒有待辦",
+  "nameDue": "{name} 到期",
+  "@nameDue": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "announcementsUnit": "則公告",
+  "currentGrade": "目前成績",
+  "courseSection": "課程",
+  "allSections": "全部章節",
+  "sectionCount": "{count} 個章節",
+  "@sectionCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "announcements": "公告",
+  "postCount": "{count} 則",
+  "@postCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "hoursLeft": "{count} 小時",
+  "@hoursLeft": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "daysLeft": "{count} 天",
+  "@daysLeft": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "today": "今天",
+  "tomorrow": "明天",
+  "nextClassAt": "下次上課　{when}",
+  "@nextClassAt": {
+    "placeholders": {
+      "when": {
+        "type": "String"
+      }
+    }
+  },
+  "noContents": "還沒有課程內容",
+  "dueOn": "{date} 截止",
+  "@dueOn": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "fileCount": "{count} 個檔案",
+  "@fileCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "noAnnouncements": "沒有公告",
+  "noGradeItems": "還沒有成績項目",
+  "searchCourses": "搜尋課程",
+  "noMatchingCourses": "沒有符合的課程",
+  "verifiedAt": "{time} 驗證",
+  "@verifiedAt": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "signedOut": "未登入",
+  "verifyFailed": "驗證失敗",
+  "signedInAs": "已登入：{name}",
+  "@signedInAs": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "signedInUnverified": "已登入，未驗證",
+  "verify": "驗證",
+  "signOut": "登出",
+  "portalCas": "單一入口（CAS）",
+  "sharedWithEcourse": "與 eCourse2 共用登入",
+  "portal": "單一入口",
+  "openPortal": "開啟單一入口",
+  "signInFailed": "登入失敗：{error}",
+  "@signInFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "signInWithPortal": "以單一入口登入",
+  "noClassesThisDay": "這天沒有課",
+  "unscheduled": "未排時間",
+  "close": "關閉",
+  "switchSemester": "切換學期",
+  "semesterLabel": "{year} 學年{term, select, 1{上學期} 2{下學期} other{暑期}}",
+  "@semesterLabel": {
+    "placeholders": {
+      "year": {
+        "type": "String"
+      },
+      "term": {
+        "type": "String"
+      }
+    }
+  },
+  "sectionGeneral": "一般",
+  "eventLabel": "{kind, select, assign{作業} quiz{測驗} course{課程事件} user{個人事件} site{全校事件} other{活動}}{action, select, due{到期} close{關閉} open{開放} other{}}",
+  "@eventLabel": {
+    "placeholders": {
+      "kind": {
+        "type": "String"
+      },
+      "action": {
+        "type": "String"
+      }
+    }
+  },
+  "weekdayShort": "{day, select, 1{一} 2{二} 3{三} 4{四} 5{五} 6{六} 7{日} other{}}",
+  "@weekdayShort": {
+    "placeholders": {
+      "day": {
+        "type": "String"
+      }
+    }
+  },
+  "weekdayFull": "{day, select, 1{週一} 2{週二} 3{週三} 4{週四} 5{週五} 6{週六} 7{週日} other{}}",
+  "@weekdayFull": {
+    "placeholders": {
+      "day": {
+        "type": "String"
+      }
+    }
+  }
+}

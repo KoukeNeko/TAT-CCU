@@ -8,6 +8,7 @@ import '../../data/repositories/ecourse_repository.dart';
 import '../../domain/models/course.dart';
 import '../core/theme.dart';
 import '../core/widgets.dart';
+import '../../l10n/l10n.dart';
 
 class TimetableScreen extends StatefulWidget {
   const TimetableScreen({super.key});
@@ -67,7 +68,7 @@ class _TimetableScreenState extends State<TimetableScreen> {
           return Scaffold(
             extendBodyBehindAppBar: true,
             appBar: topBar(
-              '課表',
+              context.l10n.navTimetable,
               actions: [
                 if (semesters.isNotEmpty)
                   Padding(
@@ -95,7 +96,7 @@ class _TimetableScreenState extends State<TimetableScreen> {
                           child: Padding(
                             padding: const EdgeInsets.symmetric(horizontal: 3),
                             child: _DayPill(
-                              label: weekdayNames[d - 1].substring(1),
+                              label: weekdayShort(context, d),
                               selected: i == page,
                               busy: days.contains(d),
                               onTap: () => pages.animateToPage(
@@ -141,7 +142,10 @@ Widget _dayList(BuildContext context, List<Course> courses, int day) {
         Padding(
           padding: const EdgeInsets.only(top: 80),
           child: Center(
-            child: Text('這天沒有課', style: theme.textTheme.titleMedium),
+            child: Text(
+              context.l10n.noClassesThisDay,
+              style: theme.textTheme.titleMedium,
+            ),
           ),
         ),
       for (final s in slots)
@@ -155,7 +159,7 @@ Widget _dayList(BuildContext context, List<Course> courses, int day) {
           ),
         ),
       if (courses.any((c) => c.sessions.isEmpty)) ...[
-        const SectionLabel('未排時間'),
+        SectionLabel(context.l10n.unscheduled),
         for (final c in courses.where((c) => c.sessions.isEmpty))
           Padding(
             padding: const EdgeInsets.only(bottom: 8),
@@ -317,7 +321,7 @@ class _SemesterMenu extends StatelessWidget {
     final picked = await showGeneralDialog<String>(
       context: context,
       barrierDismissible: true,
-      barrierLabel: '關閉',
+      barrierLabel: context.l10n.close,
       barrierColor: Colors.black.withValues(alpha: 0.12),
       transitionDuration: const Duration(milliseconds: 240),
       // No FadeTransition: an opacity layer above BackdropFilter keeps the
@@ -355,7 +359,7 @@ class _SemesterMenu extends StatelessWidget {
     final tone = context.tones.lilac;
     return Semantics(
       button: true,
-      label: '切換學期',
+      label: context.l10n.switchSemester,
       child: Material(
         color: tone.fill,
         shape: const StadiumBorder(),
@@ -482,7 +486,7 @@ class _SemesterPanel extends StatelessWidget {
             children: [
               Expanded(
                 child: Text(
-                  semesterLabel(semester),
+                  semesterName(context, semester),
                   style: TextStyle(
                     color: ink,
                     fontSize: 15,
@@ -491,7 +495,7 @@ class _SemesterPanel extends StatelessWidget {
                 ),
               ),
               Text(
-                '${counts[semester]} 門課',
+                context.l10n.courseCount(counts[semester] ?? 0),
                 style: TextStyle(
                   color: chosen
                       ? tone.ink.withValues(alpha: 0.7)

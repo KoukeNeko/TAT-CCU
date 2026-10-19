@@ -6,9 +6,11 @@ import '../core/theme.dart';
 import '../core/campus_web_screen.dart';
 import '../core/widgets.dart';
 import '../more/portal_screen.dart';
+import '../../l10n/l10n.dart';
 
-String _time(DateTime? t) =>
-    t == null ? '' : '　${t.hour}:${t.minute.toString().padLeft(2, '0')} 驗證';
+String _time(AppLocalizations l10n, DateTime? t) => t == null
+    ? ''
+    : '　${l10n.verifiedAt('${t.hour}:${t.minute.toString().padLeft(2, '0')}')}';
 
 /// Shows the two independent sign-in states side by side.
 class AccountScreen extends StatefulWidget {
@@ -43,16 +45,18 @@ class _AccountScreenState extends State<AccountScreen> {
     final ecourse = context.watch<EcourseAuthRepository>();
 
     final ecourseStatus = !ecourse.isSignedIn
-        ? '未登入'
+        ? context.l10n.signedOut
         : _ecourseError != null
-        ? '驗證失敗'
+        ? context.l10n.verifyFailed
         : _ecourseName != null
-        ? '已登入：$_ecourseName${_time(_ecourseCheckedAt)}'
-        : '已登入，未驗證';
+        ? context.l10n.signedInAs(
+            '$_ecourseName${_time(context.l10n, _ecourseCheckedAt)}',
+          )
+        : context.l10n.signedInUnverified;
 
     return Scaffold(
       extendBodyBehindAppBar: true,
-      appBar: subBar(context, '帳號'),
+      appBar: subBar(context, context.l10n.account),
       body: // Builder: the list must read insets from inside this Scaffold,
           // where the glass app bar's height is part of the padding.
           Builder(
@@ -69,11 +73,11 @@ class _AccountScreenState extends State<AccountScreen> {
                     if (ecourse.isSignedIn) ...[
                       FilledButton.tonal(
                         onPressed: _checking ? null : _verifyEcourse,
-                        child: const Text('驗證'),
+                        child: Text(context.l10n.verify),
                       ),
                       TextButton(
                         onPressed: ecourse.signOut,
-                        child: const Text('登出'),
+                        child: Text(context.l10n.signOut),
                       ),
                     ],
                   ],
@@ -84,13 +88,16 @@ class _AccountScreenState extends State<AccountScreen> {
                   // The CAS sign-in lives in the system browser, which the app
                   // cannot inspect; see docs/登入狀態設計.md.
                   signedIn: null,
-                  title: '單一入口（CAS）',
-                  status: '與 eCourse2 共用登入',
+                  title: context.l10n.portalCas,
+                  status: context.l10n.sharedWithEcourse,
                   actions: [
                     FilledButton.tonal(
-                      onPressed: () =>
-                          openCampusPage(context, portalHome, '單一入口'),
-                      child: const Text('開啟單一入口'),
+                      onPressed: () => openCampusPage(
+                        context,
+                        portalHome,
+                        context.l10n.portal,
+                      ),
+                      child: Text(context.l10n.openPortal),
                     ),
                   ],
                 ),

@@ -6,6 +6,7 @@ import '../../data/repositories/ecourse_repository.dart';
 import '../../domain/models/course.dart';
 import '../core/theme.dart';
 import '../core/widgets.dart';
+import '../../l10n/l10n.dart';
 
 class CoursesScreen extends StatefulWidget {
   const CoursesScreen({super.key});
@@ -22,7 +23,7 @@ class _CoursesScreenState extends State<CoursesScreen> {
     final repo = context.read<EcourseRepository>();
     return Scaffold(
       extendBodyBehindAppBar: true,
-      appBar: topBar('課程'),
+      appBar: topBar(context.l10n.navCourses),
       body: Loader<List<Course>>(
         load: () => repo.courses(),
         builder: (context, all) {
@@ -44,18 +45,18 @@ class _CoursesScreenState extends State<CoursesScreen> {
             padding: scrollPadding(context),
             children: [
               SearchBar(
-                hintText: '搜尋課程',
+                hintText: context.l10n.searchCourses,
                 leading: const Icon(Icons.search),
                 elevation: const WidgetStatePropertyAll(0),
                 onChanged: (v) => setState(() => _query = v.trim()),
               ),
               if (shown.isEmpty)
-                const Padding(
-                  padding: EdgeInsets.only(top: 60),
-                  child: Center(child: Text('沒有符合的課程')),
+                Padding(
+                  padding: const EdgeInsets.only(top: 60),
+                  child: Center(child: Text(context.l10n.noMatchingCourses)),
                 ),
               for (final entry in semesters.entries) ...[
-                SectionLabel(semesterLabel(entry.key)),
+                SectionLabel(semesterName(context, entry.key)),
                 for (final c in entry.value)
                   Padding(
                     padding: const EdgeInsets.only(bottom: 10),
@@ -80,7 +81,7 @@ class _CourseBlock extends StatelessWidget {
     final tone = context.tones.forCourse(course.id);
     final when = [
       for (final s in course.sessions)
-        '${weekdayNames[s.weekday - 1]} ${s.periods.join(',')}',
+        '${weekdayName(context, s.weekday)} ${s.periods.join(',')}',
     ].join('・');
     return ToneBlock(
       tone: tone,

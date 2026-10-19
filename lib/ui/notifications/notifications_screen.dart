@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import '../../data/repositories/ecourse_repository.dart';
 import '../core/theme.dart';
 import '../core/widgets.dart';
+import '../../l10n/l10n.dart';
 
 class NotificationsScreen extends StatelessWidget {
   const NotificationsScreen({super.key});
@@ -32,7 +33,7 @@ class _Bar extends StatelessWidget implements PreferredSizeWidget {
     final tone = context.tones.sun;
     return subBar(
       context,
-      '通知',
+      context.l10n.notifications,
       bottom: PreferredSize(
         preferredSize: const Size.fromHeight(56),
         child: Padding(
@@ -53,9 +54,9 @@ class _Bar extends StatelessWidget implements PreferredSizeWidget {
               labelColor: tone.ink,
               dividerColor: Colors.transparent,
               labelStyle: const TextStyle(fontWeight: FontWeight.w900),
-              tabs: const [
-                Tab(text: '通知'),
-                Tab(text: '信件'),
+              tabs: [
+                Tab(text: context.l10n.notifications),
+                Tab(text: context.l10n.mail),
               ],
             ),
           ),
@@ -74,7 +75,7 @@ class _Notices extends StatelessWidget {
     return Loader<List<NoticeItem>>(
       load: repo.notices,
       builder: (context, items) {
-        if (items.isEmpty) return const EmptyState('沒有通知');
+        if (items.isEmpty) return EmptyState(context.l10n.noNotifications);
         return ListView.separated(
           padding: scrollPadding(context),
           itemCount: items.length,
@@ -84,7 +85,7 @@ class _Notices extends StatelessWidget {
             return _Row(
               unread: !n.read,
               title: n.subject,
-              subtitle: dateTimeLabel(n.time),
+              subtitle: dateTimeLabel(context, n.time),
               onTap: n.url == null ? null : () => openExternal(n.url!),
             );
           },
@@ -103,7 +104,7 @@ class _Mail extends StatelessWidget {
     return Loader<List<MailItem>>(
       load: repo.inbox,
       builder: (context, items) {
-        if (items.isEmpty) return const EmptyState('沒有信件');
+        if (items.isEmpty) return EmptyState(context.l10n.noMail);
         return ListView.separated(
           padding: scrollPadding(context),
           itemCount: items.length,
@@ -113,7 +114,8 @@ class _Mail extends StatelessWidget {
             return _Row(
               unread: m.unread,
               title: m.subject,
-              subtitle: '${m.sender}・${m.course}・${dateTimeLabel(m.time)}',
+              subtitle:
+                  '${m.sender}・${m.course}・${dateTimeLabel(context, m.time)}',
             );
           },
         );

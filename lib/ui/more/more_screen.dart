@@ -8,6 +8,7 @@ import '../../data/repositories/portal_prefs.dart';
 import '../core/theme.dart';
 import '../core/widgets.dart';
 import 'portal_screen.dart';
+import '../../l10n/l10n.dart';
 
 /// Design X1-B "雙登入狀態卡" (design/round-11): an account card with both
 /// sign-in states, then grouped rows with favorite campus systems inline.
@@ -30,14 +31,14 @@ class _MoreScreenState extends State<MoreScreen> {
     final scheme = Theme.of(context).colorScheme;
     return Scaffold(
       extendBodyBehindAppBar: true,
-      appBar: topBar('更多'),
+      appBar: topBar(context.l10n.navMore),
       body: Builder(
         // Reads insets from inside this Scaffold, below the glass app bar.
         builder: (context) => ListView(
           padding: scrollPadding(context),
           children: [
             const _AccountCard(),
-            const SectionLabel('學業'),
+            SectionLabel(context.l10n.academics),
             Card(
               color: scheme.surfaceContainerLow,
               clipBehavior: Clip.antiAlias,
@@ -46,13 +47,15 @@ class _MoreScreenState extends State<MoreScreen> {
                 builder: (context, snap) => _Row(
                   tone: t.lilac,
                   icon: Icons.grading_outlined,
-                  title: '成績',
-                  detail: snap.hasData ? '${snap.data!.length} 門課' : null,
+                  title: context.l10n.grades,
+                  detail: snap.hasData
+                      ? context.l10n.courseCount(snap.data!.length)
+                      : null,
                   onTap: () => context.go('/more/grades'),
                 ),
               ),
             ),
-            const SectionLabel('校園'),
+            SectionLabel(context.l10n.campus),
             Card(
               color: scheme.surfaceContainerLow,
               clipBehavior: Clip.antiAlias,
@@ -61,7 +64,7 @@ class _MoreScreenState extends State<MoreScreen> {
                   _Row(
                     tone: t.peach,
                     icon: Icons.apps,
-                    title: '全部校務系統',
+                    title: context.l10n.allCampusSystems,
                     onTap: () => context.go('/more/portal'),
                   ),
                   if (favorites.isNotEmpty)
@@ -138,10 +141,13 @@ class _AccountCard extends StatelessWidget {
                 child: Icon(Icons.check, color: tone.fill),
               ),
               const SizedBox(width: 12),
-              const Expanded(
+              Expanded(
                 child: Text(
-                  '帳號',
-                  style: TextStyle(fontSize: 17, fontWeight: FontWeight.w900),
+                  context.l10n.account,
+                  style: const TextStyle(
+                    fontSize: 17,
+                    fontWeight: FontWeight.w900,
+                  ),
                 ),
               ),
               const Icon(Icons.chevron_right),
@@ -152,12 +158,14 @@ class _AccountCard extends StatelessWidget {
             children: [
               _Status(
                 on: signedIn,
-                label: signedIn ? 'eCourse2 已登入' : 'eCourse2 未登入',
+                label: signedIn
+                    ? context.l10n.ecourseSignedIn
+                    : context.l10n.ecourseSignedOut,
               ),
               const SizedBox(width: 6),
               // CAS lives in the system browser; the app can only say it is
               // shared with the eCourse2 sign-in.
-              const _Status(on: true, label: '單一入口共用'),
+              _Status(on: true, label: context.l10n.portalShared),
             ],
           ),
         ],

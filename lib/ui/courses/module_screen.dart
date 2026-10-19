@@ -5,6 +5,7 @@ import 'package:url_launcher/url_launcher.dart';
 import '../../data/repositories/ecourse_repository.dart';
 import '../core/theme.dart';
 import '../core/widgets.dart';
+import '../../l10n/l10n.dart';
 
 /// Module types with a page of their own; others open on eCourse2.
 const moduleTypesWithPage = {'assign', 'quiz', 'folder', 'resource'};
@@ -28,7 +29,7 @@ class ModuleScreen extends StatelessWidget {
         extendBodyBehindAppBar: true,
         appBar: subBar(context, module?.name ?? ''),
         body: switch (module?.type) {
-          null => const EmptyState('找不到這個項目'),
+          null => EmptyState(context.l10n.itemNotFound),
           'assign' => Loader<Assignment>(
             load: () => repo.assignment(courseId, module!.instance),
             builder: (context, a) => _AssignmentBody(assignment: a),
@@ -48,8 +49,8 @@ String _day(DateTime d) => '${d.month}/${d.day}';
 String _stamp(DateTime d) => '${_day(d)} ${clock(d.hour * 60 + d.minute)}';
 
 /// `10/13 週二 00:00`, for settings where the hour matters.
-String _full(DateTime d) =>
-    '${_day(d)} ${weekdayNames[d.weekday - 1]} ${clock(d.hour * 60 + d.minute)}';
+String _full(BuildContext context, DateTime d) =>
+    '${_day(d)} ${weekdayName(context, d.weekday)} ${clock(d.hour * 60 + d.minute)}';
 
 String _size(int bytes) => switch (bytes) {
   < 1024 => '$bytes B',
@@ -65,6 +66,7 @@ class _AssignmentBody extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final a = assignment;
+    final l10n = context.l10n;
     final now = DateTime.now();
     return ListView(
       padding: scrollPadding(context),
@@ -72,30 +74,33 @@ class _AssignmentBody extends StatelessWidget {
         _Progress(
           steps: [
             (
-              '開放',
+              l10n.stepOpens,
               a.opens == null ? '—' : _day(a.opens!),
               a.opens?.isBefore(now) ?? true,
             ),
             (
-              '繳交',
-              a.submittedAt == null ? '未繳交' : _day(a.submittedAt!),
+              l10n.stepSubmitted,
+              a.submittedAt == null ? l10n.notSubmitted : _day(a.submittedAt!),
               a.submittedAt != null,
             ),
             (
-              '截止',
+              l10n.stepDue,
               a.due == null ? '—' : _day(a.due!),
               a.due?.isBefore(now) ?? false,
             ),
-            ('成績', a.grade ?? '—', a.grade != null),
+            (l10n.stepGrade, a.grade ?? '—', a.grade != null),
           ],
         ),
         if (a.submission.isNotEmpty) ...[
-          const SectionLabel('我的繳交'),
+          SectionLabel(l10n.mySubmission),
           _FileList(files: a.submission, detail: (f) => _stamp(f.modified)),
         ],
-        if (a.intro.isNotEmpty) ...[const SectionLabel('說明'), _Text(a.intro)],
+        if (a.intro.isNotEmpty) ...[
+          SectionLabel(l10n.description),
+          _Text(a.intro),
+        ],
         if (a.attachments.isNotEmpty) ...[
-          const SectionLabel('附件'),
+          SectionLabel(l10n.attachments),
           _FileList(files: a.attachments, detail: (f) => _size(f.size)),
         ],
       ],
@@ -111,6 +116,7 @@ class _QuizBody extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final q = quiz;
+    final l10n = context.l10n;
     final now = DateTime.now();
     return ListView(
       padding: scrollPadding(context),
@@ -118,33 +124,42 @@ class _QuizBody extends StatelessWidget {
         _Progress(
           steps: [
             (
-              '開放',
+              l10n.stepOpens,
               q.opens == null ? '—' : _day(q.opens!),
               q.opens?.isBefore(now) ?? true,
             ),
             (
-              '作答',
-              q.finished == null ? '未作答' : _day(q.finished!),
+              l10n.stepAttempted,
+              q.finished == null ? l10n.notAttempted : _day(q.finished!),
               q.finished != null,
             ),
             (
-              '關閉',
+              l10n.stepCloses,
               q.closes == null ? '—' : _day(q.closes!),
               q.closes?.isBefore(now) ?? false,
             ),
-            ('成績', q.grade ?? '—', q.grade != null),
+            (l10n.stepGrade, q.grade ?? '—', q.grade != null),
           ],
         ),
-        const SectionLabel('設定'),
+        SectionLabel(l10n.quizSettings),
         _Details(
           rows: [
-            if (q.opens != null) ('開始', _full(q.opens!)),
-            if (q.closes != null) ('結束', _full(q.closes!)),
-            ('允許作答', q.attempts == 0 ? '不限次數' : '${q.attempts} 次'),
-            ('及格分數', q.pass == null ? '滿分 ${q.max}' : '${q.pass} / ${q.max}'),
+            if (q.opens != null) (l10n.quizStart, _full(context, q.opens!)),
+            if (q.closes != null) (l10n.quizEnd, _full(context, q.closes!)),
+            (
+              l10n.attemptsAllowed,
+              q.attempts == 0 ? l10n.unlimited : l10n.attemptCount(q.attempts),
+            ),
+            (
+              l10n.passGrade,
+              q.pass == null ? l10n.fullMarks(q.max) : '${q.pass} / ${q.max}',
+            ),
           ],
         ),
-        if (q.intro.isNotEmpty) ...[const SectionLabel('說明'), _Text(q.intro)],
+        if (q.intro.isNotEmpty) ...[
+          SectionLabel(l10n.description),
+          _Text(q.intro),
+        ],
       ],
     );
   }
@@ -157,7 +172,7 @@ class _FilesBody extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    if (files.isEmpty) return const EmptyState('沒有檔案');
+    if (files.isEmpty) return EmptyState(context.l10n.noFiles);
     final latest = files
         .map((f) => f.modified)
         .reduce((a, b) => a.isAfter(b) ? a : b);
@@ -167,17 +182,18 @@ class _FilesBody extends StatelessWidget {
       children: [
         Row(
           children: [
-            _Fact(value: '${files.length}', label: '個檔案'),
+            _Fact(value: '${files.length}', label: context.l10n.filesLabel),
             const SizedBox(width: 8),
-            _Fact(value: _size(total), label: '合計'),
+            _Fact(value: _size(total), label: context.l10n.total),
             const SizedBox(width: 8),
-            _Fact(value: _day(latest), label: '最後更新'),
+            _Fact(value: _day(latest), label: context.l10n.lastUpdated),
           ],
         ),
         const SizedBox(height: 12),
         _FileList(
           files: files,
-          detail: (f) => '${_size(f.size)}・${_day(f.modified)} 更新',
+          detail: (f) =>
+              context.l10n.fileUpdated(_size(f.size), _day(f.modified)),
         ),
       ],
     );

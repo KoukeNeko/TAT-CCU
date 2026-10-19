@@ -6,6 +6,7 @@ import 'package:webview_flutter/webview_flutter.dart';
 
 import '../../data/services/campus_cookies.dart';
 import 'widgets.dart';
+import '../../l10n/l10n.dart';
 
 /// A campus system read in-app. A hidden WebView goes through the portal
 /// hand-off at [entry]; once it lands on [host] it runs [script], which
@@ -103,7 +104,10 @@ class CampusSessionState extends State<CampusSession> {
   Widget build(BuildContext context) {
     return Scaffold(
       extendBodyBehindAppBar: !_signingIn,
-      appBar: subBar(context, _signingIn ? '登入單一入口' : widget.title),
+      appBar: subBar(
+        context,
+        _signingIn ? context.l10n.signInPortal : widget.title,
+      ),
       body: Stack(
         children: [
           // Kept in the tree so it can load; shown only for signing in.
@@ -147,7 +151,7 @@ class CampusError extends StatelessWidget {
           children: [
             Text(message, textAlign: TextAlign.center),
             const SizedBox(height: 12),
-            FilledButton(onPressed: onRetry, child: const Text('重試')),
+            FilledButton(onPressed: onRetry, child: Text(context.l10n.retry)),
           ],
         ),
       ),
@@ -166,7 +170,9 @@ class UpdatedAt extends StatelessWidget {
     return Padding(
       padding: const EdgeInsets.only(top: 20),
       child: Text(
-        '更新於 ${time.month}/${time.day} ${clock(time.hour * 60 + time.minute)}',
+        context.l10n.updatedAt(
+          '${time.month}/${time.day} ${clock(time.hour * 60 + time.minute)}',
+        ),
         textAlign: TextAlign.center,
         style: TextStyle(
           fontSize: 12,

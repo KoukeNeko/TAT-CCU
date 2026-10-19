@@ -45,11 +45,14 @@ typedef Section = ({String name, List<Module> modules});
 typedef Post = ({String subject, String author, DateTime time, String body});
 typedef GradeLine = ({String name, String grade, String percent});
 
-/// A calendar entry. [cmid] links assignment and quiz events to their
-/// module page.
+/// A calendar entry. [kind] is the module (`assign`, `quiz`, …) or, for
+/// plain events, the event type (`course`, `user`, `site`); [action] is
+/// `due`, `open`, `close` or empty. [cmid] links assignment and quiz events
+/// to their module page.
 typedef CalendarEvent = ({
   String name,
-  String label,
+  String kind,
+  String action,
   String course,
   int courseId,
   int? cmid,
@@ -157,13 +160,15 @@ class EcourseRepository {
         for (final d in w['days'] as List)
           for (final e in d['events'] as List)
             (
-              // `name` carries Moodle's suffix such as 在最近到期; the label
-              // below says the same in fewer words.
+              // `name` carries Moodle's suffix such as 在最近到期; the screen
+              // says the same from kind and action instead.
               name: multilang('${e['activityname'] ?? e['name']}'),
-              label: _eventLabel(
-                '${e['modulename'] ?? ''}',
-                '${e['eventtype']}',
-              ),
+              kind: '${e['modulename'] ?? ''}'.isEmpty
+                  ? '${e['eventtype']}'
+                  : '${e['modulename']}',
+              action: '${e['modulename'] ?? ''}'.isEmpty
+                  ? ''
+                  : '${e['eventtype']}',
               course: multilang('${e['course']?['fullname'] ?? ''}'),
               courseId: (e['course']?['id'] as num?)?.toInt() ?? 0,
               // Only assignments and quizzes have an in-app page.
@@ -231,10 +236,7 @@ class EcourseRepository {
     return [
       for (final s in r)
         (
-          // Moodle's untranslated default name for the course-wide section.
-          name: s['section'] == 0 && s['name'] == 'General'
-              ? '一般'
-              : multilang('${s['name']}'),
+          name: multilang('${s['name']}'),
           modules: [
             for (final m in s['modules'] as List)
               if (m['modname'] != 'label')
@@ -396,27 +398,6 @@ class EcourseRepository {
           ),
     ];
   }
-}
-
-String _eventLabel(String module, String type) {
-  final what = switch (module) {
-    'assign' => '作業',
-    'quiz' => '測驗',
-    '' => switch (type) {
-      'course' => '課程事件',
-      'user' => '個人事件',
-      'site' => '全校事件',
-      _ => '事件',
-    },
-    _ => '活動',
-  };
-  final when = switch (type) {
-    'due' => '到期',
-    'close' => '關閉',
-    'open' => '開放',
-    _ => '',
-  };
-  return '$what$when';
 }
 
 /// `60.00` → `60`, `83.5` → `83.50`.

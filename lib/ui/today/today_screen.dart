@@ -7,6 +7,7 @@ import '../../domain/models/course.dart';
 import '../../domain/models/timetable.dart';
 import '../core/theme.dart';
 import '../core/widgets.dart';
+import '../../l10n/l10n.dart';
 
 // Layout follows design/round-01/c-deck.html: headline, one hero block,
 // a pill for the next class, two count tiles.
@@ -19,8 +20,6 @@ typedef _Today = ({
   int notices,
   int mail,
 });
-
-const _counts = ['零', '一', '兩', '三', '四', '五', '六', '七', '八', '九', '十'];
 
 /// `創新大樓 322` → `322`; the pill only has room for the room number.
 String _roomNumber(String? room) =>
@@ -72,11 +71,12 @@ class TodayScreen extends StatelessWidget {
           final theme = Theme.of(context);
           final tones = context.tones;
           final n = remaining.length;
+          final l10n = context.l10n;
           final headline = d.slots.isEmpty
-              ? '今天沒有課'
+              ? l10n.todayNoClasses
               : n == 0
-              ? '今天的課結束了'
-              : '今天還有${n < _counts.length ? _counts[n] : '$n '}堂課';
+              ? l10n.todayClassesOver
+              : l10n.todayClassesLeft('$n');
           final firstDue = d.due.firstOrNull;
           return ListView(
             padding: scrollPadding(context, top: 20),
@@ -89,7 +89,7 @@ class TodayScreen extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      '${weekdayNames[now.weekday - 1]} ${now.month}/${now.day}',
+                      '${weekdayName(context, now.weekday)} ${now.month}/${now.day}',
                       style: TextStyle(
                         fontSize: 14,
                         fontWeight: FontWeight.w700,
@@ -123,18 +123,18 @@ class TodayScreen extends StatelessWidget {
               if (current != null)
                 _Hero(
                   slot: current,
-                  label: '上課中',
-                  detail: '到 ${clock(current.session.end)}',
+                  label: l10n.inClass,
+                  detail: l10n.untilTime(clock(current.session.end)),
                   minutes: current.session.end - minute,
-                  unit: '分鐘',
+                  unit: l10n.unitMinutes,
                 )
               else if (next != null)
                 _Hero(
                   slot: next,
-                  label: '下一堂',
-                  detail: '${clock(next.session.start)} 開始',
+                  label: l10n.nextClass,
+                  detail: l10n.startsAt(clock(next.session.start)),
                   minutes: next.session.start - minute,
-                  unit: '分鐘後',
+                  unit: l10n.unitMinutesLater,
                 ),
               if (current != null && next != null) ...[
                 const SizedBox(height: 12),
@@ -147,10 +147,10 @@ class TodayScreen extends StatelessWidget {
                     child: _Tile(
                       tone: tones.peach,
                       value: '${d.due.length}',
-                      label: '本週到期',
+                      label: l10n.dueThisWeek,
                       detail: firstDue == null
                           ? null
-                          : '${firstDue.name} ${weekdayNames[firstDue.due.weekday - 1]} '
+                          : '${firstDue.name} ${weekdayName(context, firstDue.due.weekday)} '
                                 '${clock(firstDue.due.hour * 60 + firstDue.due.minute)}',
                       onTap: () => context.go('/today/due'),
                     ),
@@ -160,8 +160,8 @@ class TodayScreen extends StatelessWidget {
                     child: _Tile(
                       tone: tones.sun,
                       value: '${d.notices + d.mail}',
-                      label: '未讀',
-                      detail: '通知 ${d.notices}・信件 ${d.mail}',
+                      label: l10n.unread,
+                      detail: l10n.unreadDetail(d.notices, d.mail),
                       onTap: () => context.go('/today/notifications'),
                     ),
                   ),
@@ -317,7 +317,7 @@ class _NextPill extends StatelessWidget {
       onTap: () => context.go('/courses/${slot.course.id}'),
       child: Row(
         children: [
-          const Text('下一堂', style: bold),
+          Text(context.l10n.nextClass, style: bold),
           const SizedBox(width: 12),
           Expanded(
             child: Text(
@@ -409,7 +409,9 @@ class _BellButton extends StatelessWidget {
     final sun = context.tones.sun;
     return Semantics(
       button: true,
-      label: unread > 0 ? '通知，$unread 則未讀' : '通知',
+      label: unread > 0
+          ? context.l10n.notificationsUnread(unread)
+          : context.l10n.notifications,
       child: Material(
         color: scheme.surfaceContainer,
         shape: const CircleBorder(),

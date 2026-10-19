@@ -6,6 +6,7 @@ import 'data/repositories/ecourse_auth_repository.dart';
 import 'data/repositories/ecourse_repository.dart';
 import 'data/repositories/portal_prefs.dart';
 import 'data/services/campus_cookies.dart';
+import 'l10n/l10n.dart';
 import 'routing/router.dart';
 import 'ui/core/theme.dart';
 
@@ -51,6 +52,21 @@ class TatCcuApp extends StatelessWidget {
       title: 'TAT CCU',
       theme: buildTheme(Brightness.light),
       darkTheme: buildTheme(Brightness.dark),
+      // Follows the system language, including the per-app language in
+      // iOS and Android settings.
+      localizationsDelegates: AppLocalizations.localizationsDelegates,
+      supportedLocales: AppLocalizations.supportedLocales,
+      // Japanese gets LINE Seed JP so kanji take Japanese shapes.
+      builder: (context, child) =>
+          Localizations.localeOf(context).languageCode == 'ja'
+          ? Theme(
+              data: buildTheme(
+                Theme.of(context).brightness,
+                fontFamily: fontJp,
+              ),
+              child: child!,
+            )
+          : child!,
       routerConfig: router,
     );
   }

@@ -6,6 +6,7 @@ import '../../data/repositories/ecourse_repository.dart';
 import '../../domain/models/course.dart';
 import '../core/theme.dart';
 import '../core/widgets.dart';
+import '../../l10n/l10n.dart';
 
 /// eCourse2 running grades per course. Final semester grades live in the
 /// school's grade system, reachable from 校務系統.
@@ -17,7 +18,7 @@ class GradesScreen extends StatelessWidget {
     final repo = context.read<EcourseRepository>();
     return Scaffold(
       extendBodyBehindAppBar: true,
-      appBar: subBar(context, '成績'),
+      appBar: subBar(context, context.l10n.grades),
       body: Loader<(List<Course>, Map<int, String>)>(
         load: () async => (await repo.courses(), await repo.gradeOverview()),
         builder: (context, data) {
@@ -25,7 +26,7 @@ class GradesScreen extends StatelessWidget {
           final graded = courses
               .where((c) => grades.containsKey(c.id))
               .toList();
-          if (graded.isEmpty) return const EmptyState('還沒有成績');
+          if (graded.isEmpty) return EmptyState(context.l10n.noGrades);
           final tones = context.tones;
           return ListView.separated(
             padding: scrollPadding(context),

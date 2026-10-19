@@ -10,6 +10,7 @@ import '../core/campus_session.dart';
 import '../core/campus_web_screen.dart';
 import '../core/theme.dart';
 import '../core/widgets.dart';
+import '../../l10n/l10n.dart';
 
 const _host = 'www026198.ccu.edu.tw';
 const _detailUrl = 'https://$_host/academic/academic_detail.php';
@@ -145,6 +146,8 @@ class _AcademicScreenState extends State<AcademicScreen> {
           await _refreshList();
           if (_pages.hasClients) _pages.jumpToPage(0);
           _page = 0;
+        } on NotPdfException {
+          if (mounted) setState(() => _error = context.l10n.notPdf);
         } catch (e) {
           setState(() => _error = '$e');
         } finally {
@@ -190,7 +193,7 @@ class _AcademicScreenState extends State<AcademicScreen> {
     final scheme = Theme.of(context).colorScheme;
     return CampusSession(
       key: _session,
-      title: '學籍系統',
+      title: context.l10n.academicSystem,
       entry: _entry,
       host: _host,
       script: () => _readDetail,
@@ -243,7 +246,7 @@ class _AcademicScreenState extends State<AcademicScreen> {
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
                     if (detail != null) ...[
-                      const SectionLabel('學籍資料'),
+                      SectionLabel(context.l10n.academicRecord),
                       Card(
                         color: scheme.surfaceContainerLow,
                         child: Padding(
@@ -251,10 +254,10 @@ class _AcademicScreenState extends State<AcademicScreen> {
                           child: Column(
                             children: [
                               for (final (i, (label, value)) in [
-                                ('學號', detail.studentNo),
-                                ('英文姓名', detail.englishName),
-                                ('電子郵件', detail.email),
-                                ('行動電話', detail.mobile),
+                                (context.l10n.studentNo, detail.studentNo),
+                                (context.l10n.englishName, detail.englishName),
+                                (context.l10n.email, detail.email),
+                                (context.l10n.mobile, detail.mobile),
                               ].indexed) ...[
                                 if (i > 0)
                                   Divider(
@@ -268,13 +271,16 @@ class _AcademicScreenState extends State<AcademicScreen> {
                         ),
                       ),
                     ],
-                    const SectionLabel('在學校網站辦理'),
+                    SectionLabel(context.l10n.onSchoolWebsite),
                     Card(
                       color: scheme.surfaceContainerLow,
                       clipBehavior: Clip.antiAlias,
                       child: Column(
                         children: [
-                          for (final title in ['修改英文姓名與聯絡資料', '學生照片'])
+                          for (final title in [
+                            context.l10n.editNameContact,
+                            context.l10n.studentPhoto,
+                          ])
                             ListTile(
                               title: Text(
                                 title,
@@ -287,8 +293,11 @@ class _AcademicScreenState extends State<AcademicScreen> {
                                 size: 18,
                                 color: scheme.onSurfaceVariant,
                               ),
-                              onTap: () =>
-                                  openCampusPage(context, _detailUrl, '學籍系統'),
+                              onTap: () => openCampusPage(
+                                context,
+                                _detailUrl,
+                                context.l10n.academicSystem,
+                              ),
                             ),
                         ],
                       ),
@@ -321,7 +330,7 @@ class _Ticket extends StatelessWidget {
   void _open(BuildContext context, Certificate c) => Navigator.of(context).push(
     MaterialPageRoute(
       builder: (_) => Scaffold(
-        appBar: subBar(context, '在學證明書'),
+        appBar: subBar(context, context.l10n.enrollmentCertificate),
         body: PdfViewer.file(c.file.path),
       ),
     ),
@@ -350,17 +359,20 @@ class _Ticket extends StatelessWidget {
     final semester = c == null
         ? semesterOf(DateTime.now())
         : semesterOf(c.printedAt);
-    final printLabel = printing ? '產生中' : (c == null ? '產生' : '重新產生');
+    final l10n = context.l10n;
+    final printLabel = printing
+        ? l10n.generating
+        : (c == null ? l10n.generate : l10n.regenerate);
     final buttons = <Widget>[
       if (c != null && current) ...[
-        _Action('開啟', primary: true, onTap: () => _open(context, c)),
-        _Action('分享', onTap: () => _share(context, c)),
+        _Action(l10n.open, primary: true, onTap: () => _open(context, c)),
+        _Action(l10n.share, onTap: () => _share(context, c)),
         if (onPrint != null)
           _Action(printLabel, onTap: printing ? null : onPrint),
       ] else ...[
         if (onPrint != null)
           _Action(printLabel, primary: true, onTap: printing ? null : onPrint),
-        if (c != null) _Action('開啟', onTap: () => _open(context, c)),
+        if (c != null) _Action(l10n.open, onTap: () => _open(context, c)),
       ],
     ];
     return Material(
@@ -401,17 +413,19 @@ class _Ticket extends StatelessWidget {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        const Text(
-                          '在學證明書',
-                          style: TextStyle(
+                        Text(
+                          l10n.enrollmentCertificate,
+                          style: const TextStyle(
                             fontSize: 17,
                             fontWeight: FontWeight.w900,
                           ),
                         ),
                         Text(
                           c == null
-                              ? '本學期尚未產生'
-                              : '${current ? '有效' : '已過期'}・列印日 ${_md(c.printedAt)}',
+                              ? l10n.notYetThisSemester
+                              : current
+                              ? l10n.validPrinted(_md(c.printedAt))
+                              : l10n.expiredPrinted(_md(c.printedAt)),
                           style: const TextStyle(
                             fontSize: 12,
                             fontWeight: FontWeight.w800,
@@ -459,7 +473,9 @@ class _Ticket extends StatelessWidget {
               child: Row(
                 children: [
                   Text(
-                    '已存到裝置 ${_md(c.printedAt)} ${clock(c.printedAt.hour * 60 + c.printedAt.minute)}',
+                    l10n.savedToDevice(
+                      '${_md(c.printedAt)} ${clock(c.printedAt.hour * 60 + c.printedAt.minute)}',
+                    ),
                     style: const TextStyle(
                       fontSize: 12,
                       fontWeight: FontWeight.w800,

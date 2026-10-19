@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import '../../data/repositories/ecourse_auth_repository.dart';
 import '../core/theme.dart';
 import '../core/widgets.dart';
+import '../../l10n/l10n.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -21,8 +22,9 @@ class _LoginScreenState extends State<LoginScreen> {
       await context.read<EcourseAuthRepository>().signIn();
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context)
-            .showSnackBar(SnackBar(content: Text('登入失敗：$e')));
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(context.l10n.signInFailed('$e'))),
+        );
       }
     } finally {
       if (mounted) setState(() => _busy = false);
@@ -74,7 +76,7 @@ class _LoginScreenState extends State<LoginScreen> {
               // the token, and campus systems reuse that CAS session.
               FilledButton(
                 onPressed: _busy ? null : _signIn,
-                child: const Text('以單一入口登入'),
+                child: Text(context.l10n.signInWithPortal),
               ),
             ],
           ),

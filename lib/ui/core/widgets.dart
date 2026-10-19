@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import 'theme.dart';
+import '../../l10n/l10n.dart';
 
 /// Scalloped "cookie" outline from the Material 3 Expressive shape set:
 /// a circle whose radius waves [lobes] times around the edge.
@@ -333,13 +334,16 @@ class _LoaderState<T> extends State<Loader<T>> {
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  Text('無法載入', style: Theme.of(context).textTheme.titleMedium),
+                  Text(
+                    context.l10n.loadFailed,
+                    style: Theme.of(context).textTheme.titleMedium,
+                  ),
                   const SizedBox(height: 4),
                   Text('${snap.error}', textAlign: TextAlign.center),
                   const SizedBox(height: 16),
                   FilledButton.tonal(
                     onPressed: _reload,
-                    child: const Text('重試'),
+                    child: Text(context.l10n.retry),
                   ),
                 ],
               ),
@@ -384,13 +388,26 @@ class EmptyState extends StatelessWidget {
   }
 }
 
-const weekdayNames = ['週一', '週二', '週三', '週四', '週五', '週六', '週日'];
+/// `週一`, `Mon`, `月曜` for weekday 1–7.
+String weekdayName(BuildContext context, int weekday) =>
+    context.l10n.weekdayFull('$weekday');
+
+/// `115_1` → `115 學年上學期`, `Fall of year 115`, `115学年度 前期`.
+String semesterName(BuildContext context, String semester) {
+  final parts = semester.split('_');
+  if (parts.length < 2) return semester;
+  return context.l10n.semesterLabel(parts[0], parts[1]);
+}
+
+/// `一`, `Mon`, `月` for weekday 1–7.
+String weekdayShort(BuildContext context, int weekday) =>
+    context.l10n.weekdayShort('$weekday');
 
 String clock(int minutes) =>
     '${minutes ~/ 60}:${(minutes % 60).toString().padLeft(2, '0')}';
 
-String dateTimeLabel(DateTime t) =>
-    '${t.month}/${t.day} ${weekdayNames[t.weekday - 1]} ${clock(t.hour * 60 + t.minute)}';
+String dateTimeLabel(BuildContext context, DateTime t) =>
+    '${t.month}/${t.day} ${weekdayName(context, t.weekday)} ${clock(t.hour * 60 + t.minute)}';
 
 /// Opens an eCourse2 or campus page in the system browser, which shares the
 /// sign-in made during the launch.php flow. No token is put in the URL.

@@ -7,6 +7,7 @@ import 'package:go_router/go_router.dart';
 
 import 'theme.dart';
 import 'widgets.dart';
+import '../../l10n/l10n.dart';
 
 typedef _Tab = (IconData icon, String label, Tone tone, ShapeBorder shape);
 
@@ -99,11 +100,16 @@ class _AppShellState extends State<AppShell> {
       scheme.onSurfaceVariant,
     );
     final List<_Tab> tabs = [
-      (Icons.today_outlined, '今天', t.lilac, spikyStar),
-      (Icons.calendar_view_week_outlined, '課表', t.mint, clover),
-      (Icons.school_outlined, '課程', t.peach, scallop),
-      (Icons.event_outlined, '日曆', t.sun, scallop),
-      (Icons.apps, '更多', gray, clover),
+      (Icons.today_outlined, context.l10n.navToday, t.lilac, spikyStar),
+      (
+        Icons.calendar_view_week_outlined,
+        context.l10n.navTimetable,
+        t.mint,
+        clover,
+      ),
+      (Icons.school_outlined, context.l10n.navCourses, t.peach, scallop),
+      (Icons.event_outlined, context.l10n.navCalendar, t.sun, scallop),
+      (Icons.apps, context.l10n.navMore, gray, clover),
     ];
     final light = theme.brightness == Brightness.light;
     final pressed = _downX != null;

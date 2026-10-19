@@ -7,6 +7,7 @@ import '../core/campus_session.dart';
 import '../core/campus_web_screen.dart';
 import '../core/theme.dart';
 import '../core/widgets.dart';
+import '../../l10n/l10n.dart';
 
 const _iccu = 'https://www026220.ccu.edu.tw';
 
@@ -182,7 +183,7 @@ class _IccuScreenState extends State<IccuScreen> {
     final snapshot = _snapshot;
     return CampusSession(
       key: _session,
-      title: '選課系統',
+      title: context.l10n.courseSelection,
       entry: _entry,
       host: Uri.parse(_iccu).host,
       loadOnStart: false,
@@ -232,6 +233,7 @@ class _Hub extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final t = context.tones;
+    final l10n = context.l10n;
     final s = snapshot;
     final courses = s.courses;
     final credits = courses.fold<num>(
@@ -244,13 +246,13 @@ class _Hub extends StatelessWidget {
       child: ListView(
         padding: scrollPadding(context),
         children: [
-          const SectionLabel('在 App 查看'),
+          SectionLabel(l10n.viewInApp),
           _Bar(
             tone: t.lilac,
-            value: '${courses.length} 門',
-            title: '選課查詢',
-            detail: '本學期・${_num(credits)} 學分',
-            onTap: () => _push(context, '選課查詢', [
+            value: l10n.courseCountShort(courses.length),
+            title: l10n.selectionQuery,
+            detail: l10n.thisSemesterCredits(_num(credits)),
+            onTap: () => _push(context, l10n.selectionQuery, [
               for (final c in courses)
                 (
                   title: _text(c['SemesterCourseName']),
@@ -261,17 +263,19 @@ class _Hub extends StatelessWidget {
                     if (_text(c['IsStopName']) != '正常開課')
                       _text(c['IsStopName']),
                   ].where((v) => v.isNotEmpty).join('・'),
-                  trailing:
-                      '${_text(c['ChooseName'])} ${_text(c['Credit'])} 學分',
+                  trailing: l10n.typeCredits(
+                    _text(c['ChooseName']),
+                    _text(c['Credit']),
+                  ),
                 ),
             ]),
           ),
           _Bar(
             tone: t.peach,
             value: '${s.changes.length}',
-            title: '開排課異動查詢',
-            detail: '全校本學期異動',
-            onTap: () => _push(context, '開排課異動', [
+            title: l10n.courseChanges,
+            detail: l10n.schoolwideChanges,
+            onTap: () => _push(context, l10n.courseChanges, [
               for (final c in s.changes)
                 (
                   title: _text(c['SemesterCourseName']),
@@ -285,13 +289,18 @@ class _Hub extends StatelessWidget {
           _Bar(
             tone: t.mint,
             value: '${apps.length}',
-            title: '我的申請',
+            title: l10n.myApplications,
             detail: apps.isEmpty
-                ? '加簽、超短修、校際、棄選、學程'
+                ? l10n.applicationsHint
                 : {for (final (kind, _) in apps) kind}
-                      .map((k) => '$k ${apps.where((a) => a.$1 == k).length} 筆')
+                      .map(
+                        (k) => l10n.kindCount(
+                          k,
+                          apps.where((a) => a.$1 == k).length,
+                        ),
+                      )
                       .join('、'),
-            onTap: () => _push(context, '我的申請', [
+            onTap: () => _push(context, l10n.myApplications, [
               for (final (kind, r) in apps)
                 (
                   title: _text(r['SemesterCourseName'] ?? kind),
@@ -307,9 +316,9 @@ class _Hub extends StatelessWidget {
           _Bar(
             tone: t.identity[2],
             value: '${s.programs.length}',
-            title: '跨領域學程',
-            detail: '學程與開設單位',
-            onTap: () => _push(context, '跨領域學程', [
+            title: l10n.programs,
+            detail: l10n.programsDetail,
+            onTap: () => _push(context, l10n.programs, [
               for (final p in s.programs)
                 (
                   title: _text(p['StudyCourseCategoryName']),
@@ -318,7 +327,7 @@ class _Hub extends StatelessWidget {
                 ),
             ]),
           ),
-          const SectionLabel('在學校網站辦理'),
+          SectionLabel(l10n.onSchoolWebsite),
           GridView.count(
             crossAxisCount: 2,
             shrinkWrap: true,
@@ -455,7 +464,7 @@ class _WebTile extends StatelessWidget {
                       ),
                       if (closed)
                         Text(
-                          '未開放',
+                          context.l10n.notOpen,
                           style: TextStyle(
                             fontSize: 11,
                             fontWeight: FontWeight.w800,
@@ -495,7 +504,7 @@ class _RecordsScreen extends StatelessWidget {
       appBar: subBar(context, title),
       body: Builder(
         builder: (context) => rows.isEmpty
-            ? const EmptyState('沒有資料')
+            ? EmptyState(context.l10n.noData)
             : ListView(
                 padding: scrollPadding(context),
                 children: [

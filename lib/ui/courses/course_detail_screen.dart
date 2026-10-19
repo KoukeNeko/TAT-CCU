@@ -8,6 +8,7 @@ import '../core/theme.dart';
 import '../core/widgets.dart';
 import '../today/due_screen.dart';
 import 'module_screen.dart';
+import '../../l10n/l10n.dart';
 
 const _moduleIcons = {
   'resource': Icons.description_outlined,
@@ -66,7 +67,7 @@ class CourseDetailScreen extends StatelessWidget {
         },
         builder: (context, data) {
           final (course, summary) = data;
-          if (course == null) return const EmptyState('找不到這門課');
+          if (course == null) return EmptyState(context.l10n.courseNotFound);
           final tones = context.tones;
           final scheme = Theme.of(context).colorScheme;
           final base = '/courses/$courseId';
@@ -86,8 +87,12 @@ class CourseDetailScreen extends StatelessWidget {
                 children: [
                   _Stat(
                     tone: tones.peach,
-                    value: firstDue == null ? '0' : _left(firstDue.due),
-                    label: firstDue == null ? '沒有待辦' : '${firstDue.name} 到期',
+                    value: firstDue == null
+                        ? '0'
+                        : _left(context.l10n, firstDue.due),
+                    label: firstDue == null
+                        ? context.l10n.nothingDue
+                        : context.l10n.nameDue(firstDue.name),
                     onTap: firstDue == null
                         ? null
                         : () => openDueItem(context, firstDue),
@@ -96,7 +101,7 @@ class CourseDetailScreen extends StatelessWidget {
                   _Stat(
                     tone: tones.sun,
                     value: '${summary.posts.length}',
-                    label: '則公告',
+                    label: context.l10n.announcementsUnit,
                     onTap: () => context.go('$base/announcements'),
                   ),
                   const SizedBox(width: 8),
@@ -107,20 +112,20 @@ class CourseDetailScreen extends StatelessWidget {
                       scheme.onSurfaceVariant,
                     ),
                     value: summary.total ?? '-',
-                    label: '目前成績',
+                    label: context.l10n.currentGrade,
                     onTap: () => context.go('$base/grades'),
                   ),
                 ],
               ),
               if (summary.due.isNotEmpty) ...[
-                const SectionLabel('待辦'),
+                SectionLabel(context.l10n.toDo),
                 for (final d in summary.due)
                   Padding(
                     padding: const EdgeInsets.only(bottom: 10),
                     child: DueBlock(item: d),
                   ),
               ],
-              const SectionLabel('課程'),
+              SectionLabel(context.l10n.courseSection),
               Card(
                 color: scheme.surfaceContainerLow,
                 clipBehavior: Clip.antiAlias,
@@ -128,20 +133,20 @@ class CourseDetailScreen extends StatelessWidget {
                   children: [
                     _Entry(
                       icon: Icons.folder_outlined,
-                      title: '全部章節',
-                      detail: '${summary.sections} 個章節',
+                      title: context.l10n.allSections,
+                      detail: context.l10n.sectionCount(summary.sections),
                       onTap: () => context.go('$base/contents'),
                     ),
                     _Entry(
                       icon: Icons.campaign_outlined,
-                      title: '公告',
-                      detail: '${summary.posts.length} 則',
+                      title: context.l10n.announcements,
+                      detail: context.l10n.postCount(summary.posts.length),
                       onTap: () => context.go('$base/announcements'),
                     ),
                     _Entry(
                       icon: Icons.grading_outlined,
-                      title: '成績',
-                      detail: '${summary.grades.length} 項',
+                      title: context.l10n.grades,
+                      detail: context.l10n.itemCount(summary.grades.length),
                       onTap: () => context.go('$base/grades'),
                     ),
                   ],
@@ -155,13 +160,15 @@ class CourseDetailScreen extends StatelessWidget {
   }
 }
 
-String _left(DateTime due) {
+String _left(AppLocalizations l10n, DateTime due) {
   final left = due.difference(DateTime.now());
-  return left.inHours < 24 ? '${left.inHours} 小時' : '${left.inDays} 天';
+  return left.inHours < 24
+      ? l10n.hoursLeft(left.inHours)
+      : l10n.daysLeft(left.inDays);
 }
 
 /// Next class from the timetable, e.g. `明天 10:10`; null without sessions.
-String? nextClassLabel(Course course, DateTime now) {
+String? nextClassLabel(Course course, DateTime now, AppLocalizations l10n) {
   final minutes = now.hour * 60 + now.minute;
   for (var offset = 0; offset < 8; offset++) {
     final day = now.add(Duration(days: offset));
@@ -172,9 +179,9 @@ String? nextClassLabel(Course course, DateTime now) {
     ]..sort();
     if (starts.isEmpty) continue;
     final when = switch (offset) {
-      0 => '今天',
-      1 => '明天',
-      _ => weekdayNames[day.weekday - 1],
+      0 => l10n.today,
+      1 => l10n.tomorrow,
+      _ => l10n.weekdayFull('${day.weekday}'),
     };
     return '$when ${clock(starts.first)}';
   }
@@ -189,7 +196,7 @@ class _Hero extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final tone = context.tones.forCourse(course.id);
-    final next = nextClassLabel(course, DateTime.now());
+    final next = nextClassLabel(course, DateTime.now(), context.l10n);
     return Material(
       color: tone.fill,
       shape: const RoundedRectangleBorder(
@@ -247,7 +254,7 @@ class _Hero extends StatelessWidget {
                         vertical: 7,
                       ),
                       child: Text(
-                        '下次上課　$next',
+                        context.l10n.nextClassAt(next),
                         style: TextStyle(
                           color: tone.fill,
                           fontSize: 13,
@@ -341,13 +348,15 @@ class _Entry extends StatelessWidget {
 
 /// One full list behind a course page entry.
 enum CoursePart {
-  contents('全部章節'),
-  announcements('公告'),
-  grades('成績');
+  contents,
+  announcements,
+  grades;
 
-  const CoursePart(this.title);
-
-  final String title;
+  String title(AppLocalizations l10n) => switch (this) {
+    contents => l10n.allSections,
+    announcements => l10n.announcements,
+    grades => l10n.grades,
+  };
 }
 
 class CoursePartScreen extends StatelessWidget {
@@ -373,7 +382,7 @@ class CoursePartScreen extends StatelessWidget {
 
   Widget _plain(BuildContext context, Widget body) => Scaffold(
     extendBodyBehindAppBar: true,
-    appBar: subBar(context, part.title),
+    appBar: subBar(context, part.title(context.l10n)),
     body: body,
   );
 }
@@ -392,8 +401,8 @@ class _Contents extends StatelessWidget {
       load: () => repo.contents(courseId),
       builder: (context, sections) => sections.isEmpty
           ? Scaffold(
-              appBar: subBar(context, CoursePart.contents.title),
-              body: const EmptyState('還沒有課程內容'),
+              appBar: subBar(context, CoursePart.contents.title(context.l10n)),
+              body: EmptyState(context.l10n.noContents),
             )
           : _SectionList(courseId: courseId, sections: sections),
     );
@@ -491,7 +500,7 @@ class _SectionListState extends State<_SectionList> {
       extendBodyBehindAppBar: true,
       appBar: subBar(
         context,
-        CoursePart.contents.title,
+        CoursePart.contents.title(context.l10n),
         bottom: PreferredSize(
           preferredSize: const Size.fromHeight(52),
           child: Align(
@@ -508,7 +517,7 @@ class _SectionListState extends State<_SectionList> {
                         key: _chips[i],
                         padding: const EdgeInsets.only(right: 6),
                         child: _SectionChip(
-                          label: s.name,
+                          label: _sectionName(context, s),
                           selected: i == _active,
                           tone: course,
                           onTap: () => _jumpTo(i),
@@ -536,14 +545,14 @@ class _SectionListState extends State<_SectionList> {
                     TextSpan(
                       children: [
                         TextSpan(
-                          text: s.name,
+                          text: _sectionName(context, s),
                           style: const TextStyle(
                             fontSize: 17,
                             fontWeight: FontWeight.w900,
                           ),
                         ),
                         TextSpan(
-                          text: '  ${s.modules.length} 項',
+                          text: '  ${context.l10n.itemCount(s.modules.length)}',
                           style: TextStyle(
                             fontSize: 12,
                             fontWeight: FontWeight.w800,
@@ -575,6 +584,10 @@ class _SectionListState extends State<_SectionList> {
     );
   }
 }
+
+/// Moodle names the course-wide first section `General` in English.
+String _sectionName(BuildContext context, Section s) =>
+    s.name == 'General' ? context.l10n.sectionGeneral : s.name;
 
 class _SectionChip extends StatelessWidget {
   const _SectionChip({
@@ -644,9 +657,9 @@ class _ModuleRow extends StatelessWidget {
     };
     final due = module.due;
     final detail = due != null
-        ? '${due.month}/${due.day} 截止'
+        ? context.l10n.dueOn('${due.month}/${due.day}')
         : module.files.length > 1
-        ? '${module.files.length} 個檔案'
+        ? context.l10n.fileCount(module.files.length)
         : null;
     final overdue = due != null && due.isBefore(DateTime.now());
     return InkWell(
@@ -711,7 +724,7 @@ class _Announcements extends StatelessWidget {
     return Loader<List<Post>>(
       load: () => repo.announcements(courseId),
       builder: (context, posts) {
-        if (posts.isEmpty) return const EmptyState('沒有公告');
+        if (posts.isEmpty) return EmptyState(context.l10n.noAnnouncements);
         return ListView.separated(
           padding: scrollPadding(context),
           itemCount: posts.length,
@@ -726,7 +739,7 @@ class _Announcements extends StatelessWidget {
                   p.subject,
                   style: const TextStyle(fontWeight: FontWeight.w800),
                 ),
-                subtitle: Text('${p.author}・${dateTimeLabel(p.time)}'),
+                subtitle: Text('${p.author}・${dateTimeLabel(context, p.time)}'),
                 childrenPadding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
                 expandedAlignment: Alignment.topLeft,
                 children: [Text(p.body)],
@@ -762,7 +775,7 @@ class GradeList extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    if (lines.isEmpty) return const EmptyState('還沒有成績項目');
+    if (lines.isEmpty) return EmptyState(context.l10n.noGradeItems);
     final scheme = Theme.of(context).colorScheme;
     return ListView.separated(
       padding: scrollPadding(context),

@@ -6,6 +6,7 @@ import 'package:provider/provider.dart';
 import '../../data/repositories/ecourse_repository.dart';
 import '../core/theme.dart';
 import '../core/widgets.dart';
+import '../../l10n/l10n.dart';
 
 /// Month calendar with the selected day's events below
 /// (design/round-11, variant K1). Swipe the month card to change month.
@@ -68,10 +69,14 @@ class _CalendarScreenState extends State<CalendarScreen> {
       extendBodyBehindAppBar: true,
       appBar: topBar(
         month.year == _today.year
-            ? '${month.month} 月'
-            : '${month.year} 年 ${month.month} 月',
+            ? context.l10n.monthTitle('${month.month}')
+            : context.l10n.yearMonthTitle(month.year, '${month.month}'),
         actions: [
-          _RoundAction(label: '今', onTap: () => _select(_today)),
+          _RoundAction(
+            icon: Icons.today_outlined,
+            label: context.l10n.goToToday,
+            onTap: () => _select(_today),
+          ),
           _RoundAction(
             icon: Icons.chevron_left,
             onTap: () => _pages.previousPage(
@@ -101,10 +106,10 @@ class _CalendarScreenState extends State<CalendarScreen> {
                   children: [
                     Row(
                       children: [
-                        for (final w in weekdayNames)
+                        for (var d = 1; d <= 7; d++)
                           Expanded(
                             child: Text(
-                              w.substring(1),
+                              weekdayShort(context, d),
                               textAlign: TextAlign.center,
                               style: TextStyle(
                                 fontSize: 11,
@@ -151,10 +156,12 @@ class _CalendarScreenState extends State<CalendarScreen> {
 }
 
 class _RoundAction extends StatelessWidget {
-  const _RoundAction({this.label, this.icon, required this.onTap});
+  const _RoundAction({required this.icon, this.label, required this.onTap});
 
+  final IconData icon;
+
+  /// Spoken label for icons that need one.
   final String? label;
-  final IconData? icon;
   final VoidCallback onTap;
 
   @override
@@ -171,14 +178,7 @@ class _RoundAction extends StatelessWidget {
           child: SizedBox(
             width: 38,
             height: 38,
-            child: Center(
-              child: icon != null
-                  ? Icon(icon, color: scheme.onSurface)
-                  : Text(
-                      label!,
-                      style: const TextStyle(fontWeight: FontWeight.w900),
-                    ),
-            ),
+            child: Icon(icon, color: scheme.onSurface, semanticLabel: label),
           ),
         ),
       ),
@@ -404,7 +404,7 @@ class _DayEvents extends StatelessWidget {
               child: Row(
                 children: [
                   Text(
-                    '${day.month}/${day.day} ${weekdayNames[day.weekday - 1]}',
+                    '${day.month}/${day.day} ${weekdayName(context, day.weekday)}',
                     style: theme.textTheme.titleSmall?.copyWith(
                       fontWeight: FontWeight.w800,
                       color: theme.colorScheme.onSurfaceVariant,
@@ -413,7 +413,7 @@ class _DayEvents extends StatelessWidget {
                   const Spacer(),
                   if (events.isNotEmpty)
                     Text(
-                      '${events.length} 項',
+                      context.l10n.itemCount(events.length),
                       style: theme.textTheme.titleSmall?.copyWith(
                         fontWeight: FontWeight.w800,
                         color: theme.colorScheme.onSurfaceVariant,
@@ -430,7 +430,7 @@ class _DayEvents extends StatelessWidget {
               Padding(
                 padding: const EdgeInsets.only(top: 24),
                 child: Text(
-                  '這天沒有事件',
+                  context.l10n.noEventsThisDay,
                   textAlign: TextAlign.center,
                   style: theme.textTheme.titleMedium,
                 ),
@@ -466,7 +466,7 @@ class _DayEvents extends StatelessWidget {
                             Text(
                               [
                                 e.course,
-                                e.label,
+                                context.l10n.eventLabel(e.kind, e.action),
                               ].where((s) => s.isNotEmpty).join('・'),
                               style: const TextStyle(
                                 fontSize: 12,
