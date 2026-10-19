@@ -508,5 +508,10 @@
   "notNow": "不要",
   "remember": "記住",
   "autoSignIn": "自動登入",
-  "deleteSavedPassword": "刪除儲存的密碼"
+  "deleteSavedPassword": "刪除儲存的密碼",
+  "campusConnecting": "連線中",
+  "campusFillingIn": "自動填入帳號密碼",
+  "campusVerifying": "Cloudflare 驗證",
+  "campusReading": "讀取資料",
+  "showPage": "顯示網頁"
 }

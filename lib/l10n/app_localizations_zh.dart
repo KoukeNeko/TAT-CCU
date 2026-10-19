@@ -698,4 +698,19 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get deleteSavedPassword => '刪除儲存的密碼';
+
+  @override
+  String get campusConnecting => '連線中';
+
+  @override
+  String get campusFillingIn => '自動填入帳號密碼';
+
+  @override
+  String get campusVerifying => 'Cloudflare 驗證';
+
+  @override
+  String get campusReading => '讀取資料';
+
+  @override
+  String get showPage => '顯示網頁';
 }

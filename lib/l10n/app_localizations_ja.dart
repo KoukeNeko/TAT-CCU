@@ -686,4 +686,19 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get deleteSavedPassword => '保存したパスワードを削除';
+
+  @override
+  String get campusConnecting => '接続中';
+
+  @override
+  String get campusFillingIn => '保存したパスワードを入力中';
+
+  @override
+  String get campusVerifying => 'Cloudflare 認証';
+
+  @override
+  String get campusReading => 'データを読み込み中';
+
+  @override
+  String get showPage => 'ページを表示';
 }

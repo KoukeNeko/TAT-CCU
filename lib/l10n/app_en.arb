@@ -183,5 +183,10 @@
   "notNow": "Not now",
   "remember": "Remember",
   "autoSignIn": "Auto sign-in",
-  "deleteSavedPassword": "Delete saved password"
+  "deleteSavedPassword": "Delete saved password",
+  "campusConnecting": "Connecting",
+  "campusFillingIn": "Filling in your saved password",
+  "campusVerifying": "Cloudflare check",
+  "campusReading": "Loading data",
+  "showPage": "Show page"
 }

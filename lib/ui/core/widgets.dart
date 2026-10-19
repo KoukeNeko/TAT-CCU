@@ -50,6 +50,109 @@ class CookieBorder extends OutlinedBorder {
       CookieBorder(lobes: lobes, depth: depth, side: side ?? this.side);
 }
 
+/// Material 3 Expressive style loading indicator: a cookie that keeps
+/// morphing between silhouettes while it turns. Flutter's material library
+/// has no shape-morphing indicator yet, so the radii of two [CookieBorder]
+/// outlines are blended directly.
+class MorphingCookie extends StatefulWidget {
+  const MorphingCookie({super.key, required this.size, required this.color});
+
+  final double size;
+  final Color color;
+
+  @override
+  State<MorphingCookie> createState() => _MorphingCookieState();
+}
+
+class _MorphingCookieState extends State<MorphingCookie>
+    with SingleTickerProviderStateMixin {
+  /// (lobes, depth) silhouettes, visited in turn.
+  static const _shapes = [
+    (9, 0.08),
+    (4, 0.14),
+    (12, 0.05),
+    (5, 0.12),
+    (7, 0.1),
+  ];
+  static const _perShape = Duration(milliseconds: 700);
+
+  late final _controller = AnimationController(
+    vsync: this,
+    duration: _perShape * _shapes.length,
+  )..repeat();
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final still = MediaQuery.disableAnimationsOf(context);
+    return SizedBox.square(
+      dimension: widget.size,
+      child: AnimatedBuilder(
+        animation: _controller,
+        builder: (context, _) {
+          final v = still ? 0.0 : _controller.value;
+          final along = v * _shapes.length;
+          final i = along.floor() % _shapes.length;
+          // Morph in the first part of each slot, then hold; the overshoot
+          // gives it the springy Expressive feel.
+          final t = Curves.easeOutBack.transform(
+            ((along - along.floor()) / 0.6).clamp(0.0, 1.0),
+          );
+          return CustomPaint(
+            painter: _MorphPainter(
+              from: _shapes[i],
+              to: _shapes[(i + 1) % _shapes.length],
+              t: t,
+              turn: v * 2 * pi,
+              color: widget.color,
+            ),
+          );
+        },
+      ),
+    );
+  }
+}
+
+class _MorphPainter extends CustomPainter {
+  _MorphPainter({
+    required this.from,
+    required this.to,
+    required this.t,
+    required this.turn,
+    required this.color,
+  });
+
+  final (int, double) from, to;
+  final double t, turn;
+  final Color color;
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final c = size.center(Offset.zero);
+    final reach = 1 + max(from.$2, to.$2) * 1.2;
+    final r = size.shortestSide / 2 / reach;
+    final path = Path();
+    const steps = 180;
+    for (var k = 0; k <= steps; k++) {
+      final a = 2 * pi * k / steps;
+      final r0 = 1 + from.$2 * cos(from.$1 * a);
+      final r1 = 1 + to.$2 * cos(to.$1 * a);
+      final p =
+          c + Offset(cos(a + turn), sin(a + turn)) * r * (r0 + (r1 - r0) * t);
+      k == 0 ? path.moveTo(p.dx, p.dy) : path.lineTo(p.dx, p.dy);
+    }
+    canvas.drawPath(path..close(), Paint()..color = color);
+  }
+
+  @override
+  bool shouldRepaint(_MorphPainter old) => true;
+}
+
 /// A number set inside a cookie shape; the app's signature badge.
 class CookieBadge extends StatelessWidget {
   const CookieBadge({

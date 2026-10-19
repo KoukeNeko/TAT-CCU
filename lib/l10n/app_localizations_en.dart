@@ -775,4 +775,19 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get deleteSavedPassword => 'Delete saved password';
+
+  @override
+  String get campusConnecting => 'Connecting';
+
+  @override
+  String get campusFillingIn => 'Filling in your saved password';
+
+  @override
+  String get campusVerifying => 'Cloudflare check';
+
+  @override
+  String get campusReading => 'Loading data';
+
+  @override
+  String get showPage => 'Show page';
 }

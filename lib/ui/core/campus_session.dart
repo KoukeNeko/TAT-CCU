@@ -6,6 +6,7 @@ import 'package:webview_flutter/webview_flutter.dart';
 
 import '../../data/services/campus_cookies.dart';
 import 'cas_autofill.dart';
+import 'theme.dart';
 import 'widgets.dart';
 import '../../l10n/l10n.dart';
 
@@ -53,7 +54,10 @@ class CampusSessionState extends State<CampusSession> {
   var _signingIn = false;
   String? _ranOn;
   Completer<void>? _pending;
-  Timer? _stuck;
+  var _step = _Step.connecting;
+  var _where = '';
+  var _slow = false;
+  Timer? _slowTimer;
 
   @override
   void initState() {
@@ -62,7 +66,11 @@ class CampusSessionState extends State<CampusSession> {
       ..setJavaScriptMode(JavaScriptMode.unrestricted)
       ..addJavaScriptChannel('Campus', onMessageReceived: _received)
       ..setNavigationDelegate(NavigationDelegate(onPageFinished: _arrived));
-    _cas = CasAutofill(_web, context);
+    _cas = CasAutofill(
+      _web,
+      context,
+      onVerifying: () => _go(_Step.verifying, _casHost),
+    );
     if (widget.loadOnStart) reload();
   }
 
@@ -70,6 +78,7 @@ class CampusSessionState extends State<CampusSession> {
   /// Completes when the script answers or the user is asked to sign in.
   Future<void> reload() {
     _ranOn = null;
+    _go(_Step.connecting, Uri.parse(widget.entry).host);
     final pending = _pending ??= Completer<void>();
     _web.loadRequest(Uri.parse(widget.entry));
     return pending.future;
@@ -80,25 +89,41 @@ class CampusSessionState extends State<CampusSession> {
     _pending = null;
   }
 
+  void _go(_Step step, String where) {
+    if (!mounted) return;
+    _slowTimer?.cancel();
+    setState(() {
+      _step = step;
+      _where = where;
+      _slow = false;
+    });
+    // Signing in that takes this long may be waiting on the user (a
+    // Turnstile challenge, an error page), so offer to show the page.
+    if (step != _Step.reading) {
+      _slowTimer = Timer(const Duration(seconds: 8), () {
+        if (mounted) setState(() => _slow = true);
+      });
+    }
+  }
+
+  void _showPage() {
+    _slowTimer?.cancel();
+    setState(() => _signingIn = true);
+    _settle();
+  }
+
   /// Runs another script in the signed-in page; it answers like the first.
   Future<void> run(String script) => _web.runJavaScript(script);
 
-  void _arrived(String url) {
-    _cas.pageFinished(url);
-    _stuck?.cancel();
+  Future<void> _arrived(String url) async {
     final uri = Uri.parse(url);
+    final signsInItself = await _cas.pageFinished(url);
+    if (!mounted) return;
     if (widget.via.any('${uri.host}${uri.path}'.startsWith)) {
-      // These pages move on by themselves; one that stays is showing the
-      // user something (an error or a form), so show it.
-      _stuck = Timer(const Duration(seconds: 8), () {
-        if (!mounted) return;
-        setState(() => _signingIn = true);
-        _settle();
-      });
-      return;
-    }
-    if (uri.host == widget.host) {
+      _go(_Step.connecting, uri.host);
+    } else if (uri.host == widget.host) {
       setState(() => _signingIn = false);
+      _go(_Step.reading, uri.host);
       // Once per page: a redirect or SAML page on the host drops the
       // script with it, so the page that replaces it runs it again.
       if (_ranOn == url) return;
@@ -107,11 +132,14 @@ class CampusSessionState extends State<CampusSession> {
     } else if (uri.host == 'portal.ccu.edu.tw' &&
         uri.path == '/sso_index.php') {
       // Signing in ends on the portal home, not the system it came from.
+      _go(_Step.connecting, uri.host);
       _web.loadRequest(Uri.parse(widget.entry));
+    } else if (signsInItself) {
+      _go(uri.host == _casHost ? _Step.signingIn : _Step.connecting, uri.host);
     } else {
-      // Portal or CAS sign-in form: the user fills it in (Turnstile).
-      setState(() => _signingIn = true);
-      _settle();
+      // A sign-in form without a saved password, or one that failed: the
+      // user fills it in.
+      _showPage();
     }
   }
 
@@ -125,7 +153,7 @@ class CampusSessionState extends State<CampusSession> {
 
   @override
   void dispose() {
-    _stuck?.cancel();
+    _slowTimer?.cancel();
     super.dispose();
   }
 
@@ -155,8 +183,131 @@ class CampusSessionState extends State<CampusSession> {
             Positioned.fill(
               child:
                   widget.child ??
-                  const Center(child: CircularProgressIndicator()),
+                  _Progress(
+                    step: _step,
+                    where: _where,
+                    onShowPage: _slow ? _showPage : null,
+                  ),
             ),
+        ],
+      ),
+    );
+  }
+}
+
+const _casHost = 'cas.ccu.edu.tw';
+
+enum _Step { connecting, signingIn, verifying, reading }
+
+/// Design S2-C (design/round-11): a morphing shape in the middle, and the
+/// current step in large type near the thumb with a four-part progress bar.
+class _Progress extends StatelessWidget {
+  const _Progress({
+    required this.step,
+    required this.where,
+    required this.onShowPage,
+  });
+
+  final _Step step;
+  final String where;
+
+  /// Shown once a step has taken long enough to need the user.
+  final VoidCallback? onShowPage;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = context.l10n;
+    final tones = context.tones;
+    final scheme = Theme.of(context).colorScheme;
+    final insets = MediaQuery.paddingOf(context);
+    final (title, detail) = switch (step) {
+      _Step.connecting => (l10n.campusConnecting, where),
+      _Step.signingIn => (l10n.signInPortal, l10n.campusFillingIn),
+      _Step.verifying => (l10n.campusVerifying, where),
+      _Step.reading => (l10n.campusReading, where),
+    };
+    return ColoredBox(
+      color: scheme.surface,
+      child: Stack(
+        children: [
+          Align(
+            alignment: const Alignment(0, -0.25),
+            child: MorphingCookie(size: 170, color: tones.lilac.fill),
+          ),
+          Positioned(
+            left: 24,
+            right: 24,
+            bottom: insets.bottom + 28,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  '${step.index + 1} / ${_Step.values.length}',
+                  style: TextStyle(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w900,
+                    color: scheme.onSurfaceVariant,
+                  ),
+                ),
+                const SizedBox(height: 6),
+                AnimatedSwitcher(
+                  duration: const Duration(milliseconds: 250),
+                  layoutBuilder: (current, previous) => Stack(
+                    alignment: Alignment.bottomLeft,
+                    children: [...previous, ?current],
+                  ),
+                  child: Text(
+                    title,
+                    key: ValueKey(step),
+                    style: const TextStyle(
+                      fontSize: 30,
+                      fontWeight: FontWeight.w900,
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  detail,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w700,
+                    color: scheme.onSurfaceVariant,
+                  ),
+                ),
+                const SizedBox(height: 18),
+                Row(
+                  children: [
+                    for (final s in _Step.values) ...[
+                      if (s.index > 0) const SizedBox(width: 6),
+                      Expanded(
+                        child: AnimatedContainer(
+                          duration: const Duration(milliseconds: 300),
+                          height: 6,
+                          decoration: BoxDecoration(
+                            borderRadius: BorderRadius.circular(3),
+                            color: s.index < step.index
+                                ? tones.mint.strong
+                                : s == step
+                                ? tones.lilac.strong
+                                : scheme.surfaceContainerHigh,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ],
+                ),
+                if (onShowPage case final show?) ...[
+                  const SizedBox(height: 18),
+                  FilledButton.tonal(
+                    onPressed: show,
+                    child: Text(l10n.showPage),
+                  ),
+                ],
+              ],
+            ),
+          ),
         ],
       ),
     );

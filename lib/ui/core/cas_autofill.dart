@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 
 import 'package:flutter/material.dart';
@@ -26,6 +27,7 @@ String _script(CasLogin? saved) =>
     field.value = value;
     field.dispatchEvent(new Event('input', { bubbles: true }));
   }
+  CasLogin.postMessage(JSON.stringify({ waiting: true }));
   const wait = setInterval(() => {
     const token = f.querySelector('[name="cf-turnstile-response"]');
     if (token && token.value) { clearInterval(wait); f.requestSubmit(); }
@@ -36,12 +38,15 @@ String _script(CasLogin? saved) =>
 /// Signs in to CAS with the saved password inside one campus WebView.
 /// Call [pageFinished] from the WebView's navigation delegate.
 class CasAutofill {
-  CasAutofill(this._web, this._context) {
+  CasAutofill(this._web, this._context, {this.onVerifying}) {
     _web.addJavaScriptChannel('CasLogin', onMessageReceived: _submitted);
   }
 
   final WebViewController _web;
   final BuildContext _context;
+
+  /// The saved password is filled in; Turnstile is still checking.
+  final VoidCallback? onVerifying;
   CasLogin? _submittedLogin;
 
   /// One automatic try per sign-in: a wrong saved password must not be
@@ -50,6 +55,10 @@ class CasAutofill {
 
   void _submitted(JavaScriptMessage message) {
     final json = jsonDecode(message.message) as Map<String, dynamic>;
+    if (json['waiting'] == true) {
+      onVerifying?.call();
+      return;
+    }
     _submittedLogin = (
       username: '${json['username']}',
       password: '${json['password']}',
@@ -60,7 +69,9 @@ class CasAutofill {
   /// sent to CAS again and again.
   var _sentToCas = false;
 
-  Future<void> pageFinished(String url) async {
+  /// True when this page signs in by itself (the portal home sent on to
+  /// CAS, or the saved password filled in), so the WebView can stay hidden.
+  Future<bool> pageFinished(String url) async {
     final uri = Uri.parse(url);
     if (uri.host == 'portal.ccu.edu.tw' &&
         (uri.path == '/' || uri.path == '/index.php') &&
@@ -70,16 +81,18 @@ class CasAutofill {
       await _web.loadRequest(
         Uri.parse('https://portal.ccu.edu.tw/login_check_cas.php'),
       );
-      return;
+      return true;
     }
     if (uri.host == _casHost) {
-      if (!uri.path.startsWith('/login')) return;
+      if (!uri.path.startsWith('/login')) return false;
       final saved = _tried ? null : await CasCredentials.read();
       if (saved != null) _tried = true;
       await _web.runJavaScript(_script(saved));
-      return;
+      return saved != null;
     }
-    await signedIn();
+    // Not awaited: the remember-password dialog must not hold up the page.
+    unawaited(signedIn());
+    return false;
   }
 
   /// CAS only sends the browser on after a successful sign-in; offers to

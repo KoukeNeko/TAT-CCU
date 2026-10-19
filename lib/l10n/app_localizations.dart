@@ -1203,6 +1203,36 @@ abstract class AppLocalizations {
   /// In zh, this message translates to:
   /// **'刪除儲存的密碼'**
   String get deleteSavedPassword;
+
+  /// No description provided for @campusConnecting.
+  ///
+  /// In zh, this message translates to:
+  /// **'連線中'**
+  String get campusConnecting;
+
+  /// No description provided for @campusFillingIn.
+  ///
+  /// In zh, this message translates to:
+  /// **'自動填入帳號密碼'**
+  String get campusFillingIn;
+
+  /// No description provided for @campusVerifying.
+  ///
+  /// In zh, this message translates to:
+  /// **'Cloudflare 驗證'**
+  String get campusVerifying;
+
+  /// No description provided for @campusReading.
+  ///
+  /// In zh, this message translates to:
+  /// **'讀取資料'**
+  String get campusReading;
+
+  /// No description provided for @showPage.
+  ///
+  /// In zh, this message translates to:
+  /// **'顯示網頁'**
+  String get showPage;
 }
 
 class _AppLocalizationsDelegate

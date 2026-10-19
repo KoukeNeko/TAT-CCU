@@ -183,5 +183,10 @@
   "notNow": "保存しない",
   "remember": "保存",
   "autoSignIn": "自動ログイン",
-  "deleteSavedPassword": "保存したパスワードを削除"
+  "deleteSavedPassword": "保存したパスワードを削除",
+  "campusConnecting": "接続中",
+  "campusFillingIn": "保存したパスワードを入力中",
+  "campusVerifying": "Cloudflare 認証",
+  "campusReading": "データを読み込み中",
+  "showPage": "ページを表示"
 }
