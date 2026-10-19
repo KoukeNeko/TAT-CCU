@@ -236,10 +236,11 @@ class _Hero extends StatelessWidget {
           height: 226,
           child: Stack(
             children: [
-              // The badge sits partly outside the card, as in the mockup.
+              // The badge sits partly outside the card, as in the mockup,
+              // centred behind the count below.
               Positioned(
-                right: -22,
-                bottom: -22,
+                right: -25,
+                bottom: -32,
                 child: Container(
                   width: 150,
                   height: 150,
@@ -254,23 +255,25 @@ class _Hero extends StatelessWidget {
                   ),
                 ),
               ),
+              // Count with its unit beside it; the unit's side bearing makes a
+              // smaller right inset read the same as the bottom one.
               Positioned(
-                right: 22,
-                bottom: 40,
-                width: 72,
-                child: Column(
+                right: 20,
+                bottom: 26,
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.baseline,
+                  textBaseline: TextBaseline.alphabetic,
                   children: [
-                    FittedBox(
-                      child: Text(
-                        '$minutes',
-                        style: TextStyle(
-                          color: tone.fill,
-                          fontSize: 34,
-                          fontWeight: FontWeight.w900,
-                          height: 1,
-                        ),
+                    Text(
+                      '$minutes',
+                      style: TextStyle(
+                        color: tone.fill,
+                        fontSize: 34,
+                        fontWeight: FontWeight.w900,
+                        height: 1,
                       ),
                     ),
+                    const SizedBox(width: 3),
                     Text(
                       unit,
                       style: TextStyle(
