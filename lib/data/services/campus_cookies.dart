@@ -3,7 +3,8 @@ import 'dart:convert';
 import 'package:flutter/services.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
-/// Keeps the campus sign-in (portal, CAS and each system's session cookie)
+/// Keeps the campus sign-in (portal, CAS, each system's session cookie and
+/// the library's Primo sign-in)
 /// across app launches. The cookies are session cookies, so iOS drops them
 /// when the app ends; they are copied to the Keychain and put back into the
 /// WebViews' store on the next launch. The server's own idle timeout still

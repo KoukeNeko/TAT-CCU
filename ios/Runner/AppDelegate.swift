@@ -23,6 +23,10 @@ import WebKit
 /// webview_flutter can set cookies but not read them, and the portal and
 /// CAS cookies are HttpOnly, so this goes to WKHTTPCookieStore directly.
 enum CampusCookies {
+  /// The campus systems, plus the library's Primo, whose own sign-in cookie
+  /// outlives the CAS session.
+  static let campusDomains = ["ccu.edu.tw", "ccu.primo.exlibrisgroup.com"]
+
   static func register(with messenger: FlutterBinaryMessenger) {
     let channel = FlutterMethodChannel(name: "tatccu/campus_cookies", binaryMessenger: messenger)
     channel.setMethodCallHandler { call, result in
@@ -30,7 +34,7 @@ enum CampusCookies {
       switch call.method {
       case "read":
         store.getAllCookies { cookies in
-          result(cookies.filter { $0.domain.hasSuffix("ccu.edu.tw") }.map { c -> [String: Any] in
+          result(cookies.filter { campusDomains.contains(where: $0.domain.hasSuffix) }.map { c -> [String: Any] in
             var m: [String: Any] = [
               "name": c.name, "value": c.value, "domain": c.domain, "path": c.path,
               "secure": c.isSecure, "httpOnly": c.isHTTPOnly,

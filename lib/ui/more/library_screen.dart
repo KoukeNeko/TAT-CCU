@@ -9,14 +9,18 @@ import '../core/widgets.dart';
 
 const _host = 'ccu.primo.exlibrisgroup.com';
 const _vid = '886CCU_INST:886CCU_INST';
+
+/// What the library sign-in page's 「單一登入」 button opens: CAS, then the
+/// library's IdP, which signs in to Primo over SAML. Going there directly
+/// skips that page, which waits for a tap.
 const _sso =
-    'https://portal.ccu.edu.tw/ssoService.php?service=/test_0003_Lib.php&linkId=0003&para=';
+    'https://cas.ccu.edu.tw/login?service=https%3A%2F%2Fidm.lib.ccu.edu.tw%2Fsso%2Fidm%2Fcaslogin_callback%3Fnext%3D%2Fsso%2Fidm%2Fprimo%2F';
 const _accountUrl = 'https://$_host/discovery/account?vid=$_vid&lang=zh-tw';
 const _search = 'https://$_host/discovery/search?vid=$_vid&lang=zh-tw';
 
 /// Primo keeps its own sign-in cookie, which outlives the CAS session, so
 /// the account page is opened directly; only when Primo hands out a guest
-/// JWT does the script go through the portal SSO once. The signed-in JWT
+/// JWT does the script go through CAS once. The signed-in JWT
 /// sits in sessionStorage and the account API takes it as a bearer token
 /// (research_notes/…/library_probe.md).
 const _readAccount =
@@ -177,8 +181,8 @@ class _LibraryScreenState extends State<LibraryScreen> {
       title: context.l10n.library,
       entry: _accountUrl,
       host: _host,
-      // The portal page and the library's SAML IdP post themselves on.
-      via: const ['portal.ccu.edu.tw/test_0003_Lib.php', 'idm.lib.ccu.edu.tw'],
+      // The library's IdP posts itself on to Primo.
+      via: const ['idm.lib.ccu.edu.tw'],
       loadOnStart: false,
       script: () => _readAccount,
       onMessage: _received,
