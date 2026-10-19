@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:convert';
+import 'dart:ui' show ImageFilter;
 
 import 'package:flutter/material.dart';
 import 'package:webview_flutter/webview_flutter.dart';
@@ -84,9 +85,13 @@ class CampusSessionState extends State<CampusSession> {
     return pending.future;
   }
 
+  /// For pull to refresh: starts [reload] and returns at once, leaving the
+  /// progress to the status capsule instead of the refresh spinner.
+  Future<void> refresh() async => unawaited(reload());
+
   void _settle() {
     _pending?.complete();
-    _pending = null;
+    if (mounted) setState(() => _pending = null);
   }
 
   void _go(_Step step, String where) {
@@ -165,37 +170,139 @@ class CampusSessionState extends State<CampusSession> {
         context,
         _signingIn ? context.l10n.signInPortal : widget.title,
       ),
-      body: Stack(
-        children: [
-          // Kept in the tree so it can load; shown only for signing in.
-          Positioned.fill(
-            child: Offstage(
-              offstage: !_signingIn,
-              child: Padding(
-                padding: EdgeInsets.only(
-                  bottom: MediaQuery.paddingOf(context).bottom,
+      // Builder: the capsule reads insets from inside this Scaffold, where
+      // the glass app bar's height is part of the top padding.
+      body: Builder(
+        builder: (context) => Stack(
+          children: [
+            // Kept in the tree so it can load; shown only for signing in.
+            Positioned.fill(
+              child: Offstage(
+                offstage: !_signingIn,
+                child: Padding(
+                  padding: EdgeInsets.only(
+                    bottom: MediaQuery.paddingOf(context).bottom,
+                  ),
+                  child: WebViewWidget(controller: _web),
                 ),
-                child: WebViewWidget(controller: _web),
               ),
             ),
-          ),
-          if (!_signingIn)
-            Positioned.fill(
-              child:
-                  widget.child ??
-                  _Progress(
-                    step: _step,
-                    where: _where,
-                    onShowPage: _slow ? _showPage : null,
+            if (!_signingIn)
+              Positioned.fill(
+                child:
+                    widget.child ??
+                    _Progress(
+                      step: _step,
+                      where: _where,
+                      onShowPage: _slow ? _showPage : null,
+                    ),
+              ),
+            // Refreshing a page that already shows its content.
+            if (!_signingIn && widget.child != null)
+              Positioned(
+                top: MediaQuery.paddingOf(context).top + 10,
+                left: 16,
+                right: 16,
+                child: Center(
+                  child: AnimatedSwitcher(
+                    duration: const Duration(milliseconds: 250),
+                    transitionBuilder: (child, animation) => FadeTransition(
+                      opacity: animation,
+                      child: SlideTransition(
+                        position: Tween(
+                          begin: const Offset(0, -0.4),
+                          end: Offset.zero,
+                        ).animate(animation),
+                        child: child,
+                      ),
+                    ),
+                    child: _pending == null
+                        ? const SizedBox.shrink()
+                        : _Capsule(
+                            step: _step,
+                            onShowPage: _slow ? _showPage : null,
+                          ),
                   ),
-            ),
-        ],
+                ),
+              ),
+          ],
+        ),
       ),
     );
   }
 }
 
 const _casHost = 'cas.ccu.edu.tw';
+
+String _stepTitle(AppLocalizations l10n, _Step step) => switch (step) {
+  _Step.connecting => l10n.campusConnecting,
+  _Step.signingIn => l10n.signInPortal,
+  _Step.verifying => l10n.campusVerifying,
+  _Step.reading => l10n.campusReading,
+};
+
+/// Design S3's status capsule (design/round-11): a frosted pill under the
+/// app bar while a page with content refreshes.
+class _Capsule extends StatelessWidget {
+  const _Capsule({required this.step, required this.onShowPage});
+
+  final _Step step;
+  final VoidCallback? onShowPage;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = context.l10n;
+    final scheme = Theme.of(context).colorScheme;
+    const shape = StadiumBorder();
+    return DecoratedBox(
+      decoration: const ShapeDecoration(
+        shape: shape,
+        shadows: [
+          BoxShadow(
+            color: Color(0x24000000),
+            blurRadius: 24,
+            offset: Offset(0, 8),
+          ),
+        ],
+      ),
+      child: ClipPath(
+        clipper: const ShapeBorderClipper(shape: shape),
+        child: BackdropFilter(
+          filter: ImageFilter.blur(sigmaX: 20, sigmaY: 20),
+          child: Material(
+            color: scheme.surface.withValues(alpha: 0.72),
+            shape: StadiumBorder(
+              side: BorderSide(
+                color: scheme.outlineVariant.withValues(alpha: 0.6),
+              ),
+            ),
+            child: InkWell(
+              onTap: onShowPage,
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(8, 8, 16, 8),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    MorphingCookie(size: 26, color: context.tones.lilac.strong),
+                    const SizedBox(width: 10),
+                    Text(
+                      '${_stepTitle(l10n, step)}'
+                      '${onShowPage == null ? '' : '・${l10n.showPage}'}',
+                      style: const TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w900,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
 
 enum _Step { connecting, signingIn, verifying, reading }
 
@@ -220,12 +327,8 @@ class _Progress extends StatelessWidget {
     final tones = context.tones;
     final scheme = Theme.of(context).colorScheme;
     final insets = MediaQuery.paddingOf(context);
-    final (title, detail) = switch (step) {
-      _Step.connecting => (l10n.campusConnecting, where),
-      _Step.signingIn => (l10n.signInPortal, l10n.campusFillingIn),
-      _Step.verifying => (l10n.campusVerifying, where),
-      _Step.reading => (l10n.campusReading, where),
-    };
+    final title = _stepTitle(l10n, step);
+    final detail = step == _Step.signingIn ? l10n.campusFillingIn : where;
     return ColoredBox(
       color: scheme.surface,
       child: Stack(

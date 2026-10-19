@@ -195,7 +195,7 @@ class _LibraryScreenState extends State<LibraryScreen> {
               builder: (context) => RefreshIndicator(
                 // Below the glass app bar, which the body extends under.
                 edgeOffset: MediaQuery.paddingOf(context).top,
-                onRefresh: _reload,
+                onRefresh: () async => _session.currentState?.refresh(),
                 child: _Body(
                   loans: loansOf(account),
                   holds: readyHoldsOf(account),

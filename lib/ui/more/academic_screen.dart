@@ -204,7 +204,7 @@ class _AcademicScreenState extends State<AcademicScreen> {
         builder: (context) => RefreshIndicator(
           // Below the glass app bar, which the body extends under.
           edgeOffset: MediaQuery.paddingOf(context).top,
-          onRefresh: () async => _session.currentState?.reload(),
+          onRefresh: () async => _session.currentState?.refresh(),
           child: ListView(
             padding: scrollPadding(context).copyWith(left: 0, right: 0),
             children: [

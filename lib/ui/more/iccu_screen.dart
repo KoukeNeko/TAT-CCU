@@ -201,7 +201,7 @@ class _IccuScreenState extends State<IccuScreen> {
               builder: (context) => _Hub(
                 snapshot: snapshot,
                 savedAt: _savedAt,
-                onRefresh: _reload,
+                onRefresh: () async => _session.currentState?.refresh(),
                 openWeb: (path, title) =>
                     openCampusPage(context, '$_iccu$path', title),
               ),

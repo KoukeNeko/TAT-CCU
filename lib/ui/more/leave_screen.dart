@@ -145,7 +145,7 @@ class _LeaveScreenState extends State<LeaveScreen> {
               builder: (context) => RefreshIndicator(
                 // Below the glass app bar, which the body extends under.
                 edgeOffset: MediaQuery.paddingOf(context).top,
-                onRefresh: _reload,
+                onRefresh: () async => _session.currentState?.refresh(),
                 child: _Body(requests: requests, savedAt: _savedAt),
               ),
             ),
