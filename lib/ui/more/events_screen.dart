@@ -376,6 +376,16 @@ class _EventsScreenState extends State<EventsScreen> {
       host: eventsHost,
       // Search and filters only once there is something to search.
       bottom: data == null ? null : _bar(context),
+      action: data == null
+          ? null
+          : _MyEventsChip(
+              // No count until 我的活動 has been read.
+              count: _json['mine'] == null ? null : data.mine.length,
+              onTap: () => context.push(
+                '/more/events/mine',
+                extra: (data: data, onChanged: _refresh),
+              ),
+            ),
       script: () => readMine,
       onMessage: _received,
       child: _error != null
@@ -398,10 +408,6 @@ class _EventsScreenState extends State<EventsScreen> {
     final now = DateTime.now();
     final searching = _query != null;
     final shown = _filtered(_results ?? data.events, now);
-    final signedUp = [
-      for (final e in data.events)
-        if (e.signedUp && !(e.end ?? e.start ?? now).isBefore(now)) e,
-    ];
     final groups = <DateTime, List<SchoolEvent>>{};
     for (final e in shown) {
       final s = e.start ?? now;
@@ -410,18 +416,6 @@ class _EventsScreenState extends State<EventsScreen> {
     return ListView(
       padding: scrollPadding(context),
       children: [
-        if (!searching)
-          signedUp.isEmpty
-              ? _MyEventsRow(
-                  count: data.mine.length,
-                  onTap: () => context.push('/more/events/mine', extra: data),
-                )
-              : _NextCard(
-                  event: signedUp.first,
-                  count: data.mine.length,
-                  onTap: () => _open(signedUp.first),
-                  onMine: () => context.push('/more/events/mine', extra: data),
-                ),
         if (shown.isEmpty)
           _NoMatch(
             onWiden: _time == _Time.any && _status == _Status.any
@@ -698,16 +692,10 @@ class EventRow extends StatelessWidget {
 /// The next event signed up for: its poster with the days left, then the
 /// title, time and place.
 class _NextCard extends StatelessWidget {
-  const _NextCard({
-    required this.event,
-    required this.count,
-    required this.onTap,
-    required this.onMine,
-  });
+  const _NextCard({required this.event, required this.onTap});
 
   final SchoolEvent event;
-  final int count;
-  final VoidCallback onTap, onMine;
+  final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
@@ -761,39 +749,6 @@ class _NextCard extends StatelessWidget {
                         ),
                       ),
                     ),
-                  Positioned(
-                    top: 8,
-                    right: 8,
-                    child: Material(
-                      color: tone.fill.withValues(alpha: 0.9),
-                      shape: const StadiumBorder(),
-                      child: InkWell(
-                        customBorder: const StadiumBorder(),
-                        onTap: onMine,
-                        child: Padding(
-                          padding: const EdgeInsets.fromLTRB(10, 6, 6, 6),
-                          child: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Text(
-                                '${l10n.myEvents} $count',
-                                style: TextStyle(
-                                  color: tone.ink,
-                                  fontSize: 12,
-                                  fontWeight: FontWeight.w900,
-                                ),
-                              ),
-                              Icon(
-                                Icons.chevron_right,
-                                size: 16,
-                                color: tone.ink,
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
-                    ),
-                  ),
                 ],
               ),
             ),
@@ -860,48 +815,37 @@ class _NextCard extends StatelessWidget {
   }
 }
 
-/// 我的活動 with nothing coming up: one quiet row.
-class _MyEventsRow extends StatelessWidget {
-  const _MyEventsRow({required this.count, required this.onTap});
+/// The app bar's way to 我的活動, styled like the timetable's semester menu.
+class _MyEventsChip extends StatelessWidget {
+  const _MyEventsChip({required this.count, required this.onTap});
 
-  final int count;
+  final int? count;
   final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
+    final tone = context.tones.lilac;
     return Material(
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(Corners.row),
-        side: BorderSide(color: scheme.outlineVariant, width: 1.5),
-      ),
-      color: Colors.transparent,
+      color: tone.fill,
+      shape: const StadiumBorder(),
       child: InkWell(
-        customBorder: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(Corners.row),
-        ),
+        customBorder: const StadiumBorder(),
         onTap: onTap,
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+        child: Container(
+          height: 40,
+          padding: const EdgeInsets.only(left: 14, right: 8),
           child: Row(
+            mainAxisSize: MainAxisSize.min,
             children: [
-              Expanded(
-                child: Text(
-                  context.l10n.myEvents,
-                  style: TextStyle(
-                    fontWeight: FontWeight.w900,
-                    color: scheme.onSurfaceVariant,
-                  ),
-                ),
-              ),
               Text(
-                '$count',
+                [context.l10n.myEvents, ?count?.toString()].join(' '),
                 style: TextStyle(
+                  color: tone.ink,
+                  fontSize: 14,
                   fontWeight: FontWeight.w900,
-                  color: scheme.onSurfaceVariant,
                 ),
               ),
-              Icon(Icons.chevron_right, color: scheme.onSurfaceVariant),
+              Icon(Icons.chevron_right, color: tone.ink, size: 20),
             ],
           ),
         ),
@@ -956,9 +900,12 @@ class _NoMatch extends StatelessWidget {
 
 /// 我的活動: counts, the events signed up for, then past ones.
 class MyEventsScreen extends StatelessWidget {
-  const MyEventsScreen({super.key, required this.data});
+  const MyEventsScreen({super.key, required this.data, this.onChanged});
 
   final EventsData data;
+
+  /// Called after a sign-up or cancel in a detail opened from here.
+  final VoidCallback? onChanged;
 
   @override
   Widget build(BuildContext context) {
@@ -966,6 +913,10 @@ class MyEventsScreen extends StatelessWidget {
     final tones = context.tones;
     final scheme = Theme.of(context).colorScheme;
     final byId = {for (final e in data.events) e.id: e};
+    final now = DateTime.now();
+    final next = data.events
+        .where((e) => e.signedUp && !(e.end ?? e.start ?? now).isBefore(now))
+        .firstOrNull;
     Widget group(List<({String id, String title})> rows) => Card(
       color: scheme.surfaceContainerLow,
       clipBehavior: Clip.antiAlias,
@@ -988,7 +939,7 @@ class MyEventsScreen extends StatelessWidget {
                 event: e,
                 onTap: () => context.push(
                   '/more/events/detail',
-                  extra: (event: e, onChanged: null),
+                  extra: (event: e, onChanged: onChanged),
                 ),
               )
             else
@@ -1009,6 +960,16 @@ class MyEventsScreen extends StatelessWidget {
         builder: (context) => ListView(
           padding: scrollPadding(context),
           children: [
+            if (next != null) ...[
+              _NextCard(
+                event: next,
+                onTap: () => context.push(
+                  '/more/events/detail',
+                  extra: (event: next, onChanged: onChanged),
+                ),
+              ),
+              const SizedBox(height: rowGap),
+            ],
             Row(
               children: [
                 for (final (i, (tone, value, label)) in [

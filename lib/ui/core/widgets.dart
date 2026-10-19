@@ -537,10 +537,12 @@ class _GlassPanel<T> extends StatelessWidget {
 }
 
 /// Sub-page title with the round back button from the mockup.
+/// [action] sits at the title row's end, such as a capsule to another page.
 AppBar subBar(
   BuildContext context,
   String title, {
   PreferredSizeWidget? bottom,
+  Widget? action,
 }) => AppBar(
   bottom: bottom,
   automaticallyImplyLeading: false,
@@ -553,6 +555,7 @@ AppBar subBar(
       RoundBackButton(),
       const SizedBox(width: 10),
       Expanded(child: Text(title)),
+      ?action,
     ],
   ),
 );

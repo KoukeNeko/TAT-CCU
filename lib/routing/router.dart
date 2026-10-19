@@ -145,8 +145,12 @@ GoRouter buildRouter(EcourseAuthRepository auth) => GoRouter(
                     ),
                     GoRoute(
                       path: 'mine',
-                      builder: (_, state) =>
-                          MyEventsScreen(data: state.extra! as EventsData),
+                      builder: (_, state) {
+                        final (:data, :onChanged) =
+                            state.extra!
+                                as ({EventsData data, VoidCallback onChanged});
+                        return MyEventsScreen(data: data, onChanged: onChanged);
+                      },
                     ),
                     GoRoute(
                       path: 'poster',
