@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
@@ -15,7 +17,7 @@ import '../../l10n/l10n.dart';
 typedef _Slot = ({Course course, ClassSession session});
 
 typedef _Today = ({
-  List<_Slot> slots,
+  List<Course> courses,
   List<DueItem> due,
   int notices,
   int mail,
@@ -25,24 +27,53 @@ typedef _Today = ({
 String _roomNumber(String? room) =>
     RegExp(r'\d+\S*$').stringMatch(room ?? '') ?? (room ?? '');
 
-class TodayScreen extends StatelessWidget {
+class TodayScreen extends StatefulWidget {
   const TodayScreen({super.key});
 
-  Future<_Today> _load(EcourseRepository repo) async {
+  @override
+  State<TodayScreen> createState() => _TodayScreenState();
+}
+
+/// The tab stays alive in the shell, so the countdown cannot rely on being
+/// rebuilt: it ticks at each minute and when the app comes back.
+class _TodayScreenState extends State<TodayScreen> {
+  Timer? _tick;
+  late final AppLifecycleListener _lifecycle;
+
+  @override
+  void initState() {
+    super.initState();
+    _lifecycle = AppLifecycleListener(onResume: _schedule);
+    _schedule();
+  }
+
+  /// Rebuilds now and again on the next minute boundary.
+  void _schedule() {
+    _tick?.cancel();
+    if (mounted) setState(() {});
     final now = DateTime.now();
+    _tick = Timer(
+      Duration(seconds: 60 - now.second, milliseconds: -now.millisecond),
+      _schedule,
+    );
+  }
+
+  @override
+  void dispose() {
+    _tick?.cancel();
+    _lifecycle.dispose();
+    super.dispose();
+  }
+
+  Future<_Today> _load(EcourseRepository repo) async {
     final results = await Future.wait([
       repo.currentCourses(),
       repo.dueSoon(days: 7),
       repo.unreadNotices(),
       repo.unreadMail(),
     ]);
-    final slots = [
-      for (final c in results[0] as List<Course>)
-        for (final s in c.sessions)
-          if (s.weekday == now.weekday) (course: c, session: s),
-    ]..sort((a, b) => a.session.start.compareTo(b.session.start));
     return (
-      slots: slots,
+      courses: results[0] as List<Course>,
       due: results[1] as List<DueItem>,
       notices: results[2] as int,
       mail: results[3] as int,
@@ -58,10 +89,14 @@ class TodayScreen extends StatelessWidget {
       body: Loader<_Today>(
         load: () => _load(repo),
         builder: (context, d) {
+          // Today's classes from the current day, so midnight moves on too.
+          final slots = [
+            for (final c in d.courses)
+              for (final s in c.sessions)
+                if (s.weekday == now.weekday) (course: c, session: s),
+          ]..sort((a, b) => a.session.start.compareTo(b.session.start));
           final minute = now.hour * 60 + now.minute;
-          final remaining = d.slots
-              .where((s) => s.session.end > minute)
-              .toList();
+          final remaining = slots.where((s) => s.session.end > minute).toList();
           final current = remaining
               .where((s) => s.session.start <= minute)
               .firstOrNull;
@@ -72,7 +107,7 @@ class TodayScreen extends StatelessWidget {
           final tones = context.tones;
           final n = remaining.length;
           final l10n = context.l10n;
-          final headline = d.slots.isEmpty
+          final headline = slots.isEmpty
               ? l10n.todayNoClasses
               : n == 0
               ? l10n.todayClassesOver
