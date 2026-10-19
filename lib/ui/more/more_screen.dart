@@ -108,6 +108,17 @@ class _MoreScreenState extends State<MoreScreen> {
                 ],
               ),
             ),
+            SectionLabel(context.l10n.aboutApp),
+            Card(
+              color: scheme.surfaceContainerLow,
+              clipBehavior: Clip.antiAlias,
+              child: _Row(
+                tone: t.sun,
+                icon: Icons.palette_outlined,
+                title: context.l10n.designLanguage,
+                onTap: () => context.push('/more/design'),
+              ),
+            ),
           ],
         ),
       ),

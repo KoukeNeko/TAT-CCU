@@ -876,12 +876,6 @@ class AppLocalizationsZh extends AppLocalizations {
   }
 
   @override
-  String get loadingCollections => '讀取館藏清單';
-
-  @override
-  String get loadingShelves => '讀取新書與暢銷榜';
-
-  @override
   String get studySpace => '自學空間';
 
   @override
@@ -909,4 +903,49 @@ class AppLocalizationsZh extends AppLocalizations {
   String updatesIn(int count) {
     return '$count 秒後更新';
   }
+
+  @override
+  String get designLanguage => '設計語言';
+
+  @override
+  String get dlColors => '色彩';
+
+  @override
+  String get dlCorners => '圓角';
+
+  @override
+  String get dlSpacing => '間距';
+
+  @override
+  String get dlType => '字體';
+
+  @override
+  String get dlComponents => '元件';
+
+  @override
+  String get dlFunctional => '功能色';
+
+  @override
+  String get dlIdentity => '識別色';
+
+  @override
+  String get dlRoleNow => '目前・選取';
+
+  @override
+  String get dlRoleNext => '下一個・行程';
+
+  @override
+  String get dlRoleDue => '到期・注意';
+
+  @override
+  String get dlRoleUnread => '未讀';
+
+  @override
+  String get aboutApp => 'App';
+
+  @override
+  String get loadingCollections => '讀取館藏清單';
+
+  @override
+  String get loadingShelves => '讀取新書與暢銷榜';
 }

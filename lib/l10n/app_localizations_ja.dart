@@ -864,12 +864,6 @@ class AppLocalizationsJa extends AppLocalizations {
   }
 
   @override
-  String get loadingCollections => 'コレクションを読み込み中';
-
-  @override
-  String get loadingShelves => '新着とベストセラーを読み込み中';
-
-  @override
   String get studySpace => '自習スペース';
 
   @override
@@ -897,4 +891,49 @@ class AppLocalizationsJa extends AppLocalizations {
   String updatesIn(int count) {
     return '$count 秒後に更新';
   }
+
+  @override
+  String get designLanguage => 'デザイン言語';
+
+  @override
+  String get dlColors => 'カラー';
+
+  @override
+  String get dlCorners => '角丸';
+
+  @override
+  String get dlSpacing => '余白';
+
+  @override
+  String get dlType => '書体';
+
+  @override
+  String get dlComponents => 'コンポーネント';
+
+  @override
+  String get dlFunctional => '機能色';
+
+  @override
+  String get dlIdentity => '識別色';
+
+  @override
+  String get dlRoleNow => '現在・選択';
+
+  @override
+  String get dlRoleNext => '次・予定';
+
+  @override
+  String get dlRoleDue => '期限・注意';
+
+  @override
+  String get dlRoleUnread => '未読';
+
+  @override
+  String get aboutApp => 'アプリ';
+
+  @override
+  String get loadingCollections => 'コレクションを読み込み中';
+
+  @override
+  String get loadingShelves => '新着とベストセラーを読み込み中';
 }

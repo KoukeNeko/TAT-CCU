@@ -959,12 +959,6 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get loadingCollections => 'Loading collections';
-
-  @override
-  String get loadingShelves => 'Loading new books and best sellers';
-
-  @override
   String get studySpace => 'Study spaces';
 
   @override
@@ -992,4 +986,49 @@ class AppLocalizationsEn extends AppLocalizations {
   String updatesIn(int count) {
     return 'Updates in ${count}s';
   }
+
+  @override
+  String get designLanguage => 'Design language';
+
+  @override
+  String get dlColors => 'Color';
+
+  @override
+  String get dlCorners => 'Corners';
+
+  @override
+  String get dlSpacing => 'Spacing';
+
+  @override
+  String get dlType => 'Type';
+
+  @override
+  String get dlComponents => 'Components';
+
+  @override
+  String get dlFunctional => 'Function colors';
+
+  @override
+  String get dlIdentity => 'Identity colors';
+
+  @override
+  String get dlRoleNow => 'Now・selected';
+
+  @override
+  String get dlRoleNext => 'Next・schedule';
+
+  @override
+  String get dlRoleDue => 'Due・attention';
+
+  @override
+  String get dlRoleUnread => 'Unread';
+
+  @override
+  String get aboutApp => 'App';
+
+  @override
+  String get loadingCollections => 'Loading collections';
+
+  @override
+  String get loadingShelves => 'Loading new books and best sellers';
 }

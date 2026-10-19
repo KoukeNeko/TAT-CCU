@@ -596,8 +596,6 @@
       }
     }
   },
-  "loadingCollections": "讀取館藏清單",
-  "loadingShelves": "讀取新書與暢銷榜",
   "studySpace": "自學空間",
   "scanToCheckIn": "掃描報到・開門",
   "openHours": "開放",
@@ -613,5 +611,20 @@
         "type": "int"
       }
     }
-  }
+  },
+  "designLanguage": "設計語言",
+  "dlColors": "色彩",
+  "dlCorners": "圓角",
+  "dlSpacing": "間距",
+  "dlType": "字體",
+  "dlComponents": "元件",
+  "dlFunctional": "功能色",
+  "dlIdentity": "識別色",
+  "dlRoleNow": "目前・選取",
+  "dlRoleNext": "下一個・行程",
+  "dlRoleDue": "到期・注意",
+  "dlRoleUnread": "未讀",
+  "aboutApp": "App",
+  "loadingCollections": "讀取館藏清單",
+  "loadingShelves": "讀取新書與暢銷榜"
 }

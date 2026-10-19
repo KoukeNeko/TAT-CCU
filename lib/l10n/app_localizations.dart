@@ -1540,18 +1540,6 @@ abstract class AppLocalizations {
   /// **'全部 {count} 個'**
   String allCollections(int count);
 
-  /// No description provided for @loadingCollections.
-  ///
-  /// In zh, this message translates to:
-  /// **'讀取館藏清單'**
-  String get loadingCollections;
-
-  /// No description provided for @loadingShelves.
-  ///
-  /// In zh, this message translates to:
-  /// **'讀取新書與暢銷榜'**
-  String get loadingShelves;
-
   /// No description provided for @studySpace.
   ///
   /// In zh, this message translates to:
@@ -1605,6 +1593,96 @@ abstract class AppLocalizations {
   /// In zh, this message translates to:
   /// **'{count} 秒後更新'**
   String updatesIn(int count);
+
+  /// No description provided for @designLanguage.
+  ///
+  /// In zh, this message translates to:
+  /// **'設計語言'**
+  String get designLanguage;
+
+  /// No description provided for @dlColors.
+  ///
+  /// In zh, this message translates to:
+  /// **'色彩'**
+  String get dlColors;
+
+  /// No description provided for @dlCorners.
+  ///
+  /// In zh, this message translates to:
+  /// **'圓角'**
+  String get dlCorners;
+
+  /// No description provided for @dlSpacing.
+  ///
+  /// In zh, this message translates to:
+  /// **'間距'**
+  String get dlSpacing;
+
+  /// No description provided for @dlType.
+  ///
+  /// In zh, this message translates to:
+  /// **'字體'**
+  String get dlType;
+
+  /// No description provided for @dlComponents.
+  ///
+  /// In zh, this message translates to:
+  /// **'元件'**
+  String get dlComponents;
+
+  /// No description provided for @dlFunctional.
+  ///
+  /// In zh, this message translates to:
+  /// **'功能色'**
+  String get dlFunctional;
+
+  /// No description provided for @dlIdentity.
+  ///
+  /// In zh, this message translates to:
+  /// **'識別色'**
+  String get dlIdentity;
+
+  /// No description provided for @dlRoleNow.
+  ///
+  /// In zh, this message translates to:
+  /// **'目前・選取'**
+  String get dlRoleNow;
+
+  /// No description provided for @dlRoleNext.
+  ///
+  /// In zh, this message translates to:
+  /// **'下一個・行程'**
+  String get dlRoleNext;
+
+  /// No description provided for @dlRoleDue.
+  ///
+  /// In zh, this message translates to:
+  /// **'到期・注意'**
+  String get dlRoleDue;
+
+  /// No description provided for @dlRoleUnread.
+  ///
+  /// In zh, this message translates to:
+  /// **'未讀'**
+  String get dlRoleUnread;
+
+  /// No description provided for @aboutApp.
+  ///
+  /// In zh, this message translates to:
+  /// **'App'**
+  String get aboutApp;
+
+  /// No description provided for @loadingCollections.
+  ///
+  /// In zh, this message translates to:
+  /// **'讀取館藏清單'**
+  String get loadingCollections;
+
+  /// No description provided for @loadingShelves.
+  ///
+  /// In zh, this message translates to:
+  /// **'讀取新書與暢銷榜'**
+  String get loadingShelves;
 }
 
 class _AppLocalizationsDelegate
