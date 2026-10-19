@@ -1,5 +1,3 @@
-import 'dart:ui' show ImageFilter;
-
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
@@ -316,40 +314,20 @@ class _SemesterMenu extends StatelessWidget {
 
   Future<void> _open(BuildContext context) async {
     final box = context.findRenderObject()! as RenderBox;
-    final anchor = box.localToGlobal(box.size.bottomRight(Offset.zero));
-    final screen = MediaQuery.sizeOf(context);
-    final picked = await showGeneralDialog<String>(
-      context: context,
-      barrierDismissible: true,
-      barrierLabel: context.l10n.close,
-      barrierColor: Colors.black.withValues(alpha: 0.12),
-      transitionDuration: const Duration(milliseconds: 240),
-      // No FadeTransition: an opacity layer above BackdropFilter keeps the
-      // blur from painting until the fade ends. The panel fades itself.
-      transitionBuilder: (context, animation, _, child) => ScaleTransition(
-        scale: Tween(begin: 0.92, end: 1.0).animate(
-          CurvedAnimation(parent: animation, curve: Curves.easeOutQuart),
-        ),
-        alignment: Alignment.topRight,
-        child: child,
-      ),
-      pageBuilder: (context, animation, _) => Stack(
-        children: [
-          Positioned(
-            top: anchor.dy + 8,
-            right: screen.width - anchor.dx,
-            child: _SemesterPanel(
-              reveal: CurvedAnimation(
-                parent: animation,
-                curve: Curves.easeOutQuart,
-              ),
-              semesters: semesters,
-              selected: selected,
-              counts: counts,
-            ),
+    final picked = await showGlassMenu<String>(
+      context,
+      anchor: box.localToGlobal(Offset.zero) & box.size,
+      selected: selected,
+      items: [
+        for (final s in semesters)
+          (
+            value: s,
+            title: semesterName(context, s),
+            detail: context.l10n.courseCount(counts[s] ?? 0),
+            icon: null,
+            tone: null,
           ),
-        ],
-      ),
+      ],
     );
     if (picked != null) onSelected(picked);
   }
@@ -383,134 +361,6 @@ class _SemesterMenu extends StatelessWidget {
                 Icon(Icons.arrow_drop_down, color: tone.ink),
               ],
             ),
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-/// Frosted panel matching the nav bar; the chosen row is an inset capsule so
-/// selection and press highlights never touch the panel edge.
-class _SemesterPanel extends StatelessWidget {
-  const _SemesterPanel({
-    required this.reveal,
-    required this.semesters,
-    required this.selected,
-    required this.counts,
-  });
-
-  final Animation<double> reveal;
-  final List<String> semesters;
-  final String selected;
-  final Map<String, int> counts;
-
-  @override
-  Widget build(BuildContext context) => AnimatedBuilder(
-    animation: reveal,
-    builder: (context, _) => _panel(context),
-  );
-
-  Widget _panel(BuildContext context) {
-    final t = reveal.value;
-    final theme = Theme.of(context);
-    final scheme = theme.colorScheme;
-    final tone = context.tones.lilac;
-    final light = theme.brightness == Brightness.light;
-    const radius = BorderRadius.all(Radius.circular(Corners.card));
-    return DecoratedBox(
-      decoration: BoxDecoration(
-        borderRadius: radius,
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.2 * t),
-            blurRadius: 36,
-            offset: const Offset(0, 16),
-          ),
-        ],
-      ),
-      child: ClipRRect(
-        borderRadius: radius,
-        child: BackdropFilter(
-          filter: ImageFilter.blur(sigmaX: 24 * t, sigmaY: 24 * t),
-          child: Opacity(
-            opacity: t,
-            child: Container(
-              width: 260,
-              padding: const EdgeInsets.all(8),
-              decoration: BoxDecoration(
-                borderRadius: radius,
-                color: light
-                    ? Colors.white.withValues(alpha: 0.78)
-                    : const Color(0x9E3A2F2B),
-                border: Border.all(
-                  color: Colors.white.withValues(alpha: light ? 0.95 : 0.14),
-                ),
-              ),
-              child: Material(
-                type: MaterialType.transparency,
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    for (final s in semesters)
-                      _row(context, s, s == selected, tone, scheme),
-                  ],
-                ),
-              ),
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _row(
-    BuildContext context,
-    String semester,
-    bool chosen,
-    Tone tone,
-    ColorScheme scheme,
-  ) {
-    final ink = chosen ? tone.ink : scheme.onSurface;
-    return Material(
-      color: chosen ? tone.fill : Colors.transparent,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.all(Radius.circular(Corners.row)),
-      ),
-      clipBehavior: Clip.antiAlias,
-      child: InkWell(
-        onTap: () => Navigator.of(context).pop(semester),
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 13),
-          child: Row(
-            children: [
-              Expanded(
-                child: Text(
-                  semesterName(context, semester),
-                  style: TextStyle(
-                    color: ink,
-                    fontSize: 15,
-                    fontWeight: chosen ? FontWeight.w900 : FontWeight.w700,
-                  ),
-                ),
-              ),
-              Text(
-                context.l10n.courseCount(counts[semester] ?? 0),
-                style: TextStyle(
-                  color: chosen
-                      ? tone.ink.withValues(alpha: 0.7)
-                      : scheme.onSurfaceVariant,
-                  fontSize: 12,
-                  fontWeight: FontWeight.w800,
-                ),
-              ),
-              SizedBox(
-                width: 26,
-                child: chosen
-                    ? Icon(Icons.check, size: 18, color: tone.strong)
-                    : null,
-              ),
-            ],
           ),
         ),
       ),
