@@ -1279,4 +1279,10 @@ class AppLocalizationsJa extends AppLocalizations {
   String ptEntries(int count) {
     return '$count 件';
   }
+
+  @override
+  String get demoMode => 'デモモード';
+
+  @override
+  String get demoModeDetail => 'ALPHA 機能でサンプルデータを表示';
 }

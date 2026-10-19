@@ -208,7 +208,7 @@
   "sortRelevance": "関連度",
   "sortNewest": "新しい順",
   "sortTitle": "タイトル",
-  "anyTime": "すべての期間",
+  "anyTime": "指定なし",
   "lastYears": "過去 {count} 年",
   "filter": "絞り込み",
   "filterAvailability": "入手方法",
@@ -277,6 +277,7 @@
   "within3Days": "3日以内",
   "withinWeek": "1週間以内",
   "withinMonth": "1か月以内",
+  "anyTime": "すべての期間",
   "eventsOpen": "受付中",
   "eventsOngoing": "開催中",
   "eventsClosed": "受付終了",
@@ -366,5 +367,7 @@
   "ptOtherDeduct": "その他の控除",
   "ptSubtotal": "小計",
   "ptHoliday": "休日",
-  "ptEntries": "{count} 件"
+  "ptEntries": "{count} 件",
+  "demoMode": "デモモード",
+  "demoModeDetail": "ALPHA 機能でサンプルデータを表示"
 }

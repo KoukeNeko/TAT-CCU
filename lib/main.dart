@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
@@ -10,6 +12,7 @@ import 'data/services/campus_cookies.dart';
 import 'l10n/l10n.dart';
 import 'routing/router.dart';
 import 'ui/core/theme.dart';
+import 'ui/more/parttime_data.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -25,6 +28,10 @@ Future<void> main() async {
     ),
   );
   final auth = EcourseAuthRepository();
+  final settings = AppSettings();
+  // Alpha features read demo mode from here.
+  settings.addListener(() => HoursStore.instance.demo = settings.demoMode);
+  unawaited(settings.load());
   await (auth.load(), CampusCookies.restore()).wait;
   // iOS may end a backgrounded app without notice, so save on the way out.
   AppLifecycleListener(onHide: CampusCookies.save);
@@ -33,7 +40,7 @@ Future<void> main() async {
       providers: [
         ChangeNotifierProvider.value(value: auth),
         ChangeNotifierProvider(create: (_) => PortalPrefs()..load()),
-        ChangeNotifierProvider(create: (_) => AppSettings()..load()),
+        ChangeNotifierProvider.value(value: settings),
         ProxyProvider<EcourseAuthRepository, EcourseRepository>(
           update: (_, auth, _) => EcourseRepository(auth.client()),
         ),

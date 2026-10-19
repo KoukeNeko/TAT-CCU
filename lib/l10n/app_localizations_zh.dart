@@ -1291,4 +1291,10 @@ class AppLocalizationsZh extends AppLocalizations {
   String ptEntries(int count) {
     return '$count 筆';
   }
+
+  @override
+  String get demoMode => 'Demo 模式';
+
+  @override
+  String get demoModeDetail => 'ALPHA 功能顯示模擬資料';
 }

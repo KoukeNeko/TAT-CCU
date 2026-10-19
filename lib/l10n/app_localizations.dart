@@ -2301,6 +2301,18 @@ abstract class AppLocalizations {
   /// In zh, this message translates to:
   /// **'{count} 筆'**
   String ptEntries(int count);
+
+  /// No description provided for @demoMode.
+  ///
+  /// In zh, this message translates to:
+  /// **'Demo 模式'**
+  String get demoMode;
+
+  /// No description provided for @demoModeDetail.
+  ///
+  /// In zh, this message translates to:
+  /// **'ALPHA 功能顯示模擬資料'**
+  String get demoModeDetail;
 }
 
 class _AppLocalizationsDelegate

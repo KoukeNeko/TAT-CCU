@@ -58,6 +58,20 @@ class SettingsScreen extends StatelessWidget {
               onSelected: (code) =>
                   settings.setLocale(code == null ? null : Locale(code)),
             ),
+            SectionLabel(l10n.aboutApp),
+            Card(
+              color: Theme.of(context).colorScheme.surfaceContainerLow,
+              clipBehavior: Clip.antiAlias,
+              child: SwitchListTile(
+                title: Text(
+                  l10n.demoMode,
+                  style: const TextStyle(fontWeight: FontWeight.w800),
+                ),
+                subtitle: Text(l10n.demoModeDetail),
+                value: settings.demoMode,
+                onChanged: settings.setDemoMode,
+              ),
+            ),
           ],
         ),
       ),

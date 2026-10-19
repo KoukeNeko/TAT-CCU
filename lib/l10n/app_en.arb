@@ -208,7 +208,7 @@
   "sortRelevance": "Relevance",
   "sortNewest": "Newest",
   "sortTitle": "Title",
-  "anyTime": "Any time",
+  "anyTime": "Any",
   "lastYears": "Last {count} years",
   "filter": "Filter",
   "filterAvailability": "Availability",
@@ -277,6 +277,7 @@
   "within3Days": "Next 3 days",
   "withinWeek": "Next 7 days",
   "withinMonth": "Next 30 days",
+  "anyTime": "Any time",
   "eventsOpen": "Open",
   "eventsOngoing": "Happening now",
   "eventsClosed": "Closed",
@@ -366,5 +367,7 @@
   "ptOtherDeduct": "Other deductions",
   "ptSubtotal": "Subtotal",
   "ptHoliday": "Holiday",
-  "ptEntries": "{count} entries"
+  "ptEntries": "{count} entries",
+  "demoMode": "Demo mode",
+  "demoModeDetail": "Alpha features show sample data"
 }
