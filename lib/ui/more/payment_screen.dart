@@ -9,6 +9,7 @@ import 'package:pdfrx/pdfrx.dart';
 import 'package:share_plus/share_plus.dart';
 
 import '../../data/repositories/campus_cache.dart';
+import '../../data/repositories/certificate_store.dart';
 import '../../l10n/l10n.dart';
 import '../core/campus_session.dart';
 import '../core/theme.dart';
@@ -47,25 +48,10 @@ String _read(int year) =>
 })().catch(e => Campus.postMessage(JSON.stringify({ error: String(e) })));
 ''';
 
-/// Fetches a statement inside the signed-in page, as base64.
-String _fetchPdf(String url) =>
-    '''
-(async () => {
-  const r = await fetch(${jsonEncode(url)}, { credentials: 'same-origin' });
-  const bytes = new Uint8Array(await r.arrayBuffer());
-  let bin = '';
-  for (let i = 0; i < bytes.length; i += 0x8000) {
-    bin += String.fromCharCode.apply(null, bytes.subarray(i, i + 0x8000));
-  }
-  Campus.postMessage(JSON.stringify({ kind: 'pdf', data: btoa(bin) }));
-})().catch(e => Campus.postMessage(JSON.stringify({ kind: 'pdf', error: String(e) })));
-''';
-
 int _money(Object? v) =>
     int.tryParse('${v ?? ''}'.replaceAll(RegExp(r'[^0-9-]'), '')) ?? 0;
 
-String _show(int n) =>
-    '\$${n.toString().replaceAllMapped(RegExp(r'\B(?=(\d{3})+(?!\d))'), (_) => ',')}';
+String _show(int n) => '\$${grouped(n)}';
 
 /// "115/10/05" → 2026-10-05.
 DateTime? _rocDate(Object? v) {
@@ -165,7 +151,7 @@ class PaymentScreen extends StatefulWidget {
 class _PaymentScreenState extends State<PaymentScreen> {
   final _session = GlobalKey<CampusSessionState>();
   final _yearKey = GlobalKey();
-  var _year = DateTime.now().year - 1911;
+  var _year = rocYear(DateTime.now());
   Map<String, dynamic>? _json;
   DateTime? _savedAt;
   String? _error;
@@ -192,7 +178,7 @@ class _PaymentScreenState extends State<PaymentScreen> {
   void _openPdf(String url, String title, String file) {
     if (_pdf != null) return;
     _pdf = (title: title, file: file);
-    _session.currentState?.run(_fetchPdf(url));
+    _session.currentState?.run(fetchPdfScript(url));
     // An expired session may never answer; let the buttons work again.
     _pdfWatchdog = Timer(const Duration(seconds: 30), () {
       if (!mounted || _pdf == null) return;
@@ -219,9 +205,7 @@ class _PaymentScreenState extends State<PaymentScreen> {
     final bytes = json['error'] == null
         ? base64Decode('${json['data']}')
         : null;
-    if (bytes == null ||
-        bytes.length < 5 ||
-        String.fromCharCodes(bytes.sublist(0, 5)) != '%PDF-') {
+    if (bytes == null || !isPdf(bytes)) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('${json['error'] ?? l10n.notPdf}')),
       );
@@ -295,7 +279,7 @@ class _PaymentScreenState extends State<PaymentScreen> {
 
   Future<void> _pickYear() async {
     final box = _yearKey.currentContext!.findRenderObject()! as RenderBox;
-    final now = DateTime.now().year - 1911;
+    final now = rocYear(DateTime.now());
     final y = await showGlassMenu<int>(
       context,
       anchor: box.localToGlobal(Offset.zero) & box.size,
@@ -368,7 +352,7 @@ class _PaymentScreenState extends State<PaymentScreen> {
     final payments = paymentsOf(json);
     final income = incomeOf(json);
     final now = DateTime.now();
-    final lastMonth = _year == now.year - 1911 ? now.month : 12;
+    final lastMonth = _year == rocYear(now) ? now.month : 12;
     final byMonth = List.filled(12, 0);
     for (final p in payments) {
       byMonth[p.date.month - 1] += p.amount;

@@ -70,19 +70,6 @@ class ModuleScreen extends StatelessWidget {
   }
 }
 
-String _day(DateTime d) => '${d.month}/${d.day}';
-String _stamp(DateTime d) => '${_day(d)} ${clock(d.hour * 60 + d.minute)}';
-
-/// `10/13 週二 00:00`, for settings where the hour matters.
-String _full(BuildContext context, DateTime d) =>
-    '${_day(d)} ${weekdayName(context, d.weekday)} ${clock(d.hour * 60 + d.minute)}';
-
-String fileSize(int bytes) => switch (bytes) {
-  < 1024 => '$bytes B',
-  < 1024 * 1024 => '${(bytes / 1024).round()} KB',
-  _ => '${(bytes / 1024 / 1024).toStringAsFixed(1)} MB',
-};
-
 class _AssignmentBody extends StatelessWidget {
   const _AssignmentBody({required this.assignment});
 
@@ -100,17 +87,19 @@ class _AssignmentBody extends StatelessWidget {
           steps: [
             (
               l10n.stepOpens,
-              a.opens == null ? '—' : _day(a.opens!),
+              a.opens == null ? '—' : monthDay(a.opens!),
               a.opens?.isBefore(now) ?? true,
             ),
             (
               l10n.stepSubmitted,
-              a.submittedAt == null ? l10n.notSubmitted : _day(a.submittedAt!),
+              a.submittedAt == null
+                  ? l10n.notSubmitted
+                  : monthDay(a.submittedAt!),
               a.submittedAt != null,
             ),
             (
               l10n.stepDue,
-              a.due == null ? '—' : _day(a.due!),
+              a.due == null ? '—' : monthDay(a.due!),
               a.due?.isBefore(now) ?? false,
             ),
             (l10n.stepGrade, a.grade ?? '—', a.grade != null),
@@ -118,7 +107,10 @@ class _AssignmentBody extends StatelessWidget {
         ),
         if (a.submission.isNotEmpty) ...[
           SectionLabel(l10n.mySubmission),
-          FileList(files: a.submission, detail: (f) => _stamp(f.modified)),
+          FileList(
+            files: a.submission,
+            detail: (f) => monthDayTime(f.modified),
+          ),
         ],
         if (a.intro.isNotEmpty) ...[
           SectionLabel(l10n.description),
@@ -150,17 +142,17 @@ class _QuizBody extends StatelessWidget {
           steps: [
             (
               l10n.stepOpens,
-              q.opens == null ? '—' : _day(q.opens!),
+              q.opens == null ? '—' : monthDay(q.opens!),
               q.opens?.isBefore(now) ?? true,
             ),
             (
               l10n.stepAttempted,
-              q.finished == null ? l10n.notAttempted : _day(q.finished!),
+              q.finished == null ? l10n.notAttempted : monthDay(q.finished!),
               q.finished != null,
             ),
             (
               l10n.stepCloses,
-              q.closes == null ? '—' : _day(q.closes!),
+              q.closes == null ? '—' : monthDay(q.closes!),
               q.closes?.isBefore(now) ?? false,
             ),
             (l10n.stepGrade, q.grade ?? '—', q.grade != null),
@@ -169,8 +161,10 @@ class _QuizBody extends StatelessWidget {
         SectionLabel(l10n.quizSettings),
         _Details(
           rows: [
-            if (q.opens != null) (l10n.quizStart, _full(context, q.opens!)),
-            if (q.closes != null) (l10n.quizEnd, _full(context, q.closes!)),
+            if (q.opens != null)
+              (l10n.quizStart, dateTimeLabel(context, q.opens!)),
+            if (q.closes != null)
+              (l10n.quizEnd, dateTimeLabel(context, q.closes!)),
             (
               l10n.attemptsAllowed,
               q.attempts == 0 ? l10n.unlimited : l10n.attemptCount(q.attempts),
@@ -211,14 +205,14 @@ class _FilesBody extends StatelessWidget {
             const SizedBox(width: 8),
             _Fact(value: fileSize(total), label: context.l10n.total),
             const SizedBox(width: 8),
-            _Fact(value: _day(latest), label: context.l10n.lastUpdated),
+            _Fact(value: monthDay(latest), label: context.l10n.lastUpdated),
           ],
         ),
         const SizedBox(height: 12),
         FileList(
           files: files,
           detail: (f) =>
-              context.l10n.fileUpdated(fileSize(f.size), _day(f.modified)),
+              context.l10n.fileUpdated(fileSize(f.size), monthDay(f.modified)),
         ),
       ],
     );

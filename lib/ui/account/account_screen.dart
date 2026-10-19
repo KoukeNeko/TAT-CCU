@@ -9,9 +9,8 @@ import '../core/widgets.dart';
 import '../more/portal_screen.dart';
 import '../../l10n/l10n.dart';
 
-String _time(AppLocalizations l10n, DateTime? t) => t == null
-    ? ''
-    : '　${l10n.verifiedAt('${t.hour}:${t.minute.toString().padLeft(2, '0')}')}';
+String _time(AppLocalizations l10n, DateTime? t) =>
+    t == null ? '' : '　${l10n.verifiedAt(clock(t.hour * 60 + t.minute))}';
 
 /// Shows the two independent sign-in states side by side.
 class AccountScreen extends StatefulWidget {

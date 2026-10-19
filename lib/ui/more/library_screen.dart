@@ -315,8 +315,6 @@ class _LibraryScreenState extends State<LibraryScreen> {
   }
 }
 
-String _md(DateTime d) => '${d.month}/${d.day}';
-
 class _Body extends StatelessWidget {
   const _Body({
     required this.loans,
@@ -466,7 +464,7 @@ class _Hero extends StatelessWidget {
         ),
         const SizedBox(height: 6),
         Text(
-          '${l10n.loanDue(_md(first.due))}・'
+          '${l10n.loanDue(monthDay(first.due))}・'
           '${sameDay == 1 ? first.title : l10n.bookCount(sameDay)}',
           style: note,
           maxLines: 2,
@@ -507,7 +505,7 @@ class _Hero extends StatelessWidget {
                   if ([
                         holds.first.pickup,
                         if (holds.first.until case final d?)
-                          l10n.heldUntil(_md(d)),
+                          l10n.heldUntil(monthDay(d)),
                       ].where((s) => s.isNotEmpty).join('・')
                       case final where when where.isNotEmpty)
                     Text(
@@ -572,7 +570,7 @@ class _LoanRow extends StatelessWidget {
                     Text(
                       [
                         loan.author,
-                        l10n.loanDue(_md(loan.due)),
+                        l10n.loanDue(monthDay(loan.due)),
                       ].where((s) => s.isNotEmpty).join('・'),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
@@ -702,7 +700,7 @@ void _showRenew(
             contentPadding: EdgeInsets.zero,
             title: Text(l10n.dueDate),
             trailing: Text(
-              '${_md(loan.due)}（${days < 0 ? l10n.daysOverdue(-days) : l10n.loanDaysLeft(days)}）',
+              '${monthDay(loan.due)}（${days < 0 ? l10n.daysOverdue(-days) : l10n.loanDaysLeft(days)}）',
               style: const TextStyle(fontWeight: FontWeight.w800),
             ),
           ),

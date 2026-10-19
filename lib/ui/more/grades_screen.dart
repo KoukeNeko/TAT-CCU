@@ -7,7 +7,6 @@ import '../../domain/models/course.dart';
 import '../core/theme.dart';
 import '../core/widgets.dart';
 import '../../l10n/l10n.dart';
-import '../core/campus_web_screen.dart';
 import 'portal_screen.dart';
 
 /// 本學期: eCourse2 running grades per course. 歷年: the semester grades in
@@ -113,10 +112,9 @@ class _GradesScreenState extends State<GradesScreen> {
   // shortcut: 成績查詢 has not been read natively yet, so 歷年 opens the
   // website; parse its pages once they are probed.
   Widget _historyBody(BuildContext context) {
-    final system = campusSystems['0007']!;
     return Center(
       child: FilledButton.tonalIcon(
-        onPressed: () => openCampusPage(context, entryUrl(system), system.name),
+        onPressed: () => openSchoolSite(context, '0007'),
         icon: const Icon(Icons.north_east, size: 18),
         label: Text(context.l10n.gradesOnSchoolSite),
       ),

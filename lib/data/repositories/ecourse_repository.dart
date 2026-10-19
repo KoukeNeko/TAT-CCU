@@ -1,4 +1,5 @@
 import '../../domain/models/course.dart';
+import '../services/html_text.dart';
 import '../services/moodle_client.dart';
 
 /// Something due soon, from `core_calendar_get_action_events_by_timesort`.
@@ -375,7 +376,7 @@ class EcourseRepository {
           subject: multilang('${d['subject'] ?? d['name']}'),
           author: '${d['userfullname'] ?? ''}',
           time: _ts(d['timemodified'] ?? d['created']),
-          body: _plain('${d['message'] ?? ''}'),
+          body: plainText('${d['message'] ?? ''}'),
           replies: (d['numreplies'] as num?)?.toInt() ?? 0,
           pinned: d['pinned'] == true,
         ),
@@ -397,7 +398,7 @@ class EcourseRepository {
           author: '${p['author']?['fullname'] ?? ''}',
           time: _ts(p['timecreated']),
           subject: multilang('${p['subject'] ?? ''}'),
-          body: _plain('${p['message'] ?? ''}'),
+          body: plainText('${p['message'] ?? ''}'),
           attachments: [
             for (final f in p['attachments'] as List? ?? const [])
               _file(f as Map),
@@ -437,7 +438,7 @@ class EcourseRepository {
     final submitted = submission?['status'] == 'submitted';
     final grade = status['feedback']?['gradefordisplay'] as String?;
     return (
-      intro: _plain('${a['intro'] ?? ''}'),
+      intro: plainText('${a['intro'] ?? ''}'),
       attachments: [
         for (final f in a['introattachments'] as List? ?? const [])
           _file(f as Map),
@@ -451,7 +452,7 @@ class EcourseRepository {
             for (final f in area['files'] as List? ?? const []) _file(f as Map),
       ],
       // `100.00&nbsp;/&nbsp;100.00`: keep the score, the page shows the max.
-      grade: grade == null ? null : _plain(grade).split('/').first.trim(),
+      grade: grade == null ? null : plainText(grade).split('/').first.trim(),
     );
   }
 
@@ -479,7 +480,7 @@ class EcourseRepository {
         : null;
     final pass = best['gradetopass'] as num?;
     return (
-      intro: _plain('${q['intro'] ?? ''}'),
+      intro: plainText('${q['intro'] ?? ''}'),
       opens: _date(q['timeopen']),
       closes: _date(q['timeclose']),
       finished: finished.lastOrNull,
@@ -517,8 +518,8 @@ class EcourseRepository {
             name: multilang('${i['itemname'] ?? ''}'),
             // Passing grades arrive as a check icon before the number; the
             // number alone already says it.
-            grade: _plain('${i['gradeformatted'] ?? ''}'),
-            percent: _plain('${i['percentageformatted'] ?? ''}'),
+            grade: plainText('${i['gradeformatted'] ?? ''}'),
+            percent: plainText('${i['percentageformatted'] ?? ''}'),
           ),
     ];
   }
@@ -544,13 +545,4 @@ String multilang(String html) =>
     RegExp(r'<span lang="zh_tw" class="multilang">(.*?)</span>')
         .firstMatch(html)
         ?.group(1) ??
-    _plain(html);
-
-/// Moodle returns HTML bodies; the list views only need plain text.
-String _plain(String html) => html
-    .replaceAll(RegExp(r'<br\s*/?>|</p>', caseSensitive: false), '\n')
-    .replaceAll(RegExp(r'<[^>]+>'), '')
-    .replaceAll('&nbsp;', ' ')
-    .replaceAll('&amp;', '&')
-    .replaceAll(RegExp(r'\n{3,}'), '\n\n')
-    .trim();
+    plainText(html);

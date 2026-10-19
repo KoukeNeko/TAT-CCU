@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../data/repositories/campus_cache.dart';
 import '../../l10n/l10n.dart';
+import 'portal_screen.dart';
 import '../core/campus_session.dart';
 import '../core/campus_web_screen.dart';
 import '../core/theme.dart';
@@ -10,8 +11,7 @@ import '../core/widgets.dart';
 const _host = 'www026186.ccu.edu.tw';
 const _apply = 'https://$_host/stu_off/student/apply';
 const _cancel = 'https://$_host/stu_off/student/apply/cancel';
-const _entry =
-    'https://portal.ccu.edu.tw/ssoService.php?service=/test_0064_StuOff.php&linkId=0064&para=';
+final _entry = entryUrl(campusSystems['0064']!);
 
 /// The cancel page lists every request the student filed, with its status,
 /// in a server-rendered `table#ApplyList-table` (申請編號｜假別｜請假日期｜

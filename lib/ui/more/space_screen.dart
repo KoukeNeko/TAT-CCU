@@ -7,21 +7,21 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 
 import '../../l10n/l10n.dart';
+import 'portal_screen.dart';
 import '../core/campus_session.dart';
 import '../core/campus_web_screen.dart';
 import '../core/theme.dart';
 import '../core/widgets.dart';
 
 const _host = 'selfstudy.lib.ccu.edu.tw';
-const _entry =
-    'https://portal.ccu.edu.tw/ssoService.php?service=/test_Lib_Space_Reserves.php&linkId=0059&para=';
+final _entry = entryUrl(campusSystems['0059']!);
 
 /// The space system's PWA keeps its tokens in `localStorage.vuex` and sends
 /// them as query parameters (research_notes/…/space_booking_probe.md). The
 /// first read hands the tokens to the app, which then refreshes the QR code
 /// and free places over plain HTTP: iOS stops scripts in a hidden WebView,
 /// so it cannot be left to tick there. Booking stays on the website.
-const _read =
+final _read =
     '''
 (async () => {
   const app = () => { try { return JSON.parse(localStorage.vuex || '{}').App || {}; } catch (e) { return {}; } };
@@ -377,9 +377,7 @@ class _Pass extends StatelessWidget {
                 Expanded(
                   child: field(
                     l10n.validFor,
-                    renewing
-                        ? l10n.refreshing
-                        : '${left ~/ 60}:${(left % 60).toString().padLeft(2, '0')}',
+                    renewing ? l10n.refreshing : clock(left),
                   ),
                 ),
               ],

@@ -11,11 +11,11 @@ import '../core/campus_web_screen.dart';
 import '../core/theme.dart';
 import '../core/widgets.dart';
 import '../../l10n/l10n.dart';
+import 'portal_screen.dart';
 
 const _host = 'www026198.ccu.edu.tw';
 const _detailUrl = 'https://$_host/academic/academic_detail.php';
-const _entry =
-    'https://portal.ccu.edu.tw/ssoService.php?service=/test_Academic.php&linkId=0004&para=';
+final _entry = entryUrl(campusSystems['0004']!);
 
 /// The hand-off lands on the detail page; its form holds the record
 /// (research_notes/…/academic_records_probe.md).
@@ -28,17 +28,7 @@ const _readDetail = '''
 ''';
 
 /// `prt_CerEnr.php` answers a plain GET with a freshly printed PDF.
-const _fetchCertificate = '''
-(async () => {
-  const r = await fetch('prt_CerEnr.php', { credentials: 'same-origin' });
-  const bytes = new Uint8Array(await r.arrayBuffer());
-  let bin = '';
-  for (let i = 0; i < bytes.length; i += 0x8000) {
-    bin += String.fromCharCode.apply(null, bytes.subarray(i, i + 0x8000));
-  }
-  Campus.postMessage(JSON.stringify({ kind: 'pdf', data: btoa(bin) }));
-})().catch(e => Campus.postMessage(JSON.stringify({ kind: 'pdf', error: String(e) })));
-''';
+final _fetchCertificate = fetchPdfScript('prt_CerEnr.php');
 
 typedef _Detail = ({
   String studentNo,
@@ -316,8 +306,6 @@ class _AcademicScreenState extends State<AcademicScreen> {
   }
 }
 
-String _md(DateTime d) => '${d.month}/${d.day}';
-
 class _Ticket extends StatelessWidget {
   const _Ticket({
     required this.certificate,
@@ -428,8 +416,8 @@ class _Ticket extends StatelessWidget {
                           c == null
                               ? l10n.notYetThisSemester
                               : current
-                              ? l10n.validPrinted(_md(c.printedAt))
-                              : l10n.expiredPrinted(_md(c.printedAt)),
+                              ? l10n.validPrinted(monthDay(c.printedAt))
+                              : l10n.expiredPrinted(monthDay(c.printedAt)),
                           style: const TextStyle(
                             fontSize: 12,
                             fontWeight: FontWeight.w800,
@@ -477,9 +465,7 @@ class _Ticket extends StatelessWidget {
               child: Row(
                 children: [
                   Text(
-                    l10n.savedToDevice(
-                      '${_md(c.printedAt)} ${clock(c.printedAt.hour * 60 + c.printedAt.minute)}',
-                    ),
+                    l10n.savedToDevice(monthDayTime(c.printedAt)),
                     style: const TextStyle(
                       fontSize: 12,
                       fontWeight: FontWeight.w800,
@@ -487,7 +473,7 @@ class _Ticket extends StatelessWidget {
                   ),
                   const Spacer(),
                   Text(
-                    'PDF・${(c.size / 1024).round()} KB',
+                    'PDF・${fileSize(c.size)}',
                     style: TextStyle(
                       fontSize: 12,
                       fontWeight: FontWeight.w800,

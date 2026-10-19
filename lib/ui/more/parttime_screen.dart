@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../l10n/l10n.dart';
-import '../core/campus_web_screen.dart';
 import '../core/theme.dart';
 import '../core/widgets.dart';
 import 'parttime_data.dart';
@@ -22,9 +21,6 @@ String _h(double hours) => hours == hours.roundToDouble()
     : hours.toStringAsFixed(1);
 
 String _span(HoursEntry e) => '${clock(e.start)}–${clock(e.end)}';
-
-String _day(BuildContext context, DateTime d) =>
-    '${d.month}/${d.day} ${weekdayName(context, d.weekday)}';
 
 (Tone, String) _statePill(BuildContext context, HoursState s) {
   final tones = context.tones;
@@ -61,8 +57,7 @@ class _ParttimeScreenState extends State<ParttimeScreen> {
     );
   }
 
-  String _monthLabel(DateTime m) =>
-      context.l10n.ptMonth(m.year - 1911, m.month);
+  String _monthLabel(DateTime m) => context.l10n.ptMonth(rocYear(m), m.month);
 
   Future<void> _delete() async {
     final l10n = context.l10n;
@@ -75,7 +70,7 @@ class _ParttimeScreenState extends State<ParttimeScreen> {
           [
             for (final e in _store.entries)
               if (ids.contains(e.id))
-                '${_day(context, e.date)} ${_span(e)}・${e.unit}',
+                '${dayLabel(context, e.date)} ${_span(e)}・${e.unit}',
           ].join('\n'),
         ),
         actions: [
@@ -287,7 +282,7 @@ class _ParttimeScreenState extends State<ParttimeScreen> {
                     ),
                   for (final MapEntry(key: day, value: entries)
                       in groups.entries) ...[
-                    SectionLabel(_day(context, day)),
+                    SectionLabel(dayLabel(context, day)),
                     Card(
                       color: scheme.surfaceContainerLow,
                       clipBehavior: Clip.antiAlias,
@@ -497,7 +492,7 @@ class _ParttimeAddScreenState extends State<ParttimeAddScreen> {
     final clash = overlapOf(d, [..._store.entries, ..._staged]);
     if (clash != null) {
       return l10n.ptOverlap(
-        '${_day(context, clash.date)} ${_span(clash)} ${clash.unit}',
+        '${dayLabel(context, clash.date)} ${_span(clash)} ${clash.unit}',
       );
     }
     if (!isHoliday(d.date)) {
@@ -558,7 +553,7 @@ class _ParttimeAddScreenState extends State<ParttimeAddScreen> {
         content: Text(
           [
             for (final e in _staged)
-              '${_day(context, e.date)} ${_span(e)}・${e.unit}',
+              '${dayLabel(context, e.date)} ${_span(e)}・${e.unit}',
           ].join('\n'),
         ),
         actions: [
@@ -636,7 +631,7 @@ class _ParttimeAddScreenState extends State<ParttimeAddScreen> {
                       children: [
                         field(
                           l10n.ptDate,
-                          '${_date.year - 1911}/${_date.month}/${_date.day} '
+                          '${rocYear(_date)}/${_date.month}/${_date.day} '
                           '${weekdayName(context, _date.weekday)}'
                           '${isHoliday(_date) ? '・${l10n.ptHoliday}' : ''}',
                           _pickDate,
@@ -732,7 +727,7 @@ class _ParttimeAddScreenState extends State<ParttimeAddScreen> {
                             if (i > 0) const Divider(height: 1),
                             ListTile(
                               title: Text(
-                                '${_day(context, e.date)} ${_span(e)}・${e.unit}',
+                                '${dayLabel(context, e.date)} ${_span(e)}・${e.unit}',
                                 style: const TextStyle(
                                   fontWeight: FontWeight.w900,
                                 ),
@@ -855,7 +850,7 @@ class _ParttimePayScreenState extends State<ParttimePayScreen> {
   final _key = GlobalKey();
   late var _month = () {
     final last = DateTime(DateTime.now().year, DateTime.now().month - 1);
-    return (last.year - 1911, last.month);
+    return (rocYear(last), last.month);
   }();
 
   @override
@@ -867,17 +862,13 @@ class _ParttimePayScreenState extends State<ParttimePayScreen> {
       for (var i = 0; i < 12; i++)
         () {
           final m = DateTime(now.year, now.month - i);
-          return (m.year - 1911, m.month);
+          return (rocYear(m), m.month);
         }(),
     ];
     final cases = [
       for (final c in HoursStore.instance.pay)
         if ((c.year, c.month) == _month) c,
     ];
-    String money(int n) => n.toString().replaceAllMapped(
-      RegExp(r'\B(?=(\d{3})+(?!\d))'),
-      (_) => ',',
-    );
     return Scaffold(
       extendBodyBehindAppBar: true,
       appBar: subBar(
@@ -974,7 +965,7 @@ class _ParttimePayScreenState extends State<ParttimePayScreen> {
                                   ),
                                 ),
                                 Text(
-                                  money(netOf(c)),
+                                  grouped(netOf(c)),
                                   style: const TextStyle(
                                     fontSize: 24,
                                     fontWeight: FontWeight.w900,
@@ -1030,7 +1021,7 @@ class _ParttimePayScreenState extends State<ParttimePayScreen> {
                                     ),
                                   ),
                                   Text(
-                                    money(value),
+                                    grouped(value),
                                     style: const TextStyle(
                                       fontSize: 13,
                                       fontWeight: FontWeight.w900,
@@ -1187,7 +1178,7 @@ class _ParttimePrintScreenState extends State<ParttimePrintScreen> {
                       if (i > 0) const Divider(height: 1),
                       ListTile(
                         title: Text(
-                          _day(context, e.date),
+                          dayLabel(context, e.date),
                           style: const TextStyle(fontWeight: FontWeight.w900),
                         ),
                         subtitle: Text(_span(e)),
@@ -1202,11 +1193,7 @@ class _ParttimePrintScreenState extends State<ParttimePrintScreen> {
               ),
               const SizedBox(height: rowGap),
               FilledButton.tonal(
-                onPressed: () => openCampusPage(
-                  context,
-                  entryUrl(campusSystems['0014']!),
-                  campusSystems['0014']!.name,
-                ),
+                onPressed: () => openSchoolSite(context, '0014'),
                 child: Text('${l10n.ptOpenSheet} ↗'),
               ),
               const SizedBox(height: rowGap),

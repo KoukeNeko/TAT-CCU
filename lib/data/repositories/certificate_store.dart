@@ -8,6 +8,11 @@ class NotPdfException implements Exception {
   const NotPdfException();
 }
 
+/// The bytes start with the PDF signature, not a sign-in page served in a
+/// PDF's place.
+bool isPdf(List<int> bytes) =>
+    bytes.length >= 5 && String.fromCharCodes(bytes.sublist(0, 5)) == '%PDF-';
+
 /// A saved 在學證明書 PDF. The school regenerates it on every request; the
 /// print date decides which semester it proves.
 typedef Certificate = ({File file, DateTime printedAt, int size});
@@ -50,8 +55,7 @@ class CertificateStore {
   /// Rejects anything that is not a PDF, such as a sign-in page served in
   /// its place when the session has expired.
   Future<Certificate> save(Uint8List bytes, DateTime printedAt) async {
-    if (bytes.length < 5 ||
-        String.fromCharCodes(bytes.sublist(0, 5)) != '%PDF-') {
+    if (!isPdf(bytes)) {
       throw const NotPdfException();
     }
     final file = File('${(await _dir()).path}/${_name(printedAt)}.pdf');

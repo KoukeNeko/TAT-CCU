@@ -105,8 +105,14 @@ void openCampusSystem(BuildContext context, CampusSystem s) {
       // Pushed, so back returns to wherever it was opened from.
       context.push(path);
     case null:
-      openCampusPage(context, entryUrl(s), s.name);
+      openSchoolSite(context, s.id);
   }
+}
+
+/// The school's own site for [systemId], signed in through the portal.
+void openSchoolSite(BuildContext context, String systemId) {
+  final s = campusSystems[systemId]!;
+  openCampusPage(context, entryUrl(s), s.name);
 }
 
 /// `linkId` → in-app page: 選課系統 (iCCU), 成績查詢 (with eCourse2's running
@@ -140,7 +146,6 @@ class SchoolSiteButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
-    final system = campusSystems[systemId]!;
     return IconButton(
       tooltip: context.l10n.onSchoolWebsite,
       style: IconButton.styleFrom(
@@ -148,7 +153,7 @@ class SchoolSiteButton extends StatelessWidget {
         fixedSize: const Size(40, 40),
       ),
       icon: Icon(Icons.north_east, size: 18, color: scheme.onSurfaceVariant),
-      onPressed: () => openCampusPage(context, entryUrl(system), system.name),
+      onPressed: () => openSchoolSite(context, systemId),
     );
   }
 }

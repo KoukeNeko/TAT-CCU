@@ -9,6 +9,8 @@ import 'dart:convert';
 
 import 'package:http/http.dart' as http;
 
+import '../../data/services/html_text.dart';
+
 const eventsHost = 'events.lib.ccu.edu.tw';
 const eventsOrigin = 'https://$eventsHost';
 
@@ -189,38 +191,7 @@ Future<String> _page(http.Client client, String path) async {
 List<String> _idsIn(String html) =>
     {for (final m in _ids.allMatches(html)) m[1]!}.toList();
 
-/// Markup to plain text: line breaks kept, tags dropped, entities decoded.
-String _plain(String html) {
-  final text = html
-      .replaceAll(RegExp(r'<br\s*/?>', caseSensitive: false), '\n')
-      .replaceAll(RegExp(r'</(p|div|li|h\d)>', caseSensitive: false), '\n')
-      .replaceAll(RegExp(r'<[^>]+>'), '')
-      .replaceAllMapped(RegExp(r'&(#x?[0-9a-fA-F]+|\w+);'), (m) {
-        final e = m[1]!;
-        if (e.startsWith('#x')) {
-          return String.fromCharCode(int.parse(e.substring(2), radix: 16));
-        }
-        if (e.startsWith('#')) {
-          return String.fromCharCode(int.parse(e.substring(1)));
-        }
-        return const {
-              'amp': '&',
-              'lt': '<',
-              'gt': '>',
-              'quot': '"',
-              'apos': "'",
-              'nbsp': ' ',
-            }[e] ??
-            m[0]!;
-      });
-  return text
-      .split('\n')
-      .map((l) => l.replaceAll(RegExp(r'[ \t\u00a0]+'), ' ').trim())
-      .where((l) => l.isNotEmpty)
-      .join('\n');
-}
-
-String _line(String html) => _plain(html).replaceAll('\n', ' ');
+String _line(String html) => plainText(html).replaceAll('\n', ' ');
 
 /// One detail page as the JSON [eventOf] reads; the same fields the
 /// signed-in script returns, without the student's own state.
@@ -253,7 +224,7 @@ Map<String, dynamic> parseEventPage(String id, String html) {
   final intro = dd['活動介紹'] ?? '';
   final link = RegExp(r'''href=["'](https?://[^"']+)''')
       .allMatches(intro)
-      .map((m) => _plain(m[1]!))
+      .map((m) => plainText(m[1]!))
       .where((u) => !RegExp('facebook|instagram|youtube').hasMatch(u))
       .firstOrNull;
   return {
@@ -272,7 +243,7 @@ Map<String, dynamic> parseEventPage(String id, String html) {
     'contact': _line(dd['聯絡人'] ?? ''),
     'phone': _line(dd['聯絡電話'] ?? ''),
     'email': _line(dd['Email'] ?? ''),
-    'intro': _plain(intro),
+    'intro': plainText(intro),
     'link': link,
     'signUpEnd': until == null ? null : iso(until[1]!, until[2]!),
     'spots': q.length >= 2 ? [q[0], q[1]] : null,

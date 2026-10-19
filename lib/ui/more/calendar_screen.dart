@@ -20,12 +20,11 @@ class CalendarScreen extends StatefulWidget {
 /// Months are pages counted from January 2000.
 int _pageOf(DateTime d) => (d.year - 2000) * 12 + d.month - 1;
 DateTime _monthOf(int page) => DateTime(2000 + page ~/ 12, page % 12 + 1);
-DateTime _dayOf(DateTime d) => DateTime(d.year, d.month, d.day);
 
 const _rowHeight = 46.0;
 
 class _CalendarScreenState extends State<CalendarScreen> {
-  final _today = _dayOf(DateTime.now());
+  final _today = DateUtils.dateOnly(DateTime.now());
   late DateTime _selected = _today;
   late int _page = _pageOf(_today);
   late final _pages = PageController(initialPage: _page);
@@ -206,7 +205,7 @@ class _MonthGrid extends StatelessWidget {
     final first = month.subtract(Duration(days: month.weekday - 1));
     final byDay = <DateTime, List<CalendarEvent>>{};
     for (final e in events) {
-      byDay.putIfAbsent(_dayOf(e.time), () => []).add(e);
+      byDay.putIfAbsent(DateUtils.dateOnly(e.time), () => []).add(e);
     }
     return Column(
       children: [
@@ -394,7 +393,7 @@ class _DayEvents extends StatelessWidget {
       builder: (context, snap) {
         final events = [
           for (final e in snap.data ?? const <CalendarEvent>[])
-            if (_dayOf(e.time) == day) e,
+            if (DateUtils.dateOnly(e.time) == day) e,
         ]..sort((a, b) => a.time.compareTo(b.time));
         return Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,

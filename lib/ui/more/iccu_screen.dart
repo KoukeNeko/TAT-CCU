@@ -3,17 +3,18 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 
 import '../../data/repositories/campus_cache.dart';
+import '../../data/services/html_text.dart';
 import '../core/campus_session.dart';
 import '../core/campus_web_screen.dart';
 import '../core/theme.dart';
 import '../core/widgets.dart';
 import '../../l10n/l10n.dart';
+import 'portal_screen.dart';
 
 const _iccu = 'https://www026220.ccu.edu.tw';
 
 /// Portal hand-off into iCCU; lands on `/home` when already signed in.
-const _entry =
-    'https://portal.ccu.edu.tw/ssoService.php?service=/test_0075_nidalap_CourseSelection.php&linkId=0075&para=';
+final _entry = entryUrl(campusSystems['0075']!);
 
 typedef _Rows = List<Map<String, dynamic>>;
 
@@ -119,11 +120,7 @@ class _Snapshot {
 }
 
 /// iCCU values are plain text with the odd tag or entity.
-String _text(Object? v) => '${v ?? ''}'
-    .replaceAll(RegExp(r'<[^>]+>'), '')
-    .replaceAll('&nbsp;', ' ')
-    .replaceAll('&amp;', '&')
-    .trim();
+String _text(Object? v) => plainText('${v ?? ''}');
 
 /// Design H2-B (design/round-11): what iCCU shows is read in-app as tall
 /// bars; everything else opens the website in the shared campus WebView.

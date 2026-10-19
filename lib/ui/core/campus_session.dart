@@ -11,6 +11,21 @@ import 'theme.dart';
 import 'widgets.dart';
 import '../../l10n/l10n.dart';
 
+/// Fetches [url] inside the signed-in page and answers `{kind: 'pdf',
+/// data}` with the bytes as base64, or `{kind: 'pdf', error}`.
+String fetchPdfScript(String url) =>
+    '''
+(async () => {
+  const r = await fetch(${jsonEncode(url)}, { credentials: 'same-origin' });
+  const bytes = new Uint8Array(await r.arrayBuffer());
+  let bin = '';
+  for (let i = 0; i < bytes.length; i += 0x8000) {
+    bin += String.fromCharCode.apply(null, bytes.subarray(i, i + 0x8000));
+  }
+  Campus.postMessage(JSON.stringify({ kind: 'pdf', data: btoa(bin) }));
+})().catch(e => Campus.postMessage(JSON.stringify({ kind: 'pdf', error: String(e) })));
+''';
+
 /// A campus system read in-app. A hidden WebView goes through the portal
 /// hand-off at [entry]; once it lands on [host] it runs [script], which
 /// reads pages same-origin and posts JSON back through `Campus.postMessage`.
