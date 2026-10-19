@@ -868,4 +868,33 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get loadingShelves => '新着とベストセラーを読み込み中';
+
+  @override
+  String get studySpace => '自習スペース';
+
+  @override
+  String get scanToCheckIn => 'スキャンしてチェックイン';
+
+  @override
+  String get openHours => '開館';
+
+  @override
+  String get validFor => '有効';
+
+  @override
+  String get refreshing => '更新中';
+
+  @override
+  String get refresh => '更新';
+
+  @override
+  String get available => '空き';
+
+  @override
+  String get bookSpace => '予約';
+
+  @override
+  String updatesIn(int count) {
+    return '$count 秒後に更新';
+  }
 }

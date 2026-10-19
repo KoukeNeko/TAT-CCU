@@ -1551,6 +1551,60 @@ abstract class AppLocalizations {
   /// In zh, this message translates to:
   /// **'讀取新書與暢銷榜'**
   String get loadingShelves;
+
+  /// No description provided for @studySpace.
+  ///
+  /// In zh, this message translates to:
+  /// **'自學空間'**
+  String get studySpace;
+
+  /// No description provided for @scanToCheckIn.
+  ///
+  /// In zh, this message translates to:
+  /// **'掃描報到・開門'**
+  String get scanToCheckIn;
+
+  /// No description provided for @openHours.
+  ///
+  /// In zh, this message translates to:
+  /// **'開放'**
+  String get openHours;
+
+  /// No description provided for @validFor.
+  ///
+  /// In zh, this message translates to:
+  /// **'有效'**
+  String get validFor;
+
+  /// No description provided for @refreshing.
+  ///
+  /// In zh, this message translates to:
+  /// **'更新中'**
+  String get refreshing;
+
+  /// No description provided for @refresh.
+  ///
+  /// In zh, this message translates to:
+  /// **'重新整理'**
+  String get refresh;
+
+  /// No description provided for @available.
+  ///
+  /// In zh, this message translates to:
+  /// **'可前往'**
+  String get available;
+
+  /// No description provided for @bookSpace.
+  ///
+  /// In zh, this message translates to:
+  /// **'預約'**
+  String get bookSpace;
+
+  /// No description provided for @updatesIn.
+  ///
+  /// In zh, this message translates to:
+  /// **'{count} 秒後更新'**
+  String updatesIn(int count);
 }
 
 class _AppLocalizationsDelegate

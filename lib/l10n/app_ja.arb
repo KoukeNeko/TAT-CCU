@@ -241,5 +241,14 @@
   "otherCollections": "その他のコレクション",
   "allCollections": "すべて（{count}）",
   "loadingCollections": "コレクションを読み込み中",
-  "loadingShelves": "新着とベストセラーを読み込み中"
+  "loadingShelves": "新着とベストセラーを読み込み中",
+  "studySpace": "自習スペース",
+  "scanToCheckIn": "スキャンしてチェックイン",
+  "openHours": "開館",
+  "validFor": "有効",
+  "refreshing": "更新中",
+  "refresh": "更新",
+  "available": "空き",
+  "bookSpace": "予約",
+  "updatesIn": "{count} 秒後に更新"
 }

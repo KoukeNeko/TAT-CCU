@@ -17,6 +17,7 @@ import '../ui/more/library_collections_screen.dart';
 import '../ui/more/library_record_screen.dart';
 import '../ui/more/library_screen.dart';
 import '../ui/more/library_search_screen.dart';
+import '../ui/more/space_screen.dart';
 import '../ui/more/more_screen.dart';
 import '../ui/more/portal_screen.dart';
 import '../ui/notifications/notifications_screen.dart';
@@ -117,6 +118,7 @@ GoRouter buildRouter(EcourseAuthRepository auth) => GoRouter(
                 ),
                 GoRoute(path: 'iccu', builder: (_, _) => const IccuScreen()),
                 GoRoute(path: 'leave', builder: (_, _) => const LeaveScreen()),
+                GoRoute(path: 'space', builder: (_, _) => const SpaceScreen()),
                 GoRoute(
                   path: 'library',
                   builder: (_, _) => const LibraryScreen(),

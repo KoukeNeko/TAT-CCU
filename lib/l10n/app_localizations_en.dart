@@ -963,4 +963,33 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get loadingShelves => 'Loading new books and best sellers';
+
+  @override
+  String get studySpace => 'Study spaces';
+
+  @override
+  String get scanToCheckIn => 'Scan to check in';
+
+  @override
+  String get openHours => 'Open';
+
+  @override
+  String get validFor => 'Valid';
+
+  @override
+  String get refreshing => 'Updating';
+
+  @override
+  String get refresh => 'Refresh';
+
+  @override
+  String get available => 'Available';
+
+  @override
+  String get bookSpace => 'Book';
+
+  @override
+  String updatesIn(int count) {
+    return 'Updates in ${count}s';
+  }
 }

@@ -597,5 +597,21 @@
     }
   },
   "loadingCollections": "讀取館藏清單",
-  "loadingShelves": "讀取新書與暢銷榜"
+  "loadingShelves": "讀取新書與暢銷榜",
+  "studySpace": "自學空間",
+  "scanToCheckIn": "掃描報到・開門",
+  "openHours": "開放",
+  "validFor": "有效",
+  "refreshing": "更新中",
+  "refresh": "重新整理",
+  "available": "可前往",
+  "bookSpace": "預約",
+  "updatesIn": "{count} 秒後更新",
+  "@updatesIn": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  }
 }

@@ -880,4 +880,33 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get loadingShelves => '讀取新書與暢銷榜';
+
+  @override
+  String get studySpace => '自學空間';
+
+  @override
+  String get scanToCheckIn => '掃描報到・開門';
+
+  @override
+  String get openHours => '開放';
+
+  @override
+  String get validFor => '有效';
+
+  @override
+  String get refreshing => '更新中';
+
+  @override
+  String get refresh => '重新整理';
+
+  @override
+  String get available => '可前往';
+
+  @override
+  String get bookSpace => '預約';
+
+  @override
+  String updatesIn(int count) {
+    return '$count 秒後更新';
+  }
 }
