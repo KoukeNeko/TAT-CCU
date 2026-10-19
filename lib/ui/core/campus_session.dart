@@ -25,9 +25,14 @@ class CampusSession extends StatefulWidget {
     required this.onMessage,
     required this.child,
     this.loadOnStart = true,
+    this.via = const [],
   });
 
   final String title, entry, host;
+
+  /// `host/path` prefixes the hand-off passes through on its own (e.g. a
+  /// SAML form that posts itself); they are not sign-in pages.
+  final List<String> via;
 
   /// False for pages that show cached data first and load on [reload].
   final bool loadOnStart;
@@ -44,7 +49,7 @@ class CampusSession extends StatefulWidget {
 class CampusSessionState extends State<CampusSession> {
   late final WebViewController _web;
   var _signingIn = false;
-  var _ran = false;
+  String? _ranOn;
   Completer<void>? _pending;
 
   @override
@@ -60,7 +65,7 @@ class CampusSessionState extends State<CampusSession> {
   /// Goes through the hand-off again and reruns [CampusSession.script].
   /// Completes when the script answers or the user is asked to sign in.
   Future<void> reload() {
-    _ran = false;
+    _ranOn = null;
     final pending = _pending ??= Completer<void>();
     _web.loadRequest(Uri.parse(widget.entry));
     return pending.future;
@@ -76,10 +81,13 @@ class CampusSessionState extends State<CampusSession> {
 
   void _arrived(String url) {
     final uri = Uri.parse(url);
+    if (widget.via.any('${uri.host}${uri.path}'.startsWith)) return;
     if (uri.host == widget.host) {
       setState(() => _signingIn = false);
-      if (_ran) return;
-      _ran = true;
+      // Once per page: a redirect or SAML page on the host drops the
+      // script with it, so the page that replaces it runs it again.
+      if (_ranOn == url) return;
+      _ranOn = url;
       _web.runJavaScript(widget.script());
     } else if (uri.host == 'portal.ccu.edu.tw' &&
         uri.path == '/sso_index.php') {
