@@ -18,6 +18,9 @@ class MoodleException implements Exception {
 
 /// Calls Moodle web service functions over REST.
 class MoodleClient {
+  /// eCourse2 answers within a few seconds; past this the request is stuck.
+  static const _timeout = Duration(seconds: 30);
+
   MoodleClient({
     required this.siteUrl,
     required this.token,
@@ -32,15 +35,24 @@ class MoodleClient {
     String function, [
     Map<String, Object?> params = const {},
   ]) async {
-    final response = await _http.post(
-      siteUrl.resolve('webservice/rest/server.php'),
-      body: {
-        'wstoken': token,
-        'wsfunction': function,
-        'moodlewsrestformat': 'json',
-        ...flattenParams(params),
-      },
-    );
+    final body = {
+      'wstoken': token,
+      'wsfunction': function,
+      'moodlewsrestformat': 'json',
+      ...flattenParams(params),
+    };
+    final url = siteUrl.resolve('webservice/rest/server.php');
+    http.Response response;
+    // A pooled keep-alive connection can be dead without the client knowing,
+    // most often after the app was suspended or the phone switched networks;
+    // the request then fails with "Connection closed before full header was
+    // received". Retrying once opens a fresh connection. Safe because every
+    // function this app calls only reads.
+    try {
+      response = await _http.post(url, body: body).timeout(_timeout);
+    } on http.ClientException {
+      response = await _http.post(url, body: body).timeout(_timeout);
+    }
     if (response.statusCode != 200) {
       throw MoodleException('http${response.statusCode}', function);
     }

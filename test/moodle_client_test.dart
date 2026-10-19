@@ -71,4 +71,40 @@ void main() {
       );
     });
   });
+
+  test('retries once when a reused connection was already closed', () async {
+    var calls = 0;
+    final client = MoodleClient(
+      siteUrl: Uri.parse('https://example.test/'),
+      token: 't',
+      httpClient: MockClient((_) async {
+        calls++;
+        if (calls == 1) {
+          throw http.ClientException(
+            'Connection closed before full header was received',
+          );
+        }
+        return http.Response(jsonEncode({'ok': true}), 200);
+      }),
+    );
+    expect(await client.call('core_webservice_get_site_info'), {'ok': true});
+    expect(calls, 2);
+  });
+
+  test('gives up after the retry fails too', () async {
+    var calls = 0;
+    final client = MoodleClient(
+      siteUrl: Uri.parse('https://example.test/'),
+      token: 't',
+      httpClient: MockClient((_) async {
+        calls++;
+        throw http.ClientException('Connection reset by peer');
+      }),
+    );
+    await expectLater(
+      client.call('core_webservice_get_site_info'),
+      throwsA(isA<http.ClientException>()),
+    );
+    expect(calls, 2);
+  });
 }
