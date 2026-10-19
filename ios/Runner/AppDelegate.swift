@@ -1,4 +1,5 @@
 import Flutter
+import QuickLook
 import UIKit
 import WebKit
 
@@ -15,6 +16,9 @@ import WebKit
     GeneratedPluginRegistrant.register(with: engineBridge.pluginRegistry)
     if let registrar = engineBridge.pluginRegistry.registrar(forPlugin: "CampusCookies") {
       CampusCookies.register(with: registrar.messenger())
+    }
+    if let registrar = engineBridge.pluginRegistry.registrar(forPlugin: "PdfPreview") {
+      PdfPreview.register(with: registrar.messenger())
     }
   }
 }
@@ -63,6 +67,50 @@ enum CampusCookies {
       default:
         result(FlutterMethodNotImplemented)
       }
+    }
+  }
+}
+
+/// Shows a PDF in Quick Look, which draws the school's unembedded CJK fonts
+/// with the system's and brings its own share button.
+final class PdfPreview: NSObject, QLPreviewControllerDataSource {
+  /// Quick Look keeps only a weak reference to its data source.
+  private static var current: PdfPreview?
+
+  private let item: Item
+
+  private init(item: Item) { self.item = item }
+
+  static func register(with messenger: FlutterBinaryMessenger) {
+    let channel = FlutterMethodChannel(name: "tatccu/pdf_preview", binaryMessenger: messenger)
+    channel.setMethodCallHandler { call, result in
+      guard call.method == "show",
+        let args = call.arguments as? [String: Any],
+        let path = args["path"] as? String
+      else { return result(FlutterMethodNotImplemented) }
+      let preview = PdfPreview(item: Item(url: URL(fileURLWithPath: path), title: args["title"] as? String))
+      current = preview
+      let controller = QLPreviewController()
+      controller.dataSource = preview
+      var top = UIApplication.shared.connectedScenes
+        .compactMap { ($0 as? UIWindowScene)?.keyWindow }.first?.rootViewController
+      while let presented = top?.presentedViewController { top = presented }
+      top?.present(controller, animated: true)
+      result(nil)
+    }
+  }
+
+  func numberOfPreviewItems(in controller: QLPreviewController) -> Int { 1 }
+
+  func previewController(_ controller: QLPreviewController, previewItemAt index: Int) -> QLPreviewItem { item }
+
+  final class Item: NSObject, QLPreviewItem {
+    let previewItemURL: URL?
+    let previewItemTitle: String?
+
+    init(url: URL, title: String?) {
+      previewItemURL = url
+      previewItemTitle = title
     }
   }
 }

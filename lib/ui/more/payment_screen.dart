@@ -1,14 +1,23 @@
+import 'dart:async';
+import 'dart:convert';
+import 'dart:io';
+
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:path_provider/path_provider.dart';
+import 'package:pdfrx/pdfrx.dart';
+import 'package:share_plus/share_plus.dart';
 
 import '../../data/repositories/campus_cache.dart';
 import '../../l10n/l10n.dart';
 import '../core/campus_session.dart';
-import '../core/campus_web_screen.dart';
 import '../core/theme.dart';
 import '../core/widgets.dart';
 import 'portal_screen.dart';
 
 const _host = 'www026197.ccu.edu.tw';
+const _pdfPreview = MethodChannel('tatccu/pdf_preview');
+final _systemFonts = PdfFontManager(resolvers: const []);
 const _api = 'https://$_host/gensys/site/general';
 
 /// 付款及所得查詢 serves JSON as `{status_code, msg, data}` (0 is success;
@@ -36,6 +45,20 @@ String _read(int year) =>
   for (const y of years) income[y] = (await get('taxDetail/query?year=' + y)).tax_summary || [];
   Campus.postMessage(JSON.stringify({ year: $year, rows, years, income }));
 })().catch(e => Campus.postMessage(JSON.stringify({ error: String(e) })));
+''';
+
+/// Fetches a statement inside the signed-in page, as base64.
+String _fetchPdf(String url) =>
+    '''
+(async () => {
+  const r = await fetch(${jsonEncode(url)}, { credentials: 'same-origin' });
+  const bytes = new Uint8Array(await r.arrayBuffer());
+  let bin = '';
+  for (let i = 0; i < bytes.length; i += 0x8000) {
+    bin += String.fromCharCode.apply(null, bytes.subarray(i, i + 0x8000));
+  }
+  Campus.postMessage(JSON.stringify({ kind: 'pdf', data: btoa(bin) }));
+})().catch(e => Campus.postMessage(JSON.stringify({ kind: 'pdf', error: String(e) })));
 ''';
 
 int _money(Object? v) =>
@@ -148,6 +171,8 @@ class _PaymentScreenState extends State<PaymentScreen> {
   String? _error;
   int? _month;
   String? _open;
+  ({String title, String file})? _pdf;
+  Timer? _pdfWatchdog;
 
   @override
   void initState() {
@@ -164,7 +189,96 @@ class _PaymentScreenState extends State<PaymentScreen> {
     });
   }
 
+  void _openPdf(String url, String title, String file) {
+    if (_pdf != null) return;
+    _pdf = (title: title, file: file);
+    _session.currentState?.run(_fetchPdf(url));
+    // An expired session may never answer; let the buttons work again.
+    _pdfWatchdog = Timer(const Duration(seconds: 30), () {
+      if (!mounted || _pdf == null) return;
+      _pdf = null;
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text(context.l10n.loadFailed)));
+    });
+  }
+
+  @override
+  void dispose() {
+    _pdfWatchdog?.cancel();
+    super.dispose();
+  }
+
+  /// Opens the statement with its own share button. The file is named by
+  /// year and format only, never by the ID number in its URL.
+  Future<void> _showPdf(Map<String, dynamic> json) async {
+    _pdfWatchdog?.cancel();
+    final pdf = _pdf;
+    if (pdf == null) return;
+    _pdf = null;
+    final l10n = context.l10n;
+    final bytes = json['error'] == null
+        ? base64Decode('${json['data']}')
+        : null;
+    if (bytes == null ||
+        bytes.length < 5 ||
+        String.fromCharCodes(bytes.sublist(0, 5)) != '%PDF-') {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('${json['error'] ?? l10n.notPdf}')),
+      );
+      return;
+    }
+    final file = File(
+      '${(await getTemporaryDirectory()).path}/${pdf.file}.pdf',
+    );
+    await file.writeAsBytes(bytes, flush: true);
+    if (Platform.isIOS) {
+      // Quick Look draws the school's unembedded CJK fonts with the
+      // system's and brings its own share button.
+      return _pdfPreview.invokeMethod('show', {
+        'path': file.path,
+        'title': pdf.title,
+      });
+    }
+    // pdfium finds no CJK font by itself; Android keeps them here.
+    await _systemFonts.prepare(fontPaths: const ['/system/fonts']);
+    if (!mounted) return;
+    Navigator.of(context, rootNavigator: true).push(
+      MaterialPageRoute(
+        builder: (context) => Scaffold(
+          appBar: subBar(
+            context,
+            pdf.title,
+            action: Builder(
+              builder: (context) {
+                final scheme = Theme.of(context).colorScheme;
+                return IconButton(
+                  tooltip: l10n.share,
+                  style: IconButton.styleFrom(
+                    backgroundColor: scheme.surfaceContainerHigh,
+                    fixedSize: const Size(40, 40),
+                  ),
+                  icon: Icon(
+                    Icons.share,
+                    size: 18,
+                    color: scheme.onSurfaceVariant,
+                  ),
+                  onPressed: () => SharePlus.instance.share(
+                    ShareParams(
+                      files: [XFile(file.path, mimeType: 'application/pdf')],
+                    ),
+                  ),
+                );
+              },
+            ),
+          ),
+          body: PdfViewer.file(file.path),
+        ),
+      ),
+    );
+  }
+
   Future<void> _received(Map<String, dynamic> json) async {
+    if (json['kind'] == 'pdf') return _showPdf(json);
     if (json['error'] != null) {
       setState(() => _error = '${json['error']}');
       return;
@@ -324,7 +438,7 @@ class _PaymentScreenState extends State<PaymentScreen> {
           for (final item in list)
             Padding(
               padding: const EdgeInsets.only(bottom: rowGap),
-              child: _IncomeCard(year: year, income: item),
+              child: _IncomeCard(year: year, income: item, onOpen: _openPdf),
             ),
         if (_savedAt case final time?) UpdatedAt(time),
       ],
@@ -543,10 +657,15 @@ class _PaymentRow extends StatelessWidget {
 }
 
 class _IncomeCard extends StatelessWidget {
-  const _IncomeCard({required this.year, required this.income});
+  const _IncomeCard({
+    required this.year,
+    required this.income,
+    required this.onOpen,
+  });
 
   final int year;
   final Income income;
+  final void Function(String url, String title, String file) onOpen;
 
   @override
   Widget build(BuildContext context) {
@@ -554,11 +673,11 @@ class _IncomeCard extends StatelessWidget {
     final tones = context.tones;
     final scheme = Theme.of(context).colorScheme;
     final i = income;
-    void open(String path, String key, String title) => openCampusPage(
-      context,
+    void open(String path, String key, String title) => onOpen(
       '$_api/$path/generatePDF?year=$year&incoming_no=${Uri.encodeQueryComponent(i.format)}'
-      '&$key=${Uri.encodeQueryComponent(i.payee)}',
+          '&$key=${Uri.encodeQueryComponent(i.payee)}',
       title,
+      '$year-${i.format}-$path',
     );
     Widget figure(String label, int value) => Expanded(
       child: Container(
