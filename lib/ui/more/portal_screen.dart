@@ -220,13 +220,10 @@ class _PortalScreenState extends State<PortalScreen> {
                   clipBehavior: Clip.none,
                   itemCount: recent.length,
                   separatorBuilder: (_, _) => const SizedBox(width: 8),
-                  itemBuilder: (context, i) => ActionChip(
-                    label: Text(recent[i].name),
-                    labelStyle: const TextStyle(fontWeight: FontWeight.w800),
-                    backgroundColor: scheme.surfaceContainerLow,
-                    side: BorderSide.none,
-                    shape: const StadiumBorder(),
-                    onPressed: () => open(recent[i]),
+                  itemBuilder: (context, i) => BarChip(
+                    label: recent[i].name,
+                    selected: false,
+                    onTap: () => open(recent[i]),
                   ),
                 ),
               ),

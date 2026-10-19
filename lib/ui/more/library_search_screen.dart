@@ -65,87 +65,96 @@ class _LibrarySearchScreenState extends State<LibrarySearchScreen> {
         context,
         l10n.libraryDiscovery,
         bottom: PreferredSize(
-          preferredSize: Size.fromHeight(
-            !searching
-                ? 60
-                : catalog
-                ? 152
-                : 104,
-          ),
+          preferredSize: Size.fromHeight(searching ? 108 : 60),
           child: Padding(
-            padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
+            padding: const EdgeInsets.only(bottom: 12),
             child: Column(
               children: [
-                TextField(
-                  controller: _field,
-                  textInputAction: TextInputAction.search,
-                  onSubmitted: (v) => setState(() => _query = v.trim()),
-                  decoration: InputDecoration(
-                    hintText: l10n.librarySearchHint,
-                    prefixIcon: const Icon(Icons.search),
-                    suffixIcon: searching
-                        ? IconButton(
-                            tooltip: MaterialLocalizations.of(context)
-                                .deleteButtonTooltip,
-                            icon: const Icon(Icons.close),
-                            onPressed: () => setState(() {
-                              _field.clear();
-                              _query = '';
-                            }),
-                          )
-                        : null,
-                    filled: true,
-                    fillColor: scheme.surfaceContainerHigh,
-                    border: const OutlineInputBorder(
-                      borderRadius: BorderRadius.all(Radius.circular(999)),
-                      borderSide: BorderSide.none,
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  child: TextField(
+                    controller: _field,
+                    textInputAction: TextInputAction.search,
+                    onSubmitted: (v) => setState(() => _query = v.trim()),
+                    decoration: InputDecoration(
+                      hintText: l10n.librarySearchHint,
+                      prefixIcon: const Icon(Icons.search),
+                      suffixIcon: searching
+                          ? IconButton(
+                              tooltip: MaterialLocalizations.of(context)
+                                  .deleteButtonTooltip,
+                              icon: const Icon(Icons.close),
+                              onPressed: () => setState(() {
+                                _field.clear();
+                                _query = '';
+                              }),
+                            )
+                          : null,
+                      filled: true,
+                      fillColor: scheme.surfaceContainerHigh,
+                      border: const OutlineInputBorder(
+                        borderRadius: BorderRadius.all(Radius.circular(999)),
+                        borderSide: BorderSide.none,
+                      ),
+                      contentPadding: EdgeInsets.zero,
                     ),
-                    contentPadding: EdgeInsets.zero,
                   ),
                 ),
                 if (searching) ...[
-                  const SizedBox(height: 6),
-                  _KindTabs(
-                    kind: _kind,
-                    onChanged: (k) => setState(() => _kind = k),
-                  ),
-                ],
-                if (searching && catalog) ...[
-                  const SizedBox(height: 8),
-                  SingleChildScrollView(
-                    scrollDirection: Axis.horizontal,
-                    child: Row(
-                      children: [
-                        FilterChip(
-                          label: Text(l10n.onShelf),
+                  const SizedBox(height: 10),
+                  ChipRow(
+                    children: [
+                      for (final (k, label) in [
+                        (PrimoKind.catalog, l10n.kindCatalog),
+                        (PrimoKind.journal, l10n.kindJournal),
+                        (PrimoKind.database, l10n.kindDatabase),
+                      ])
+                        BarChip(
+                          label: label,
+                          selected: k == _kind,
+                          onTap: () => setState(() => _kind = k),
+                        ),
+                      if (catalog) ...[
+                        BarChip(
+                          label: l10n.onShelf,
                           selected: f.onShelf,
-                          onSelected: (on) => setState(
+                          tone: context.tones.mint,
+                          onTap: () => setState(
                             () => _filters = (
-                              onShelf: on,
+                              onShelf: !f.onShelf,
                               type: f.type,
                               sort: f.sort,
                               years: f.years,
                             ),
                           ),
                         ),
-                        for (final label in [
-                          f.type == null
-                              ? l10n.filterType
-                              : _typeLabel(context, f.type!),
-                          _sortLabel(context, f.sort),
-                          f.years == null
-                              ? l10n.filterYear
-                              : _yearsLabel(context, f.years),
-                        ]) ...[
-                          const SizedBox(width: 6),
-                          ActionChip(
-                            label: Text(label),
-                            avatar: const Icon(Icons.expand_more, size: 18),
-                            onPressed: _editFilters,
+                        for (final (label, set) in [
+                          (
+                            f.type == null
+                                ? l10n.filterType
+                                : _typeLabel(context, f.type!),
+                            f.type != null,
                           ),
-                        ],
+                          (
+                            _sortLabel(context, f.sort),
+                            f.sort != PrimoSort.rank,
+                          ),
+                          (
+                            f.years == null
+                                ? l10n.filterYear
+                                : _yearsLabel(context, f.years),
+                            f.years != null,
+                          ),
+                        ])
+                          BarChip(
+                            label: label,
+                            selected: set,
+                            tone: context.tones.mint,
+                            dropdown: true,
+                            onTap: _editFilters,
+                          ),
                       ],
-                    ),
+                    ],
                   ),
                 ],
               ],
@@ -171,54 +180,6 @@ class _LibrarySearchScreenState extends State<LibrarySearchScreen> {
                 ),
               ),
             ),
-    );
-  }
-}
-
-/// 館藏・期刊・資料庫 as underlined text tabs (design D1).
-class _KindTabs extends StatelessWidget {
-  const _KindTabs({required this.kind, required this.onChanged});
-
-  final PrimoKind kind;
-  final ValueChanged<PrimoKind> onChanged;
-
-  @override
-  Widget build(BuildContext context) {
-    final l10n = context.l10n;
-    final scheme = Theme.of(context).colorScheme;
-    return Row(
-      children: [
-        for (final (k, label) in [
-          (PrimoKind.catalog, l10n.kindCatalog),
-          (PrimoKind.journal, l10n.kindJournal),
-          (PrimoKind.database, l10n.kindDatabase),
-        ])
-          InkWell(
-            onTap: () => onChanged(k),
-            child: Container(
-              padding: const EdgeInsets.fromLTRB(4, 8, 4, 8),
-              margin: const EdgeInsets.only(right: 18),
-              decoration: BoxDecoration(
-                border: Border(
-                  bottom: BorderSide(
-                    width: 3,
-                    color: k == kind
-                        ? context.tones.lilac.strong
-                        : Colors.transparent,
-                  ),
-                ),
-              ),
-              child: Text(
-                label,
-                style: TextStyle(
-                  fontSize: 15,
-                  fontWeight: FontWeight.w900,
-                  color: k == kind ? scheme.onSurface : scheme.onSurfaceVariant,
-                ),
-              ),
-            ),
-          ),
-      ],
     );
   }
 }
@@ -676,10 +637,10 @@ class _FilterSheetState extends State<_FilterSheet> {
           runSpacing: 6,
           children: [
             for (final (option, label) in options)
-              ChoiceChip(
-                label: Text(label),
+              BarChip(
+                label: label,
                 selected: option == value,
-                onSelected: (_) => setState(() => _f = pick(option)),
+                onTap: () => setState(() => _f = pick(option)),
               ),
           ],
         ),

@@ -112,25 +112,15 @@ class _CollectionState extends State<_Collection> {
         context,
         widget.title,
         bottom: chips
-            ? PreferredSize(
-                preferredSize: const Size.fromHeight(52),
-                child: SizedBox(
-                  height: 44,
-                  child: ListView(
-                    scrollDirection: Axis.horizontal,
-                    padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
-                    children: [
-                      for (final (i, p) in parts.indexed) ...[
-                        if (i > 0) const SizedBox(width: 6),
-                        ChoiceChip(
-                          label: Text(p.name),
-                          selected: i == _selected,
-                          onSelected: (_) => setState(() => _selected = i),
-                        ),
-                      ],
-                    ],
-                  ),
-                ),
+            ? ChipBar(
+                children: [
+                  for (final (i, p) in parts.indexed)
+                    BarChip(
+                      label: p.name,
+                      selected: i == _selected,
+                      onTap: () => setState(() => _selected = i),
+                    ),
+                ],
               )
             : null,
       ),

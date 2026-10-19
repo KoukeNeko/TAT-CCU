@@ -419,6 +419,119 @@ class ToneBlock extends StatelessWidget {
 }
 
 /// Small uppercase-style section label above a group of blocks.
+/// The app's one chip (design: course contents bar): a pill that fills with
+/// the tone's strong color when selected. [dropdown] adds a chevron for
+/// chips that open a choice.
+class BarChip extends StatelessWidget {
+  const BarChip({
+    super.key,
+    required this.label,
+    required this.selected,
+    required this.onTap,
+    this.tone,
+    this.dropdown = false,
+  });
+
+  final String label;
+  final bool selected;
+  final VoidCallback? onTap;
+
+  /// Defaults to lilac.
+  final Tone? tone;
+  final bool dropdown;
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    final tone = this.tone ?? context.tones.lilac;
+    final ink = selected ? tone.fill : scheme.onSurfaceVariant;
+    return Material(
+      color: selected ? tone.strong : scheme.surfaceContainerHigh,
+      shape: const StadiumBorder(),
+      child: InkWell(
+        customBorder: const StadiumBorder(),
+        onTap: onTap,
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 200),
+          child: Padding(
+            padding: EdgeInsets.fromLTRB(14, 9, dropdown ? 8 : 14, 9),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Flexible(
+                  child: Text(
+                    label,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w900,
+                      color: ink,
+                    ),
+                  ),
+                ),
+                if (dropdown) Icon(Icons.expand_more, size: 18, color: ink),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// A horizontally scrolling row of [BarChip]s, padded to the page margin.
+class ChipRow extends StatelessWidget {
+  const ChipRow({
+    super.key,
+    required this.children,
+    this.padding = const EdgeInsets.symmetric(horizontal: 16),
+  });
+
+  final List<Widget> children;
+  final EdgeInsets padding;
+
+  @override
+  Widget build(BuildContext context) {
+    return SingleChildScrollView(
+      scrollDirection: Axis.horizontal,
+      padding: padding,
+      child: Row(
+        children: [
+          for (final (i, chip) in children.indexed) ...[
+            if (i > 0) const SizedBox(width: 6),
+            chip,
+          ],
+        ],
+      ),
+    );
+  }
+}
+
+/// [ChipRow] as an app bar's bottom.
+class ChipBar extends StatelessWidget implements PreferredSizeWidget {
+  const ChipBar({super.key, required this.children});
+
+  final List<Widget> children;
+
+  @override
+  Size get preferredSize => const Size.fromHeight(52);
+
+  @override
+  Widget build(BuildContext context) {
+    return Align(
+      alignment: Alignment.centerLeft,
+      child: SizedBox(
+        height: 52,
+        child: ChipRow(
+          padding: const EdgeInsets.fromLTRB(16, 0, 16, 10),
+          children: children,
+        ),
+      ),
+    );
+  }
+}
+
 /// Small colored status capsule at the end of a list row.
 class StatusPill extends StatelessWidget {
   const StatusPill({super.key, required this.tone, required this.label});

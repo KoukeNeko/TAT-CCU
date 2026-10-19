@@ -501,33 +501,19 @@ class _SectionListState extends State<_SectionList> {
       appBar: subBar(
         context,
         CoursePart.contents.title(context.l10n),
-        bottom: PreferredSize(
-          preferredSize: const Size.fromHeight(52),
-          child: Align(
-            alignment: Alignment.centerLeft,
-            child: SizedBox(
-              height: 52,
-              child: SingleChildScrollView(
-                scrollDirection: Axis.horizontal,
-                padding: const EdgeInsets.fromLTRB(16, 0, 16, 10),
-                child: Row(
-                  children: [
-                    for (final (i, s) in sections.indexed)
-                      Padding(
-                        key: _chips[i],
-                        padding: const EdgeInsets.only(right: 6),
-                        child: _SectionChip(
-                          label: _sectionName(context, s),
-                          selected: i == _active,
-                          tone: course,
-                          onTap: () => _jumpTo(i),
-                        ),
-                      ),
-                  ],
+        bottom: ChipBar(
+          children: [
+            for (final (i, s) in sections.indexed)
+              KeyedSubtree(
+                key: _chips[i],
+                child: BarChip(
+                  label: _sectionName(context, s),
+                  selected: i == _active,
+                  tone: course,
+                  onTap: () => _jumpTo(i),
                 ),
               ),
-            ),
-          ),
+          ],
         ),
       ),
       body: Builder(
@@ -588,49 +574,6 @@ class _SectionListState extends State<_SectionList> {
 /// Moodle names the course-wide first section `General` in English.
 String _sectionName(BuildContext context, Section s) =>
     s.name == 'General' ? context.l10n.sectionGeneral : s.name;
-
-class _SectionChip extends StatelessWidget {
-  const _SectionChip({
-    required this.label,
-    required this.selected,
-    required this.tone,
-    required this.onTap,
-  });
-
-  final String label;
-  final bool selected;
-  final Tone tone;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
-    return Material(
-      color: selected ? tone.strong : scheme.surfaceContainerHigh,
-      shape: const StadiumBorder(),
-      child: InkWell(
-        customBorder: const StadiumBorder(),
-        onTap: onTap,
-        child: ConstrainedBox(
-          constraints: const BoxConstraints(maxWidth: 200),
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 9),
-            child: Text(
-              label,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              style: TextStyle(
-                fontSize: 13,
-                fontWeight: FontWeight.w900,
-                color: selected ? tone.fill : scheme.onSurfaceVariant,
-              ),
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-}
 
 class _ModuleRow extends StatelessWidget {
   const _ModuleRow({required this.courseId, required this.module});

@@ -26,39 +26,31 @@ class _Bar extends StatelessWidget implements PreferredSizeWidget {
   const _Bar();
 
   @override
-  Size get preferredSize => const Size.fromHeight(72 + 56);
+  Size get preferredSize => const Size.fromHeight(72 + 52);
 
   @override
   Widget build(BuildContext context) {
-    final tone = context.tones.sun;
+    final tabs = DefaultTabController.of(context);
     return subBar(
       context,
       context.l10n.notifications,
       bottom: PreferredSize(
-        preferredSize: const Size.fromHeight(56),
-        child: Padding(
-          padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
-          child: Container(
-            height: 48,
-            padding: const EdgeInsets.all(4),
-            decoration: ShapeDecoration(
-              color: Theme.of(context).colorScheme.surfaceContainerHigh,
-              shape: const StadiumBorder(),
-            ),
-            child: TabBar(
-              indicator: ShapeDecoration(
-                color: tone.fill,
-                shape: const StadiumBorder(),
-              ),
-              indicatorSize: TabBarIndicatorSize.tab,
-              labelColor: tone.ink,
-              dividerColor: Colors.transparent,
-              labelStyle: const TextStyle(fontWeight: FontWeight.w900),
-              tabs: [
-                Tab(text: context.l10n.notifications),
-                Tab(text: context.l10n.mail),
-              ],
-            ),
+        preferredSize: const Size.fromHeight(52),
+        child: AnimatedBuilder(
+          animation: tabs,
+          builder: (context, _) => ChipBar(
+            children: [
+              for (final (i, label) in [
+                context.l10n.notifications,
+                context.l10n.mail,
+              ].indexed)
+                BarChip(
+                  label: label,
+                  selected: tabs.index == i,
+                  tone: context.tones.sun,
+                  onTap: () => tabs.animateTo(i),
+                ),
+            ],
           ),
         ),
       ),
