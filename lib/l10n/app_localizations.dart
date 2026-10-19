@@ -520,12 +520,6 @@ abstract class AppLocalizations {
   /// **'沒有資料'**
   String get noData;
 
-  /// No description provided for @academics.
-  ///
-  /// In zh, this message translates to:
-  /// **'學業'**
-  String get academics;
-
   /// No description provided for @grades.
   ///
   /// In zh, this message translates to:
@@ -556,18 +550,6 @@ abstract class AppLocalizations {
   /// **'{count} 門課'**
   String courseCount(int count);
 
-  /// No description provided for @campus.
-  ///
-  /// In zh, this message translates to:
-  /// **'校園'**
-  String get campus;
-
-  /// No description provided for @allCampusSystems.
-  ///
-  /// In zh, this message translates to:
-  /// **'全部校務系統'**
-  String get allCampusSystems;
-
   /// No description provided for @account.
   ///
   /// In zh, this message translates to:
@@ -592,29 +574,11 @@ abstract class AppLocalizations {
   /// **'單一入口共用'**
   String get portalShared;
 
-  /// No description provided for @campusSystems.
-  ///
-  /// In zh, this message translates to:
-  /// **'校務系統'**
-  String get campusSystems;
-
   /// No description provided for @searchSystems.
   ///
   /// In zh, this message translates to:
   /// **'搜尋系統'**
   String get searchSystems;
-
-  /// No description provided for @favorites.
-  ///
-  /// In zh, this message translates to:
-  /// **'常用'**
-  String get favorites;
-
-  /// No description provided for @edit.
-  ///
-  /// In zh, this message translates to:
-  /// **'編輯'**
-  String get edit;
 
   /// No description provided for @replaceWith.
   ///
@@ -657,18 +621,6 @@ abstract class AppLocalizations {
   /// In zh, this message translates to:
   /// **'深色'**
   String get themeDark;
-
-  /// No description provided for @recentlyOpened.
-  ///
-  /// In zh, this message translates to:
-  /// **'最近開啟'**
-  String get recentlyOpened;
-
-  /// No description provided for @favoritesCount.
-  ///
-  /// In zh, this message translates to:
-  /// **'常用（{count}/{max}）'**
-  String favoritesCount(int count, int max);
 
   /// No description provided for @noGrades.
   ///

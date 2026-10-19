@@ -265,9 +265,6 @@ class AppLocalizationsZh extends AppLocalizations {
   String get noData => '沒有資料';
 
   @override
-  String get academics => '學業';
-
-  @override
   String get grades => '成績';
 
   @override
@@ -285,12 +282,6 @@ class AppLocalizationsZh extends AppLocalizations {
   }
 
   @override
-  String get campus => '校園';
-
-  @override
-  String get allCampusSystems => '全部校務系統';
-
-  @override
   String get account => '帳號';
 
   @override
@@ -303,16 +294,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get portalShared => '單一入口共用';
 
   @override
-  String get campusSystems => '校務系統';
-
-  @override
   String get searchSystems => '搜尋系統';
-
-  @override
-  String get favorites => '常用';
-
-  @override
-  String get edit => '編輯';
 
   @override
   String get replaceWith => '換成';
@@ -334,14 +316,6 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get themeDark => '深色';
-
-  @override
-  String get recentlyOpened => '最近開啟';
-
-  @override
-  String favoritesCount(int count, int max) {
-    return '常用（$count/$max）';
-  }
 
   @override
   String get noGrades => '還沒有成績';

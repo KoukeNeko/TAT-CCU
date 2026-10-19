@@ -28,7 +28,6 @@ import '../ui/more/settings_screen.dart';
 import '../ui/more/space_screen.dart';
 import '../ui/more/design_language_screen.dart';
 import '../ui/more/more_screen.dart';
-import '../ui/more/portal_screen.dart';
 import '../ui/notifications/notifications_screen.dart';
 import '../ui/timetable/timetable_screen.dart';
 import '../ui/today/due_screen.dart';
@@ -247,10 +246,6 @@ GoRouter buildRouter(EcourseAuthRepository auth) => GoRouter(
                 GoRoute(
                   path: 'academic',
                   builder: (_, _) => const AcademicScreen(),
-                ),
-                GoRoute(
-                  path: 'portal',
-                  builder: (_, _) => const PortalScreen(),
                 ),
                 GoRoute(
                   path: 'account',

@@ -1,8 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:provider/provider.dart';
 
-import '../../data/repositories/portal_prefs.dart';
 import '../core/theme.dart';
 import '../core/campus_web_screen.dart';
 import '../core/widgets.dart';
@@ -34,7 +32,7 @@ CampusSystem _s(
 ]) => (id: id, name: name, service: service, mark: mark, note: note);
 
 /// Read from the logged-in portal on 2026-10-18 (CAS 校務系統清單.md).
-final _groups = <(String, List<CampusSystem>)>[
+final campusGroups = <(String, List<CampusSystem>)>[
   (
     '教務與學習',
     [
@@ -98,14 +96,13 @@ final _groups = <(String, List<CampusSystem>)>[
 
 /// Every system by `linkId`, for screens that show favorites elsewhere.
 final campusSystems = {
-  for (final (_, systems) in _groups)
+  for (final (_, systems) in campusGroups)
     for (final s in systems) s.id: s,
 };
 
-/// Records the visit and opens [s] inside the app: systems with their own
-/// page go there (the website is a tap further), the rest open the website.
-void openCampusSystem(BuildContext context, PortalPrefs prefs, CampusSystem s) {
-  prefs.opened(s.id);
+/// Opens [s] inside the app: systems with their own page go there (the
+/// website is a tap further), the rest open the website.
+void openCampusSystem(BuildContext context, CampusSystem s) {
   switch (inAppPages[s.id]) {
     case final path?:
       // Pushed, so back returns to wherever it was opened from.
@@ -115,11 +112,12 @@ void openCampusSystem(BuildContext context, PortalPrefs prefs, CampusSystem s) {
   }
 }
 
-/// `linkId` → in-app page: 選課系統 (iCCU), 學籍系統, 學生請假系統, My圖書館
-/// 圖書館資源探索, 自學空間, 活動報名系統, 學習暨勞僱時數登錄, 宿舍維修系統 and
-/// 付款及所得查詢.
+/// `linkId` → in-app page: 選課系統 (iCCU), 成績查詢 (with eCourse2's running
+/// grades), 學籍系統, 學生請假系統, My圖書館, 圖書館資源探索, 自學空間,
+/// 活動報名系統, 學習暨勞僱時數登錄, 宿舍維修系統 and 付款及所得查詢.
 const inAppPages = {
   '0075': '/more/iccu',
+  '0007': '/more/grades',
   '0004': '/more/academic',
   '0064': '/more/leave',
   '0003': '/more/library',
@@ -164,178 +162,47 @@ String entryUrl(CampusSystem s) => s.service.startsWith('http')
 
 const _shapes = [spikyStar, clover, scallop];
 
-/// Design A3 "寬列＋最近開啟" (design/round-07): favorites as tiles, recently
-/// opened as chips, then every system as a wide row grouped by office.
-class PortalScreen extends StatefulWidget {
-  const PortalScreen({super.key});
-
-  @override
-  State<PortalScreen> createState() => _PortalScreenState();
-}
-
-class _PortalScreenState extends State<PortalScreen> {
-  String _query = '';
-
-  @override
-  Widget build(BuildContext context) {
-    final prefs = context.watch<PortalPrefs>();
-    final t = context.tones;
-    final scheme = Theme.of(context).colorScheme;
-    // Groups use identity colors (靛、湖綠、珊瑚、橄欖、金黃), not the
-    // functional ones, so they never read as "due" or "unread".
-    final groupTones = [
-      for (final i in [1, 3, 8, 5, 6]) t.identity[i],
-    ];
-
-    // Each system keeps its group's color and its slot's silhouette.
-    final look = <String, (Tone, ShapeBorder)>{};
-    final byId = <String, CampusSystem>{};
-    for (final (gi, (_, systems)) in _groups.indexed) {
-      for (final (i, s) in systems.indexed) {
-        look[s.id] = (groupTones[gi], _shapes[i % _shapes.length]);
-        byId[s.id] = s;
-      }
-    }
-
-    void open(CampusSystem s) => openCampusSystem(context, prefs, s);
-
-    final q = _query.toLowerCase();
-    final searching = q.isNotEmpty;
-    final favorites = [for (final id in prefs.favorites) ?byId[id]];
-    final recent = [for (final id in prefs.recent) ?byId[id]];
-
-    return Scaffold(
-      extendBodyBehindAppBar: true,
-      appBar: subBar(context, context.l10n.campusSystems),
-      body: Builder(
-        // Reads insets from inside this Scaffold, below the glass app bar.
-        builder: (context) => ListView(
-          padding: scrollPadding(context),
-          children: [
-            SearchBar(
-              hintText: context.l10n.searchSystems,
-              leading: const Icon(Icons.search),
-              onChanged: (v) => setState(() => _query = v.trim()),
-            ),
-            if (!searching && favorites.isNotEmpty) ...[
-              SectionLabel(
-                context.l10n.favorites,
-                action: TextButton(
-                  onPressed: () => _editFavorites(context, prefs),
-                  child: Text(context.l10n.edit),
-                ),
-              ),
-              GridView.count(
-                crossAxisCount: 4,
-                shrinkWrap: true,
-                physics: const NeverScrollableScrollPhysics(),
-                padding: EdgeInsets.zero,
-                mainAxisSpacing: 10,
-                crossAxisSpacing: 10,
-                childAspectRatio: 0.82,
-                children: [
-                  for (final s in favorites)
-                    _FavoriteTile(
-                      system: s,
-                      tone: look[s.id]!.$1,
-                      shape: look[s.id]!.$2,
-                      onTap: () => open(s),
-                    ),
-                ],
-              ),
-            ],
-            if (!searching && recent.isNotEmpty) ...[
-              SectionLabel(context.l10n.recentlyOpened),
-              SizedBox(
-                height: 40,
-                child: ListView.separated(
-                  scrollDirection: Axis.horizontal,
-                  clipBehavior: Clip.none,
-                  itemCount: recent.length,
-                  separatorBuilder: (_, _) => const SizedBox(width: 8),
-                  itemBuilder: (context, i) => BarChip(
-                    label: recent[i].name,
-                    selected: false,
-                    onTap: () => open(recent[i]),
-                  ),
-                ),
-              ),
-            ],
-            for (final (group, systems) in _groups)
-              if (systems
-                      .where((s) => s.name.toLowerCase().contains(q))
-                      .toList()
-                  case final shown when shown.isNotEmpty) ...[
-                SectionLabel(group, detail: '${shown.length}'),
-                Card(
-                  color: scheme.surfaceContainerLow,
-                  clipBehavior: Clip.antiAlias,
-                  child: Column(
-                    children: [
-                      for (final (i, s) in shown.indexed) ...[
-                        if (i > 0)
-                          Divider(height: 1, color: scheme.outlineVariant),
-                        _SystemRow(
-                          system: s,
-                          tone: look[s.id]!.$1,
-                          shape: look[s.id]!.$2,
-                          onTap: () => open(s),
-                        ),
-                      ],
-                    ],
-                  ),
+/// Each office's systems as a list, the in-app pages first in the group's
+/// color, then the school's websites in grey ([query] filters by name).
+/// Design round-11 more-a-full.
+List<Widget> campusSystemSections(BuildContext context, String query) {
+  final t = context.tones;
+  final scheme = Theme.of(context).colorScheme;
+  // Groups use identity colors (靛、湖綠、珊瑚、橄欖、金黃), not the
+  // functional ones, so they never read as "due" or "unread".
+  final groupTones = [
+    for (final i in [1, 3, 8, 5, 6]) t.identity[i],
+  ];
+  final q = query.toLowerCase();
+  return [
+    for (final (gi, (group, systems)) in campusGroups.indexed)
+      if ([
+            for (final s in systems)
+              if (inAppPages.containsKey(s.id)) s,
+            for (final s in systems)
+              if (!inAppPages.containsKey(s.id)) s,
+          ].where((s) => s.name.toLowerCase().contains(q)).toList()
+          case final shown when shown.isNotEmpty) ...[
+        SectionLabel(group, detail: '${shown.length}'),
+        Card(
+          color: scheme.surfaceContainerLow,
+          clipBehavior: Clip.antiAlias,
+          child: Column(
+            children: [
+              for (final (i, s) in shown.indexed) ...[
+                if (i > 0) Divider(height: 1, color: scheme.outlineVariant),
+                _SystemRow(
+                  system: s,
+                  tone: groupTones[gi],
+                  shape: _shapes[systems.indexOf(s) % _shapes.length],
+                  onTap: () => openCampusSystem(context, s),
                 ),
               ],
-          ],
-        ),
-      ),
-    );
-  }
-
-  Future<void> _editFavorites(BuildContext context, PortalPrefs prefs) async {
-    final picked = [...prefs.favorites];
-    await showModalBottomSheet<void>(
-      context: context,
-      isScrollControlled: true,
-      showDragHandle: true,
-      builder: (context) => StatefulBuilder(
-        builder: (context, setSheet) => DraggableScrollableSheet(
-          expand: false,
-          initialChildSize: 0.75,
-          builder: (context, controller) => ListView(
-            controller: controller,
-            children: [
-              Padding(
-                padding: const EdgeInsets.fromLTRB(20, 0, 20, 8),
-                child: Text(
-                  context.l10n.favoritesCount(
-                    picked.length,
-                    PortalPrefs.maxFavorites,
-                  ),
-                  style: Theme.of(context).textTheme.titleMedium,
-                ),
-              ),
-              for (final (_, systems) in _groups)
-                for (final s in systems)
-                  CheckboxListTile(
-                    value: picked.contains(s.id),
-                    title: Text(s.name),
-                    onChanged: (on) => setSheet(() {
-                      if (on == true &&
-                          picked.length < PortalPrefs.maxFavorites) {
-                        picked.add(s.id);
-                      } else if (on == false) {
-                        picked.remove(s.id);
-                      }
-                    }),
-                  ),
             ],
           ),
         ),
-      ),
-    );
-    await prefs.setFavorites(picked);
-  }
+      ],
+  ];
 }
 
 class _Mark extends StatelessWidget {
@@ -347,60 +214,30 @@ class _Mark extends StatelessWidget {
   });
 
   final String text;
-  final Tone tone;
+
+  /// Null draws the mark in grey, for a school website.
+  final Tone? tone;
   final ShapeBorder shape;
   final double size;
 
   @override
   Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
     return Container(
       width: size,
       height: size,
       alignment: Alignment.center,
-      decoration: ShapeDecoration(color: tone.strong, shape: shape),
+      decoration: ShapeDecoration(
+        color: tone?.strong ?? scheme.surfaceContainerHigh,
+        shape: shape,
+      ),
       child: Text(
         text,
         style: TextStyle(
-          color: tone.fill,
+          color: tone?.fill ?? scheme.onSurfaceVariant,
           fontSize: size * 0.42,
           fontWeight: FontWeight.w900,
         ),
-      ),
-    );
-  }
-}
-
-class _FavoriteTile extends StatelessWidget {
-  const _FavoriteTile({
-    required this.system,
-    required this.tone,
-    required this.shape,
-    required this.onTap,
-  });
-
-  final CampusSystem system;
-  final Tone tone;
-  final ShapeBorder shape;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    return ToneBlock(
-      tone: tone,
-      radius: Corners.row,
-      padding: const EdgeInsets.fromLTRB(4, 12, 4, 8),
-      onTap: onTap,
-      child: Column(
-        children: [
-          _Mark(text: system.mark, tone: tone, shape: shape, size: 48),
-          const Spacer(),
-          Text(
-            system.name.replaceAll('系統', ''),
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-            style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w800),
-          ),
-        ],
       ),
     );
   }
@@ -428,7 +265,12 @@ class _SystemRow extends StatelessWidget {
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
         child: Row(
           children: [
-            _Mark(text: system.mark, tone: tone, shape: shape, size: 40),
+            _Mark(
+              text: system.mark,
+              tone: inAppPages.containsKey(system.id) ? tone : null,
+              shape: shape,
+              size: 40,
+            ),
             const SizedBox(width: 14),
             Expanded(
               child: Column(

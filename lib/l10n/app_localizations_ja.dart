@@ -252,9 +252,6 @@ class AppLocalizationsJa extends AppLocalizations {
   String get noData => 'データがありません';
 
   @override
-  String get academics => '学業';
-
-  @override
   String get grades => '成績';
 
   @override
@@ -272,12 +269,6 @@ class AppLocalizationsJa extends AppLocalizations {
   }
 
   @override
-  String get campus => 'キャンパス';
-
-  @override
-  String get allCampusSystems => 'すべての学内システム';
-
-  @override
   String get account => 'アカウント';
 
   @override
@@ -290,16 +281,7 @@ class AppLocalizationsJa extends AppLocalizations {
   String get portalShared => 'ポータル共通';
 
   @override
-  String get campusSystems => '学内システム';
-
-  @override
   String get searchSystems => 'システムを検索';
-
-  @override
-  String get favorites => 'よく使う';
-
-  @override
-  String get edit => '編集';
 
   @override
   String get replaceWith => '入れ替え';
@@ -321,14 +303,6 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get themeDark => 'ダーク';
-
-  @override
-  String get recentlyOpened => '最近使ったもの';
-
-  @override
-  String favoritesCount(int count, int max) {
-    return 'よく使う（$count/$max）';
-  }
 
   @override
   String get noGrades => '成績はまだありません';

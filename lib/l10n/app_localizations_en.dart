@@ -293,9 +293,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get noData => 'No data';
 
   @override
-  String get academics => 'Academics';
-
-  @override
   String get grades => 'Grades';
 
   @override
@@ -319,12 +316,6 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get campus => 'Campus';
-
-  @override
-  String get allCampusSystems => 'All campus systems';
-
-  @override
   String get account => 'Account';
 
   @override
@@ -337,16 +328,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get portalShared => 'Portal shared';
 
   @override
-  String get campusSystems => 'Campus systems';
-
-  @override
   String get searchSystems => 'Search systems';
-
-  @override
-  String get favorites => 'Favorites';
-
-  @override
-  String get edit => 'Edit';
 
   @override
   String get replaceWith => 'Replace with';
@@ -368,14 +350,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get themeDark => 'Dark';
-
-  @override
-  String get recentlyOpened => 'Recent';
-
-  @override
-  String favoritesCount(int count, int max) {
-    return 'Favorites ($count/$max)';
-  }
 
   @override
   String get noGrades => 'No grades yet';

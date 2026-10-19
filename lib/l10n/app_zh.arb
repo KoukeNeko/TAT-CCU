@@ -194,7 +194,6 @@
   "programsDetail": "學程與開設單位",
   "notOpen": "未開放",
   "noData": "沒有資料",
-  "academics": "學業",
   "grades": "成績",
   "gradesThisTerm": "本學期",
   "gradesHistory": "歷年",
@@ -207,16 +206,11 @@
       }
     }
   },
-  "campus": "校園",
-  "allCampusSystems": "全部校務系統",
   "account": "帳號",
   "ecourseSignedIn": "eCourse2 已登入",
   "ecourseSignedOut": "eCourse2 未登入",
   "portalShared": "單一入口共用",
-  "campusSystems": "校務系統",
   "searchSystems": "搜尋系統",
-  "favorites": "常用",
-  "edit": "編輯",
   "replaceWith": "換成",
   "settings": "設定",
   "appearance": "外觀",
@@ -224,18 +218,6 @@
   "followSystem": "跟隨系統",
   "themeLight": "淺色",
   "themeDark": "深色",
-  "recentlyOpened": "最近開啟",
-  "favoritesCount": "常用（{count}/{max}）",
-  "@favoritesCount": {
-    "placeholders": {
-      "count": {
-        "type": "int"
-      },
-      "max": {
-        "type": "int"
-      }
-    }
-  },
   "noGrades": "還沒有成績",
   "itemNotFound": "找不到這個項目",
   "stepOpens": "開放",

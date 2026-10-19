@@ -17,9 +17,9 @@ import '../../l10n/l10n.dart';
 /// A native page the More page can show as a status tile or a row.
 typedef _Page = ({String path, IconData icon, Tone tone, String title});
 
-/// Design B1 "狀態優先" with E3 "長按單格" (design/round-11): four status
-/// tiles the student picks (long-press to replace, drag to reorder), the
-/// remaining native pages, campus systems with favorites, then the app.
+/// Design round-11 more-a-full: a search, four status tiles the student
+/// picks (long-press to replace, drag to reorder), every campus system by
+/// office with the in-app pages first, then the app.
 class MoreScreen extends StatefulWidget {
   const MoreScreen({super.key});
 
@@ -35,6 +35,7 @@ class _MoreScreenState extends State<MoreScreen> {
   final _library = CampusCache.read(LibraryScreen.cacheKey);
   final _leave = CampusCache.read(LeaveScreen.cacheKey);
   final _slots = List.generate(4, (_) => GlobalKey());
+  var _query = '';
 
   Map<String, _Page> _pages(BuildContext context) {
     final t = context.tones;
@@ -180,14 +181,9 @@ class _MoreScreenState extends State<MoreScreen> {
     final t = context.tones;
     final prefs = context.watch<PortalPrefs>();
     final pages = _pages(context);
-    final favorites = [for (final id in prefs.favorites) ?campusSystems[id]];
     final scheme = Theme.of(context).colorScheme;
     final signedIn = context.watch<EcourseAuthRepository>().isSignedIn;
-    Widget group(List<Widget> rows) => Card(
-      color: scheme.surfaceContainerLow,
-      clipBehavior: Clip.antiAlias,
-      child: Column(children: rows),
-    );
+    final searching = _query.isNotEmpty;
     return Scaffold(
       extendBodyBehindAppBar: true,
       appBar: topBar(context.l10n.navMore),
@@ -196,99 +192,60 @@ class _MoreScreenState extends State<MoreScreen> {
         builder: (context) => ListView(
           padding: scrollPadding(context),
           children: [
-            for (final row in [0, 2]) ...[
-              if (row > 0) const SizedBox(height: rowGap),
-              Row(
-                children: [
-                  _slot(prefs, pages, row),
-                  const SizedBox(width: rowGap),
-                  _slot(prefs, pages, row + 1),
-                ],
+            SearchBar(
+              hintText: context.l10n.searchSystems,
+              leading: const Icon(Icons.search),
+              onChanged: (v) => setState(() => _query = v.trim()),
+            ),
+            if (!searching) ...[
+              const SizedBox(height: rowGap),
+              for (final row in [0, 2]) ...[
+                if (row > 0) const SizedBox(height: rowGap),
+                Row(
+                  children: [
+                    _slot(prefs, pages, row),
+                    const SizedBox(width: rowGap),
+                    _slot(prefs, pages, row + 1),
+                  ],
+                ),
+              ],
+            ],
+            ...campusSystemSections(context, _query),
+            if (!searching) ...[
+              SectionLabel(context.l10n.aboutApp),
+              Card(
+                color: scheme.surfaceContainerLow,
+                clipBehavior: Clip.antiAlias,
+                child: Column(
+                  children: [
+                    _Row(
+                      tone: t.lilac,
+                      icon: Icons.person_outline,
+                      title: context.l10n.account,
+                      trailing: StatusPill(
+                        tone: signedIn ? t.mint : t.peach,
+                        label: signedIn
+                            ? context.l10n.ecourseSignedIn
+                            : context.l10n.ecourseSignedOut,
+                      ),
+                      onTap: () => context.push('/more/account'),
+                    ),
+                    _Row(
+                      tone: t.mint,
+                      icon: Icons.tune,
+                      title: context.l10n.settings,
+                      onTap: () => context.push('/more/settings'),
+                    ),
+                    _Row(
+                      tone: t.sun,
+                      icon: Icons.palette_outlined,
+                      title: context.l10n.designLanguage,
+                      onTap: () => context.push('/more/design'),
+                    ),
+                  ],
+                ),
               ),
             ],
-            SectionLabel(context.l10n.academics),
-            group([
-              for (final p in pages.values)
-                if (!prefs.tiles.contains(p.path))
-                  _Row(
-                    tone: p.tone,
-                    icon: p.icon,
-                    title: p.title,
-                    onTap: () => context.push(p.path),
-                  ),
-            ]),
-            SectionLabel(context.l10n.campus),
-            group([
-              _Row(
-                tone: t.peach,
-                icon: Icons.apps,
-                title: context.l10n.allCampusSystems,
-                onTap: () => context.push('/more/portal'),
-              ),
-              if (favorites.isNotEmpty)
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(10, 0, 10, 10),
-                  child: GridView.count(
-                    crossAxisCount: 2,
-                    shrinkWrap: true,
-                    // A nested GridView otherwise pads itself by the
-                    // screen's safe-area and bar insets.
-                    padding: EdgeInsets.zero,
-                    physics: const NeverScrollableScrollPhysics(),
-                    mainAxisSpacing: 6,
-                    crossAxisSpacing: 6,
-                    childAspectRatio: 3.4,
-                    children: [
-                      for (final s in favorites)
-                        ToneBlock(
-                          tone: t.peach,
-                          radius: Corners.inset,
-                          padding: const EdgeInsets.symmetric(horizontal: 12),
-                          onTap: () => openCampusSystem(context, prefs, s),
-                          child: Align(
-                            alignment: Alignment.centerLeft,
-                            child: Text(
-                              s.name.replaceAll('系統', ''),
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                              style: const TextStyle(
-                                fontSize: 13,
-                                fontWeight: FontWeight.w900,
-                              ),
-                            ),
-                          ),
-                        ),
-                    ],
-                  ),
-                ),
-            ]),
-            SectionLabel(context.l10n.aboutApp),
-            group([
-              _Row(
-                tone: t.lilac,
-                icon: Icons.person_outline,
-                title: context.l10n.account,
-                trailing: StatusPill(
-                  tone: signedIn ? t.mint : t.peach,
-                  label: signedIn
-                      ? context.l10n.ecourseSignedIn
-                      : context.l10n.ecourseSignedOut,
-                ),
-                onTap: () => context.push('/more/account'),
-              ),
-              _Row(
-                tone: t.mint,
-                icon: Icons.tune,
-                title: context.l10n.settings,
-                onTap: () => context.push('/more/settings'),
-              ),
-              _Row(
-                tone: t.sun,
-                icon: Icons.palette_outlined,
-                title: context.l10n.designLanguage,
-                onTap: () => context.push('/more/design'),
-              ),
-            ]),
           ],
         ),
       ),
