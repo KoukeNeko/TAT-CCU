@@ -271,6 +271,15 @@ class AppLocalizationsZh extends AppLocalizations {
   String get grades => '成績';
 
   @override
+  String get gradesThisTerm => '本學期';
+
+  @override
+  String get gradesHistory => '歷年';
+
+  @override
+  String get gradesOnSchoolSite => '在學校網站查看';
+
+  @override
   String courseCount(int count) {
     return '$count 門課';
   }

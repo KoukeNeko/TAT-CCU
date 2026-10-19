@@ -196,6 +196,9 @@
   "noData": "沒有資料",
   "academics": "學業",
   "grades": "成績",
+  "gradesThisTerm": "本學期",
+  "gradesHistory": "歷年",
+  "gradesOnSchoolSite": "在學校網站查看",
   "courseCount": "{count} 門課",
   "@courseCount": {
     "placeholders": {

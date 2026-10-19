@@ -258,6 +258,15 @@ class AppLocalizationsJa extends AppLocalizations {
   String get grades => '成績';
 
   @override
+  String get gradesThisTerm => '今学期';
+
+  @override
+  String get gradesHistory => 'これまで';
+
+  @override
+  String get gradesOnSchoolSite => '大学のサイトで見る';
+
+  @override
   String courseCount(int count) {
     return '$count 科目';
   }

@@ -532,6 +532,24 @@ abstract class AppLocalizations {
   /// **'成績'**
   String get grades;
 
+  /// No description provided for @gradesThisTerm.
+  ///
+  /// In zh, this message translates to:
+  /// **'本學期'**
+  String get gradesThisTerm;
+
+  /// No description provided for @gradesHistory.
+  ///
+  /// In zh, this message translates to:
+  /// **'歷年'**
+  String get gradesHistory;
+
+  /// No description provided for @gradesOnSchoolSite.
+  ///
+  /// In zh, this message translates to:
+  /// **'在學校網站查看'**
+  String get gradesOnSchoolSite;
+
   /// No description provided for @courseCount.
   ///
   /// In zh, this message translates to:

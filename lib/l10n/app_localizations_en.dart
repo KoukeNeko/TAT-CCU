@@ -299,6 +299,15 @@ class AppLocalizationsEn extends AppLocalizations {
   String get grades => 'Grades';
 
   @override
+  String get gradesThisTerm => 'This term';
+
+  @override
+  String get gradesHistory => 'All terms';
+
+  @override
+  String get gradesOnSchoolSite => 'View on the school website';
+
+  @override
   String courseCount(int count) {
     String _temp0 = intl.Intl.pluralLogic(
       count,
