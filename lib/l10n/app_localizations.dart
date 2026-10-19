@@ -250,12 +250,6 @@ abstract class AppLocalizations {
   /// **'未讀'**
   String get unread;
 
-  /// No description provided for @unreadDetail.
-  ///
-  /// In zh, this message translates to:
-  /// **'通知 {notices}・信件 {mail}'**
-  String unreadDetail(int notices, int mail);
-
   /// No description provided for @notifications.
   ///
   /// In zh, this message translates to:
@@ -573,12 +567,6 @@ abstract class AppLocalizations {
   /// In zh, this message translates to:
   /// **'eCourse2 未登入'**
   String get ecourseSignedOut;
-
-  /// No description provided for @portalShared.
-  ///
-  /// In zh, this message translates to:
-  /// **'單一入口共用'**
-  String get portalShared;
 
   /// No description provided for @searchSystems.
   ///
@@ -1456,12 +1444,6 @@ abstract class AppLocalizations {
   /// **'沒有書目'**
   String get noBooks;
 
-  /// No description provided for @libraryCollections.
-  ///
-  /// In zh, this message translates to:
-  /// **'館藏'**
-  String get libraryCollections;
-
   /// No description provided for @renewAll.
   ///
   /// In zh, this message translates to:
@@ -1726,12 +1708,6 @@ abstract class AppLocalizations {
   /// **'搜尋活動'**
   String get searchEvents;
 
-  /// No description provided for @searchFor.
-  ///
-  /// In zh, this message translates to:
-  /// **'搜尋「{query}」'**
-  String searchFor(String query);
-
   /// No description provided for @within3Days.
   ///
   /// In zh, this message translates to:
@@ -1845,12 +1821,6 @@ abstract class AppLocalizations {
   /// In zh, this message translates to:
   /// **'額滿'**
   String get eventFull;
-
-  /// No description provided for @happeningNow.
-  ///
-  /// In zh, this message translates to:
-  /// **'進行中'**
-  String get happeningNow;
 
   /// No description provided for @eventDate.
   ///
@@ -2277,12 +2247,6 @@ abstract class AppLocalizations {
   /// In zh, this message translates to:
   /// **'其他代扣款'**
   String get ptOtherDeduct;
-
-  /// No description provided for @ptSubtotal.
-  ///
-  /// In zh, this message translates to:
-  /// **'小計'**
-  String get ptSubtotal;
 
   /// No description provided for @ptHoliday.
   ///

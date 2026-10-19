@@ -9,9 +9,6 @@ import '../../l10n/l10n.dart';
 /// Portal home; bounces to the portal login when its session has lapsed.
 const portalHome = 'https://portal.ccu.edu.tw/sso_index.php';
 
-/// Goes straight to the CAS form (or through it when already signed in).
-const portalCasLogin = 'https://portal.ccu.edu.tw/login_check_cas.php';
-
 /// One portal tile: its `linkId`, the `ssoService.php` service it hands off
 /// to, the character shown in its badge, and a note when it behaves
 /// differently from the rest (campus-only, separate login, external site).
@@ -94,7 +91,7 @@ final campusGroups = <(String, List<CampusSystem>)>[
   ),
 ];
 
-/// Every system by `linkId`, for screens that show favorites elsewhere.
+/// Every system by `linkId`.
 final campusSystems = {
   for (final (_, systems) in campusGroups)
     for (final s in systems) s.id: s,

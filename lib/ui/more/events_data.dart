@@ -151,8 +151,6 @@ const parseEvent = (id, h) => {
     canSignUp: !!box.querySelector('a[href^="/event/add/"]'), signedUp, cancel,
   };
 };
-const ids = h => [...new Set([...h.matchAll(/\/event\/detail\/list\/(\d+)\//g)].map(m => m[1]))];
-const details = list => Promise.all(list.map(async id => parseEvent(id, await page('/event/detail/list/' + id + '/'))));
 const post = o => Campus.postMessage(JSON.stringify(o));
 ''';
 

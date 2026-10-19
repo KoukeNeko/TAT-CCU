@@ -93,11 +93,6 @@ class AppLocalizationsJa extends AppLocalizations {
   String get unread => '未読';
 
   @override
-  String unreadDetail(int notices, int mail) {
-    return '通知 $notices・メール $mail';
-  }
-
-  @override
   String get notifications => '通知';
 
   @override
@@ -279,9 +274,6 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get ecourseSignedOut => 'eCourse2 未ログイン';
-
-  @override
-  String get portalShared => 'ポータル共通';
 
   @override
   String get searchSystems => 'システムを検索';
@@ -818,9 +810,6 @@ class AppLocalizationsJa extends AppLocalizations {
   String get noBooks => '資料がありません';
 
   @override
-  String get libraryCollections => '蔵書';
-
-  @override
   String get renewAll => 'すべて延長';
 
   @override
@@ -959,11 +948,6 @@ class AppLocalizationsJa extends AppLocalizations {
   String get searchEvents => 'イベントを検索';
 
   @override
-  String searchFor(String query) {
-    return '「$query」を検索';
-  }
-
-  @override
   String get within3Days => '3日以内';
 
   @override
@@ -1025,9 +1009,6 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get eventFull => '満員';
-
-  @override
-  String get happeningNow => '開催中';
 
   @override
   String get eventDate => '日時';
@@ -1265,9 +1246,6 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get ptOtherDeduct => 'その他の控除';
-
-  @override
-  String get ptSubtotal => '小計';
 
   @override
   String get ptHoliday => '休日';

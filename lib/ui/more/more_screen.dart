@@ -6,7 +6,7 @@ import 'package:provider/provider.dart';
 import '../../data/repositories/ecourse_auth_repository.dart';
 import '../../data/repositories/campus_cache.dart';
 import '../../data/repositories/ecourse_repository.dart';
-import '../../data/repositories/portal_prefs.dart';
+import '../../data/repositories/more_tiles_prefs.dart';
 import '../core/theme.dart';
 import '../core/widgets.dart';
 import 'leave_screen.dart';
@@ -91,7 +91,7 @@ class _MoreScreenState extends State<MoreScreen> {
 
   /// The four tiles: saved routes that no longer exist (a renamed page) are
   /// skipped and the rest filled up from the other pages.
-  List<String> _tilesOf(PortalPrefs prefs, Map<String, _Page> pages) {
+  List<String> _tilesOf(MoreTilesPrefs prefs, Map<String, _Page> pages) {
     final kept = {
       for (final t in prefs.tiles)
         if (pages.containsKey(t)) t,
@@ -103,7 +103,7 @@ class _MoreScreenState extends State<MoreScreen> {
   }
 
   Future<void> _replace(
-    PortalPrefs prefs,
+    MoreTilesPrefs prefs,
     Map<String, _Page> pages,
     int i,
   ) async {
@@ -129,7 +129,7 @@ class _MoreScreenState extends State<MoreScreen> {
     prefs.setTiles(tiles..[i] = path);
   }
 
-  void _swap(PortalPrefs prefs, Map<String, _Page> pages, int from, int to) {
+  void _swap(MoreTilesPrefs prefs, Map<String, _Page> pages, int from, int to) {
     final tiles = _tilesOf(prefs, pages);
     final moved = tiles[from];
     tiles[from] = tiles[to];
@@ -138,7 +138,7 @@ class _MoreScreenState extends State<MoreScreen> {
     prefs.setTiles(tiles);
   }
 
-  Widget _slot(PortalPrefs prefs, Map<String, _Page> pages, int i) {
+  Widget _slot(MoreTilesPrefs prefs, Map<String, _Page> pages, int i) {
     final page = pages[_tilesOf(prefs, pages)[i]]!;
     return Expanded(
       child: KeyedSubtree(
@@ -193,7 +193,7 @@ class _MoreScreenState extends State<MoreScreen> {
   @override
   Widget build(BuildContext context) {
     final t = context.tones;
-    final prefs = context.watch<PortalPrefs>();
+    final prefs = context.watch<MoreTilesPrefs>();
     final pages = _pages(context);
     final scheme = Theme.of(context).colorScheme;
     final signedIn = context.watch<EcourseAuthRepository>().isSignedIn;
@@ -267,8 +267,7 @@ class _MoreScreenState extends State<MoreScreen> {
   }
 }
 
-/// A status tile: the page's state large, its name small; the name alone
-/// when there is no state to show.
+/// A [StatusTile] with the page's state read from its saved data.
 class _StatusTile extends StatelessWidget {
   const _StatusTile({
     required this.page,

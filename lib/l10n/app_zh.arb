@@ -54,17 +54,6 @@
   },
   "dueThisWeek": "本週到期",
   "unread": "未讀",
-  "unreadDetail": "通知 {notices}・信件 {mail}",
-  "@unreadDetail": {
-    "placeholders": {
-      "notices": {
-        "type": "int"
-      },
-      "mail": {
-        "type": "int"
-      }
-    }
-  },
   "notifications": "通知",
   "notificationsUnread": "通知，{count} 則未讀",
   "@notificationsUnread": {
@@ -211,7 +200,6 @@
   "account": "帳號",
   "ecourseSignedIn": "eCourse2 已登入",
   "ecourseSignedOut": "eCourse2 未登入",
-  "portalShared": "單一入口共用",
   "searchSystems": "搜尋系統",
   "replaceWith": "換成",
   "settings": "設定",
@@ -563,7 +551,6 @@
   "collections": "主題館藏",
   "newBooks": "新進圖書",
   "noBooks": "沒有書目",
-  "libraryCollections": "館藏",
   "renewAll": "全部續借",
   "renew": "續借",
   "notRenewable": "不可續借",
@@ -632,8 +619,6 @@
   "loadingShelves": "讀取新書與暢銷榜",
   "events": "活動報名",
   "searchEvents": "搜尋活動",
-  "searchFor": "搜尋「{query}」",
-  "@searchFor": {"placeholders": {"query": {"type": "String"}}},
   "within3Days": "3 日內",
   "withinWeek": "一週內",
   "withinMonth": "一個月內",
@@ -656,7 +641,6 @@
   "signUpClosed": "已截止",
   "signedUp": "已報名",
   "eventFull": "額滿",
-  "happeningNow": "進行中",
   "eventDate": "日期",
   "eventPlace": "地點",
   "eventOrganizer": "承辦",
@@ -740,7 +724,6 @@
   "ptHealth": "健保",
   "ptSupp": "個人補充保費",
   "ptOtherDeduct": "其他代扣款",
-  "ptSubtotal": "小計",
   "ptHoliday": "例假日",
   "ptEntries": "{count} 筆",
   "@ptEntries": {"placeholders": {"count": {"type": "int"}}},

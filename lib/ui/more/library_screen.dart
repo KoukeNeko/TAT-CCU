@@ -166,7 +166,6 @@ List<Loan> loansOf(Map<String, dynamic> json) {
   return loans..sort((a, b) => a.due.compareTo(b.due));
 }
 
-@visibleForTesting
 List<Hold> holdsOf(Map<String, dynamic> json) => [
   for (final item in (json['holds'] as List? ?? const []).whereType<Map>())
     _holdOf(item),
@@ -189,13 +188,6 @@ Hold _holdOf(Map item) {
     ),
   );
 }
-
-/// Holds waiting on the pickup shelf.
-@visibleForTesting
-List<Hold> readyHoldsOf(Map<String, dynamic> json) => [
-  for (final h in holdsOf(json))
-    if (h.ready) h,
-];
 
 /// Design B1-A (design/round-11): one card with the most urgent due date
 /// and holds to pick up, the loans by due date, then the library website.

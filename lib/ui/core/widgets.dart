@@ -162,7 +162,6 @@ class CookieBadge extends StatelessWidget {
     required this.color,
     required this.ink,
     this.size = 96,
-    this.lobes = 9,
     this.shape,
   });
 
@@ -170,7 +169,6 @@ class CookieBadge extends StatelessWidget {
   final String? unit;
   final Color color, ink;
   final double size;
-  final int lobes;
   final ShapeBorder? shape;
 
   @override
@@ -180,7 +178,7 @@ class CookieBadge extends StatelessWidget {
       height: size,
       decoration: ShapeDecoration(
         color: color,
-        shape: shape ?? CookieBorder(lobes: lobes),
+        shape: shape ?? const CookieBorder(),
       ),
       alignment: Alignment.center,
       child: Column(
@@ -621,7 +619,6 @@ class _RoundBackButtonState extends State<RoundBackButton> {
   }
 }
 
-/// Rounded color block; the basic surface of direction C.
 /// A status tile: the page's state large, its name small; the name alone
 /// when there is no state to show. Shared by 今天 and 更多.
 class StatusTile extends StatelessWidget {
@@ -704,6 +701,7 @@ class StatusTile extends StatelessWidget {
   }
 }
 
+/// Rounded color block; the basic surface of direction C.
 class ToneBlock extends StatelessWidget {
   const ToneBlock({
     super.key,
@@ -739,7 +737,6 @@ class ToneBlock extends StatelessWidget {
   }
 }
 
-/// Small uppercase-style section label above a group of blocks.
 /// The app's one chip (design: course contents bar): a pill that fills with
 /// the tone's strong color when selected. [dropdown] adds a chevron for
 /// chips that open a choice.
@@ -887,6 +884,7 @@ class StatusPill extends StatelessWidget {
   }
 }
 
+/// Small uppercase-style section label above a group of blocks.
 class SectionLabel extends StatelessWidget {
   const SectionLabel(this.text, {super.key, this.detail, this.action});
 

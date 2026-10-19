@@ -2,7 +2,7 @@ import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 /// The More page's status tiles, by route. Stored on the device only.
-class PortalPrefs extends ChangeNotifier {
+class MoreTilesPrefs extends ChangeNotifier {
   static const _tilesKey = 'more_tiles';
 
   /// The More page's four status tiles.

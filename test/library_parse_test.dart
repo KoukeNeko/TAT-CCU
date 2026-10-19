@@ -18,7 +18,7 @@ void main() {
   });
 
   test('only holds on the pickup shelf count as ready', () {
-    final holds = readyHoldsOf({
+    final holds = holdsOf({
       'holds': [
         {
           'requestid': 'R1',
@@ -30,8 +30,8 @@ void main() {
         {'title': 'Y', 'status': 'In Process'},
       ],
     });
-    expect(holds.single.title, 'X');
-    expect(holds.single.until, DateTime(2026, 10, 24));
-    expect((holds.single.id, holds.single.type), ('R1', 'HOLD'));
+    expect(holds.where((h) => h.ready).single.title, 'X');
+    expect(holds.first.until, DateTime(2026, 10, 24));
+    expect((holds.first.id, holds.first.type), ('R1', 'HOLD'));
   });
 }

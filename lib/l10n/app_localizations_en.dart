@@ -97,11 +97,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get unread => 'Unread';
 
   @override
-  String unreadDetail(int notices, int mail) {
-    return '$notices notifications · $mail mail';
-  }
-
-  @override
   String get notifications => 'Notifications';
 
   @override
@@ -326,9 +321,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get ecourseSignedOut => 'eCourse2 signed out';
-
-  @override
-  String get portalShared => 'Portal shared';
 
   @override
   String get searchSystems => 'Search systems';
@@ -919,9 +911,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get noBooks => 'No books';
 
   @override
-  String get libraryCollections => 'Browse';
-
-  @override
   String get renewAll => 'Renew all';
 
   @override
@@ -1060,11 +1049,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get searchEvents => 'Search events';
 
   @override
-  String searchFor(String query) {
-    return 'Search \"$query\"';
-  }
-
-  @override
   String get within3Days => 'Next 3 days';
 
   @override
@@ -1132,9 +1116,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get eventFull => 'Full';
-
-  @override
-  String get happeningNow => 'Now';
 
   @override
   String get eventDate => 'Date';
@@ -1372,9 +1353,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get ptOtherDeduct => 'Other deductions';
-
-  @override
-  String get ptSubtotal => 'Subtotal';
 
   @override
   String get ptHoliday => 'Holiday';

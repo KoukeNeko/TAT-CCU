@@ -106,11 +106,6 @@ class AppLocalizationsZh extends AppLocalizations {
   String get unread => '未讀';
 
   @override
-  String unreadDetail(int notices, int mail) {
-    return '通知 $notices・信件 $mail';
-  }
-
-  @override
   String get notifications => '通知';
 
   @override
@@ -292,9 +287,6 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get ecourseSignedOut => 'eCourse2 未登入';
-
-  @override
-  String get portalShared => '單一入口共用';
 
   @override
   String get searchSystems => '搜尋系統';
@@ -830,9 +822,6 @@ class AppLocalizationsZh extends AppLocalizations {
   String get noBooks => '沒有書目';
 
   @override
-  String get libraryCollections => '館藏';
-
-  @override
   String get renewAll => '全部續借';
 
   @override
@@ -971,11 +960,6 @@ class AppLocalizationsZh extends AppLocalizations {
   String get searchEvents => '搜尋活動';
 
   @override
-  String searchFor(String query) {
-    return '搜尋「$query」';
-  }
-
-  @override
   String get within3Days => '3 日內';
 
   @override
@@ -1037,9 +1021,6 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get eventFull => '額滿';
-
-  @override
-  String get happeningNow => '進行中';
 
   @override
   String get eventDate => '日期';
@@ -1277,9 +1258,6 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get ptOtherDeduct => '其他代扣款';
-
-  @override
-  String get ptSubtotal => '小計';
 
   @override
   String get ptHoliday => '例假日';

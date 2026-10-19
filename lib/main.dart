@@ -8,7 +8,7 @@ import 'package:workmanager/workmanager.dart';
 import 'data/repositories/app_settings.dart';
 import 'data/repositories/ecourse_auth_repository.dart';
 import 'data/repositories/ecourse_repository.dart';
-import 'data/repositories/portal_prefs.dart';
+import 'data/repositories/more_tiles_prefs.dart';
 import 'data/services/campus_cookies.dart';
 import 'data/services/reminders.dart';
 import 'l10n/l10n.dart';
@@ -58,7 +58,7 @@ Future<void> main() async {
     MultiProvider(
       providers: [
         ChangeNotifierProvider.value(value: auth),
-        ChangeNotifierProvider(create: (_) => PortalPrefs()..load()),
+        ChangeNotifierProvider(create: (_) => MoreTilesPrefs()..load()),
         ChangeNotifierProvider.value(value: settings),
         ProxyProvider<EcourseAuthRepository, EcourseRepository>(
           update: (_, auth, _) => EcourseRepository(auth.client()),
