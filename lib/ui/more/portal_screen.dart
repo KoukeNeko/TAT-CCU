@@ -108,7 +108,8 @@ void openCampusSystem(BuildContext context, PortalPrefs prefs, CampusSystem s) {
   prefs.opened(s.id);
   switch (inAppPages[s.id]) {
     case final path?:
-      context.go(path);
+      // Pushed, so back returns to wherever it was opened from.
+      context.push(path);
     case null:
       openCampusPage(context, entryUrl(s), s.name);
   }
