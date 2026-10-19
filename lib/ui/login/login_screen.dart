@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../../data/repositories/ecourse_auth_repository.dart';
+import '../../data/services/cas_credentials.dart';
 import '../core/campus_web_screen.dart';
 import '../core/theme.dart';
 import '../core/widgets.dart';
@@ -16,6 +17,16 @@ class LoginScreen extends StatefulWidget {
 
 class _LoginScreenState extends State<LoginScreen> {
   var _busy = false;
+
+  @override
+  void initState() {
+    super.initState();
+    // With a saved password the sign-in runs by itself; once, so backing
+    // out or a failure leaves the button to the user.
+    CasCredentials.read().then((login) {
+      if (login != null && mounted && !_busy) _signIn();
+    });
+  }
 
   Future<void> _signIn() async {
     setState(() => _busy = true);

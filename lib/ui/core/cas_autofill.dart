@@ -56,8 +56,22 @@ class CasAutofill {
     );
   }
 
+  /// Once per sign-in, so a portal that sends the browser back is not
+  /// sent to CAS again and again.
+  var _sentToCas = false;
+
   Future<void> pageFinished(String url) async {
     final uri = Uri.parse(url);
+    if (uri.host == 'portal.ccu.edu.tw' &&
+        (uri.path == '/' || uri.path == '/index.php') &&
+        !_sentToCas) {
+      // The signed-out portal home only links to its CAS sign-in.
+      _sentToCas = true;
+      await _web.loadRequest(
+        Uri.parse('https://portal.ccu.edu.tw/login_check_cas.php'),
+      );
+      return;
+    }
     if (uri.host == _casHost) {
       if (!uri.path.startsWith('/login')) return;
       final saved = _tried ? null : await CasCredentials.read();
@@ -81,6 +95,7 @@ class CasAutofill {
     final login = _submittedLogin;
     _submittedLogin = null;
     _tried = false;
+    _sentToCas = false;
     if (login == null || login.username.isEmpty || login.password.isEmpty) {
       return;
     }
