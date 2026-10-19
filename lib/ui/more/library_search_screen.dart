@@ -259,7 +259,7 @@ class _Browse extends StatelessWidget {
         return ListView(
           // No side padding: shelves and the carousel run to the screen
           // edge and pad their own content; everything else pads itself.
-          padding: scrollPadding(context, top: 4).copyWith(left: 0, right: 0),
+          padding: scrollPadding(context).copyWith(left: 0, right: 0),
           children: [
             if (featured.isNotEmpty)
               _Carousel(
@@ -349,6 +349,8 @@ class _Browse extends StatelessWidget {
   }
 }
 
+const _carouselCover = 78.0;
+
 class _Carousel extends StatefulWidget {
   const _Carousel({required this.books, required this.label});
 
@@ -404,47 +406,51 @@ class _CarouselState extends State<_Carousel> {
                       BookCover(
                         title: book.title,
                         index: i + 4,
-                        width: 78,
+                        width: _carouselCover,
                         inverse: true,
                       ),
                       const SizedBox(width: 14),
                       Expanded(
-                        child: Column(
-                          mainAxisSize: MainAxisSize.min,
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              widget.label,
-                              style: const TextStyle(
-                                fontSize: 12,
-                                fontWeight: FontWeight.w900,
+                        // As tall as the cover: the label and title line up
+                        // with its top, the author with its bottom.
+                        child: SizedBox(
+                          height: _carouselCover * 1.36,
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                widget.label,
+                                style: const TextStyle(
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.w900,
+                                ),
                               ),
-                            ),
-                            const SizedBox(height: 4),
-                            Text(
-                              book.title,
-                              maxLines: 2,
-                              overflow: TextOverflow.ellipsis,
-                              style: const TextStyle(
-                                fontSize: 17,
-                                fontWeight: FontWeight.w900,
-                                height: 1.25,
+                              const SizedBox(height: 4),
+                              Text(
+                                book.title,
+                                maxLines: 2,
+                                overflow: TextOverflow.ellipsis,
+                                style: const TextStyle(
+                                  fontSize: 17,
+                                  fontWeight: FontWeight.w900,
+                                  height: 1.25,
+                                ),
                               ),
-                            ),
-                            const SizedBox(height: 2),
-                            Text(
-                              [
-                                book.author,
-                                ?pill?.$2,
-                              ].where((s) => s.isNotEmpty).join('・'),
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                              style: const TextStyle(
-                                fontSize: 12,
-                                fontWeight: FontWeight.w800,
+                              const Spacer(),
+                              Text(
+                                [
+                                  book.author,
+                                  ?pill?.$2,
+                                ].where((s) => s.isNotEmpty).join('・'),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: const TextStyle(
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.w800,
+                                ),
                               ),
-                            ),
-                          ],
+                            ],
+                          ),
                         ),
                       ),
                     ],
