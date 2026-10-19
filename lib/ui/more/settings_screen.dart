@@ -3,6 +3,8 @@ import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 
 import '../../data/repositories/app_settings.dart';
+import '../../data/repositories/ecourse_repository.dart';
+import '../../data/services/reminders.dart';
 import '../../l10n/l10n.dart';
 import '../core/theme.dart';
 import '../core/widgets.dart';
@@ -60,6 +62,8 @@ class SettingsScreen extends StatelessWidget {
               onSelected: (code) =>
                   settings.setLocale(code == null ? null : Locale(code)),
             ),
+            SectionLabel(l10n.notifications),
+            const _Notifications(),
             SectionLabel(l10n.aboutApp),
             Card(
               color: Theme.of(context).colorScheme.surfaceContainerLow,
@@ -255,6 +259,80 @@ class _Segments extends StatelessWidget {
                 ),
               ),
             ),
+        ],
+      ),
+    );
+  }
+}
+
+/// Local reminders and the background check (Reminders); each asks for the
+/// system permission the first time it is turned on.
+class _Notifications extends StatelessWidget {
+  const _Notifications();
+
+  Future<void> _set(
+    BuildContext context, {
+    bool? due,
+    bool? classes,
+    bool? news,
+  }) async {
+    final settings = context.read<AppSettings>();
+    final repo = context.read<EcourseRepository>();
+    final messenger = ScaffoldMessenger.of(context);
+    final denied = context.l10n.notifyDenied;
+    if ((due ?? classes ?? news)! && !await Reminders.requestPermission()) {
+      messenger.showSnackBar(SnackBar(content: Text(denied)));
+      return;
+    }
+    await settings.setNotify(due: due, classes: classes, news: news);
+    await Reminders.updateBackground(settings);
+    if (due != null || classes != null) {
+      try {
+        await Reminders.sync(repo, settings);
+      } catch (e) {
+        messenger.showSnackBar(SnackBar(content: Text('$e')));
+      }
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = context.l10n;
+    final settings = context.watch<AppSettings>();
+    Widget tile(
+      String title,
+      String detail,
+      bool value,
+      ValueChanged<bool> onChanged,
+    ) => SwitchListTile(
+      title: Text(title, style: const TextStyle(fontWeight: FontWeight.w800)),
+      subtitle: Text(detail),
+      value: value,
+      onChanged: onChanged,
+    );
+    return Card(
+      color: Theme.of(context).colorScheme.surfaceContainerLow,
+      clipBehavior: Clip.antiAlias,
+      child: Column(
+        children: [
+          tile(
+            l10n.notifyDue,
+            l10n.notifyDueDetail,
+            settings.notifyDue,
+            (on) => _set(context, due: on),
+          ),
+          tile(
+            l10n.notifyClass,
+            l10n.notifyClassDetail,
+            settings.notifyClass,
+            (on) => _set(context, classes: on),
+          ),
+          tile(
+            l10n.notifyNews,
+            l10n.notifyNewsDetail,
+            settings.notifyNews,
+            (on) => _set(context, news: on),
+          ),
         ],
       ),
     );

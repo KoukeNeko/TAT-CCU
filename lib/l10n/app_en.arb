@@ -428,5 +428,16 @@
   "absenceOnline": "Online",
   "absenceRemark": "Note",
   "absenceWarning": "This only tells the instructor; it does not replace the school's leave process.",
-  "absenceSubmitTitle": "Send this request?"
+  "absenceSubmitTitle": "Send this request?",
+  "notifyDue": "Deadline reminders",
+  "notifyDueDetail": "24 hours and 1 hour before",
+  "notifyClass": "Class reminders",
+  "notifyClassDetail": "10 minutes before class",
+  "notifyNews": "New notices and mail",
+  "notifyNewsDetail": "Checked in the background when the system allows",
+  "notifyDenied": "Notifications are off for this app; turn them on in system settings",
+  "reminderDue24": "Due in 24 hours",
+  "reminderDue1": "Due in 1 hour",
+  "reminderClass": "Class in 10 minutes",
+  "newMailFrom": "New mail from {sender}"
 }

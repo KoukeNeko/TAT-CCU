@@ -1486,4 +1486,39 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get absenceSubmitTitle => '送出請假單？';
+
+  @override
+  String get notifyDue => '截止提醒';
+
+  @override
+  String get notifyDueDetail => '截止前 24 小時和 1 小時';
+
+  @override
+  String get notifyClass => '上課提醒';
+
+  @override
+  String get notifyClassDetail => '上課前 10 分鐘';
+
+  @override
+  String get notifyNews => '新通知與信件';
+
+  @override
+  String get notifyNewsDetail => '在背景檢查，時間由系統決定';
+
+  @override
+  String get notifyDenied => '通知權限已關閉，請到系統設定開啟';
+
+  @override
+  String get reminderDue24 => '24 小時後截止';
+
+  @override
+  String get reminderDue1 => '1 小時後截止';
+
+  @override
+  String get reminderClass => '10 分鐘後上課';
+
+  @override
+  String newMailFrom(String sender) {
+    return '$sender 寄來新信件';
+  }
 }

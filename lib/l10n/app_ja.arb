@@ -428,5 +428,16 @@
   "absenceOnline": "同期オンライン",
   "absenceRemark": "備考",
   "absenceWarning": "担当教員への連絡のみで、正式な欠席手続きの代わりにはなりません。",
-  "absenceSubmitTitle": "この欠席届を送信しますか？"
+  "absenceSubmitTitle": "この欠席届を送信しますか？",
+  "notifyDue": "締切リマインダー",
+  "notifyDueDetail": "24 時間前と 1 時間前",
+  "notifyClass": "授業リマインダー",
+  "notifyClassDetail": "授業の 10 分前",
+  "notifyNews": "新しい通知とメール",
+  "notifyNewsDetail": "システムが許可したときにバックグラウンドで確認",
+  "notifyDenied": "通知がオフです。システム設定でオンにしてください",
+  "reminderDue24": "24 時間後に締切",
+  "reminderDue1": "1 時間後に締切",
+  "reminderClass": "10 分後に授業",
+  "newMailFrom": "{sender} から新しいメール"
 }

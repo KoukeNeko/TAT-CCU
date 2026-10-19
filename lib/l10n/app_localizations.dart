@@ -2667,6 +2667,72 @@ abstract class AppLocalizations {
   /// In zh, this message translates to:
   /// **'送出請假單？'**
   String get absenceSubmitTitle;
+
+  /// No description provided for @notifyDue.
+  ///
+  /// In zh, this message translates to:
+  /// **'截止提醒'**
+  String get notifyDue;
+
+  /// No description provided for @notifyDueDetail.
+  ///
+  /// In zh, this message translates to:
+  /// **'截止前 24 小時和 1 小時'**
+  String get notifyDueDetail;
+
+  /// No description provided for @notifyClass.
+  ///
+  /// In zh, this message translates to:
+  /// **'上課提醒'**
+  String get notifyClass;
+
+  /// No description provided for @notifyClassDetail.
+  ///
+  /// In zh, this message translates to:
+  /// **'上課前 10 分鐘'**
+  String get notifyClassDetail;
+
+  /// No description provided for @notifyNews.
+  ///
+  /// In zh, this message translates to:
+  /// **'新通知與信件'**
+  String get notifyNews;
+
+  /// No description provided for @notifyNewsDetail.
+  ///
+  /// In zh, this message translates to:
+  /// **'在背景檢查，時間由系統決定'**
+  String get notifyNewsDetail;
+
+  /// No description provided for @notifyDenied.
+  ///
+  /// In zh, this message translates to:
+  /// **'通知權限已關閉，請到系統設定開啟'**
+  String get notifyDenied;
+
+  /// No description provided for @reminderDue24.
+  ///
+  /// In zh, this message translates to:
+  /// **'24 小時後截止'**
+  String get reminderDue24;
+
+  /// No description provided for @reminderDue1.
+  ///
+  /// In zh, this message translates to:
+  /// **'1 小時後截止'**
+  String get reminderDue1;
+
+  /// No description provided for @reminderClass.
+  ///
+  /// In zh, this message translates to:
+  /// **'10 分鐘後上課'**
+  String get reminderClass;
+
+  /// No description provided for @newMailFrom.
+  ///
+  /// In zh, this message translates to:
+  /// **'{sender} 寄來新信件'**
+  String newMailFrom(String sender);
 }
 
 class _AppLocalizationsDelegate

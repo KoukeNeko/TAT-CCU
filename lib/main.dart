@@ -3,12 +3,14 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
+import 'package:workmanager/workmanager.dart';
 
 import 'data/repositories/app_settings.dart';
 import 'data/repositories/ecourse_auth_repository.dart';
 import 'data/repositories/ecourse_repository.dart';
 import 'data/repositories/portal_prefs.dart';
 import 'data/services/campus_cookies.dart';
+import 'data/services/reminders.dart';
 import 'l10n/l10n.dart';
 import 'routing/router.dart';
 import 'ui/core/theme.dart';
@@ -35,10 +37,19 @@ Future<void> main() async {
     HoursStore.instance.demo = settings.demoMode;
     DormRepairStore.instance.demo = settings.demoMode;
   });
-  unawaited(settings.load());
-  await (auth.load(), CampusCookies.restore()).wait;
+  await (
+    settings.load(),
+    auth.load(),
+    CampusCookies.restore(),
+    Reminders.init(),
+  ).wait;
   // iOS may end a backgrounded app without notice, so save on the way out.
-  AppLifecycleListener(onHide: CampusCookies.save);
+  AppLifecycleListener(
+    onHide: CampusCookies.save,
+    onResume: () => _remind(auth, settings),
+  );
+  await Workmanager().initialize(reminderTask);
+  unawaited(_remind(auth, settings));
   runApp(
     MultiProvider(
       providers: [
@@ -83,5 +94,20 @@ class TatCcuApp extends StatelessWidget {
           : child!,
       routerConfig: router,
     );
+  }
+}
+
+/// Reschedules reminders from the latest deadlines and timetable, so a
+/// changed due date is not announced at the old time.
+Future<void> _remind(EcourseAuthRepository auth, AppSettings settings) async {
+  if (!auth.isSignedIn) return;
+  try {
+    await Reminders.updateBackground(settings);
+    if (settings.notifyDue || settings.notifyClass) {
+      await Reminders.sync(EcourseRepository(auth.client()), settings);
+    }
+  } catch (e) {
+    // Offline or signed out: the reminders already scheduled stay.
+    debugPrint('reminders: $e');
   }
 }

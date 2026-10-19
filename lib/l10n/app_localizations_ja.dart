@@ -1475,4 +1475,39 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get absenceSubmitTitle => 'この欠席届を送信しますか？';
+
+  @override
+  String get notifyDue => '締切リマインダー';
+
+  @override
+  String get notifyDueDetail => '24 時間前と 1 時間前';
+
+  @override
+  String get notifyClass => '授業リマインダー';
+
+  @override
+  String get notifyClassDetail => '授業の 10 分前';
+
+  @override
+  String get notifyNews => '新しい通知とメール';
+
+  @override
+  String get notifyNewsDetail => 'システムが許可したときにバックグラウンドで確認';
+
+  @override
+  String get notifyDenied => '通知がオフです。システム設定でオンにしてください';
+
+  @override
+  String get reminderDue24 => '24 時間後に締切';
+
+  @override
+  String get reminderDue1 => '1 時間後に締切';
+
+  @override
+  String get reminderClass => '10 分後に授業';
+
+  @override
+  String newMailFrom(String sender) {
+    return '$sender から新しいメール';
+  }
 }

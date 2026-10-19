@@ -1,5 +1,16 @@
 import 'timetable.dart';
 
+/// One language of a joined eCourse2 course name, as [Course.name] keeps.
+String courseNameIn(String fullName, {required bool chinese}) {
+  final m = _bilingual.firstMatch(fullName);
+  if (m == null) return fullName;
+  return (chinese ? m[2] : m[1])!.trim();
+}
+
+final _bilingual = RegExp(
+  r'^([^\u3400-\u9fff]*[A-Za-z][^\u3400-\u9fff]*?)\s*([\u3400-\u9fff].*)$',
+);
+
 class Course {
   const Course({
     required this.id,
@@ -20,15 +31,8 @@ class Course {
   /// eCourse2 joins the English and Chinese names, e.g. `Software Analysis
   /// and Optimization軟體分析與最佳化`; this keeps one of them. Names in a
   /// single language come back whole.
-  String name({required bool chinese}) {
-    final m = _bilingual.firstMatch(fullName);
-    if (m == null) return fullName;
-    return (chinese ? m[2] : m[1])!.trim();
-  }
-
-  static final _bilingual = RegExp(
-    r'^([^\u3400-\u9fff]*[A-Za-z][^\u3400-\u9fff]*?)\s*([\u3400-\u9fff].*)$',
-  );
+  String name({required bool chinese}) =>
+      courseNameIn(fullName, chinese: chinese);
 
   /// `115_1`, used to group courses by semester.
   String get semester => shortName.split('_').take(2).join('_');

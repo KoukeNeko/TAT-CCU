@@ -817,5 +817,23 @@
   "absenceOnline": "同步課程",
   "absenceRemark": "備註",
   "absenceWarning": "只通知授課教師，不能取代學校的正式請假流程。",
-  "absenceSubmitTitle": "送出請假單？"
+  "absenceSubmitTitle": "送出請假單？",
+  "notifyDue": "截止提醒",
+  "notifyDueDetail": "截止前 24 小時和 1 小時",
+  "notifyClass": "上課提醒",
+  "notifyClassDetail": "上課前 10 分鐘",
+  "notifyNews": "新通知與信件",
+  "notifyNewsDetail": "在背景檢查，時間由系統決定",
+  "notifyDenied": "通知權限已關閉，請到系統設定開啟",
+  "reminderDue24": "24 小時後截止",
+  "reminderDue1": "1 小時後截止",
+  "reminderClass": "10 分鐘後上課",
+  "newMailFrom": "{sender} 寄來新信件",
+  "@newMailFrom": {
+    "placeholders": {
+      "sender": {
+        "type": "String"
+      }
+    }
+  }
 }

@@ -1584,4 +1584,41 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get absenceSubmitTitle => 'Send this request?';
+
+  @override
+  String get notifyDue => 'Deadline reminders';
+
+  @override
+  String get notifyDueDetail => '24 hours and 1 hour before';
+
+  @override
+  String get notifyClass => 'Class reminders';
+
+  @override
+  String get notifyClassDetail => '10 minutes before class';
+
+  @override
+  String get notifyNews => 'New notices and mail';
+
+  @override
+  String get notifyNewsDetail =>
+      'Checked in the background when the system allows';
+
+  @override
+  String get notifyDenied =>
+      'Notifications are off for this app; turn them on in system settings';
+
+  @override
+  String get reminderDue24 => 'Due in 24 hours';
+
+  @override
+  String get reminderDue1 => 'Due in 1 hour';
+
+  @override
+  String get reminderClass => 'Class in 10 minutes';
+
+  @override
+  String newMailFrom(String sender) {
+    return 'New mail from $sender';
+  }
 }

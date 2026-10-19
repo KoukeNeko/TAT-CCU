@@ -2,6 +2,7 @@ import Flutter
 import QuickLook
 import UIKit
 import WebKit
+import workmanager_apple
 
 @main
 @objc class AppDelegate: FlutterAppDelegate, FlutterImplicitEngineDelegate {
@@ -9,6 +10,16 @@ import WebKit
     _ application: UIApplication,
     didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?
   ) -> Bool {
+    // Reminders.backgroundTask: plugins for its isolate, and the task itself.
+    WorkmanagerPlugin.setPluginRegistrantCallback { registry in
+      GeneratedPluginRegistrant.register(with: registry)
+    }
+    WorkmanagerPlugin.registerPeriodicTask(
+      withIdentifier: "io.github.koukeneko.tatCcu.refresh",
+      earliestBeginInSeconds: NSNumber(value: 60 * 60)
+    )
+    // Shows reminders while the app is open too.
+    UNUserNotificationCenter.current().delegate = self
     return super.application(application, didFinishLaunchingWithOptions: launchOptions)
   }
 
