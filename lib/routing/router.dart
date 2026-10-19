@@ -12,7 +12,11 @@ import '../ui/more/calendar_screen.dart';
 import '../ui/more/grades_screen.dart';
 import '../ui/more/iccu_screen.dart';
 import '../ui/more/leave_screen.dart';
+import '../data/services/primo_client.dart';
+import '../ui/more/library_collections_screen.dart';
+import '../ui/more/library_record_screen.dart';
 import '../ui/more/library_screen.dart';
+import '../ui/more/library_search_screen.dart';
 import '../ui/more/more_screen.dart';
 import '../ui/more/portal_screen.dart';
 import '../ui/notifications/notifications_screen.dart';
@@ -115,6 +119,33 @@ GoRouter buildRouter(EcourseAuthRepository auth) => GoRouter(
                 GoRoute(
                   path: 'library',
                   builder: (_, _) => const LibraryScreen(),
+                  routes: [
+                    GoRoute(
+                      path: 'search',
+                      builder: (_, _) => const LibrarySearchScreen(),
+                    ),
+                    GoRoute(
+                      path: 'record',
+                      builder: (_, state) {
+                        final (:record, :index) =
+                            state.extra! as ({LibraryRecord record, int index});
+                        return LibraryRecordScreen(
+                          record: record,
+                          index: index,
+                        );
+                      },
+                    ),
+                    GoRoute(
+                      path: 'collections',
+                      builder: (_, _) => const LibraryCollectionsScreen(),
+                    ),
+                    GoRoute(
+                      path: 'collection/:id',
+                      builder: (_, state) => LibraryCollectionScreen(
+                        id: state.pathParameters['id']!,
+                      ),
+                    ),
+                  ],
                 ),
                 GoRoute(
                   path: 'academic',

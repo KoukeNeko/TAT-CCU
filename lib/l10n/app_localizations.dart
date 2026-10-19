@@ -1228,6 +1228,210 @@ abstract class AppLocalizations {
   /// **'顯示網頁'**
   String get showPage;
 
+  /// No description provided for @librarySearchHint.
+  ///
+  /// In zh, this message translates to:
+  /// **'搜尋館藏、期刊、資料庫'**
+  String get librarySearchHint;
+
+  /// No description provided for @kindCatalog.
+  ///
+  /// In zh, this message translates to:
+  /// **'館藏'**
+  String get kindCatalog;
+
+  /// No description provided for @kindJournal.
+  ///
+  /// In zh, this message translates to:
+  /// **'期刊'**
+  String get kindJournal;
+
+  /// No description provided for @kindDatabase.
+  ///
+  /// In zh, this message translates to:
+  /// **'資料庫'**
+  String get kindDatabase;
+
+  /// No description provided for @onShelf.
+  ///
+  /// In zh, this message translates to:
+  /// **'在架'**
+  String get onShelf;
+
+  /// No description provided for @checkedOut.
+  ///
+  /// In zh, this message translates to:
+  /// **'借出'**
+  String get checkedOut;
+
+  /// No description provided for @online.
+  ///
+  /// In zh, this message translates to:
+  /// **'線上全文'**
+  String get online;
+
+  /// No description provided for @typeBooks.
+  ///
+  /// In zh, this message translates to:
+  /// **'圖書'**
+  String get typeBooks;
+
+  /// No description provided for @typeDissertations.
+  ///
+  /// In zh, this message translates to:
+  /// **'學位論文'**
+  String get typeDissertations;
+
+  /// No description provided for @typeVideos.
+  ///
+  /// In zh, this message translates to:
+  /// **'影音'**
+  String get typeVideos;
+
+  /// No description provided for @sortRelevance.
+  ///
+  /// In zh, this message translates to:
+  /// **'相關性'**
+  String get sortRelevance;
+
+  /// No description provided for @sortNewest.
+  ///
+  /// In zh, this message translates to:
+  /// **'新到舊'**
+  String get sortNewest;
+
+  /// No description provided for @sortTitle.
+  ///
+  /// In zh, this message translates to:
+  /// **'題名'**
+  String get sortTitle;
+
+  /// No description provided for @anyTime.
+  ///
+  /// In zh, this message translates to:
+  /// **'不限'**
+  String get anyTime;
+
+  /// No description provided for @lastYears.
+  ///
+  /// In zh, this message translates to:
+  /// **'近 {count} 年'**
+  String lastYears(int count);
+
+  /// No description provided for @filter.
+  ///
+  /// In zh, this message translates to:
+  /// **'篩選'**
+  String get filter;
+
+  /// No description provided for @filterAvailability.
+  ///
+  /// In zh, this message translates to:
+  /// **'取得方式'**
+  String get filterAvailability;
+
+  /// No description provided for @filterType.
+  ///
+  /// In zh, this message translates to:
+  /// **'資源類型'**
+  String get filterType;
+
+  /// No description provided for @filterSort.
+  ///
+  /// In zh, this message translates to:
+  /// **'排序'**
+  String get filterSort;
+
+  /// No description provided for @filterYear.
+  ///
+  /// In zh, this message translates to:
+  /// **'出版年'**
+  String get filterYear;
+
+  /// No description provided for @showResults.
+  ///
+  /// In zh, this message translates to:
+  /// **'顯示結果'**
+  String get showResults;
+
+  /// No description provided for @resultCount.
+  ///
+  /// In zh, this message translates to:
+  /// **'{count} 筆'**
+  String resultCount(int count);
+
+  /// No description provided for @holdings.
+  ///
+  /// In zh, this message translates to:
+  /// **'館藏'**
+  String get holdings;
+
+  /// No description provided for @requestHold.
+  ///
+  /// In zh, this message translates to:
+  /// **'預約'**
+  String get requestHold;
+
+  /// No description provided for @readOnline.
+  ///
+  /// In zh, this message translates to:
+  /// **'線上閱讀'**
+  String get readOnline;
+
+  /// No description provided for @cite.
+  ///
+  /// In zh, this message translates to:
+  /// **'引用'**
+  String get cite;
+
+  /// No description provided for @citationCopied.
+  ///
+  /// In zh, this message translates to:
+  /// **'已複製引用'**
+  String get citationCopied;
+
+  /// No description provided for @bibDetails.
+  ///
+  /// In zh, this message translates to:
+  /// **'詳細書目'**
+  String get bibDetails;
+
+  /// No description provided for @publisher.
+  ///
+  /// In zh, this message translates to:
+  /// **'出版者'**
+  String get publisher;
+
+  /// No description provided for @subjects.
+  ///
+  /// In zh, this message translates to:
+  /// **'主題'**
+  String get subjects;
+
+  /// No description provided for @collections.
+  ///
+  /// In zh, this message translates to:
+  /// **'主題館藏'**
+  String get collections;
+
+  /// No description provided for @newBooks.
+  ///
+  /// In zh, this message translates to:
+  /// **'新進圖書'**
+  String get newBooks;
+
+  /// No description provided for @noBooks.
+  ///
+  /// In zh, this message translates to:
+  /// **'沒有書目'**
+  String get noBooks;
+
+  /// No description provided for @libraryCollections.
+  ///
+  /// In zh, this message translates to:
+  /// **'館藏'**
+  String get libraryCollections;
+
   /// No description provided for @renewAll.
   ///
   /// In zh, this message translates to:
@@ -1311,6 +1515,30 @@ abstract class AppLocalizations {
   /// In zh, this message translates to:
   /// **'保留'**
   String get keepHold;
+
+  /// No description provided for @libraryDiscovery.
+  ///
+  /// In zh, this message translates to:
+  /// **'圖書館資源探索'**
+  String get libraryDiscovery;
+
+  /// No description provided for @viewAll.
+  ///
+  /// In zh, this message translates to:
+  /// **'全部'**
+  String get viewAll;
+
+  /// No description provided for @otherCollections.
+  ///
+  /// In zh, this message translates to:
+  /// **'其他主題館藏'**
+  String get otherCollections;
+
+  /// No description provided for @allCollections.
+  ///
+  /// In zh, this message translates to:
+  /// **'全部 {count} 個'**
+  String allCollections(int count);
 }
 
 class _AppLocalizationsDelegate

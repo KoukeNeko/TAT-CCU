@@ -513,6 +513,54 @@
   "campusVerifying": "Cloudflare 驗證",
   "campusReading": "讀取資料",
   "showPage": "顯示網頁",
+  "librarySearchHint": "搜尋館藏、期刊、資料庫",
+  "kindCatalog": "館藏",
+  "kindJournal": "期刊",
+  "kindDatabase": "資料庫",
+  "onShelf": "在架",
+  "checkedOut": "借出",
+  "online": "線上全文",
+  "typeBooks": "圖書",
+  "typeDissertations": "學位論文",
+  "typeVideos": "影音",
+  "sortRelevance": "相關性",
+  "sortNewest": "新到舊",
+  "sortTitle": "題名",
+  "anyTime": "不限",
+  "lastYears": "近 {count} 年",
+  "@lastYears": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "filter": "篩選",
+  "filterAvailability": "取得方式",
+  "filterType": "資源類型",
+  "filterSort": "排序",
+  "filterYear": "出版年",
+  "showResults": "顯示結果",
+  "resultCount": "{count} 筆",
+  "@resultCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "holdings": "館藏",
+  "requestHold": "預約",
+  "readOnline": "線上閱讀",
+  "cite": "引用",
+  "citationCopied": "已複製引用",
+  "bibDetails": "詳細書目",
+  "publisher": "出版者",
+  "subjects": "主題",
+  "collections": "主題館藏",
+  "newBooks": "新進圖書",
+  "noBooks": "沒有書目",
+  "libraryCollections": "館藏",
   "renewAll": "全部續借",
   "renew": "續借",
   "notRenewable": "不可續借",
@@ -536,5 +584,16 @@
   "holdWaiting": "等待中",
   "cancelHoldTitle": "取消預約？",
   "cancelHold": "取消預約",
-  "keepHold": "保留"
+  "keepHold": "保留",
+  "libraryDiscovery": "圖書館資源探索",
+  "viewAll": "全部",
+  "otherCollections": "其他主題館藏",
+  "allCollections": "全部 {count} 個",
+  "@allCollections": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  }
 }

@@ -789,6 +789,118 @@ class AppLocalizationsEn extends AppLocalizations {
   String get showPage => 'Show page';
 
   @override
+  String get librarySearchHint => 'Search books, journals, databases';
+
+  @override
+  String get kindCatalog => 'Catalog';
+
+  @override
+  String get kindJournal => 'Journals';
+
+  @override
+  String get kindDatabase => 'Databases';
+
+  @override
+  String get onShelf => 'On shelf';
+
+  @override
+  String get checkedOut => 'Checked out';
+
+  @override
+  String get online => 'Online';
+
+  @override
+  String get typeBooks => 'Books';
+
+  @override
+  String get typeDissertations => 'Theses';
+
+  @override
+  String get typeVideos => 'Video';
+
+  @override
+  String get sortRelevance => 'Relevance';
+
+  @override
+  String get sortNewest => 'Newest';
+
+  @override
+  String get sortTitle => 'Title';
+
+  @override
+  String get anyTime => 'Any';
+
+  @override
+  String lastYears(int count) {
+    return 'Last $count years';
+  }
+
+  @override
+  String get filter => 'Filter';
+
+  @override
+  String get filterAvailability => 'Availability';
+
+  @override
+  String get filterType => 'Type';
+
+  @override
+  String get filterSort => 'Sort';
+
+  @override
+  String get filterYear => 'Published';
+
+  @override
+  String get showResults => 'Show results';
+
+  @override
+  String resultCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count results',
+      one: '1 result',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get holdings => 'Copies';
+
+  @override
+  String get requestHold => 'Request';
+
+  @override
+  String get readOnline => 'Read online';
+
+  @override
+  String get cite => 'Cite';
+
+  @override
+  String get citationCopied => 'Citation copied';
+
+  @override
+  String get bibDetails => 'Details';
+
+  @override
+  String get publisher => 'Publisher';
+
+  @override
+  String get subjects => 'Subjects';
+
+  @override
+  String get collections => 'Collections';
+
+  @override
+  String get newBooks => 'New books';
+
+  @override
+  String get noBooks => 'No books';
+
+  @override
+  String get libraryCollections => 'Browse';
+
+  @override
   String get renewAll => 'Renew all';
 
   @override
@@ -831,4 +943,18 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get keepHold => 'Keep';
+
+  @override
+  String get libraryDiscovery => 'Library Discovery';
+
+  @override
+  String get viewAll => 'All';
+
+  @override
+  String get otherCollections => 'More collections';
+
+  @override
+  String allCollections(int count) {
+    return 'All $count';
+  }
 }

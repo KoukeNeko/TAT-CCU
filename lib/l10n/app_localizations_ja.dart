@@ -700,6 +700,112 @@ class AppLocalizationsJa extends AppLocalizations {
   String get showPage => 'ページを表示';
 
   @override
+  String get librarySearchHint => '蔵書・雑誌・データベースを検索';
+
+  @override
+  String get kindCatalog => '蔵書';
+
+  @override
+  String get kindJournal => '雑誌';
+
+  @override
+  String get kindDatabase => 'データベース';
+
+  @override
+  String get onShelf => '貸出可';
+
+  @override
+  String get checkedOut => '貸出中';
+
+  @override
+  String get online => 'オンライン';
+
+  @override
+  String get typeBooks => '図書';
+
+  @override
+  String get typeDissertations => '学位論文';
+
+  @override
+  String get typeVideos => '映像';
+
+  @override
+  String get sortRelevance => '関連度';
+
+  @override
+  String get sortNewest => '新しい順';
+
+  @override
+  String get sortTitle => 'タイトル';
+
+  @override
+  String get anyTime => '指定なし';
+
+  @override
+  String lastYears(int count) {
+    return '過去 $count 年';
+  }
+
+  @override
+  String get filter => '絞り込み';
+
+  @override
+  String get filterAvailability => '入手方法';
+
+  @override
+  String get filterType => '資料種別';
+
+  @override
+  String get filterSort => '並べ替え';
+
+  @override
+  String get filterYear => '出版年';
+
+  @override
+  String get showResults => '結果を表示';
+
+  @override
+  String resultCount(int count) {
+    return '$count 件';
+  }
+
+  @override
+  String get holdings => '所蔵';
+
+  @override
+  String get requestHold => '予約';
+
+  @override
+  String get readOnline => 'オンラインで読む';
+
+  @override
+  String get cite => '引用';
+
+  @override
+  String get citationCopied => '引用をコピーしました';
+
+  @override
+  String get bibDetails => '書誌情報';
+
+  @override
+  String get publisher => '出版者';
+
+  @override
+  String get subjects => '件名';
+
+  @override
+  String get collections => 'テーマコレクション';
+
+  @override
+  String get newBooks => '新着図書';
+
+  @override
+  String get noBooks => '資料がありません';
+
+  @override
+  String get libraryCollections => '蔵書';
+
+  @override
   String get renewAll => 'すべて延長';
 
   @override
@@ -742,4 +848,18 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get keepHold => '取り消さない';
+
+  @override
+  String get libraryDiscovery => '図書館資料検索';
+
+  @override
+  String get viewAll => 'すべて';
+
+  @override
+  String get otherCollections => 'その他のコレクション';
+
+  @override
+  String allCollections(int count) {
+    return 'すべて（$count）';
+  }
 }

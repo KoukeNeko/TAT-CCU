@@ -712,6 +712,112 @@ class AppLocalizationsZh extends AppLocalizations {
   String get showPage => '顯示網頁';
 
   @override
+  String get librarySearchHint => '搜尋館藏、期刊、資料庫';
+
+  @override
+  String get kindCatalog => '館藏';
+
+  @override
+  String get kindJournal => '期刊';
+
+  @override
+  String get kindDatabase => '資料庫';
+
+  @override
+  String get onShelf => '在架';
+
+  @override
+  String get checkedOut => '借出';
+
+  @override
+  String get online => '線上全文';
+
+  @override
+  String get typeBooks => '圖書';
+
+  @override
+  String get typeDissertations => '學位論文';
+
+  @override
+  String get typeVideos => '影音';
+
+  @override
+  String get sortRelevance => '相關性';
+
+  @override
+  String get sortNewest => '新到舊';
+
+  @override
+  String get sortTitle => '題名';
+
+  @override
+  String get anyTime => '不限';
+
+  @override
+  String lastYears(int count) {
+    return '近 $count 年';
+  }
+
+  @override
+  String get filter => '篩選';
+
+  @override
+  String get filterAvailability => '取得方式';
+
+  @override
+  String get filterType => '資源類型';
+
+  @override
+  String get filterSort => '排序';
+
+  @override
+  String get filterYear => '出版年';
+
+  @override
+  String get showResults => '顯示結果';
+
+  @override
+  String resultCount(int count) {
+    return '$count 筆';
+  }
+
+  @override
+  String get holdings => '館藏';
+
+  @override
+  String get requestHold => '預約';
+
+  @override
+  String get readOnline => '線上閱讀';
+
+  @override
+  String get cite => '引用';
+
+  @override
+  String get citationCopied => '已複製引用';
+
+  @override
+  String get bibDetails => '詳細書目';
+
+  @override
+  String get publisher => '出版者';
+
+  @override
+  String get subjects => '主題';
+
+  @override
+  String get collections => '主題館藏';
+
+  @override
+  String get newBooks => '新進圖書';
+
+  @override
+  String get noBooks => '沒有書目';
+
+  @override
+  String get libraryCollections => '館藏';
+
+  @override
   String get renewAll => '全部續借';
 
   @override
@@ -754,4 +860,18 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get keepHold => '保留';
+
+  @override
+  String get libraryDiscovery => '圖書館資源探索';
+
+  @override
+  String get viewAll => '全部';
+
+  @override
+  String get otherCollections => '其他主題館藏';
+
+  @override
+  String allCollections(int count) {
+    return '全部 $count 個';
+  }
 }
