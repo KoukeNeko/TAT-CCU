@@ -64,8 +64,8 @@ class _Notices extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final repo = context.read<EcourseRepository>();
-    return Loader<List<NoticeItem>>(
-      load: repo.notices,
+    return Loader<List<NoticeItem>>.watch(
+      watch: () => repo.watch((repo) => repo.notices()),
       builder: (context, items) {
         if (items.isEmpty) return EmptyState(context.l10n.noNotifications);
         return ListView.separated(
@@ -93,8 +93,8 @@ class _Mail extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final repo = context.read<EcourseRepository>();
-    return Loader<List<MailItem>>(
-      load: repo.inbox,
+    return Loader<List<MailItem>>.watch(
+      watch: () => repo.watch((repo) => repo.inbox()),
       builder: (context, items) {
         if (items.isEmpty) return EmptyState(context.l10n.noMail);
         return ListView.separated(

@@ -18,8 +18,8 @@ class DueScreen extends StatelessWidget {
     return Scaffold(
       extendBodyBehindAppBar: true,
       appBar: subBar(context, context.l10n.toDo),
-      body: Loader<List<DueItem>>(
-        load: () => repo.dueSoon(),
+      body: Loader<List<DueItem>>.watch(
+        watch: () => repo.watch((repo) => repo.dueSoon()),
         builder: (context, items) {
           if (items.isEmpty) return EmptyState(context.l10n.nothingDueSoon);
           return ListView.separated(

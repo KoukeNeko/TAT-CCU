@@ -28,23 +28,28 @@ class ModuleScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final repo = context.read<EcourseRepository>();
-    return Loader<Module?>(
+    return Loader<Module?>.watch(
       bar: (context) => subBar(context, title ?? ''),
-      load: () async =>
-          [for (final s in await repo.contents(courseId)) ...s.modules]
-              .where((m) => m.id == cmid)
-              .firstOrNull,
+      watch: () => repo.watch(
+        (repo) async =>
+            [for (final s in await repo.contents(courseId)) ...s.modules]
+                .where((m) => m.id == cmid)
+                .firstOrNull,
+      ),
       builder: (context, module) => Scaffold(
         extendBodyBehindAppBar: true,
         appBar: subBar(context, module?.name ?? ''),
         body: switch (module?.type) {
           null => EmptyState(context.l10n.itemNotFound),
-          'assign' => Loader<Assignment>(
-            load: () => repo.assignment(courseId, module!.instance),
+          'assign' => Loader<Assignment>.watch(
+            watch: () => repo.watch(
+              (repo) => repo.assignment(courseId, module!.instance),
+            ),
             builder: (context, a) => _AssignmentBody(assignment: a),
           ),
-          'quiz' => Loader<Quiz>(
-            load: () => repo.quiz(courseId, module!.instance),
+          'quiz' => Loader<Quiz>.watch(
+            watch: () =>
+                repo.watch((repo) => repo.quiz(courseId, module!.instance)),
             builder: (context, q) => _QuizBody(quiz: q),
           ),
           _ => _FilesBody(files: module!.files),

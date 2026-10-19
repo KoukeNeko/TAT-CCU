@@ -24,8 +24,8 @@ class _CoursesScreenState extends State<CoursesScreen> {
     return Scaffold(
       extendBodyBehindAppBar: true,
       appBar: topBar(context.l10n.navCourses),
-      body: Loader<List<Course>>(
-        load: () => repo.courses(),
+      body: Loader<List<Course>>.watch(
+        watch: () => repo.watch((repo) => repo.courses()),
         builder: (context, all) {
           final q = _query.toLowerCase();
           final shown = q.isEmpty

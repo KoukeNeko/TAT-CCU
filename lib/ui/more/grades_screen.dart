@@ -49,9 +49,11 @@ class _GradesScreenState extends State<GradesScreen> {
       ),
       body: _history
           ? _historyBody(context)
-          : Loader<(List<Course>, Map<int, String>)>(
-              load: () async =>
-                  (await repo.courses(), await repo.gradeOverview()),
+          : Loader<(List<Course>, Map<int, String>)>.watch(
+              watch: () => repo.watch(
+                (repo) async =>
+                    (await repo.courses(), await repo.gradeOverview()),
+              ),
               builder: (context, data) {
                 final (courses, grades) = data;
                 final graded = courses

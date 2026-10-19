@@ -397,10 +397,10 @@ class _Contents extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final repo = context.read<EcourseRepository>();
-    return Loader<List<Section>>(
+    return Loader<List<Section>>.watch(
       bar: (context) =>
           subBar(context, CoursePart.contents.title(context.l10n)),
-      load: () => repo.contents(courseId),
+      watch: () => repo.watch((repo) => repo.contents(courseId)),
       builder: (context, sections) => sections.isEmpty
           ? Scaffold(
               appBar: subBar(context, CoursePart.contents.title(context.l10n)),
@@ -669,8 +669,8 @@ class _Announcements extends StatelessWidget {
   Widget build(BuildContext context) {
     final repo = context.read<EcourseRepository>();
     final scheme = Theme.of(context).colorScheme;
-    return Loader<List<Post>>(
-      load: () => repo.announcements(courseId),
+    return Loader<List<Post>>.watch(
+      watch: () => repo.watch((repo) => repo.announcements(courseId)),
       builder: (context, posts) {
         if (posts.isEmpty) return EmptyState(context.l10n.noAnnouncements);
         return ListView.separated(
@@ -708,8 +708,8 @@ class _Grades extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final repo = context.read<EcourseRepository>();
-    return Loader<List<GradeLine>>(
-      load: () => repo.gradeItems(courseId),
+    return Loader<List<GradeLine>>.watch(
+      watch: () => repo.watch((repo) => repo.gradeItems(courseId)),
       builder: (context, lines) => GradeList(lines: lines),
     );
   }
