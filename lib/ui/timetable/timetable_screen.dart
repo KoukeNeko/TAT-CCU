@@ -161,7 +161,7 @@ Widget _dayList(BuildContext context, List<Course> courses, int day) {
         for (final c in courses.where((c) => c.sessions.isEmpty))
           Padding(
             padding: const EdgeInsets.only(bottom: 8),
-            child: Text(c.fullName, style: theme.textTheme.bodyMedium),
+            child: Text(context.courseName(c), style: theme.textTheme.bodyMedium),
           ),
       ],
     ],
@@ -268,7 +268,7 @@ class _ClassBlock extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    course.fullName,
+                    context.courseName(course),
                     style: const TextStyle(
                       fontSize: 16,
                       fontWeight: FontWeight.w900,

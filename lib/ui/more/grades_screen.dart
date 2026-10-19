@@ -77,7 +77,7 @@ class _GradesScreenState extends State<GradesScreen> {
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 Text(
-                                  c.fullName,
+                                  context.courseName(c),
                                   style: const TextStyle(
                                     fontWeight: FontWeight.w900,
                                     height: 1.25,

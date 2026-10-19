@@ -96,7 +96,7 @@ class _CourseBlock extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  course.fullName,
+                  context.courseName(course),
                   style: const TextStyle(
                     fontSize: 15,
                     fontWeight: FontWeight.w900,

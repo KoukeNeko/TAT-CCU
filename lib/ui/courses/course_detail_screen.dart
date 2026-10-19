@@ -222,7 +222,7 @@ class _Hero extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  course.fullName,
+                  context.courseName(course),
                   style: TextStyle(
                     color: tone.ink,
                     fontSize: 21,
