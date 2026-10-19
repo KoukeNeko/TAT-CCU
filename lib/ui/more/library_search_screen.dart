@@ -463,8 +463,12 @@ class _CarouselState extends State<_Carousel> {
               final pill = availabilityPill(context, book.availability);
               return Padding(
                 // Each page starts with the gap, so the first card lines up
-                // with the page margin and the next one peeks in.
-                padding: const EdgeInsets.only(left: 16),
+                // with the page margin and the next one peeks in; the last
+                // page ends at the screen edge, so it keeps the margin there.
+                padding: EdgeInsets.only(
+                  left: pageMargin,
+                  right: i == books.length - 1 ? pageMargin : 0,
+                ),
                 child: ToneBlock(
                   tone: tone,
                   radius: Corners.card,
