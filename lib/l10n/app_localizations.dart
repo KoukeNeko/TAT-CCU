@@ -2433,6 +2433,114 @@ abstract class AppLocalizations {
   /// In zh, this message translates to:
   /// **'結果寄到 {email}'**
   String drResultTo(String email);
+
+  /// No description provided for @payTitle.
+  ///
+  /// In zh, this message translates to:
+  /// **'付款及所得'**
+  String get payTitle;
+
+  /// No description provided for @payYear.
+  ///
+  /// In zh, this message translates to:
+  /// **'{year} 年'**
+  String payYear(int year);
+
+  /// No description provided for @payReceived.
+  ///
+  /// In zh, this message translates to:
+  /// **'{year} 年已入帳・{count} 筆'**
+  String payReceived(int year, int count);
+
+  /// No description provided for @payMonth.
+  ///
+  /// In zh, this message translates to:
+  /// **'{month} 月'**
+  String payMonth(int month);
+
+  /// No description provided for @payCase.
+  ///
+  /// In zh, this message translates to:
+  /// **'案號'**
+  String get payCase;
+
+  /// No description provided for @payHandler.
+  ///
+  /// In zh, this message translates to:
+  /// **'經手人'**
+  String get payHandler;
+
+  /// No description provided for @payAccount.
+  ///
+  /// In zh, this message translates to:
+  /// **'入帳帳號'**
+  String get payAccount;
+
+  /// No description provided for @payInvoice.
+  ///
+  /// In zh, this message translates to:
+  /// **'發票'**
+  String get payInvoice;
+
+  /// No description provided for @payNone.
+  ///
+  /// In zh, this message translates to:
+  /// **'沒有付款紀錄'**
+  String get payNone;
+
+  /// No description provided for @incomeTitle.
+  ///
+  /// In zh, this message translates to:
+  /// **'年度所得'**
+  String get incomeTitle;
+
+  /// No description provided for @incomeYear.
+  ///
+  /// In zh, this message translates to:
+  /// **'{year} 年度'**
+  String incomeYear(int year);
+
+  /// No description provided for @incomeNet.
+  ///
+  /// In zh, this message translates to:
+  /// **'給付淨額'**
+  String get incomeNet;
+
+  /// No description provided for @incomeGross.
+  ///
+  /// In zh, this message translates to:
+  /// **'給付總額'**
+  String get incomeGross;
+
+  /// No description provided for @incomeTax.
+  ///
+  /// In zh, this message translates to:
+  /// **'扣繳稅額'**
+  String get incomeTax;
+
+  /// No description provided for @incomePension.
+  ///
+  /// In zh, this message translates to:
+  /// **'勞退自提'**
+  String get incomePension;
+
+  /// No description provided for @incomeDetail.
+  ///
+  /// In zh, this message translates to:
+  /// **'所得明細表'**
+  String get incomeDetail;
+
+  /// No description provided for @incomeWithholding.
+  ///
+  /// In zh, this message translates to:
+  /// **'扣繳憑單'**
+  String get incomeWithholding;
+
+  /// No description provided for @incomeNone.
+  ///
+  /// In zh, this message translates to:
+  /// **'沒有所得資料'**
+  String get incomeNone;
 }
 
 class _AppLocalizationsDelegate

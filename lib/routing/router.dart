@@ -23,6 +23,7 @@ import '../ui/more/event_detail_screen.dart';
 import '../ui/more/events_data.dart';
 import '../ui/more/events_screen.dart';
 import '../ui/more/parttime_screen.dart';
+import '../ui/more/payment_screen.dart';
 import '../ui/more/settings_screen.dart';
 import '../ui/more/space_screen.dart';
 import '../ui/more/design_language_screen.dart';
@@ -160,6 +161,10 @@ GoRouter buildRouter(EcourseAuthRepository auth) => GoRouter(
                           PosterScreen(url: state.extra! as String),
                     ),
                   ],
+                ),
+                GoRoute(
+                  path: 'payment',
+                  builder: (_, _) => const PaymentScreen(),
                 ),
                 GoRoute(
                   path: 'dorm-repair',

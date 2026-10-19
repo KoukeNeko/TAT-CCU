@@ -116,7 +116,8 @@ void openCampusSystem(BuildContext context, PortalPrefs prefs, CampusSystem s) {
 }
 
 /// `linkId` → in-app page: 選課系統 (iCCU), 學籍系統, 學生請假系統, My圖書館
-/// 圖書館資源探索, 自學空間, 活動報名系統, 學習暨勞僱時數登錄 and 宿舍維修系統.
+/// 圖書館資源探索, 自學空間, 活動報名系統, 學習暨勞僱時數登錄, 宿舍維修系統 and
+/// 付款及所得查詢.
 const inAppPages = {
   '0075': '/more/iccu',
   '0004': '/more/academic',
@@ -127,11 +128,12 @@ const inAppPages = {
   '0060': '/more/events',
   '0014': '/more/parttime',
   '0011': '/more/dorm-repair',
+  '0042': '/more/payment',
 };
 
 /// In-app pages not yet finished, marked in the list: ALPHA still shows
 /// made-up data, BETA reads the real site but is new.
-const pageStages = {'0014': 'ALPHA', '0011': 'ALPHA'};
+const pageStages = {'0014': 'ALPHA', '0011': 'ALPHA', '0042': 'BETA'};
 
 /// For an in-app page: opens the school's own site for [systemId], signed
 /// in through the portal.

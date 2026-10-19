@@ -1348,4 +1348,66 @@ class AppLocalizationsJa extends AppLocalizations {
   String drResultTo(String email) {
     return '結果の送信先：$email';
   }
+
+  @override
+  String get payTitle => '支払と所得';
+
+  @override
+  String payYear(int year) {
+    return '$year年';
+  }
+
+  @override
+  String payReceived(int year, int count) {
+    return '$year年の入金・$count 件';
+  }
+
+  @override
+  String payMonth(int month) {
+    return '$month月';
+  }
+
+  @override
+  String get payCase => '案件番号';
+
+  @override
+  String get payHandler => '担当';
+
+  @override
+  String get payAccount => '振込口座';
+
+  @override
+  String get payInvoice => '請求書';
+
+  @override
+  String get payNone => '支払記録なし';
+
+  @override
+  String get incomeTitle => '年間所得';
+
+  @override
+  String incomeYear(int year) {
+    return '$year年度';
+  }
+
+  @override
+  String get incomeNet => '支給純額';
+
+  @override
+  String get incomeGross => '支給総額';
+
+  @override
+  String get incomeTax => '源泉徴収額';
+
+  @override
+  String get incomePension => '年金自己拠出';
+
+  @override
+  String get incomeDetail => '所得明細書';
+
+  @override
+  String get incomeWithholding => '源泉徴収票';
+
+  @override
+  String get incomeNone => '所得データなし';
 }

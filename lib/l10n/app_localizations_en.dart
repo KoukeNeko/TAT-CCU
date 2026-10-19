@@ -1450,4 +1450,66 @@ class AppLocalizationsEn extends AppLocalizations {
   String drResultTo(String email) {
     return 'Result to $email';
   }
+
+  @override
+  String get payTitle => 'Payments & income';
+
+  @override
+  String payYear(int year) {
+    return '$year';
+  }
+
+  @override
+  String payReceived(int year, int count) {
+    return 'Received in $year・$count';
+  }
+
+  @override
+  String payMonth(int month) {
+    return 'Month $month';
+  }
+
+  @override
+  String get payCase => 'Case';
+
+  @override
+  String get payHandler => 'Handled by';
+
+  @override
+  String get payAccount => 'Account';
+
+  @override
+  String get payInvoice => 'Invoice';
+
+  @override
+  String get payNone => 'No payments';
+
+  @override
+  String get incomeTitle => 'Annual income';
+
+  @override
+  String incomeYear(int year) {
+    return '$year';
+  }
+
+  @override
+  String get incomeNet => 'Net';
+
+  @override
+  String get incomeGross => 'Gross';
+
+  @override
+  String get incomeTax => 'Tax withheld';
+
+  @override
+  String get incomePension => 'Pension';
+
+  @override
+  String get incomeDetail => 'Income statement';
+
+  @override
+  String get incomeWithholding => 'Withholding statement';
+
+  @override
+  String get incomeNone => 'No income records';
 }

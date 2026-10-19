@@ -1359,4 +1359,66 @@ class AppLocalizationsZh extends AppLocalizations {
   String drResultTo(String email) {
     return '結果寄到 $email';
   }
+
+  @override
+  String get payTitle => '付款及所得';
+
+  @override
+  String payYear(int year) {
+    return '$year 年';
+  }
+
+  @override
+  String payReceived(int year, int count) {
+    return '$year 年已入帳・$count 筆';
+  }
+
+  @override
+  String payMonth(int month) {
+    return '$month 月';
+  }
+
+  @override
+  String get payCase => '案號';
+
+  @override
+  String get payHandler => '經手人';
+
+  @override
+  String get payAccount => '入帳帳號';
+
+  @override
+  String get payInvoice => '發票';
+
+  @override
+  String get payNone => '沒有付款紀錄';
+
+  @override
+  String get incomeTitle => '年度所得';
+
+  @override
+  String incomeYear(int year) {
+    return '$year 年度';
+  }
+
+  @override
+  String get incomeNet => '給付淨額';
+
+  @override
+  String get incomeGross => '給付總額';
+
+  @override
+  String get incomeTax => '扣繳稅額';
+
+  @override
+  String get incomePension => '勞退自提';
+
+  @override
+  String get incomeDetail => '所得明細表';
+
+  @override
+  String get incomeWithholding => '扣繳憑單';
+
+  @override
+  String get incomeNone => '沒有所得資料';
 }
