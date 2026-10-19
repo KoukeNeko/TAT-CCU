@@ -163,5 +163,19 @@
   "noLeaves": "休暇申請はありません",
   "applyLeave": "休暇を申請",
   "cancelLeave": "休暇を取り消す",
-  "recordCount": "{count} 件"
+  "recordCount": "{count} 件",
+  "library": "マイライブラリ",
+  "loansOverdue": "延滞",
+  "loansNextDue": "次の返却",
+  "onLoan": "貸出中",
+  "noLoans": "貸出中の本はありません",
+  "bookCount": "{count} 冊",
+  "dueToday": "今日返却",
+  "daysOverdue": "{count} 日延滞",
+  "holdsReady": "取り置き {count} 冊",
+  "heldUntil": "{date} まで取り置き",
+  "loansAndRenewals": "貸出と延長",
+  "catalogSearch": "蔵書検索",
+  "loanDue": "{date} 返却",
+  "loanDaysLeft": "残り {count} 日"
 }

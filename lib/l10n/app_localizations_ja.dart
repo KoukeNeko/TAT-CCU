@@ -613,4 +613,58 @@ class AppLocalizationsJa extends AppLocalizations {
   String recordCount(int count) {
     return '$count 件';
   }
+
+  @override
+  String get library => 'マイライブラリ';
+
+  @override
+  String get loansOverdue => '延滞';
+
+  @override
+  String get loansNextDue => '次の返却';
+
+  @override
+  String get onLoan => '貸出中';
+
+  @override
+  String get noLoans => '貸出中の本はありません';
+
+  @override
+  String bookCount(int count) {
+    return '$count 冊';
+  }
+
+  @override
+  String get dueToday => '今日返却';
+
+  @override
+  String daysOverdue(int count) {
+    return '$count 日延滞';
+  }
+
+  @override
+  String holdsReady(int count) {
+    return '取り置き $count 冊';
+  }
+
+  @override
+  String heldUntil(String date) {
+    return '$date まで取り置き';
+  }
+
+  @override
+  String get loansAndRenewals => '貸出と延長';
+
+  @override
+  String get catalogSearch => '蔵書検索';
+
+  @override
+  String loanDue(String date) {
+    return '$date 返却';
+  }
+
+  @override
+  String loanDaysLeft(int count) {
+    return '残り $count 日';
+  }
 }

@@ -626,4 +626,58 @@ class AppLocalizationsZh extends AppLocalizations {
   String recordCount(int count) {
     return '$count 筆';
   }
+
+  @override
+  String get library => '我的圖書館';
+
+  @override
+  String get loansOverdue => '逾期';
+
+  @override
+  String get loansNextDue => '最近到期';
+
+  @override
+  String get onLoan => '借閱中';
+
+  @override
+  String get noLoans => '沒有借閱中的書';
+
+  @override
+  String bookCount(int count) {
+    return '$count 本';
+  }
+
+  @override
+  String get dueToday => '今天到期';
+
+  @override
+  String daysOverdue(int count) {
+    return '逾期 $count 天';
+  }
+
+  @override
+  String holdsReady(int count) {
+    return '$count 本預約書可取';
+  }
+
+  @override
+  String heldUntil(String date) {
+    return '保留至 $date';
+  }
+
+  @override
+  String get loansAndRenewals => '借閱與續借';
+
+  @override
+  String get catalogSearch => '館藏查詢';
+
+  @override
+  String loanDue(String date) {
+    return '$date 到期';
+  }
+
+  @override
+  String loanDaysLeft(int count) {
+    return '剩 $count 天';
+  }
 }

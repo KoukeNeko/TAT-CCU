@@ -678,4 +678,82 @@ class AppLocalizationsEn extends AppLocalizations {
     );
     return '$_temp0';
   }
+
+  @override
+  String get library => 'My Library';
+
+  @override
+  String get loansOverdue => 'Overdue';
+
+  @override
+  String get loansNextDue => 'Next due';
+
+  @override
+  String get onLoan => 'On loan';
+
+  @override
+  String get noLoans => 'No books on loan';
+
+  @override
+  String bookCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count books',
+      one: '1 book',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get dueToday => 'Due today';
+
+  @override
+  String daysOverdue(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count days overdue',
+      one: '1 day overdue',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String holdsReady(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count holds ready for pickup',
+      one: '1 hold ready for pickup',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String heldUntil(String date) {
+    return 'Held until $date';
+  }
+
+  @override
+  String get loansAndRenewals => 'Loans & renewals';
+
+  @override
+  String get catalogSearch => 'Catalog search';
+
+  @override
+  String loanDue(String date) {
+    return 'Due $date';
+  }
+
+  @override
+  String loanDaysLeft(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count days left',
+      one: '1 day left',
+    );
+    return '$_temp0';
+  }
 }

@@ -115,11 +115,12 @@ void openCampusSystem(BuildContext context, PortalPrefs prefs, CampusSystem s) {
   }
 }
 
-/// `linkId` → in-app page: 選課系統 (iCCU), 學籍系統 and 學生請假系統.
+/// `linkId` → in-app page: 選課系統 (iCCU), 學籍系統, 學生請假系統 and My圖書館.
 const inAppPages = {
   '0075': '/more/iccu',
   '0004': '/more/academic',
   '0064': '/more/leave',
+  '0003': '/more/library',
 };
 
 String entryUrl(CampusSystem s) => s.service.startsWith('http')

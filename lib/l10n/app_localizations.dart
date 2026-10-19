@@ -1083,6 +1083,90 @@ abstract class AppLocalizations {
   /// In zh, this message translates to:
   /// **'{count} 筆'**
   String recordCount(int count);
+
+  /// No description provided for @library.
+  ///
+  /// In zh, this message translates to:
+  /// **'我的圖書館'**
+  String get library;
+
+  /// No description provided for @loansOverdue.
+  ///
+  /// In zh, this message translates to:
+  /// **'逾期'**
+  String get loansOverdue;
+
+  /// No description provided for @loansNextDue.
+  ///
+  /// In zh, this message translates to:
+  /// **'最近到期'**
+  String get loansNextDue;
+
+  /// No description provided for @onLoan.
+  ///
+  /// In zh, this message translates to:
+  /// **'借閱中'**
+  String get onLoan;
+
+  /// No description provided for @noLoans.
+  ///
+  /// In zh, this message translates to:
+  /// **'沒有借閱中的書'**
+  String get noLoans;
+
+  /// No description provided for @bookCount.
+  ///
+  /// In zh, this message translates to:
+  /// **'{count} 本'**
+  String bookCount(int count);
+
+  /// No description provided for @dueToday.
+  ///
+  /// In zh, this message translates to:
+  /// **'今天到期'**
+  String get dueToday;
+
+  /// No description provided for @daysOverdue.
+  ///
+  /// In zh, this message translates to:
+  /// **'逾期 {count} 天'**
+  String daysOverdue(int count);
+
+  /// No description provided for @holdsReady.
+  ///
+  /// In zh, this message translates to:
+  /// **'{count} 本預約書可取'**
+  String holdsReady(int count);
+
+  /// No description provided for @heldUntil.
+  ///
+  /// In zh, this message translates to:
+  /// **'保留至 {date}'**
+  String heldUntil(String date);
+
+  /// No description provided for @loansAndRenewals.
+  ///
+  /// In zh, this message translates to:
+  /// **'借閱與續借'**
+  String get loansAndRenewals;
+
+  /// No description provided for @catalogSearch.
+  ///
+  /// In zh, this message translates to:
+  /// **'館藏查詢'**
+  String get catalogSearch;
+
+  /// No description provided for @loanDue.
+  ///
+  /// In zh, this message translates to:
+  /// **'{date} 到期'**
+  String loanDue(String date);
+
+  /// No description provided for @loanDaysLeft.
+  ///
+  /// In zh, this message translates to:
+  /// **'剩 {count} 天'**
+  String loanDaysLeft(int count);
 }
 
 class _AppLocalizationsDelegate
