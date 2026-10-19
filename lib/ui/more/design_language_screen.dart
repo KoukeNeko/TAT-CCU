@@ -172,7 +172,12 @@ class DesignLanguageScreen extends StatelessWidget {
                         ),
                     ],
                   ),
-                  [rowGap, pageMargin, pageTop].map((v) => v.round()).join('・'),
+                  [
+                    rowGap,
+                    sectionBelow,
+                    pageMargin,
+                    pageTop,
+                  ].map((v) => v.round()).join('・'),
                 ),
                 tile(
                   DesignPart.type,

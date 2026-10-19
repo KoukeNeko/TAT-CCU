@@ -124,7 +124,7 @@ const pageMargin = 16.0;
 const pageTop = 20.0;
 
 /// Space above and below a section label.
-const sectionAbove = 20.0, sectionBelow = 10.0;
+const sectionAbove = 20.0, sectionBelow = 12.0;
 
 const fontTw = 'LINESeedTW';
 const fontJp = 'LINESeedJP';
