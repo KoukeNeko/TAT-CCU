@@ -351,6 +351,8 @@ class _LoaderState<T> extends State<Loader<T>> {
           );
         }
         return RefreshIndicator(
+          // Bodies extend under the glass app bar; start the spinner below it.
+          edgeOffset: MediaQuery.paddingOf(context).top,
           onRefresh: _reload,
           child: widget.builder(context, snap.data as T),
         );

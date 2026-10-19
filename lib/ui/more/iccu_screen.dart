@@ -242,6 +242,8 @@ class _Hub extends StatelessWidget {
     );
     final apps = s.applications;
     return RefreshIndicator(
+      // Below the glass app bar, which the body extends under.
+      edgeOffset: MediaQuery.paddingOf(context).top,
       onRefresh: onRefresh,
       child: ListView(
         padding: scrollPadding(context),
