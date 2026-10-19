@@ -29,3 +29,23 @@ dev_dependencies:
 
 flutter:
   uses-material-design: true
+
+  # LINE Seed (SIL OFL 1.1; licenses in assets/fonts). Thin is left out to
+  # keep the app smaller; w900 falls back to ExtraBold.
+  fonts:
+    - family: LINESeedTW
+      fonts:
+        - asset: assets/fonts/LINESeedTW_TTF_Rg.ttf
+          weight: 400
+        - asset: assets/fonts/LINESeedTW_TTF_Bd.ttf
+          weight: 700
+        - asset: assets/fonts/LINESeedTW_TTF_Eb.ttf
+          weight: 800
+    - family: LINESeedJP
+      fonts:
+        - asset: assets/fonts/LINESeedJP_A_TTF_Rg.ttf
+          weight: 400
+        - asset: assets/fonts/LINESeedJP_A_TTF_Bd.ttf
+          weight: 700
+        - asset: assets/fonts/LINESeedJP_A_TTF_Eb.ttf
+          weight: 800

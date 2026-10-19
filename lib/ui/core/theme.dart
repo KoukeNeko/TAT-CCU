@@ -96,7 +96,13 @@ extension TonesContext on BuildContext {
   Tones get tones => Theme.of(this).extension<Tones>()!;
 }
 
-ThemeData buildTheme(Brightness brightness) {
+/// LINE Seed, bundled under the SIL OFL (assets/fonts). Japanese uses the
+/// JP cut so kanji take Japanese shapes; everything else uses the TW cut,
+/// which also covers Latin.
+const fontTw = 'LINESeedTW';
+const fontJp = 'LINESeedJP';
+
+ThemeData buildTheme(Brightness brightness, {String fontFamily = fontTw}) {
   final light = brightness == Brightness.light;
   final tones = Tones.of(brightness);
   final colors = ColorScheme.fromSeed(
@@ -117,7 +123,11 @@ ThemeData buildTheme(Brightness brightness) {
     surfaceContainerHigh: Color(light ? 0xFFF3E7E1 : 0xFF2C2320),
     outlineVariant: Color(light ? 0xFFF0E3DC : 0xFF3A2E2A),
   );
-  final base = ThemeData(colorScheme: colors);
+  final base = ThemeData(
+    colorScheme: colors,
+    fontFamily: fontFamily,
+    fontFamilyFallback: [fontFamily == fontTw ? fontJp : fontTw],
+  );
   final text = base.textTheme;
   return base.copyWith(
     extensions: [tones],
@@ -140,6 +150,7 @@ ThemeData buildTheme(Brightness brightness) {
       toolbarHeight: 72,
       titleSpacing: 20,
       titleTextStyle: TextStyle(
+        fontFamily: fontFamily,
         fontSize: 28,
         fontWeight: FontWeight.w900,
         color: colors.onSurface,
