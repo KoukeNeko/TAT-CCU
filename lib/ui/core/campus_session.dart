@@ -324,95 +324,17 @@ class _Progress extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
-    final tones = context.tones;
-    final scheme = Theme.of(context).colorScheme;
-    final insets = MediaQuery.paddingOf(context);
-    final title = _stepTitle(l10n, step);
-    final detail = step == _Step.signingIn ? l10n.campusFillingIn : where;
-    return ColoredBox(
-      color: scheme.surface,
-      child: Stack(
-        children: [
-          Align(
-            alignment: const Alignment(0, -0.25),
-            child: MorphingCookie(size: 170, color: tones.lilac.fill),
-          ),
-          Positioned(
-            left: 24,
-            right: 24,
-            bottom: insets.bottom + 28,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  '${step.index + 1} / ${_Step.values.length}',
-                  style: TextStyle(
-                    fontSize: 13,
-                    fontWeight: FontWeight.w900,
-                    color: scheme.onSurfaceVariant,
-                  ),
-                ),
-                const SizedBox(height: 6),
-                AnimatedSwitcher(
-                  duration: const Duration(milliseconds: 250),
-                  layoutBuilder: (current, previous) => Stack(
-                    alignment: Alignment.bottomLeft,
-                    children: [...previous, ?current],
-                  ),
-                  child: Text(
-                    title,
-                    key: ValueKey(step),
-                    style: const TextStyle(
-                      fontSize: 30,
-                      fontWeight: FontWeight.w900,
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  detail,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: TextStyle(
-                    fontSize: 13,
-                    fontWeight: FontWeight.w700,
-                    color: scheme.onSurfaceVariant,
-                  ),
-                ),
-                const SizedBox(height: 18),
-                Row(
-                  children: [
-                    for (final s in _Step.values) ...[
-                      if (s.index > 0) const SizedBox(width: 6),
-                      Expanded(
-                        child: AnimatedContainer(
-                          duration: const Duration(milliseconds: 300),
-                          height: 6,
-                          decoration: BoxDecoration(
-                            borderRadius: BorderRadius.circular(3),
-                            color: s.index < step.index
-                                ? tones.mint.strong
-                                : s == step
-                                ? tones.lilac.strong
-                                : scheme.surfaceContainerHigh,
-                          ),
-                        ),
-                      ),
-                    ],
-                  ],
-                ),
-                if (onShowPage case final show?) ...[
-                  const SizedBox(height: 18),
-                  FilledButton.tonal(
-                    onPressed: show,
-                    child: Text(l10n.showPage),
-                  ),
-                ],
-              ],
+    return LoadingView(
+      title: _stepTitle(l10n, step),
+      detail: step == _Step.signingIn ? l10n.campusFillingIn : where,
+      step: step.index,
+      steps: _Step.values.length,
+      action: onShowPage == null
+          ? null
+          : FilledButton.tonal(
+              onPressed: onShowPage,
+              child: Text(l10n.showPage),
             ),
-          ),
-        ],
-      ),
     );
   }
 }

@@ -874,4 +874,10 @@ class AppLocalizationsZh extends AppLocalizations {
   String allCollections(int count) {
     return '全部 $count 個';
   }
+
+  @override
+  String get loadingCollections => '讀取館藏清單';
+
+  @override
+  String get loadingShelves => '讀取新書與暢銷榜';
 }

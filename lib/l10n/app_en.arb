@@ -239,5 +239,7 @@
   "libraryDiscovery": "Library Discovery",
   "viewAll": "All",
   "otherCollections": "More collections",
-  "allCollections": "All {count}"
+  "allCollections": "All {count}",
+  "loadingCollections": "Loading collections",
+  "loadingShelves": "Loading new books and best sellers"
 }

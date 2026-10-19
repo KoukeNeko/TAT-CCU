@@ -3,6 +3,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../data/services/primo_client.dart';
 import '../../l10n/l10n.dart';
+import '../core/campus_session.dart';
 import '../core/campus_web_screen.dart';
 import '../core/theme.dart';
 import '../core/widgets.dart';
@@ -195,12 +196,19 @@ typedef _Shelves = ({
 
 /// What to browse before searching: the newest month of 新進圖書, the
 /// 誠品暢銷榜 shelf and the other themed collections.
-Future<_Shelves> _loadShelves(PrimoClient primo) async {
+/// Two steps, reported through [onStep]: the collection tree, then the books
+/// of the newest month and 誠品暢銷榜 together.
+Future<_Shelves> _loadShelves(
+  PrimoClient primo,
+  void Function(int step) onStep,
+) async {
+  onStep(0);
   final tree = await primo.collections();
   final news = [for (final c in tree) ?c.find(newBooksId)].firstOrNull;
   final hot = tree.where((c) => c.name.contains('暢銷')).firstOrNull;
   final month = news?.withItems.firstOrNull;
   final hotPart = hot?.withItems.firstOrNull;
+  onStep(1);
   final (newPage, hotPage) = await (
     month == null
         ? Future.value((total: 0, records: <LibraryRecord>[]))
@@ -240,19 +248,76 @@ List<LibraryRecord> _featured(List<LibraryRecord> books) {
 
 /// Design M1-C (design/round-11): a daily carousel of new books, shelves
 /// of 新進圖書 and 誠品暢銷榜, then the other collections.
-class _Browse extends StatelessWidget {
+class _Browse extends StatefulWidget {
   const _Browse({required this.primo});
 
   final PrimoClient primo;
 
   @override
+  State<_Browse> createState() => _BrowseState();
+}
+
+class _BrowseState extends State<_Browse> {
+  _Shelves? _shelves;
+  Object? _error;
+  var _step = 0;
+
+  @override
+  void initState() {
+    super.initState();
+    _load();
+  }
+
+  Future<void> _load() async {
+    try {
+      final shelves = await _loadShelves(widget.primo, (step) {
+        if (mounted) setState(() => _step = step);
+      });
+      if (mounted) setState(() => _shelves = shelves);
+    } catch (e) {
+      if (!mounted) return;
+      // Keep what is shown when refreshing fails.
+      if (_shelves == null) {
+        setState(() => _error = e);
+      } else {
+        ScaffoldMessenger.of(context)
+            .showSnackBar(SnackBar(content: Text(context.l10n.loadFailed)));
+      }
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
+    final l10n = context.l10n;
+    final shelves = _shelves;
+    if (shelves == null) {
+      return _error != null
+          ? CampusError(
+              message: '$_error',
+              onRetry: () {
+                setState(() => _error = null);
+                _load();
+              },
+            )
+          : LoadingView(
+              title: _step == 0 ? l10n.loadingCollections : l10n.loadingShelves,
+              step: _step,
+              steps: 2,
+            );
+    }
+    return RefreshIndicator(
+      edgeOffset: MediaQuery.paddingOf(context).top,
+      onRefresh: _load,
+      child: _list(context, shelves),
+    );
+  }
+
+  Widget _list(BuildContext context, _Shelves shelves) {
     final l10n = context.l10n;
     final scheme = Theme.of(context).colorScheme;
     final tones = context.tones;
-    return Loader(
-      load: () => _loadShelves(primo),
-      builder: (context, shelves) {
+    {
+      {
         final featured = _featured(shelves.newBooks);
         final month = shelves.month;
         final hot = shelves.hot;
@@ -269,15 +334,20 @@ class _Browse extends StatelessWidget {
             if (month != null && shelves.newBooks.isNotEmpty) ...[
               _ShelfHeader(
                 title: l10n.newBooks,
-                onAll: () =>
-                    context.push('/more/library/collection/$newBooksId'),
+                onAll: () => context.push(
+                  '/more/library/collection/$newBooksId',
+                  extra: l10n.newBooks,
+                ),
               ),
               _Shelf(books: shelves.newBooks, offset: 1),
             ],
             if (hot != null && shelves.hotBooks.isNotEmpty) ...[
               _ShelfHeader(
                 title: hot.name,
-                onAll: () => context.push('/more/library/collection/${hot.id}'),
+                onAll: () => context.push(
+                  '/more/library/collection/${hot.id}',
+                  extra: hot.name,
+                ),
               ),
               _Shelf(books: shelves.hotBooks, offset: 2),
             ],
@@ -289,7 +359,7 @@ class _Browse extends StatelessWidget {
             GridView.count(
               crossAxisCount: 2,
               shrinkWrap: true,
-              padding: const EdgeInsets.symmetric(horizontal: 16),
+              padding: const EdgeInsets.symmetric(horizontal: pageMargin),
               physics: const NeverScrollableScrollPhysics(),
               mainAxisSpacing: 8,
               crossAxisSpacing: 8,
@@ -300,8 +370,10 @@ class _Browse extends StatelessWidget {
                     tone: tones.cycle[(i + 3) % tones.cycle.length],
                     radius: Corners.row,
                     padding: const EdgeInsets.all(12),
-                    onTap: () =>
-                        context.push('/more/library/collection/${c.id}'),
+                    onTap: () => context.push(
+                      '/more/library/collection/${c.id}',
+                      extra: c.name,
+                    ),
                     child: Align(
                       alignment: Alignment.topLeft,
                       child: Text(
@@ -344,8 +416,8 @@ class _Browse extends StatelessWidget {
             ),
           ],
         );
-      },
-    );
+      }
+    }
   }
 }
 
@@ -747,6 +819,7 @@ class _RecordListState extends State<RecordList> {
     final l10n = context.l10n;
     final total = _total;
     final more = total != null && _records.length < total;
+    if (total == null && _loading) return const LoadingView();
     return NotificationListener<ScrollNotification>(
       onNotification: (n) {
         if (more && n.metrics.extentAfter < 400) _more();

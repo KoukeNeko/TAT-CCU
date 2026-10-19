@@ -239,5 +239,7 @@
   "libraryDiscovery": "図書館資料検索",
   "viewAll": "すべて",
   "otherCollections": "その他のコレクション",
-  "allCollections": "すべて（{count}）"
+  "allCollections": "すべて（{count}）",
+  "loadingCollections": "コレクションを読み込み中",
+  "loadingShelves": "新着とベストセラーを読み込み中"
 }

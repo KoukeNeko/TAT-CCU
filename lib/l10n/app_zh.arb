@@ -595,5 +595,7 @@
         "type": "int"
       }
     }
-  }
+  },
+  "loadingCollections": "讀取館藏清單",
+  "loadingShelves": "讀取新書與暢銷榜"
 }

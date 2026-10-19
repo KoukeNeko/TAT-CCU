@@ -80,6 +80,7 @@ GoRouter buildRouter(EcourseAuthRepository auth) => GoRouter(
                       builder: (_, state) => ModuleScreen(
                         courseId: int.parse(state.pathParameters['id']!),
                         cmid: int.parse(state.pathParameters['cmid']!),
+                        title: state.extra as String?,
                       ),
                     ),
                     for (final part in CoursePart.values)
@@ -143,6 +144,7 @@ GoRouter buildRouter(EcourseAuthRepository auth) => GoRouter(
                       path: 'collection/:id',
                       builder: (_, state) => LibraryCollectionScreen(
                         id: state.pathParameters['id']!,
+                        title: state.extra as String?,
                       ),
                     ),
                   ],

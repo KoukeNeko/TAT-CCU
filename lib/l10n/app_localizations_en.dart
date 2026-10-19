@@ -957,4 +957,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String allCollections(int count) {
     return 'All $count';
   }
+
+  @override
+  String get loadingCollections => 'Loading collections';
+
+  @override
+  String get loadingShelves => 'Loading new books and best sellers';
 }

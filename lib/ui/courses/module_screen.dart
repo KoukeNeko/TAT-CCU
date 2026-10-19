@@ -13,14 +13,23 @@ const moduleTypesWithPage = {'assign', 'quiz', 'folder', 'resource'};
 /// One assignment, quiz or file collection (design/round-11, variant B1):
 /// a horizontal progress card for timed work, then files and description.
 class ModuleScreen extends StatelessWidget {
-  const ModuleScreen({super.key, required this.courseId, required this.cmid});
+  const ModuleScreen({
+    super.key,
+    required this.courseId,
+    required this.cmid,
+    this.title,
+  });
 
   final int courseId, cmid;
+
+  /// The module's name when the opener knows it; shown while loading.
+  final String? title;
 
   @override
   Widget build(BuildContext context) {
     final repo = context.read<EcourseRepository>();
     return Loader<Module?>(
+      bar: (context) => subBar(context, title ?? ''),
       load: () async =>
           [for (final s in await repo.contents(courseId)) ...s.modules]
               .where((m) => m.id == cmid)

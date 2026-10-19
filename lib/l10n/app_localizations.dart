@@ -1539,6 +1539,18 @@ abstract class AppLocalizations {
   /// In zh, this message translates to:
   /// **'全部 {count} 個'**
   String allCollections(int count);
+
+  /// No description provided for @loadingCollections.
+  ///
+  /// In zh, this message translates to:
+  /// **'讀取館藏清單'**
+  String get loadingCollections;
+
+  /// No description provided for @loadingShelves.
+  ///
+  /// In zh, this message translates to:
+  /// **'讀取新書與暢銷榜'**
+  String get loadingShelves;
 }
 
 class _AppLocalizationsDelegate

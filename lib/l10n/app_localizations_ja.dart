@@ -862,4 +862,10 @@ class AppLocalizationsJa extends AppLocalizations {
   String allCollections(int count) {
     return 'すべて（$count）';
   }
+
+  @override
+  String get loadingCollections => 'コレクションを読み込み中';
+
+  @override
+  String get loadingShelves => '新着とベストセラーを読み込み中';
 }

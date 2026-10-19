@@ -32,7 +32,10 @@ class LibraryCollectionsScreen extends StatelessWidget {
                   tone: tones.cycle[i % tones.cycle.length],
                   radius: Corners.row,
                   padding: const EdgeInsets.all(14),
-                  onTap: () => context.push('/more/library/collection/${c.id}'),
+                  onTap: () => context.push(
+                    '/more/library/collection/${c.id}',
+                    extra: c.name,
+                  ),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -69,13 +72,17 @@ class LibraryCollectionsScreen extends StatelessWidget {
 /// One collection's books (screen 8). Nested collections such as 新進圖書
 /// (year → month) become chips of the parts that hold books.
 class LibraryCollectionScreen extends StatelessWidget {
-  const LibraryCollectionScreen({super.key, required this.id});
+  const LibraryCollectionScreen({super.key, required this.id, this.title});
 
   final String id;
+
+  /// Known by the page that opened this one; shown while the tree loads.
+  final String? title;
 
   @override
   Widget build(BuildContext context) {
     return Loader(
+      bar: (context) => subBar(context, title ?? ''),
       load: PrimoClient().collections,
       builder: (context, tree) {
         final collection = [for (final c in tree) ?c.find(id)].firstOrNull;

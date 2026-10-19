@@ -398,6 +398,8 @@ class _Contents extends StatelessWidget {
   Widget build(BuildContext context) {
     final repo = context.read<EcourseRepository>();
     return Loader<List<Section>>(
+      bar: (context) =>
+          subBar(context, CoursePart.contents.title(context.l10n)),
       load: () => repo.contents(courseId),
       builder: (context, sections) => sections.isEmpty
           ? Scaffold(
@@ -607,7 +609,10 @@ class _ModuleRow extends StatelessWidget {
     final overdue = due != null && due.isBefore(DateTime.now());
     return InkWell(
       onTap: moduleTypesWithPage.contains(module.type)
-          ? () => context.push('/courses/$courseId/modules/${module.id}')
+          ? () => context.push(
+              '/courses/$courseId/modules/${module.id}',
+              extra: module.name,
+            )
           : module.url == null
           ? null
           : () => openExternal(module.url!),
