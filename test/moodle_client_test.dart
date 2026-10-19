@@ -31,7 +31,7 @@ void main() {
     final client = MoodleClient(
       siteUrl: Uri.parse('https://example.test/'),
       token: 't',
-      httpClient: MockClient(
+      newHttpClient: () => MockClient(
         (_) async => http.Response(
           jsonEncode({
             'exception': 'x',
@@ -52,6 +52,51 @@ void main() {
         ),
       ),
     );
+  });
+
+  group('F5 backend', () {
+    test('a stalled request is sent again on a fresh connection', () async {
+      var clients = 0;
+      final client = MoodleClient(
+        siteUrl: Uri.parse('https://example.test/'),
+        token: 't',
+        stallAfter: const Duration(milliseconds: 50),
+        newHttpClient: () {
+          // The first connection lands on the slow backend.
+          final slow = clients++ == 0;
+          return MockClient((_) async {
+            if (slow) await Future<void>.delayed(const Duration(seconds: 1));
+            return http.Response('7', 200);
+          });
+        },
+      );
+      final watch = Stopwatch()..start();
+      expect(await client.call('local_mail_get_unread_count'), 7);
+      expect(clients, 2);
+      expect(watch.elapsed, lessThan(const Duration(milliseconds: 500)));
+    });
+
+    test('keeps the cookie of a backend that answered quickly', () async {
+      final cookies = <String?>[];
+      final client = MoodleClient(
+        siteUrl: Uri.parse('https://example.test/'),
+        token: 't',
+        newHttpClient: () => MockClient((request) async {
+          cookies.add(request.headers['cookie']);
+          return http.Response(
+            '1',
+            200,
+            headers: {
+              'set-cookie':
+                  'MoodleSession=x; path=/; secure,f5_persisten=fast1; path=/',
+            },
+          );
+        }),
+      );
+      await client.call('local_mail_get_unread_count');
+      await client.call('local_mail_get_unread_count');
+      expect(cookies, [null, 'f5_persisten=fast1']);
+    });
   });
 
   group('launch callback', () {
@@ -77,7 +122,7 @@ void main() {
     final client = MoodleClient(
       siteUrl: Uri.parse('https://example.test/'),
       token: 't',
-      httpClient: MockClient((_) async {
+      newHttpClient: () => MockClient((_) async {
         calls++;
         if (calls == 1) {
           throw http.ClientException(
@@ -96,7 +141,7 @@ void main() {
     final client = MoodleClient(
       siteUrl: Uri.parse('https://example.test/'),
       token: 't',
-      httpClient: MockClient((_) async {
+      newHttpClient: () => MockClient((_) async {
         calls++;
         throw http.ClientException('Connection reset by peer');
       }),

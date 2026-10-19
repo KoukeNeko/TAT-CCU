@@ -18,9 +18,8 @@ void main() {
         siteUrl: Uri.parse('https://example.test/'),
         token: 't',
         cache: ResponseCache('t', dir: dir),
-        httpClient: MockClient(
-          (_) async => http.Response(jsonEncode(count), 200),
-        ),
+        newHttpClient: () =>
+            MockClient((_) async => http.Response(jsonEncode(count), 200)),
       ),
     );
 
@@ -41,7 +40,7 @@ void main() {
         siteUrl: Uri.parse('https://example.test/'),
         token: 't',
         cache: ResponseCache('t', dir: dir),
-        httpClient: MockClient((request) async {
+        newHttpClient: () => MockClient((request) async {
           final function = request.bodyFields['wsfunction']!;
           calls.add(function);
           return http.Response(
