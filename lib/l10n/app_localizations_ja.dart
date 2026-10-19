@@ -465,6 +465,14 @@ class AppLocalizationsJa extends AppLocalizations {
   String get noAnnouncements => 'お知らせはありません';
 
   @override
+  String get noDiscussions => 'ディスカッションはありません';
+
+  @override
+  String replyCount(int count) {
+    return '返信 $count 件';
+  }
+
+  @override
   String get noGradeItems => '成績項目はまだありません';
 
   @override

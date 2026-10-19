@@ -6,6 +6,7 @@ import '../ui/account/account_screen.dart';
 import '../ui/core/app_shell.dart';
 import '../ui/courses/course_detail_screen.dart';
 import '../ui/courses/courses_screen.dart';
+import '../ui/courses/forum_screen.dart';
 import '../ui/courses/module_screen.dart';
 import '../ui/login/login_screen.dart';
 import '../ui/more/academic_screen.dart';
@@ -89,6 +90,13 @@ GoRouter buildRouter(EcourseAuthRepository auth) => GoRouter(
                       builder: (_, state) => ModuleScreen(
                         courseId: int.parse(state.pathParameters['id']!),
                         cmid: int.parse(state.pathParameters['cmid']!),
+                        title: state.extra as String?,
+                      ),
+                    ),
+                    GoRoute(
+                      path: 'discussions/:did',
+                      builder: (_, state) => DiscussionScreen(
+                        discussionId: int.parse(state.pathParameters['did']!),
                         title: state.extra as String?,
                       ),
                     ),

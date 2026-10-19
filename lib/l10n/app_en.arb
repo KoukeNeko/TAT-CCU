@@ -134,6 +134,8 @@
   "dueOn": "Due {date}",
   "fileCount": "{count} files",
   "noAnnouncements": "No announcements",
+  "noDiscussions": "No discussions",
+  "replyCount": "{count, plural, =1{1 reply} other{{count} replies}}",
   "noGradeItems": "No grade items yet",
   "searchCourses": "Search courses",
   "noMatchingCourses": "No matching courses",

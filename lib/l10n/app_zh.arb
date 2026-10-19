@@ -345,6 +345,15 @@
     }
   },
   "noAnnouncements": "沒有公告",
+  "noDiscussions": "沒有討論",
+  "replyCount": "{count} 則回覆",
+  "@replyCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "noGradeItems": "還沒有成績項目",
   "searchCourses": "搜尋課程",
   "noMatchingCourses": "沒有符合的課程",

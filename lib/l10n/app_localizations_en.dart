@@ -524,6 +524,20 @@ class AppLocalizationsEn extends AppLocalizations {
   String get noAnnouncements => 'No announcements';
 
   @override
+  String get noDiscussions => 'No discussions';
+
+  @override
+  String replyCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count replies',
+      one: '1 reply',
+    );
+    return '$_temp0';
+  }
+
+  @override
   String get noGradeItems => 'No grade items yet';
 
   @override

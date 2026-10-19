@@ -7,6 +7,7 @@ import '../../domain/models/course.dart';
 import '../core/theme.dart';
 import '../core/widgets.dart';
 import '../today/due_screen.dart';
+import 'forum_screen.dart';
 import 'module_screen.dart';
 import '../../l10n/l10n.dart';
 
@@ -25,7 +26,7 @@ const _moduleIcons = {
 /// one pass.
 typedef _Summary = ({
   List<DueItem> due,
-  List<Post> posts,
+  List<Discussion> posts,
   List<GradeLine> grades,
   String? total,
   int sections,
@@ -668,34 +669,11 @@ class _Announcements extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final repo = context.read<EcourseRepository>();
-    final scheme = Theme.of(context).colorScheme;
-    return Loader<List<Post>>.watch(
+    return Loader<List<Discussion>>.watch(
       watch: () => repo.watch((repo) => repo.announcements(courseId)),
-      builder: (context, posts) {
-        if (posts.isEmpty) return EmptyState(context.l10n.noAnnouncements);
-        return ListView.separated(
-          padding: scrollPadding(context),
-          itemCount: posts.length,
-          separatorBuilder: (_, _) => const SizedBox(height: 10),
-          itemBuilder: (context, i) {
-            final p = posts[i];
-            return Card(
-              color: scheme.surfaceContainerLow,
-              child: ExpansionTile(
-                shape: const Border(),
-                title: Text(
-                  p.subject,
-                  style: const TextStyle(fontWeight: FontWeight.w800),
-                ),
-                subtitle: Text('${p.author}・${dateTimeLabel(context, p.time)}'),
-                childrenPadding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
-                expandedAlignment: Alignment.topLeft,
-                children: [Text(p.body)],
-              ),
-            );
-          },
-        );
-      },
+      builder: (context, posts) => posts.isEmpty
+          ? EmptyState(context.l10n.noAnnouncements)
+          : DiscussionList(courseId: courseId, discussions: posts),
     );
   }
 }

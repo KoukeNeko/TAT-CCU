@@ -134,6 +134,8 @@
   "dueOn": "{date} 締切",
   "fileCount": "{count} ファイル",
   "noAnnouncements": "お知らせはありません",
+  "noDiscussions": "ディスカッションはありません",
+  "replyCount": "返信 {count} 件",
   "noGradeItems": "成績項目はまだありません",
   "searchCourses": "コースを検索",
   "noMatchingCourses": "該当するコースはありません",

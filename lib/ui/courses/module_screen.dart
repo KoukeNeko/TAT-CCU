@@ -6,9 +6,10 @@ import '../../data/repositories/ecourse_repository.dart';
 import '../core/theme.dart';
 import '../core/widgets.dart';
 import '../../l10n/l10n.dart';
+import 'forum_screen.dart';
 
 /// Module types with a page of their own; others open on eCourse2.
-const moduleTypesWithPage = {'assign', 'quiz', 'folder', 'resource'};
+const moduleTypesWithPage = {'assign', 'quiz', 'folder', 'resource', 'forum'};
 
 /// One assignment, quiz or file collection (design/round-11, variant B1):
 /// a horizontal progress card for timed work, then files and description.
@@ -47,6 +48,7 @@ class ModuleScreen extends StatelessWidget {
             ),
             builder: (context, a) => _AssignmentBody(assignment: a),
           ),
+          'forum' => ForumBody(courseId: courseId, forumId: module!.instance),
           'quiz' => Loader<Quiz>.watch(
             watch: () =>
                 repo.watch((repo) => repo.quiz(courseId, module!.instance)),
@@ -66,7 +68,7 @@ String _stamp(DateTime d) => '${_day(d)} ${clock(d.hour * 60 + d.minute)}';
 String _full(BuildContext context, DateTime d) =>
     '${_day(d)} ${weekdayName(context, d.weekday)} ${clock(d.hour * 60 + d.minute)}';
 
-String _size(int bytes) => switch (bytes) {
+String fileSize(int bytes) => switch (bytes) {
   < 1024 => '$bytes B',
   < 1024 * 1024 => '${(bytes / 1024).round()} KB',
   _ => '${(bytes / 1024 / 1024).toStringAsFixed(1)} MB',
@@ -107,7 +109,7 @@ class _AssignmentBody extends StatelessWidget {
         ),
         if (a.submission.isNotEmpty) ...[
           SectionLabel(l10n.mySubmission),
-          _FileList(files: a.submission, detail: (f) => _stamp(f.modified)),
+          FileList(files: a.submission, detail: (f) => _stamp(f.modified)),
         ],
         if (a.intro.isNotEmpty) ...[
           SectionLabel(l10n.description),
@@ -115,7 +117,7 @@ class _AssignmentBody extends StatelessWidget {
         ],
         if (a.attachments.isNotEmpty) ...[
           SectionLabel(l10n.attachments),
-          _FileList(files: a.attachments, detail: (f) => _size(f.size)),
+          FileList(files: a.attachments, detail: (f) => fileSize(f.size)),
         ],
       ],
     );
@@ -198,16 +200,16 @@ class _FilesBody extends StatelessWidget {
           children: [
             _Fact(value: '${files.length}', label: context.l10n.filesLabel),
             const SizedBox(width: 8),
-            _Fact(value: _size(total), label: context.l10n.total),
+            _Fact(value: fileSize(total), label: context.l10n.total),
             const SizedBox(width: 8),
             _Fact(value: _day(latest), label: context.l10n.lastUpdated),
           ],
         ),
         const SizedBox(height: 12),
-        _FileList(
+        FileList(
           files: files,
           detail: (f) =>
-              context.l10n.fileUpdated(_size(f.size), _day(f.modified)),
+              context.l10n.fileUpdated(fileSize(f.size), _day(f.modified)),
         ),
       ],
     );
@@ -438,8 +440,8 @@ class _Text extends StatelessWidget {
   }
 }
 
-class _FileList extends StatelessWidget {
-  const _FileList({required this.files, required this.detail});
+class FileList extends StatelessWidget {
+  const FileList({super.key, required this.files, required this.detail});
 
   final List<ModuleFile> files;
   final String Function(ModuleFile) detail;

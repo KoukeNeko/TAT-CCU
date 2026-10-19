@@ -478,6 +478,14 @@ class AppLocalizationsZh extends AppLocalizations {
   String get noAnnouncements => '沒有公告';
 
   @override
+  String get noDiscussions => '沒有討論';
+
+  @override
+  String replyCount(int count) {
+    return '$count 則回覆';
+  }
+
+  @override
   String get noGradeItems => '還沒有成績項目';
 
   @override

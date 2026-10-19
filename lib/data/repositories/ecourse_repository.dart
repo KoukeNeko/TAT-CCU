@@ -42,7 +42,28 @@ typedef Module = ({
   DateTime? due,
 });
 typedef Section = ({String name, List<Module> modules});
-typedef Post = ({String subject, String author, DateTime time, String body});
+
+/// A forum discussion as its list shows it; [body] is the first post.
+typedef Discussion = ({
+  int id,
+  String subject,
+  String author,
+  DateTime time,
+  String body,
+  int replies,
+  bool pinned,
+});
+
+/// One post in a discussion; [parent] is 0 for the first post.
+typedef ForumPost = ({
+  int id,
+  int parent,
+  String author,
+  DateTime time,
+  String subject,
+  String body,
+  List<ModuleFile> attachments,
+});
 typedef GradeLine = ({String name, String grade, String percent});
 
 /// A calendar entry. [kind] is the module (`assign`, `quiz`, …) or, for
@@ -312,22 +333,55 @@ class EcourseRepository {
     ].where((s) => s.modules.isNotEmpty).toList();
   }
 
-  Future<List<Post>> announcements(int courseId) async {
+  /// The course's 公佈欄 (the news forum).
+  Future<List<Discussion>> announcements(int courseId) async {
     final forums = await _client.call('mod_forum_get_forums_by_courses', {
       'courseids': [courseId],
     }) as List;
-    final news = forums.where((f) => f['type'] == 'news').toList();
-    if (news.isEmpty) return [];
+    final news = forums.where((f) => f['type'] == 'news').firstOrNull;
+    if (news == null) return [];
+    return discussions((news['id'] as num).toInt());
+  }
+
+  /// Pinned first, then newest activity, as eCourse2 orders them.
+  Future<List<Discussion>> discussions(int forumId) async {
     final r = await _client.call('mod_forum_get_forum_discussions', {
-      'forumid': news.first['id'],
+      'forumid': forumId,
     }) as Map;
     return [
       for (final d in r['discussions'] as List)
         (
-          subject: '${d['subject'] ?? d['name']}',
+          id: (d['discussion'] as num).toInt(),
+          subject: multilang('${d['subject'] ?? d['name']}'),
           author: '${d['userfullname'] ?? ''}',
           time: _ts(d['timemodified'] ?? d['created']),
           body: _plain('${d['message'] ?? ''}'),
+          replies: (d['numreplies'] as num?)?.toInt() ?? 0,
+          pinned: d['pinned'] == true,
+        ),
+    ];
+  }
+
+  /// Oldest first, so the opening post leads.
+  Future<List<ForumPost>> discussionPosts(int discussionId) async {
+    final r = await _client.call('mod_forum_get_discussion_posts', {
+      'discussionid': discussionId,
+      'sortby': 'created',
+      'sortdirection': 'ASC',
+    }) as Map;
+    return [
+      for (final p in r['posts'] as List)
+        (
+          id: (p['id'] as num).toInt(),
+          parent: (p['parentid'] as num?)?.toInt() ?? 0,
+          author: '${p['author']?['fullname'] ?? ''}',
+          time: _ts(p['timecreated']),
+          subject: multilang('${p['subject'] ?? ''}'),
+          body: _plain('${p['message'] ?? ''}'),
+          attachments: [
+            for (final f in p['attachments'] as List? ?? const [])
+              _file(f as Map),
+          ],
         ),
     ];
   }

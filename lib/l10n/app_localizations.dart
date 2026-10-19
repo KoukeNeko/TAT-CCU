@@ -898,6 +898,18 @@ abstract class AppLocalizations {
   /// **'沒有公告'**
   String get noAnnouncements;
 
+  /// No description provided for @noDiscussions.
+  ///
+  /// In zh, this message translates to:
+  /// **'沒有討論'**
+  String get noDiscussions;
+
+  /// No description provided for @replyCount.
+  ///
+  /// In zh, this message translates to:
+  /// **'{count} 則回覆'**
+  String replyCount(int count);
+
   /// No description provided for @noGradeItems.
   ///
   /// In zh, this message translates to:
