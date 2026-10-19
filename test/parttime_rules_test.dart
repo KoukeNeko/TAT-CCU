@@ -1,5 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:tat_ccu/ui/more/parttime_data.dart';
+import 'package:tat_ccu/data/repositories/parttime_data.dart';
 
 HoursEntry entry(DateTime date, int start, int end) => (
   id: '$date$start',

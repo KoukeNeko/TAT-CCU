@@ -7,7 +7,7 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 
 import '../../l10n/l10n.dart';
-import 'portal_screen.dart';
+import '../core/campus_systems.dart';
 import '../core/campus_session.dart';
 import '../core/campus_web_screen.dart';
 import '../core/theme.dart';

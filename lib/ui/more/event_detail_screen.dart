@@ -5,7 +5,7 @@ import '../../l10n/l10n.dart';
 import '../core/campus_session.dart';
 import '../core/theme.dart';
 import '../core/widgets.dart';
-import 'events_data.dart';
+import '../../data/services/events_data.dart';
 import 'events_screen.dart';
 
 /// An event from the list, read again signed in: whether the student has

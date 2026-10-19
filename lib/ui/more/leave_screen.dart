@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../data/repositories/campus_cache.dart';
 import '../../l10n/l10n.dart';
-import 'portal_screen.dart';
+import '../core/campus_systems.dart';
 import '../core/campus_session.dart';
 import '../core/campus_web_screen.dart';
 import '../core/theme.dart';

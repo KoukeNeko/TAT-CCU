@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
-import '../core/theme.dart';
-import '../core/campus_web_screen.dart';
-import '../core/widgets.dart';
+import 'theme.dart';
+import 'campus_web_screen.dart';
+import 'widgets.dart';
 import '../../l10n/l10n.dart';
 
 /// Portal home; bounces to the portal login when its session has lapsed.

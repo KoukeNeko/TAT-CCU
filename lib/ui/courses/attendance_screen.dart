@@ -5,7 +5,7 @@ import '../../l10n/l10n.dart';
 import '../core/campus_session.dart';
 import '../core/theme.dart';
 import '../core/widgets.dart';
-import 'ecourse_web.dart';
+import '../../data/services/ecourse_web.dart';
 
 /// An attendance activity (design/round-11 course-modules-screens): the
 /// attendance rate as the hero, then every session's status and points.

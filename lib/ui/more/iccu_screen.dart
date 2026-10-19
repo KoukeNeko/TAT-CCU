@@ -9,7 +9,7 @@ import '../core/campus_web_screen.dart';
 import '../core/theme.dart';
 import '../core/widgets.dart';
 import '../../l10n/l10n.dart';
-import 'portal_screen.dart';
+import '../core/campus_systems.dart';
 
 const _iccu = 'https://www026220.ccu.edu.tw';
 

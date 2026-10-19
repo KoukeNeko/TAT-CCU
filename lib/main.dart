@@ -14,8 +14,8 @@ import 'data/services/reminders.dart';
 import 'l10n/l10n.dart';
 import 'routing/router.dart';
 import 'ui/core/theme.dart';
-import 'ui/more/dorm_repair_data.dart';
-import 'ui/more/parttime_data.dart';
+import 'data/repositories/dorm_repair_data.dart';
+import 'data/repositories/parttime_data.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();

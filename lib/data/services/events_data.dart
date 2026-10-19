@@ -9,7 +9,7 @@ import 'dart:convert';
 
 import 'package:http/http.dart' as http;
 
-import '../../data/services/html_text.dart';
+import 'html_text.dart';
 
 const eventsHost = 'events.lib.ccu.edu.tw';
 const eventsOrigin = 'https://$eventsHost';

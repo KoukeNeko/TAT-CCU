@@ -23,7 +23,7 @@ import '../ui/more/library_screen.dart';
 import '../ui/more/library_search_screen.dart';
 import '../ui/more/dorm_repair_screen.dart';
 import '../ui/more/event_detail_screen.dart';
-import '../ui/more/events_data.dart';
+import '../data/services/events_data.dart';
 import '../ui/more/events_screen.dart';
 import '../ui/more/parttime_screen.dart';
 import '../ui/more/payment_screen.dart';

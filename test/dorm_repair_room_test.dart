@@ -1,5 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:tat_ccu/ui/more/dorm_repair_data.dart';
+import 'package:tat_ccu/data/repositories/dorm_repair_data.dart';
 
 void main() {
   test('rooms take only the four forms the site lists', () {

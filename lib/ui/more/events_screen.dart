@@ -9,7 +9,7 @@ import '../../l10n/l10n.dart';
 import '../core/campus_session.dart';
 import '../core/theme.dart';
 import '../core/widgets.dart';
-import 'events_data.dart';
+import '../../data/services/events_data.dart';
 
 /// What [EventsScreen] read: every current event, the site's categories and
 /// the student's sign-ups, for the list and for 我的活動.

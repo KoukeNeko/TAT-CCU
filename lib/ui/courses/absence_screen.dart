@@ -7,7 +7,7 @@ import '../../l10n/l10n.dart';
 import '../core/campus_session.dart';
 import '../core/theme.dart';
 import '../core/widgets.dart';
-import 'ecourse_web.dart';
+import '../../data/services/ecourse_web.dart';
 
 /// 請假單 (design/round-11 course-modules-screens), shaped like 宿舍維修:
 /// the student's own requests, then a button to the full-page form.

@@ -1,5 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:tat_ccu/ui/more/events_data.dart';
+import 'package:tat_ccu/data/services/events_data.dart';
 
 void main() {
   final now = DateTime(2026, 10, 19, 12);

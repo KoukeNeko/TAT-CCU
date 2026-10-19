@@ -5,8 +5,8 @@ import 'package:go_router/go_router.dart';
 import '../../l10n/l10n.dart';
 import '../core/theme.dart';
 import '../core/widgets.dart';
-import 'dorm_repair_data.dart';
-import 'portal_screen.dart';
+import '../../data/repositories/dorm_repair_data.dart';
+import '../core/campus_systems.dart';
 
 /// Design round-11 dorm-repair R1-A: past requests, then a full-page form
 /// with the site's four fields (alpha).

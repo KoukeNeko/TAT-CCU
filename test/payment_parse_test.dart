@@ -1,5 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:tat_ccu/ui/more/payment_screen.dart';
+import 'package:tat_ccu/data/services/payment_data.dart';
 
 void main() {
   test('payments read ROC dates and money, newest first, once each', () {

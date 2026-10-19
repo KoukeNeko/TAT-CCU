@@ -1,5 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:tat_ccu/ui/courses/ecourse_web.dart';
+import 'package:tat_ccu/data/services/ecourse_web.dart';
 
 void main() {
   test('reads sessions and the course summary from view.php', () {

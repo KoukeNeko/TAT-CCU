@@ -4,8 +4,8 @@ import 'package:go_router/go_router.dart';
 import '../../l10n/l10n.dart';
 import '../core/theme.dart';
 import '../core/widgets.dart';
-import 'parttime_data.dart';
-import 'portal_screen.dart';
+import '../../data/repositories/parttime_data.dart';
+import '../core/campus_systems.dart';
 
 /// Design round-11 parttime-screens: the five functions of 學習暨勞僱時數登錄
 /// on made-up data (alpha). The app bar button opens the real site.

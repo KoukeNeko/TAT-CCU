@@ -7,7 +7,7 @@ import '../../domain/models/course.dart';
 import '../core/theme.dart';
 import '../core/widgets.dart';
 import '../../l10n/l10n.dart';
-import 'portal_screen.dart';
+import '../core/campus_systems.dart';
 
 /// 本學期: eCourse2 running grades per course. 歷年: the semester grades in
 /// 成績查詢, still the school's website.

@@ -11,7 +11,7 @@ import '../core/theme.dart';
 import '../core/widgets.dart';
 import 'leave_screen.dart';
 import 'library_screen.dart';
-import 'portal_screen.dart';
+import '../core/campus_systems.dart';
 import '../../l10n/l10n.dart';
 
 /// A native page the More page can show as a status tile or a row.

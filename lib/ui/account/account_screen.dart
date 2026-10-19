@@ -6,7 +6,7 @@ import '../../data/services/cas_credentials.dart';
 import '../core/theme.dart';
 import '../core/campus_web_screen.dart';
 import '../core/widgets.dart';
-import '../more/portal_screen.dart';
+import '../core/campus_systems.dart';
 import '../../l10n/l10n.dart';
 
 String _time(AppLocalizations l10n, DateTime? t) =>
