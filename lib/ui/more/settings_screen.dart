@@ -7,6 +7,15 @@ import '../../l10n/l10n.dart';
 import '../core/theme.dart';
 import '../core/widgets.dart';
 
+/// The app's languages by code; null follows the system. Each language is
+/// named in itself so it can be found from any of the others.
+List<(String?, String)> languageOptions(BuildContext context) => [
+  (null, context.l10n.followSystem),
+  ('zh', '繁中'),
+  ('en', 'English'),
+  ('ja', '日本語'),
+];
+
 /// Design S2 "直接選" (design/round-11): theme as three preview cards and
 /// language as one segmented row; a tap applies at once.
 class SettingsScreen extends StatelessWidget {
@@ -47,14 +56,7 @@ class SettingsScreen extends StatelessWidget {
             SectionLabel(l10n.language),
             _Segments(
               selected: settings.locale?.languageCode,
-              options: [
-                (null, l10n.followSystem),
-                // Each language is named in itself so it can be found from
-                // any of the others.
-                ('zh', '繁中'),
-                ('en', 'English'),
-                ('ja', '日本語'),
-              ],
+              options: languageOptions(context),
               onSelected: (code) =>
                   settings.setLocale(code == null ? null : Locale(code)),
             ),

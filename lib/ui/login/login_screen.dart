@@ -1,11 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import '../../data/repositories/app_settings.dart';
 import '../../data/repositories/ecourse_auth_repository.dart';
 import '../../data/services/cas_credentials.dart';
 import '../core/campus_web_screen.dart';
 import '../core/theme.dart';
 import '../core/widgets.dart';
+import '../more/settings_screen.dart';
 import '../../l10n/l10n.dart';
 
 class LoginScreen extends StatefulWidget {
@@ -68,6 +70,11 @@ class _LoginScreenState extends State<LoginScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
+              // Before signing in, Settings cannot be reached.
+              const Align(
+                alignment: Alignment.centerRight,
+                child: _LanguageChip(),
+              ),
               const Spacer(),
               // The four function colors as cookies: the app's mark.
               SizedBox(
@@ -109,6 +116,44 @@ class _LoginScreenState extends State<LoginScreen> {
           ),
         ),
       ),
+    );
+  }
+}
+
+/// The app's language, picked from the shared glass menu.
+class _LanguageChip extends StatelessWidget {
+  const _LanguageChip();
+
+  @override
+  Widget build(BuildContext context) {
+    final settings = context.watch<AppSettings>();
+    final options = languageOptions(context);
+    final code = settings.locale?.languageCode;
+    return BarChip(
+      label: options.firstWhere((o) => o.$1 == code).$2,
+      selected: false,
+      dropdown: true,
+      onTap: () async {
+        final box = context.findRenderObject()! as RenderBox;
+        // The empty string stands for following the system in the menu.
+        final picked = await showGlassMenu<String>(
+          context,
+          anchor: box.localToGlobal(Offset.zero) & box.size,
+          selected: code ?? '',
+          items: [
+            for (final (value, label) in options)
+              (
+                value: value ?? '',
+                title: label,
+                detail: null,
+                icon: null,
+                tone: null,
+              ),
+          ],
+        );
+        if (picked == null) return;
+        await settings.setLocale(picked.isEmpty ? null : Locale(picked));
+      },
     );
   }
 }
