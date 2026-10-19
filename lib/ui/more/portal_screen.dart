@@ -116,7 +116,7 @@ void openCampusSystem(BuildContext context, PortalPrefs prefs, CampusSystem s) {
 }
 
 /// `linkId` → in-app page: 選課系統 (iCCU), 學籍系統, 學生請假系統, My圖書館
-/// 圖書館資源探索, 自學空間 and 活動報名系統.
+/// 圖書館資源探索, 自學空間, 活動報名系統 and 學習暨勞僱時數登錄.
 const inAppPages = {
   '0075': '/more/iccu',
   '0004': '/more/academic',
@@ -125,7 +125,11 @@ const inAppPages = {
   '0057': '/more/library/search',
   '0059': '/more/space',
   '0060': '/more/events',
+  '0014': '/more/parttime',
 };
+
+/// In-app pages still on made-up data; the list marks them ALPHA.
+const alphaPages = {'0014'};
 
 String entryUrl(CampusSystem s) => s.service.startsWith('http')
     ? s.service
@@ -403,12 +407,22 @@ class _SystemRow extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
-                    system.name,
-                    style: const TextStyle(
-                      fontSize: 15,
-                      fontWeight: FontWeight.w800,
-                    ),
+                  Row(
+                    children: [
+                      Flexible(
+                        child: Text(
+                          system.name,
+                          style: const TextStyle(
+                            fontSize: 15,
+                            fontWeight: FontWeight.w800,
+                          ),
+                        ),
+                      ),
+                      if (alphaPages.contains(system.id)) ...[
+                        const SizedBox(width: 6),
+                        StatusPill(tone: context.tones.peach, label: 'ALPHA'),
+                      ],
+                    ],
                   ),
                   if (system.note case final note?)
                     Text(
@@ -430,7 +444,10 @@ class _SystemRow extends StatelessWidget {
                 shape: BoxShape.circle,
               ),
               child: Icon(
-                Icons.north_east,
+                // In-app pages open as pages; the rest go to the school.
+                inAppPages.containsKey(system.id)
+                    ? Icons.chevron_right
+                    : Icons.north_east,
                 size: 16,
                 color: scheme.onSurfaceVariant,
               ),

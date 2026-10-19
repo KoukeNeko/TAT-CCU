@@ -1197,4 +1197,187 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get cancelSignUpFailed => 'Couldn\'t cancel the sign-up';
+
+  @override
+  String get ptTitle => 'Study & work hours';
+
+  @override
+  String get ptSelect => 'Select';
+
+  @override
+  String get ptDone => 'Done';
+
+  @override
+  String ptMonth(int year, int month) {
+    return '$month/$year';
+  }
+
+  @override
+  String get ptAllUnits => 'All units';
+
+  @override
+  String get ptUnconfirmed => 'Unconfirmed';
+
+  @override
+  String get ptConfirmed => 'Confirmed';
+
+  @override
+  String get ptPaid => 'Paid';
+
+  @override
+  String ptHours(String hours) {
+    return '$hours h';
+  }
+
+  @override
+  String ptWeek(String used, int limit) {
+    return 'This week $used / $limit h';
+  }
+
+  @override
+  String get ptOther => 'More';
+
+  @override
+  String get ptPayroll => 'Payments';
+
+  @override
+  String get ptPrint => 'Sign-in sheets and batches';
+
+  @override
+  String get ptAdd => 'Log hours';
+
+  @override
+  String get ptDate => 'Date';
+
+  @override
+  String get ptUnit => 'Unit';
+
+  @override
+  String get ptTime => 'Time';
+
+  @override
+  String get ptWork => 'Work';
+
+  @override
+  String get ptStage => 'Add to list';
+
+  @override
+  String ptStaged(int count, String hours) {
+    return '$count to save・$hours h';
+  }
+
+  @override
+  String ptSaveCount(int count) {
+    return 'Save $count';
+  }
+
+  @override
+  String ptSaveTitle(int count) {
+    return 'Save $count entries?';
+  }
+
+  @override
+  String get ptSave => 'Save';
+
+  @override
+  String get ptEndAfterStart => 'End must be after start';
+
+  @override
+  String ptOverlap(String slot) {
+    return 'Overlaps $slot';
+  }
+
+  @override
+  String ptWeekOver(String total, int limit) {
+    return 'This week would reach $total h, over the $limit h limit';
+  }
+
+  @override
+  String ptDeleteCount(int count) {
+    return 'Delete $count';
+  }
+
+  @override
+  String ptDeleteTitle(int count) {
+    return 'Delete $count entries?';
+  }
+
+  @override
+  String get ptDelete => 'Delete';
+
+  @override
+  String ptSelected(int count) {
+    return '$count selected';
+  }
+
+  @override
+  String get ptNoRecords => 'No hours logged';
+
+  @override
+  String get ptSearchUnits => 'Search units';
+
+  @override
+  String get ptMyUnits => 'My units';
+
+  @override
+  String get ptBatch => 'Batch';
+
+  @override
+  String get ptSheet => 'Sign-in sheet';
+
+  @override
+  String get ptOpenSheet => 'Open sign-in sheet';
+
+  @override
+  String get ptNet => 'Net';
+
+  @override
+  String get ptGross => 'Gross';
+
+  @override
+  String get ptWage => 'Wage';
+
+  @override
+  String get ptEmpLabor => 'Employer labour insurance';
+
+  @override
+  String get ptEmpPension => 'Employer pension';
+
+  @override
+  String get ptEmpHealth => 'Employer health insurance';
+
+  @override
+  String get ptEmpSupp => 'Employer supplementary premium';
+
+  @override
+  String get ptDeduct => 'Deductions';
+
+  @override
+  String get ptTax => 'Income tax';
+
+  @override
+  String get ptLabor => 'Labour insurance';
+
+  @override
+  String get ptPension => 'Pension';
+
+  @override
+  String get ptHealth => 'Health insurance';
+
+  @override
+  String get ptSupp => 'Supplementary premium';
+
+  @override
+  String get ptOtherDeduct => 'Other deductions';
+
+  @override
+  String get ptSubtotal => 'Subtotal';
+
+  @override
+  String get ptHoliday => 'Holiday';
+
+  @override
+  String ptEntries(int count) {
+    return '$count entries';
+  }
 }

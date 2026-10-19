@@ -1983,6 +1983,324 @@ abstract class AppLocalizations {
   /// In zh, this message translates to:
   /// **'無法取消報名'**
   String get cancelSignUpFailed;
+
+  /// No description provided for @ptTitle.
+  ///
+  /// In zh, this message translates to:
+  /// **'學習暨勞僱時數'**
+  String get ptTitle;
+
+  /// No description provided for @ptSelect.
+  ///
+  /// In zh, this message translates to:
+  /// **'選取'**
+  String get ptSelect;
+
+  /// No description provided for @ptDone.
+  ///
+  /// In zh, this message translates to:
+  /// **'完成'**
+  String get ptDone;
+
+  /// No description provided for @ptMonth.
+  ///
+  /// In zh, this message translates to:
+  /// **'{year} 年 {month} 月'**
+  String ptMonth(int year, int month);
+
+  /// No description provided for @ptAllUnits.
+  ///
+  /// In zh, this message translates to:
+  /// **'所有單位'**
+  String get ptAllUnits;
+
+  /// No description provided for @ptUnconfirmed.
+  ///
+  /// In zh, this message translates to:
+  /// **'未確認'**
+  String get ptUnconfirmed;
+
+  /// No description provided for @ptConfirmed.
+  ///
+  /// In zh, this message translates to:
+  /// **'已確認'**
+  String get ptConfirmed;
+
+  /// No description provided for @ptPaid.
+  ///
+  /// In zh, this message translates to:
+  /// **'已報帳'**
+  String get ptPaid;
+
+  /// No description provided for @ptHours.
+  ///
+  /// In zh, this message translates to:
+  /// **'{hours} 小時'**
+  String ptHours(String hours);
+
+  /// No description provided for @ptWeek.
+  ///
+  /// In zh, this message translates to:
+  /// **'本週 {used} / {limit} 小時'**
+  String ptWeek(String used, int limit);
+
+  /// No description provided for @ptOther.
+  ///
+  /// In zh, this message translates to:
+  /// **'其他'**
+  String get ptOther;
+
+  /// No description provided for @ptPayroll.
+  ///
+  /// In zh, this message translates to:
+  /// **'付款清冊'**
+  String get ptPayroll;
+
+  /// No description provided for @ptPrint.
+  ///
+  /// In zh, this message translates to:
+  /// **'列印簽到退表與批號'**
+  String get ptPrint;
+
+  /// No description provided for @ptAdd.
+  ///
+  /// In zh, this message translates to:
+  /// **'新增時數'**
+  String get ptAdd;
+
+  /// No description provided for @ptDate.
+  ///
+  /// In zh, this message translates to:
+  /// **'日期'**
+  String get ptDate;
+
+  /// No description provided for @ptUnit.
+  ///
+  /// In zh, this message translates to:
+  /// **'單位'**
+  String get ptUnit;
+
+  /// No description provided for @ptTime.
+  ///
+  /// In zh, this message translates to:
+  /// **'時間'**
+  String get ptTime;
+
+  /// No description provided for @ptWork.
+  ///
+  /// In zh, this message translates to:
+  /// **'內容'**
+  String get ptWork;
+
+  /// No description provided for @ptStage.
+  ///
+  /// In zh, this message translates to:
+  /// **'加入待儲存'**
+  String get ptStage;
+
+  /// No description provided for @ptStaged.
+  ///
+  /// In zh, this message translates to:
+  /// **'待儲存 {count} 筆・{hours} 小時'**
+  String ptStaged(int count, String hours);
+
+  /// No description provided for @ptSaveCount.
+  ///
+  /// In zh, this message translates to:
+  /// **'儲存 {count} 筆'**
+  String ptSaveCount(int count);
+
+  /// No description provided for @ptSaveTitle.
+  ///
+  /// In zh, this message translates to:
+  /// **'儲存 {count} 筆時數？'**
+  String ptSaveTitle(int count);
+
+  /// No description provided for @ptSave.
+  ///
+  /// In zh, this message translates to:
+  /// **'儲存'**
+  String get ptSave;
+
+  /// No description provided for @ptEndAfterStart.
+  ///
+  /// In zh, this message translates to:
+  /// **'結束時間要晚於開始時間'**
+  String get ptEndAfterStart;
+
+  /// No description provided for @ptOverlap.
+  ///
+  /// In zh, this message translates to:
+  /// **'與 {slot} 重疊'**
+  String ptOverlap(String slot);
+
+  /// No description provided for @ptWeekOver.
+  ///
+  /// In zh, this message translates to:
+  /// **'本週會到 {total} 小時，超過每週 {limit} 小時'**
+  String ptWeekOver(String total, int limit);
+
+  /// No description provided for @ptDeleteCount.
+  ///
+  /// In zh, this message translates to:
+  /// **'刪除 {count} 筆'**
+  String ptDeleteCount(int count);
+
+  /// No description provided for @ptDeleteTitle.
+  ///
+  /// In zh, this message translates to:
+  /// **'刪除 {count} 筆時數？'**
+  String ptDeleteTitle(int count);
+
+  /// No description provided for @ptDelete.
+  ///
+  /// In zh, this message translates to:
+  /// **'刪除'**
+  String get ptDelete;
+
+  /// No description provided for @ptSelected.
+  ///
+  /// In zh, this message translates to:
+  /// **'已選 {count} 筆'**
+  String ptSelected(int count);
+
+  /// No description provided for @ptNoRecords.
+  ///
+  /// In zh, this message translates to:
+  /// **'沒有時數紀錄'**
+  String get ptNoRecords;
+
+  /// No description provided for @ptSearchUnits.
+  ///
+  /// In zh, this message translates to:
+  /// **'搜尋單位'**
+  String get ptSearchUnits;
+
+  /// No description provided for @ptMyUnits.
+  ///
+  /// In zh, this message translates to:
+  /// **'我的單位'**
+  String get ptMyUnits;
+
+  /// No description provided for @ptBatch.
+  ///
+  /// In zh, this message translates to:
+  /// **'批號'**
+  String get ptBatch;
+
+  /// No description provided for @ptSheet.
+  ///
+  /// In zh, this message translates to:
+  /// **'簽到退表'**
+  String get ptSheet;
+
+  /// No description provided for @ptOpenSheet.
+  ///
+  /// In zh, this message translates to:
+  /// **'開啟簽到退表'**
+  String get ptOpenSheet;
+
+  /// No description provided for @ptNet.
+  ///
+  /// In zh, this message translates to:
+  /// **'實領'**
+  String get ptNet;
+
+  /// No description provided for @ptGross.
+  ///
+  /// In zh, this message translates to:
+  /// **'應支金額'**
+  String get ptGross;
+
+  /// No description provided for @ptWage.
+  ///
+  /// In zh, this message translates to:
+  /// **'應領金額'**
+  String get ptWage;
+
+  /// No description provided for @ptEmpLabor.
+  ///
+  /// In zh, this message translates to:
+  /// **'機關勞保'**
+  String get ptEmpLabor;
+
+  /// No description provided for @ptEmpPension.
+  ///
+  /// In zh, this message translates to:
+  /// **'機關勞退'**
+  String get ptEmpPension;
+
+  /// No description provided for @ptEmpHealth.
+  ///
+  /// In zh, this message translates to:
+  /// **'機關健保'**
+  String get ptEmpHealth;
+
+  /// No description provided for @ptEmpSupp.
+  ///
+  /// In zh, this message translates to:
+  /// **'機關負擔補充保費'**
+  String get ptEmpSupp;
+
+  /// No description provided for @ptDeduct.
+  ///
+  /// In zh, this message translates to:
+  /// **'代扣款項'**
+  String get ptDeduct;
+
+  /// No description provided for @ptTax.
+  ///
+  /// In zh, this message translates to:
+  /// **'所得稅'**
+  String get ptTax;
+
+  /// No description provided for @ptLabor.
+  ///
+  /// In zh, this message translates to:
+  /// **'勞保'**
+  String get ptLabor;
+
+  /// No description provided for @ptPension.
+  ///
+  /// In zh, this message translates to:
+  /// **'勞退'**
+  String get ptPension;
+
+  /// No description provided for @ptHealth.
+  ///
+  /// In zh, this message translates to:
+  /// **'健保'**
+  String get ptHealth;
+
+  /// No description provided for @ptSupp.
+  ///
+  /// In zh, this message translates to:
+  /// **'個人補充保費'**
+  String get ptSupp;
+
+  /// No description provided for @ptOtherDeduct.
+  ///
+  /// In zh, this message translates to:
+  /// **'其他代扣款'**
+  String get ptOtherDeduct;
+
+  /// No description provided for @ptSubtotal.
+  ///
+  /// In zh, this message translates to:
+  /// **'小計'**
+  String get ptSubtotal;
+
+  /// No description provided for @ptHoliday.
+  ///
+  /// In zh, this message translates to:
+  /// **'例假日'**
+  String get ptHoliday;
+
+  /// No description provided for @ptEntries.
+  ///
+  /// In zh, this message translates to:
+  /// **'{count} 筆'**
+  String ptEntries(int count);
 }
 
 class _AppLocalizationsDelegate

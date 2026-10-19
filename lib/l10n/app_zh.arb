@@ -533,7 +533,7 @@
   "sortRelevance": "相關性",
   "sortNewest": "新到舊",
   "sortTitle": "題名",
-  "anyTime": "不限",
+  "anyTime": "全部時間",
   "lastYears": "近 {count} 年",
   "@lastYears": {
     "placeholders": {
@@ -637,11 +637,16 @@
   "events": "活動報名",
   "searchEvents": "搜尋活動",
   "searchFor": "搜尋「{query}」",
-  "@searchFor": {"placeholders": {"query": {"type": "String"}}},
+  "@searchFor": {
+    "placeholders": {
+      "query": {
+        "type": "String"
+      }
+    }
+  },
   "within3Days": "3 日內",
   "withinWeek": "一週內",
   "withinMonth": "一個月內",
-  "anyTime": "全部時間",
   "eventsOpen": "接受報名中",
   "eventsOngoing": "活動進行中",
   "eventsClosed": "已截止報名",
@@ -651,11 +656,35 @@
   "myEvents": "我的活動",
   "nextSignedUp": "下一場・已報名",
   "inDays": "{count} 天後",
-  "@inDays": {"placeholders": {"count": {"type": "int"}}},
+  "@inDays": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "waitlistSpots": "備取 {taken}/{total}",
-  "@waitlistSpots": {"placeholders": {"taken": {"type": "int"}, "total": {"type": "int"}}},
+  "@waitlistSpots": {
+    "placeholders": {
+      "taken": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
   "waitlistOnly": "正取已滿・備取 {taken} / {total}",
-  "@waitlistOnly": {"placeholders": {"taken": {"type": "int"}, "total": {"type": "int"}}},
+  "@waitlistOnly": {
+    "placeholders": {
+      "taken": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
   "externalSignUp": "外部報名",
   "signUpClosed": "已截止",
   "signedUp": "已報名",
@@ -678,9 +707,164 @@
   "noMatchingEvents": "沒有符合的活動",
   "searchAnyTimeStatus": "搜尋全部時間與狀態",
   "eventsAttended": "已參加・{hours} 小時",
-  "@eventsAttended": {"placeholders": {"hours": {"type": "String"}}},
+  "@eventsAttended": {
+    "placeholders": {
+      "hours": {
+        "type": "String"
+      }
+    }
+  },
   "pastEvents": "歷史活動",
   "noEventRecords": "沒有紀錄",
   "signUpFailed": "無法報名",
-  "cancelSignUpFailed": "無法取消報名"
+  "cancelSignUpFailed": "無法取消報名",
+  "ptTitle": "學習暨勞僱時數",
+  "ptSelect": "選取",
+  "ptDone": "完成",
+  "ptMonth": "{year} 年 {month} 月",
+  "@ptMonth": {
+    "placeholders": {
+      "year": {
+        "type": "int"
+      },
+      "month": {
+        "type": "int"
+      }
+    }
+  },
+  "ptAllUnits": "所有單位",
+  "ptUnconfirmed": "未確認",
+  "ptConfirmed": "已確認",
+  "ptPaid": "已報帳",
+  "ptHours": "{hours} 小時",
+  "@ptHours": {
+    "placeholders": {
+      "hours": {
+        "type": "String"
+      }
+    }
+  },
+  "ptWeek": "本週 {used} / {limit} 小時",
+  "@ptWeek": {
+    "placeholders": {
+      "used": {
+        "type": "String"
+      },
+      "limit": {
+        "type": "int"
+      }
+    }
+  },
+  "ptOther": "其他",
+  "ptPayroll": "付款清冊",
+  "ptPrint": "列印簽到退表與批號",
+  "ptAdd": "新增時數",
+  "ptDate": "日期",
+  "ptUnit": "單位",
+  "ptTime": "時間",
+  "ptWork": "內容",
+  "ptStage": "加入待儲存",
+  "ptStaged": "待儲存 {count} 筆・{hours} 小時",
+  "@ptStaged": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      },
+      "hours": {
+        "type": "String"
+      }
+    }
+  },
+  "ptSaveCount": "儲存 {count} 筆",
+  "@ptSaveCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "ptSaveTitle": "儲存 {count} 筆時數？",
+  "@ptSaveTitle": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "ptSave": "儲存",
+  "ptEndAfterStart": "結束時間要晚於開始時間",
+  "ptOverlap": "與 {slot} 重疊",
+  "@ptOverlap": {
+    "placeholders": {
+      "slot": {
+        "type": "String"
+      }
+    }
+  },
+  "ptWeekOver": "本週會到 {total} 小時，超過每週 {limit} 小時",
+  "@ptWeekOver": {
+    "placeholders": {
+      "total": {
+        "type": "String"
+      },
+      "limit": {
+        "type": "int"
+      }
+    }
+  },
+  "ptDeleteCount": "刪除 {count} 筆",
+  "@ptDeleteCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "ptDeleteTitle": "刪除 {count} 筆時數？",
+  "@ptDeleteTitle": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "ptDelete": "刪除",
+  "ptSelected": "已選 {count} 筆",
+  "@ptSelected": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "ptNoRecords": "沒有時數紀錄",
+  "ptSearchUnits": "搜尋單位",
+  "ptMyUnits": "我的單位",
+  "ptBatch": "批號",
+  "ptSheet": "簽到退表",
+  "ptOpenSheet": "開啟簽到退表",
+  "ptNet": "實領",
+  "ptGross": "應支金額",
+  "ptWage": "應領金額",
+  "ptEmpLabor": "機關勞保",
+  "ptEmpPension": "機關勞退",
+  "ptEmpHealth": "機關健保",
+  "ptEmpSupp": "機關負擔補充保費",
+  "ptDeduct": "代扣款項",
+  "ptTax": "所得稅",
+  "ptLabor": "勞保",
+  "ptPension": "勞退",
+  "ptHealth": "健保",
+  "ptSupp": "個人補充保費",
+  "ptOtherDeduct": "其他代扣款",
+  "ptSubtotal": "小計",
+  "ptHoliday": "例假日",
+  "ptEntries": "{count} 筆",
+  "@ptEntries": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  }
 }

@@ -1096,4 +1096,187 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get cancelSignUpFailed => '取り消せませんでした';
+
+  @override
+  String get ptTitle => '学習・雇用時間';
+
+  @override
+  String get ptSelect => '選択';
+
+  @override
+  String get ptDone => '完了';
+
+  @override
+  String ptMonth(int year, int month) {
+    return '$year年$month月';
+  }
+
+  @override
+  String get ptAllUnits => 'すべての部署';
+
+  @override
+  String get ptUnconfirmed => '未確認';
+
+  @override
+  String get ptConfirmed => '確認済み';
+
+  @override
+  String get ptPaid => '精算済み';
+
+  @override
+  String ptHours(String hours) {
+    return '$hours 時間';
+  }
+
+  @override
+  String ptWeek(String used, int limit) {
+    return '今週 $used / $limit 時間';
+  }
+
+  @override
+  String get ptOther => 'その他';
+
+  @override
+  String get ptPayroll => '支払明細';
+
+  @override
+  String get ptPrint => '出勤表と番号';
+
+  @override
+  String get ptAdd => '時間を登録';
+
+  @override
+  String get ptDate => '日付';
+
+  @override
+  String get ptUnit => '部署';
+
+  @override
+  String get ptTime => '時間';
+
+  @override
+  String get ptWork => '内容';
+
+  @override
+  String get ptStage => 'リストに追加';
+
+  @override
+  String ptStaged(int count, String hours) {
+    return '保存待ち $count 件・$hours 時間';
+  }
+
+  @override
+  String ptSaveCount(int count) {
+    return '$count 件を保存';
+  }
+
+  @override
+  String ptSaveTitle(int count) {
+    return '$count 件を保存しますか？';
+  }
+
+  @override
+  String get ptSave => '保存';
+
+  @override
+  String get ptEndAfterStart => '終了は開始より後にしてください';
+
+  @override
+  String ptOverlap(String slot) {
+    return '$slot と重複';
+  }
+
+  @override
+  String ptWeekOver(String total, int limit) {
+    return '今週 $total 時間になり、上限 $limit 時間を超えます';
+  }
+
+  @override
+  String ptDeleteCount(int count) {
+    return '$count 件を削除';
+  }
+
+  @override
+  String ptDeleteTitle(int count) {
+    return '$count 件を削除しますか？';
+  }
+
+  @override
+  String get ptDelete => '削除';
+
+  @override
+  String ptSelected(int count) {
+    return '$count 件選択';
+  }
+
+  @override
+  String get ptNoRecords => '記録なし';
+
+  @override
+  String get ptSearchUnits => '部署を検索';
+
+  @override
+  String get ptMyUnits => '自分の部署';
+
+  @override
+  String get ptBatch => '番号';
+
+  @override
+  String get ptSheet => '出勤表';
+
+  @override
+  String get ptOpenSheet => '出勤表を開く';
+
+  @override
+  String get ptNet => '手取り';
+
+  @override
+  String get ptGross => '支給額';
+
+  @override
+  String get ptWage => '給与';
+
+  @override
+  String get ptEmpLabor => '事業主労災保険';
+
+  @override
+  String get ptEmpPension => '事業主退職金';
+
+  @override
+  String get ptEmpHealth => '事業主健康保険';
+
+  @override
+  String get ptEmpSupp => '事業主補充保険料';
+
+  @override
+  String get ptDeduct => '控除';
+
+  @override
+  String get ptTax => '所得税';
+
+  @override
+  String get ptLabor => '労災保険';
+
+  @override
+  String get ptPension => '退職金';
+
+  @override
+  String get ptHealth => '健康保険';
+
+  @override
+  String get ptSupp => '補充保険料';
+
+  @override
+  String get ptOtherDeduct => 'その他の控除';
+
+  @override
+  String get ptSubtotal => '小計';
+
+  @override
+  String get ptHoliday => '休日';
+
+  @override
+  String ptEntries(int count) {
+    return '$count 件';
+  }
 }

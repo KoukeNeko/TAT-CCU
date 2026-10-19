@@ -1108,4 +1108,187 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get cancelSignUpFailed => '無法取消報名';
+
+  @override
+  String get ptTitle => '學習暨勞僱時數';
+
+  @override
+  String get ptSelect => '選取';
+
+  @override
+  String get ptDone => '完成';
+
+  @override
+  String ptMonth(int year, int month) {
+    return '$year 年 $month 月';
+  }
+
+  @override
+  String get ptAllUnits => '所有單位';
+
+  @override
+  String get ptUnconfirmed => '未確認';
+
+  @override
+  String get ptConfirmed => '已確認';
+
+  @override
+  String get ptPaid => '已報帳';
+
+  @override
+  String ptHours(String hours) {
+    return '$hours 小時';
+  }
+
+  @override
+  String ptWeek(String used, int limit) {
+    return '本週 $used / $limit 小時';
+  }
+
+  @override
+  String get ptOther => '其他';
+
+  @override
+  String get ptPayroll => '付款清冊';
+
+  @override
+  String get ptPrint => '列印簽到退表與批號';
+
+  @override
+  String get ptAdd => '新增時數';
+
+  @override
+  String get ptDate => '日期';
+
+  @override
+  String get ptUnit => '單位';
+
+  @override
+  String get ptTime => '時間';
+
+  @override
+  String get ptWork => '內容';
+
+  @override
+  String get ptStage => '加入待儲存';
+
+  @override
+  String ptStaged(int count, String hours) {
+    return '待儲存 $count 筆・$hours 小時';
+  }
+
+  @override
+  String ptSaveCount(int count) {
+    return '儲存 $count 筆';
+  }
+
+  @override
+  String ptSaveTitle(int count) {
+    return '儲存 $count 筆時數？';
+  }
+
+  @override
+  String get ptSave => '儲存';
+
+  @override
+  String get ptEndAfterStart => '結束時間要晚於開始時間';
+
+  @override
+  String ptOverlap(String slot) {
+    return '與 $slot 重疊';
+  }
+
+  @override
+  String ptWeekOver(String total, int limit) {
+    return '本週會到 $total 小時，超過每週 $limit 小時';
+  }
+
+  @override
+  String ptDeleteCount(int count) {
+    return '刪除 $count 筆';
+  }
+
+  @override
+  String ptDeleteTitle(int count) {
+    return '刪除 $count 筆時數？';
+  }
+
+  @override
+  String get ptDelete => '刪除';
+
+  @override
+  String ptSelected(int count) {
+    return '已選 $count 筆';
+  }
+
+  @override
+  String get ptNoRecords => '沒有時數紀錄';
+
+  @override
+  String get ptSearchUnits => '搜尋單位';
+
+  @override
+  String get ptMyUnits => '我的單位';
+
+  @override
+  String get ptBatch => '批號';
+
+  @override
+  String get ptSheet => '簽到退表';
+
+  @override
+  String get ptOpenSheet => '開啟簽到退表';
+
+  @override
+  String get ptNet => '實領';
+
+  @override
+  String get ptGross => '應支金額';
+
+  @override
+  String get ptWage => '應領金額';
+
+  @override
+  String get ptEmpLabor => '機關勞保';
+
+  @override
+  String get ptEmpPension => '機關勞退';
+
+  @override
+  String get ptEmpHealth => '機關健保';
+
+  @override
+  String get ptEmpSupp => '機關負擔補充保費';
+
+  @override
+  String get ptDeduct => '代扣款項';
+
+  @override
+  String get ptTax => '所得稅';
+
+  @override
+  String get ptLabor => '勞保';
+
+  @override
+  String get ptPension => '勞退';
+
+  @override
+  String get ptHealth => '健保';
+
+  @override
+  String get ptSupp => '個人補充保費';
+
+  @override
+  String get ptOtherDeduct => '其他代扣款';
+
+  @override
+  String get ptSubtotal => '小計';
+
+  @override
+  String get ptHoliday => '例假日';
+
+  @override
+  String ptEntries(int count) {
+    return '$count 筆';
+  }
 }

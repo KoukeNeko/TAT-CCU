@@ -21,6 +21,7 @@ import '../ui/more/library_search_screen.dart';
 import '../ui/more/event_detail_screen.dart';
 import '../ui/more/events_data.dart';
 import '../ui/more/events_screen.dart';
+import '../ui/more/parttime_screen.dart';
 import '../ui/more/settings_screen.dart';
 import '../ui/more/space_screen.dart';
 import '../ui/more/design_language_screen.dart';
@@ -156,6 +157,24 @@ GoRouter buildRouter(EcourseAuthRepository auth) => GoRouter(
                       path: 'poster',
                       builder: (_, state) =>
                           PosterScreen(url: state.extra! as String),
+                    ),
+                  ],
+                ),
+                GoRoute(
+                  path: 'parttime',
+                  builder: (_, _) => const ParttimeScreen(),
+                  routes: [
+                    GoRoute(
+                      path: 'add',
+                      builder: (_, _) => const ParttimeAddScreen(),
+                    ),
+                    GoRoute(
+                      path: 'pay',
+                      builder: (_, _) => const ParttimePayScreen(),
+                    ),
+                    GoRoute(
+                      path: 'print',
+                      builder: (_, _) => const ParttimePrintScreen(),
                     ),
                   ],
                 ),
