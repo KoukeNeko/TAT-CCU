@@ -306,6 +306,27 @@ class AppLocalizationsZh extends AppLocalizations {
   String get edit => '編輯';
 
   @override
+  String get replaceWith => '換成';
+
+  @override
+  String get settings => '設定';
+
+  @override
+  String get appearance => '外觀';
+
+  @override
+  String get language => '語言';
+
+  @override
+  String get followSystem => '跟隨系統';
+
+  @override
+  String get themeLight => '淺色';
+
+  @override
+  String get themeDark => '深色';
+
+  @override
   String get recentlyOpened => '最近開啟';
 
   @override
@@ -948,7 +969,4 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get loadingShelves => '讀取新書與暢銷榜';
-
-  @override
-  String get replaceWith => '換成';
 }

@@ -293,6 +293,27 @@ class AppLocalizationsJa extends AppLocalizations {
   String get edit => '編集';
 
   @override
+  String get replaceWith => '入れ替え';
+
+  @override
+  String get settings => '設定';
+
+  @override
+  String get appearance => '外観';
+
+  @override
+  String get language => '言語';
+
+  @override
+  String get followSystem => 'システム';
+
+  @override
+  String get themeLight => 'ライト';
+
+  @override
+  String get themeDark => 'ダーク';
+
+  @override
   String get recentlyOpened => '最近使ったもの';
 
   @override
@@ -936,7 +957,4 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get loadingShelves => '新着とベストセラーを読み込み中';
-
-  @override
-  String get replaceWith => '入れ替え';
 }

@@ -83,6 +83,13 @@
   "searchSystems": "システムを検索",
   "favorites": "よく使う",
   "edit": "編集",
+  "replaceWith": "入れ替え",
+  "settings": "設定",
+  "appearance": "外観",
+  "language": "言語",
+  "followSystem": "システム",
+  "themeLight": "ライト",
+  "themeDark": "ダーク",
   "recentlyOpened": "最近使ったもの",
   "favoritesCount": "よく使う（{count}/{max}）",
   "noGrades": "成績はまだありません",
@@ -263,6 +270,5 @@
   "dlRoleUnread": "未読",
   "aboutApp": "アプリ",
   "loadingCollections": "コレクションを読み込み中",
-  "loadingShelves": "新着とベストセラーを読み込み中",
-  "replaceWith": "入れ替え"
+  "loadingShelves": "新着とベストセラーを読み込み中"
 }

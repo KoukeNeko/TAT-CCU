@@ -83,6 +83,13 @@
   "searchSystems": "Search systems",
   "favorites": "Favorites",
   "edit": "Edit",
+  "replaceWith": "Replace with",
+  "settings": "Settings",
+  "appearance": "Appearance",
+  "language": "Language",
+  "followSystem": "System",
+  "themeLight": "Light",
+  "themeDark": "Dark",
   "recentlyOpened": "Recent",
   "favoritesCount": "Favorites ({count}/{max})",
   "noGrades": "No grades yet",
@@ -263,6 +270,5 @@
   "dlRoleUnread": "Unread",
   "aboutApp": "App",
   "loadingCollections": "Loading collections",
-  "loadingShelves": "Loading new books and best sellers",
-  "replaceWith": "Replace with"
+  "loadingShelves": "Loading new books and best sellers"
 }

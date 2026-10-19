@@ -340,6 +340,27 @@ class AppLocalizationsEn extends AppLocalizations {
   String get edit => 'Edit';
 
   @override
+  String get replaceWith => 'Replace with';
+
+  @override
+  String get settings => 'Settings';
+
+  @override
+  String get appearance => 'Appearance';
+
+  @override
+  String get language => 'Language';
+
+  @override
+  String get followSystem => 'System';
+
+  @override
+  String get themeLight => 'Light';
+
+  @override
+  String get themeDark => 'Dark';
+
+  @override
   String get recentlyOpened => 'Recent';
 
   @override
@@ -1031,7 +1052,4 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get loadingShelves => 'Loading new books and best sellers';
-
-  @override
-  String get replaceWith => 'Replace with';
 }

@@ -277,6 +277,12 @@ class _MoreScreenState extends State<MoreScreen> {
                 onTap: () => context.push('/more/account'),
               ),
               _Row(
+                tone: t.mint,
+                icon: Icons.tune,
+                title: context.l10n.settings,
+                onTap: () => context.push('/more/settings'),
+              ),
+              _Row(
                 tone: t.sun,
                 icon: Icons.palette_outlined,
                 title: context.l10n.designLanguage,

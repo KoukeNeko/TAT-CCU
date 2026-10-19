@@ -598,6 +598,48 @@ abstract class AppLocalizations {
   /// **'編輯'**
   String get edit;
 
+  /// No description provided for @replaceWith.
+  ///
+  /// In zh, this message translates to:
+  /// **'換成'**
+  String get replaceWith;
+
+  /// No description provided for @settings.
+  ///
+  /// In zh, this message translates to:
+  /// **'設定'**
+  String get settings;
+
+  /// No description provided for @appearance.
+  ///
+  /// In zh, this message translates to:
+  /// **'外觀'**
+  String get appearance;
+
+  /// No description provided for @language.
+  ///
+  /// In zh, this message translates to:
+  /// **'語言'**
+  String get language;
+
+  /// No description provided for @followSystem.
+  ///
+  /// In zh, this message translates to:
+  /// **'跟隨系統'**
+  String get followSystem;
+
+  /// No description provided for @themeLight.
+  ///
+  /// In zh, this message translates to:
+  /// **'淺色'**
+  String get themeLight;
+
+  /// No description provided for @themeDark.
+  ///
+  /// In zh, this message translates to:
+  /// **'深色'**
+  String get themeDark;
+
   /// No description provided for @recentlyOpened.
   ///
   /// In zh, this message translates to:
@@ -1683,12 +1725,6 @@ abstract class AppLocalizations {
   /// In zh, this message translates to:
   /// **'讀取新書與暢銷榜'**
   String get loadingShelves;
-
-  /// No description provided for @replaceWith.
-  ///
-  /// In zh, this message translates to:
-  /// **'換成'**
-  String get replaceWith;
 }
 
 class _AppLocalizationsDelegate

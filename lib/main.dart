@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 
+import 'data/repositories/app_settings.dart';
 import 'data/repositories/ecourse_auth_repository.dart';
 import 'data/repositories/ecourse_repository.dart';
 import 'data/repositories/portal_prefs.dart';
@@ -32,6 +33,7 @@ Future<void> main() async {
       providers: [
         ChangeNotifierProvider.value(value: auth),
         ChangeNotifierProvider(create: (_) => PortalPrefs()..load()),
+        ChangeNotifierProvider(create: (_) => AppSettings()..load()),
         ProxyProvider<EcourseAuthRepository, EcourseRepository>(
           update: (_, auth, _) => EcourseRepository(auth.client()),
         ),
@@ -48,12 +50,13 @@ class TatCcuApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final settings = context.watch<AppSettings>();
     return MaterialApp.router(
       title: 'TAT CCU',
       theme: buildTheme(Brightness.light),
       darkTheme: buildTheme(Brightness.dark),
-      // Follows the system language, including the per-app language in
-      // iOS and Android settings.
+      themeMode: settings.themeMode,
+      locale: settings.locale,
       localizationsDelegates: AppLocalizations.localizationsDelegates,
       supportedLocales: AppLocalizations.supportedLocales,
       // Japanese gets LINE Seed JP so kanji take Japanese shapes.
