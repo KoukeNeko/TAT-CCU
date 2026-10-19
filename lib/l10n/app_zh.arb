@@ -835,5 +835,15 @@
         "type": "String"
       }
     }
+  },
+  "latestDue": "最近截止",
+  "latestPost": "最新公告",
+  "classesEndAt": "課到 {time} 結束",
+  "@classesEndAt": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
   }
 }

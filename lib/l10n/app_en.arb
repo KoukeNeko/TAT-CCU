@@ -439,5 +439,8 @@
   "reminderDue24": "Due in 24 hours",
   "reminderDue1": "Due in 1 hour",
   "reminderClass": "Class in 10 minutes",
-  "newMailFrom": "New mail from {sender}"
+  "newMailFrom": "New mail from {sender}",
+  "latestDue": "Next deadline",
+  "latestPost": "Latest notice",
+  "classesEndAt": "Classes end at {time}"
 }

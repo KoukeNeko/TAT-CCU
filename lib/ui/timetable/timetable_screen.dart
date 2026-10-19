@@ -1,9 +1,12 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 
 import '../../data/repositories/ecourse_repository.dart';
 import '../../domain/models/course.dart';
+import '../../domain/models/timetable.dart';
 import '../core/theme.dart';
 import '../core/widgets.dart';
 import '../../l10n/l10n.dart';
@@ -24,8 +27,21 @@ class _TimetableScreenState extends State<TimetableScreen> {
   /// One page per weekday shown; rebuilt when the semester changes.
   PageController? _pages;
 
+  /// The progress bar and countdowns move with the clock.
+  late final _tick = Timer.periodic(
+    const Duration(minutes: 1),
+    (_) => setState(() {}),
+  );
+
+  @override
+  void initState() {
+    super.initState();
+    _tick;
+  }
+
   @override
   void dispose() {
+    _tick.cancel();
     _pages?.dispose();
     super.dispose();
   }
@@ -115,7 +131,8 @@ class _TimetableScreenState extends State<TimetableScreen> {
                 controller: pages,
                 onPageChanged: (i) => setState(() => _day = weekdays[i]),
                 children: [
-                  for (final d in weekdays) _dayList(context, courses, d),
+                  for (final d in weekdays)
+                    _DayView(courses: courses, day: d, now: DateTime.now()),
                 ],
               ),
             ),
@@ -126,46 +143,599 @@ class _TimetableScreenState extends State<TimetableScreen> {
   }
 }
 
-Widget _dayList(BuildContext context, List<Course> courses, int day) {
-  final slots = [
-    for (final c in courses)
-      for (final s in c.sessions)
-        if (s.weekday == day) (course: c, session: s),
-  ]..sort((a, b) => a.session.start.compareTo(b.session.start));
-  final theme = Theme.of(context);
-  return ListView(
-    padding: scrollPadding(context),
-    children: [
-      if (slots.isEmpty)
-        Padding(
-          padding: const EdgeInsets.only(top: 80),
-          child: Center(
-            child: Text(
-              context.l10n.noClassesThisDay,
-              style: theme.textTheme.titleMedium,
+typedef _Slot = ({Course course, ClassSession session});
+
+/// Design round-11 timetable 2C: one class in focus with its period
+/// progress, deadline, notice and grade; on today the class after it gets
+/// its own card; the rest are one line each, those already over dimmed.
+class _DayView extends StatelessWidget {
+  const _DayView({required this.courses, required this.day, required this.now});
+
+  final List<Course> courses;
+  final int day;
+  final DateTime now;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = context.l10n;
+    final theme = Theme.of(context);
+    final slots = <_Slot>[
+      for (final c in courses)
+        for (final s in c.sessions)
+          if (s.weekday == day) (course: c, session: s),
+    ]..sort((a, b) => a.session.start.compareTo(b.session.start));
+    final today = day == now.weekday;
+    final minute = now.hour * 60 + now.minute;
+    // Today: the class on now, else the next one. Other days: the first.
+    final focus = today
+        ? slots.where((s) => s.session.end > minute).firstOrNull
+        : slots.firstOrNull;
+    final after = focus == null || !today
+        ? null
+        : slots.skipWhile((s) => s != focus).skip(1).firstOrNull;
+    return ListView(
+      padding: scrollPadding(context),
+      children: [
+        if (slots.isEmpty)
+          Padding(
+            padding: const EdgeInsets.only(top: 80),
+            child: Center(
+              child: Text(
+                l10n.noClassesThisDay,
+                style: theme.textTheme.titleMedium,
+              ),
             ),
           ),
-        ),
-      for (final s in slots)
-        Padding(
-          padding: const EdgeInsets.only(bottom: rowGap),
-          child: _ClassBlock(
-            course: s.course,
-            start: s.session.start,
-            end: s.session.end,
-            periods: s.session.periods,
-          ),
-        ),
-      if (courses.any((c) => c.sessions.isEmpty)) ...[
-        SectionLabel(context.l10n.unscheduled),
-        for (final c in courses.where((c) => c.sessions.isEmpty))
+        for (final s in slots)
+          if (s == focus)
+            Padding(
+              padding: const EdgeInsets.only(bottom: rowGap),
+              child: _FocusCard(slot: s, minute: today ? minute : null),
+            )
+          else if (s == after)
+            Padding(
+              padding: const EdgeInsets.only(bottom: rowGap),
+              child: _NextCard(slot: s, minute: minute),
+            )
+          else
+            Padding(
+              padding: const EdgeInsets.only(bottom: 8),
+              child: Opacity(
+                opacity: today && s.session.end <= minute ? 0.45 : 1,
+                child: _ClassLine(slot: s),
+              ),
+            ),
+        if (slots.isNotEmpty)
           Padding(
-            padding: const EdgeInsets.only(bottom: 8),
-            child: Text(context.courseName(c), style: theme.textTheme.bodyMedium),
+            padding: const EdgeInsets.only(top: 4),
+            child: Text(
+              l10n.classesEndAt(
+                clock(
+                  slots
+                      .map((s) => s.session.end)
+                      .reduce((a, b) => a > b ? a : b),
+                ),
+              ),
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                fontSize: 12,
+                fontWeight: FontWeight.w800,
+                color: theme.colorScheme.onSurfaceVariant,
+              ),
+            ),
           ),
+        if (courses.any((c) => c.sessions.isEmpty)) ...[
+          SectionLabel(l10n.unscheduled),
+          for (final c in courses.where((c) => c.sessions.isEmpty))
+            Padding(
+              padding: const EdgeInsets.only(bottom: 8),
+              child: Text(
+                context.courseName(c),
+                style: theme.textTheme.bodyMedium,
+              ),
+            ),
+        ],
       ],
-    ],
+    );
+  }
+}
+
+/// `CD` for lettered periods; `8–9` for numbered ones, which would
+/// otherwise read as one number.
+String _periodLabel(List<String> periods) =>
+    periods.length > 1 && int.tryParse(periods.first) != null
+    ? '${periods.first}–${periods.last}'
+    : periods.join();
+
+/// `2 小時後` or `25 分鐘後`.
+String _until(AppLocalizations l10n, int minutes) => minutes >= 60
+    ? '${minutes ~/ 60} ${l10n.unitHoursLater}'
+    : '$minutes ${l10n.unitMinutesLater}';
+
+/// What the cards show beside the timetable: the course's nearest deadline,
+/// newest notice and current grade, from eCourse2's saved answers first.
+typedef _Facts = ({DueItem? due, String? post, String? grade});
+
+class _FactsLoader extends StatefulWidget {
+  const _FactsLoader({required this.courseId, required this.builder});
+
+  final int courseId;
+  final Widget Function(BuildContext context, _Facts? facts) builder;
+
+  @override
+  State<_FactsLoader> createState() => _FactsLoaderState();
+}
+
+class _FactsLoaderState extends State<_FactsLoader> {
+  // Made once per course: the screen rebuilds every minute for the clock.
+  late Stream<_Facts> _facts = _load();
+
+  Stream<_Facts> _load() {
+    final courseId = widget.courseId;
+    return context.read<EcourseRepository>().watch((repo) async {
+      final (due, posts, grades) = await (
+        repo.dueSoon(days: 60),
+        repo.announcements(courseId),
+        repo.gradeOverview(),
+      ).wait;
+      return (
+        due: due.where((d) => d.courseId == courseId).firstOrNull,
+        // `[公告] …`: the tile already says it is a notice.
+        post: posts.firstOrNull?.subject.replaceFirst(
+          RegExp(r'^\s*(\[[^\]]*\]|【[^】]*】)\s*'),
+          '',
+        ),
+        grade: grades[courseId],
+      );
+    });
+  }
+
+  @override
+  void didUpdateWidget(_FactsLoader old) {
+    super.didUpdateWidget(old);
+    if (old.courseId != widget.courseId) _facts = _load();
+  }
+
+  @override
+  Widget build(BuildContext context) => StreamBuilder<_Facts>(
+    stream: _facts,
+    // A failure leaves the card without its extras, not an error.
+    builder: (context, snap) => widget.builder(context, snap.data),
   );
+}
+
+class _FocusCard extends StatelessWidget {
+  const _FocusCard({required this.slot, required this.minute});
+
+  final _Slot slot;
+
+  /// Now, in minutes after midnight, when the day shown is today.
+  final int? minute;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = context.l10n;
+    final c = slot.course;
+    final s = slot.session;
+    final tone = context.tones.forCourse(c.id);
+    final now = minute;
+    final label = now == null
+        ? null
+        : now >= s.start
+        ? l10n.inClass
+        : '${l10n.nextClass}・${_until(l10n, s.start - now)}';
+    final small = TextStyle(
+      color: tone.ink.withValues(alpha: 0.8),
+      fontSize: 11,
+      fontWeight: FontWeight.w900,
+    );
+    Widget fact(String title, String value) => Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+      decoration: BoxDecoration(
+        color: Colors.black.withValues(alpha: 0.16),
+        borderRadius: BorderRadius.circular(Corners.small),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(title, style: small),
+          const SizedBox(height: 3),
+          Text(
+            value,
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
+            style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w900),
+          ),
+        ],
+      ),
+    );
+    return ToneBlock(
+      tone: tone,
+      padding: const EdgeInsets.all(18),
+      onTap: () => context.push('/courses/${c.id}'),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    if (label != null)
+                      Container(
+                        margin: const EdgeInsets.only(bottom: 10),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 10,
+                          vertical: 4,
+                        ),
+                        decoration: ShapeDecoration(
+                          color: tone.strong,
+                          shape: const StadiumBorder(),
+                        ),
+                        child: Text(
+                          label,
+                          style: TextStyle(
+                            color: tone.fill,
+                            fontSize: 12,
+                            fontWeight: FontWeight.w900,
+                          ),
+                        ),
+                      ),
+                    Text(
+                      context.courseName(c),
+                      style: const TextStyle(
+                        fontSize: 21,
+                        fontWeight: FontWeight.w900,
+                        height: 1.25,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    for (final (icon, line) in [
+                      if (c.room case final room?) (Icons.place_outlined, room),
+                      for (final t in c.teachers.take(1))
+                        (Icons.person_outline, t),
+                    ])
+                      Padding(
+                        padding: const EdgeInsets.only(top: 2),
+                        child: Row(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Padding(
+                              padding: const EdgeInsets.only(top: 2),
+                              child: Icon(
+                                icon,
+                                size: 15,
+                                color: tone.ink.withValues(alpha: 0.7),
+                              ),
+                            ),
+                            const SizedBox(width: 6),
+                            Expanded(
+                              child: Text(
+                                line,
+                                style: TextStyle(
+                                  color: tone.ink.withValues(alpha: 0.85),
+                                  fontSize: 13,
+                                  fontWeight: FontWeight.w700,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                  ],
+                ),
+              ),
+              const SizedBox(width: 12),
+              CookieBadge(
+                value: _periodLabel(s.periods),
+                color: tone.strong,
+                ink: tone.fill,
+                size: 56,
+                shape: courseShape(c.id),
+              ),
+            ],
+          ),
+          const SizedBox(height: 14),
+          _PeriodBar(session: s, minute: now, tone: tone),
+          const SizedBox(height: 12),
+          _FactsLoader(
+            courseId: c.id,
+            builder: (context, facts) {
+              final due = facts?.due;
+              final post = facts?.post;
+              // eCourse2 answers `-` for a course without a grade yet.
+              final grade = facts?.grade == '-' ? null : facts?.grade;
+              final pair = [
+                if (post != null) fact(l10n.latestPost, post),
+                if (grade != null) fact(l10n.currentGrade, grade),
+              ];
+              return Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  if (due != null)
+                    fact(
+                      l10n.latestDue,
+                      '${due.name}・${weekdayName(context, due.due.weekday)} '
+                      '${clock(due.due.hour * 60 + due.due.minute)}',
+                    ),
+                  if (due != null && pair.isNotEmpty) const SizedBox(height: 8),
+                  if (pair.isNotEmpty)
+                    IntrinsicHeight(
+                      child: Row(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          for (final (i, tile) in pair.indexed) ...[
+                            if (i > 0) const SizedBox(width: 8),
+                            Expanded(child: tile),
+                          ],
+                        ],
+                      ),
+                    ),
+                ],
+              );
+            },
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// One segment per period, filled as the clock passes through it, with
+/// each period's letter and hours below.
+class _PeriodBar extends StatelessWidget {
+  const _PeriodBar({
+    required this.session,
+    required this.minute,
+    required this.tone,
+  });
+
+  final ClassSession session;
+  final int? minute;
+  final Tone tone;
+
+  @override
+  Widget build(BuildContext context) {
+    final periods = [
+      for (final code in session.periods)
+        if (periodTime(code) case final t?)
+          (code: code, start: t.start, end: t.end),
+    ];
+    final now = minute;
+    final label = TextStyle(
+      color: tone.ink.withValues(alpha: 0.8),
+      fontSize: 11,
+      fontWeight: FontWeight.w900,
+    );
+    // Another day: nothing to fill, so only each period's hours.
+    if (now == null) {
+      return Wrap(
+        spacing: 6,
+        runSpacing: 6,
+        children: [
+          for (final p in periods)
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+              decoration: BoxDecoration(
+                color: Colors.black.withValues(alpha: 0.16),
+                borderRadius: BorderRadius.circular(999),
+              ),
+              child: Text(
+                '${p.code} ${clock(p.start)}–${clock(p.end)}',
+                style: label,
+              ),
+            ),
+        ],
+      );
+    }
+    return Row(
+      children: [
+        for (final (i, p) in periods.indexed) ...[
+          if (i > 0) const SizedBox(width: 6),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(4),
+                  child: LinearProgressIndicator(
+                    value: ((now - p.start) / (p.end - p.start)).clamp(0, 1),
+                    minHeight: 8,
+                    color: tone.ink,
+                    backgroundColor: Colors.black.withValues(alpha: 0.22),
+                  ),
+                ),
+                const SizedBox(height: 5),
+                Text(
+                  '${p.code} ${clock(p.start)}–${clock(p.end)}',
+                  style: label,
+                ),
+              ],
+            ),
+          ),
+        ],
+      ],
+    );
+  }
+}
+
+/// Today's class after the one in focus, with its own nearest deadline so
+/// it can be prepared for.
+class _NextCard extends StatelessWidget {
+  const _NextCard({required this.slot, required this.minute});
+
+  final _Slot slot;
+  final int minute;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = context.l10n;
+    final c = slot.course;
+    final tone = context.tones.forCourse(c.id);
+    return ToneBlock(
+      tone: tone,
+      padding: const EdgeInsets.fromLTRB(16, 14, 16, 14),
+      onTap: () => context.push('/courses/${c.id}'),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Row(
+            children: [
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      [l10n.nextClass, ?c.room].join('・'),
+                      style: TextStyle(
+                        color: tone.ink.withValues(alpha: 0.8),
+                        fontSize: 12,
+                        fontWeight: FontWeight.w800,
+                      ),
+                    ),
+                    Text(
+                      context.courseName(c),
+                      style: const TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w900,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.end,
+                children: [
+                  Text(
+                    clock(slot.session.start),
+                    style: const TextStyle(
+                      fontSize: 20,
+                      fontWeight: FontWeight.w900,
+                      height: 1,
+                    ),
+                  ),
+                  Text(
+                    _until(l10n, slot.session.start - minute),
+                    style: TextStyle(
+                      color: tone.ink.withValues(alpha: 0.8),
+                      fontSize: 11,
+                      fontWeight: FontWeight.w900,
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+          _FactsLoader(
+            courseId: c.id,
+            builder: (context, facts) {
+              final due = facts?.due;
+              if (due == null) return const SizedBox();
+              return Container(
+                margin: const EdgeInsets.only(top: 10),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 10,
+                  vertical: 8,
+                ),
+                decoration: BoxDecoration(
+                  color: Colors.black.withValues(alpha: 0.16),
+                  borderRadius: BorderRadius.circular(Corners.small),
+                ),
+                child: Row(
+                  children: [
+                    const Icon(Icons.assignment_outlined, size: 14),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        due.name,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w800,
+                        ),
+                      ),
+                    ),
+                    Text(
+                      '${weekdayName(context, due.due.weekday)} '
+                      '${clock(due.due.hour * 60 + due.due.minute)}',
+                      style: const TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w800,
+                      ),
+                    ),
+                  ],
+                ),
+              );
+            },
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// Any other class of the day: time, name and room on one line.
+class _ClassLine extends StatelessWidget {
+  const _ClassLine({required this.slot});
+
+  final _Slot slot;
+
+  @override
+  Widget build(BuildContext context) {
+    final c = slot.course;
+    final s = slot.session;
+    final tone = context.tones.forCourse(c.id);
+    return ToneBlock(
+      tone: tone,
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      onTap: () => context.push('/courses/${c.id}'),
+      child: Row(
+        children: [
+          SizedBox(
+            width: 54,
+            child: Text(
+              clock(s.start),
+              style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w900),
+            ),
+          ),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  context.courseName(c),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(
+                    fontSize: 15,
+                    fontWeight: FontWeight.w900,
+                  ),
+                ),
+                Text(
+                  [?c.room, clock(s.end)].join('・'),
+                  style: TextStyle(
+                    color: tone.ink.withValues(alpha: 0.8),
+                    fontSize: 12,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          CookieBadge(
+            value: _periodLabel(s.periods),
+            color: tone.strong,
+            ink: tone.fill,
+            size: 36,
+            shape: courseShape(c.id),
+          ),
+        ],
+      ),
+    );
+  }
 }
 
 class _DayPill extends StatelessWidget {
@@ -215,82 +785,6 @@ class _DayPill extends StatelessWidget {
               ),
             ],
           ),
-        ),
-      ),
-    );
-  }
-}
-
-class _ClassBlock extends StatelessWidget {
-  const _ClassBlock({
-    required this.course,
-    required this.start,
-    required this.end,
-    required this.periods,
-  });
-
-  final Course course;
-  final int start, end;
-  final List<String> periods;
-
-  @override
-  Widget build(BuildContext context) {
-    final tone = context.tones.forCourse(course.id);
-    // Height follows class length so a 3-hour block reads as long.
-    final height = (end - start) * 0.9 + 40;
-    return ToneBlock(
-      tone: tone,
-      onTap: () => context.push('/courses/${course.id}'),
-      child: SizedBox(
-        height: height,
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  clock(start),
-                  style: const TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.w900,
-                  ),
-                ),
-                Text(
-                  clock(end),
-                  style: const TextStyle(fontWeight: FontWeight.w700),
-                ),
-              ],
-            ),
-            const SizedBox(width: 16),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    context.courseName(course),
-                    style: const TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w900,
-                      height: 1.25,
-                    ),
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    course.room ?? '',
-                    style: const TextStyle(fontWeight: FontWeight.w700),
-                  ),
-                ],
-              ),
-            ),
-            CookieBadge(
-              value: periods.join(),
-              color: tone.strong,
-              ink: tone.fill,
-              size: 52,
-              shape: courseShape(course.id),
-            ),
-          ],
         ),
       ),
     );

@@ -1521,4 +1521,15 @@ class AppLocalizationsZh extends AppLocalizations {
   String newMailFrom(String sender) {
     return '$sender 寄來新信件';
   }
+
+  @override
+  String get latestDue => '最近截止';
+
+  @override
+  String get latestPost => '最新公告';
+
+  @override
+  String classesEndAt(String time) {
+    return '課到 $time 結束';
+  }
 }

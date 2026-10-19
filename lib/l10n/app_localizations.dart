@@ -2733,6 +2733,24 @@ abstract class AppLocalizations {
   /// In zh, this message translates to:
   /// **'{sender} 寄來新信件'**
   String newMailFrom(String sender);
+
+  /// No description provided for @latestDue.
+  ///
+  /// In zh, this message translates to:
+  /// **'最近截止'**
+  String get latestDue;
+
+  /// No description provided for @latestPost.
+  ///
+  /// In zh, this message translates to:
+  /// **'最新公告'**
+  String get latestPost;
+
+  /// No description provided for @classesEndAt.
+  ///
+  /// In zh, this message translates to:
+  /// **'課到 {time} 結束'**
+  String classesEndAt(String time);
 }
 
 class _AppLocalizationsDelegate

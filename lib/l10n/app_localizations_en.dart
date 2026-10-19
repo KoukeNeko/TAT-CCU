@@ -1621,4 +1621,15 @@ class AppLocalizationsEn extends AppLocalizations {
   String newMailFrom(String sender) {
     return 'New mail from $sender';
   }
+
+  @override
+  String get latestDue => 'Next deadline';
+
+  @override
+  String get latestPost => 'Latest notice';
+
+  @override
+  String classesEndAt(String time) {
+    return 'Classes end at $time';
+  }
 }

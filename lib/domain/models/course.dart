@@ -18,6 +18,7 @@ class Course {
     required this.fullName,
     this.room,
     this.sessions = const [],
+    this.teachers = const [],
   });
 
   final int id;
@@ -27,6 +28,9 @@ class Course {
   final String fullName;
   final String? room;
   final List<ClassSession> sessions;
+
+  /// The course's contacts, as eCourse2 lists them (usually the teachers).
+  final List<String> teachers;
 
   /// eCourse2 joins the English and Chinese names, e.g. `Software Analysis
   /// and Optimization軟體分析與最佳化`; this keeps one of them. Names in a
@@ -53,6 +57,15 @@ class Course {
       fullName: json['fullname'] as String,
       room: field('room'),
       sessions: parseSchedule(field('schedule') ?? ''),
+      teachers: [
+        for (final c in json['contacts'] as List? ?? const [])
+          // eCourse2 marks some names with a leading ☆.
+          if (c is Map && c['fullname'] != null)
+            '${c['fullname']}'.replaceFirst(
+              RegExp(r'^[^\p{L}]+', unicode: true),
+              '',
+            ),
+      ],
     );
   }
 }

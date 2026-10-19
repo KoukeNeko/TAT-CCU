@@ -439,5 +439,8 @@
   "reminderDue24": "24 時間後に締切",
   "reminderDue1": "1 時間後に締切",
   "reminderClass": "10 分後に授業",
-  "newMailFrom": "{sender} から新しいメール"
+  "newMailFrom": "{sender} から新しいメール",
+  "latestDue": "次の締切",
+  "latestPost": "最新のお知らせ",
+  "classesEndAt": "授業は {time} まで"
 }

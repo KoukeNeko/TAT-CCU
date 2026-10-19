@@ -1510,4 +1510,15 @@ class AppLocalizationsJa extends AppLocalizations {
   String newMailFrom(String sender) {
     return '$sender から新しいメール';
   }
+
+  @override
+  String get latestDue => '次の締切';
+
+  @override
+  String get latestPost => '最新のお知らせ';
+
+  @override
+  String classesEndAt(String time) {
+    return '授業は $time まで';
+  }
 }
