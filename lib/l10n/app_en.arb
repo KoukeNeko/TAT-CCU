@@ -277,7 +277,7 @@
   "within3Days": "Next 3 days",
   "withinWeek": "Next 7 days",
   "withinMonth": "Next 30 days",
-  "anyTime": "Any time",
+  "allTime": "Any time",
   "eventsOpen": "Open",
   "eventsOngoing": "Happening now",
   "eventsClosed": "Closed",

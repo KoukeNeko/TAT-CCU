@@ -772,7 +772,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get sortTitle => '題名';
 
   @override
-  String get anyTime => '全部時間';
+  String get anyTime => '不限';
 
   @override
   String lastYears(int count) {
@@ -989,6 +989,9 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get withinMonth => '一個月內';
+
+  @override
+  String get allTime => '全部時間';
 
   @override
   String get eventsOpen => '接受報名中';

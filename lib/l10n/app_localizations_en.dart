@@ -849,7 +849,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get sortTitle => 'Title';
 
   @override
-  String get anyTime => 'Any time';
+  String get anyTime => 'Any';
 
   @override
   String lastYears(int count) {
@@ -1072,6 +1072,9 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get withinMonth => 'Next 30 days';
+
+  @override
+  String get allTime => 'Any time';
 
   @override
   String get eventsOpen => 'Open';

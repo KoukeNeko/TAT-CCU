@@ -277,7 +277,7 @@
   "within3Days": "3日以内",
   "withinWeek": "1週間以内",
   "withinMonth": "1か月以内",
-  "anyTime": "すべての期間",
+  "allTime": "すべての期間",
   "eventsOpen": "受付中",
   "eventsOngoing": "開催中",
   "eventsClosed": "受付終了",

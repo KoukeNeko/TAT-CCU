@@ -1351,7 +1351,7 @@ abstract class AppLocalizations {
   /// No description provided for @anyTime.
   ///
   /// In zh, this message translates to:
-  /// **'全部時間'**
+  /// **'不限'**
   String get anyTime;
 
   /// No description provided for @lastYears.
@@ -1761,6 +1761,12 @@ abstract class AppLocalizations {
   /// In zh, this message translates to:
   /// **'一個月內'**
   String get withinMonth;
+
+  /// No description provided for @allTime.
+  ///
+  /// In zh, this message translates to:
+  /// **'全部時間'**
+  String get allTime;
 
   /// No description provided for @eventsOpen.
   ///

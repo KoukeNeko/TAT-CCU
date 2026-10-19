@@ -760,7 +760,7 @@ class AppLocalizationsJa extends AppLocalizations {
   String get sortTitle => 'タイトル';
 
   @override
-  String get anyTime => 'すべての期間';
+  String get anyTime => '指定なし';
 
   @override
   String lastYears(int count) {
@@ -977,6 +977,9 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get withinMonth => '1か月以内';
+
+  @override
+  String get allTime => 'すべての期間';
 
   @override
   String get eventsOpen => '受付中';

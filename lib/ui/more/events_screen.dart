@@ -259,7 +259,7 @@ class _EventsScreenState extends State<EventsScreen> {
       _Time.days3 => l10n.within3Days,
       _Time.week => l10n.withinWeek,
       _Time.month => l10n.withinMonth,
-      _Time.any => l10n.anyTime,
+      _Time.any => l10n.allTime,
     };
     String statusLabel(_Status s) => switch (s) {
       _Status.open => l10n.eventsOpen,

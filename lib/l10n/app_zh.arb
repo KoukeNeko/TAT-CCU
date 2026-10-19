@@ -641,7 +641,7 @@
   "within3Days": "3 日內",
   "withinWeek": "一週內",
   "withinMonth": "一個月內",
-  "anyTime": "全部時間",
+  "allTime": "全部時間",
   "eventsOpen": "接受報名中",
   "eventsOngoing": "活動進行中",
   "eventsClosed": "已截止報名",

@@ -180,7 +180,7 @@ class _ParttimeScreenState extends State<ParttimeScreen> {
           children: [
             BarChip(
               key: _keys['month'],
-              label: _month == null ? l10n.anyTime : _monthLabel(_month!),
+              label: _month == null ? l10n.allTime : _monthLabel(_month!),
               selected: _month != null,
               dropdown: true,
               onTap: () async {
@@ -188,7 +188,7 @@ class _ParttimeScreenState extends State<ParttimeScreen> {
                 final any = DateTime(0);
                 final m = await _pick<DateTime>('month', [
                   for (final m in months) (m, _monthLabel(m), null),
-                  (any, l10n.anyTime, null),
+                  (any, l10n.allTime, null),
                 ], _month ?? any);
                 if (m != null) setState(() => _month = m == any ? null : m);
               },
