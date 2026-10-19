@@ -739,9 +739,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get loansAndRenewals => 'Loans & renewals';
 
   @override
-  String get catalogSearch => 'Catalog search';
-
-  @override
   String loanDue(String date) {
     return 'Due $date';
   }
@@ -790,4 +787,48 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get showPage => 'Show page';
+
+  @override
+  String get renewAll => 'Renew all';
+
+  @override
+  String get renew => 'Renew';
+
+  @override
+  String get notRenewable => 'Can\'t be renewed';
+
+  @override
+  String get dueDate => 'Due';
+
+  @override
+  String get renewPending => 'Renewal requested';
+
+  @override
+  String get renewFailed => 'Couldn\'t renew';
+
+  @override
+  String renewedCount(int renewed, int total) {
+    return 'Renewed $renewed of $total';
+  }
+
+  @override
+  String get cancelHoldFailed => 'Couldn\'t cancel the request';
+
+  @override
+  String get holds => 'Requests';
+
+  @override
+  String get holdReady => 'Ready';
+
+  @override
+  String get holdWaiting => 'Waiting';
+
+  @override
+  String get cancelHoldTitle => 'Cancel request?';
+
+  @override
+  String get cancelHold => 'Cancel request';
+
+  @override
+  String get keepHold => 'Keep';
 }

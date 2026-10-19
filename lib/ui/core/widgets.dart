@@ -419,6 +419,35 @@ class ToneBlock extends StatelessWidget {
 }
 
 /// Small uppercase-style section label above a group of blocks.
+/// Small colored status capsule at the end of a list row.
+class StatusPill extends StatelessWidget {
+  const StatusPill({super.key, required this.tone, required this.label});
+
+  final Tone tone;
+  final String label;
+
+  @override
+  Widget build(BuildContext context) {
+    return DecoratedBox(
+      decoration: ShapeDecoration(
+        color: tone.fill,
+        shape: const StadiumBorder(),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 4),
+        child: Text(
+          label,
+          style: TextStyle(
+            color: tone.ink,
+            fontSize: 11,
+            fontWeight: FontWeight.w900,
+          ),
+        ),
+      ),
+    );
+  }
+}
+
 class SectionLabel extends StatelessWidget {
   const SectionLabel(this.text, {super.key});
 

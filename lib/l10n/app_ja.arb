@@ -175,7 +175,6 @@
   "holdsReady": "取り置き {count} 冊",
   "heldUntil": "{date} まで取り置き",
   "loansAndRenewals": "貸出と延長",
-  "catalogSearch": "蔵書検索",
   "loanDue": "{date} 返却",
   "loanDaysLeft": "残り {count} 日",
   "rememberPasswordTitle": "パスワードを保存しますか？",
@@ -188,5 +187,19 @@
   "campusFillingIn": "保存したパスワードを入力中",
   "campusVerifying": "Cloudflare 認証",
   "campusReading": "データを読み込み中",
-  "showPage": "ページを表示"
+  "showPage": "ページを表示",
+  "renewAll": "すべて延長",
+  "renew": "延長",
+  "notRenewable": "延長不可",
+  "dueDate": "返却期限",
+  "renewPending": "延長を申請しました",
+  "renewFailed": "延長できませんでした",
+  "renewedCount": "{total} 冊中 {renewed} 冊を延長",
+  "cancelHoldFailed": "予約を取り消せませんでした",
+  "holds": "予約",
+  "holdReady": "受取可",
+  "holdWaiting": "待機中",
+  "cancelHoldTitle": "予約を取り消しますか？",
+  "cancelHold": "予約を取り消す",
+  "keepHold": "取り消さない"
 }

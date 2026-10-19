@@ -1150,12 +1150,6 @@ abstract class AppLocalizations {
   /// **'借閱與續借'**
   String get loansAndRenewals;
 
-  /// No description provided for @catalogSearch.
-  ///
-  /// In zh, this message translates to:
-  /// **'館藏查詢'**
-  String get catalogSearch;
-
   /// No description provided for @loanDue.
   ///
   /// In zh, this message translates to:
@@ -1233,6 +1227,90 @@ abstract class AppLocalizations {
   /// In zh, this message translates to:
   /// **'顯示網頁'**
   String get showPage;
+
+  /// No description provided for @renewAll.
+  ///
+  /// In zh, this message translates to:
+  /// **'全部續借'**
+  String get renewAll;
+
+  /// No description provided for @renew.
+  ///
+  /// In zh, this message translates to:
+  /// **'續借'**
+  String get renew;
+
+  /// No description provided for @notRenewable.
+  ///
+  /// In zh, this message translates to:
+  /// **'不可續借'**
+  String get notRenewable;
+
+  /// No description provided for @dueDate.
+  ///
+  /// In zh, this message translates to:
+  /// **'到期'**
+  String get dueDate;
+
+  /// No description provided for @renewPending.
+  ///
+  /// In zh, this message translates to:
+  /// **'續借申請已送出'**
+  String get renewPending;
+
+  /// No description provided for @renewFailed.
+  ///
+  /// In zh, this message translates to:
+  /// **'無法續借'**
+  String get renewFailed;
+
+  /// No description provided for @renewedCount.
+  ///
+  /// In zh, this message translates to:
+  /// **'已續借 {renewed} / {total} 本'**
+  String renewedCount(int renewed, int total);
+
+  /// No description provided for @cancelHoldFailed.
+  ///
+  /// In zh, this message translates to:
+  /// **'無法取消預約'**
+  String get cancelHoldFailed;
+
+  /// No description provided for @holds.
+  ///
+  /// In zh, this message translates to:
+  /// **'預約'**
+  String get holds;
+
+  /// No description provided for @holdReady.
+  ///
+  /// In zh, this message translates to:
+  /// **'可取'**
+  String get holdReady;
+
+  /// No description provided for @holdWaiting.
+  ///
+  /// In zh, this message translates to:
+  /// **'等待中'**
+  String get holdWaiting;
+
+  /// No description provided for @cancelHoldTitle.
+  ///
+  /// In zh, this message translates to:
+  /// **'取消預約？'**
+  String get cancelHoldTitle;
+
+  /// No description provided for @cancelHold.
+  ///
+  /// In zh, this message translates to:
+  /// **'取消預約'**
+  String get cancelHold;
+
+  /// No description provided for @keepHold.
+  ///
+  /// In zh, this message translates to:
+  /// **'保留'**
+  String get keepHold;
 }
 
 class _AppLocalizationsDelegate

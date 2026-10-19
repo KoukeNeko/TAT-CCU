@@ -656,9 +656,6 @@ class AppLocalizationsJa extends AppLocalizations {
   String get loansAndRenewals => '貸出と延長';
 
   @override
-  String get catalogSearch => '蔵書検索';
-
-  @override
   String loanDue(String date) {
     return '$date 返却';
   }
@@ -701,4 +698,48 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get showPage => 'ページを表示';
+
+  @override
+  String get renewAll => 'すべて延長';
+
+  @override
+  String get renew => '延長';
+
+  @override
+  String get notRenewable => '延長不可';
+
+  @override
+  String get dueDate => '返却期限';
+
+  @override
+  String get renewPending => '延長を申請しました';
+
+  @override
+  String get renewFailed => '延長できませんでした';
+
+  @override
+  String renewedCount(int renewed, int total) {
+    return '$total 冊中 $renewed 冊を延長';
+  }
+
+  @override
+  String get cancelHoldFailed => '予約を取り消せませんでした';
+
+  @override
+  String get holds => '予約';
+
+  @override
+  String get holdReady => '受取可';
+
+  @override
+  String get holdWaiting => '待機中';
+
+  @override
+  String get cancelHoldTitle => '予約を取り消しますか？';
+
+  @override
+  String get cancelHold => '予約を取り消す';
+
+  @override
+  String get keepHold => '取り消さない';
 }

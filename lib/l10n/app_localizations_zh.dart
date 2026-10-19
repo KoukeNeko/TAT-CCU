@@ -669,9 +669,6 @@ class AppLocalizationsZh extends AppLocalizations {
   String get loansAndRenewals => '借閱與續借';
 
   @override
-  String get catalogSearch => '館藏查詢';
-
-  @override
   String loanDue(String date) {
     return '$date 到期';
   }
@@ -713,4 +710,48 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get showPage => '顯示網頁';
+
+  @override
+  String get renewAll => '全部續借';
+
+  @override
+  String get renew => '續借';
+
+  @override
+  String get notRenewable => '不可續借';
+
+  @override
+  String get dueDate => '到期';
+
+  @override
+  String get renewPending => '續借申請已送出';
+
+  @override
+  String get renewFailed => '無法續借';
+
+  @override
+  String renewedCount(int renewed, int total) {
+    return '已續借 $renewed / $total 本';
+  }
+
+  @override
+  String get cancelHoldFailed => '無法取消預約';
+
+  @override
+  String get holds => '預約';
+
+  @override
+  String get holdReady => '可取';
+
+  @override
+  String get holdWaiting => '等待中';
+
+  @override
+  String get cancelHoldTitle => '取消預約？';
+
+  @override
+  String get cancelHold => '取消預約';
+
+  @override
+  String get keepHold => '保留';
 }

@@ -5,7 +5,7 @@ void main() {
   test('loans read every due date format, most urgent first', () {
     final loans = loansOf({
       'loans': [
-        {'title': 'B', 'author': 'b', 'duedate': '20261105'},
+        {'loanid': 'L2', 'title': 'B', 'duedate': '20261105', 'renewable': 'N'},
         {'title': 'A', 'author': 'a', 'duedate': '10/17/2026'},
         {'title': 'C', 'dueDate': '2026-10-22T23:59:00Z'},
         {'title': 'no date'},
@@ -13,16 +13,25 @@ void main() {
     });
     expect(loans.map((l) => l.title), ['A', 'C', 'B']);
     expect(loans.first.due, DateTime(2026, 10, 17));
+    expect((loans.last.id, loans.last.renewable), ('L2', false));
+    expect(loans.first.renewable, true);
   });
 
   test('only holds on the pickup shelf count as ready', () {
     final holds = readyHoldsOf({
       'holds': [
-        {'title': 'X', 'status': 'On Hold Shelf', 'expirydate': '20261024'},
+        {
+          'requestid': 'R1',
+          'requesttype': 'HOLD',
+          'title': 'X',
+          'requeststatus': 'On Hold Shelf',
+          'expiryDate': '20261024',
+        },
         {'title': 'Y', 'status': 'In Process'},
       ],
     });
     expect(holds.single.title, 'X');
     expect(holds.single.until, DateTime(2026, 10, 24));
+    expect((holds.single.id, holds.single.type), ('R1', 'HOLD'));
   });
 }

@@ -175,7 +175,6 @@
   "holdsReady": "{count, plural, =1{1 hold ready for pickup} other{{count} holds ready for pickup}}",
   "heldUntil": "Held until {date}",
   "loansAndRenewals": "Loans & renewals",
-  "catalogSearch": "Catalog search",
   "loanDue": "Due {date}",
   "loanDaysLeft": "{count, plural, =1{1 day left} other{{count} days left}}",
   "rememberPasswordTitle": "Remember password?",
@@ -188,5 +187,19 @@
   "campusFillingIn": "Filling in your saved password",
   "campusVerifying": "Cloudflare check",
   "campusReading": "Loading data",
-  "showPage": "Show page"
+  "showPage": "Show page",
+  "renewAll": "Renew all",
+  "renew": "Renew",
+  "notRenewable": "Can't be renewed",
+  "dueDate": "Due",
+  "renewPending": "Renewal requested",
+  "renewFailed": "Couldn't renew",
+  "renewedCount": "Renewed {renewed} of {total}",
+  "cancelHoldFailed": "Couldn't cancel the request",
+  "holds": "Requests",
+  "holdReady": "Ready",
+  "holdWaiting": "Waiting",
+  "cancelHoldTitle": "Cancel request?",
+  "cancelHold": "Cancel request",
+  "keepHold": "Keep"
 }

@@ -486,7 +486,6 @@
     }
   },
   "loansAndRenewals": "借閱與續借",
-  "catalogSearch": "館藏查詢",
   "loanDue": "{date} 到期",
   "@loanDue": {
     "placeholders": {
@@ -513,5 +512,29 @@
   "campusFillingIn": "自動填入帳號密碼",
   "campusVerifying": "Cloudflare 驗證",
   "campusReading": "讀取資料",
-  "showPage": "顯示網頁"
+  "showPage": "顯示網頁",
+  "renewAll": "全部續借",
+  "renew": "續借",
+  "notRenewable": "不可續借",
+  "dueDate": "到期",
+  "renewPending": "續借申請已送出",
+  "renewFailed": "無法續借",
+  "renewedCount": "已續借 {renewed} / {total} 本",
+  "@renewedCount": {
+    "placeholders": {
+      "renewed": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "cancelHoldFailed": "無法取消預約",
+  "holds": "預約",
+  "holdReady": "可取",
+  "holdWaiting": "等待中",
+  "cancelHoldTitle": "取消預約？",
+  "cancelHold": "取消預約",
+  "keepHold": "保留"
 }
