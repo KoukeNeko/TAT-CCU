@@ -729,16 +729,21 @@ class ChipRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return SingleChildScrollView(
-      scrollDirection: Axis.horizontal,
-      padding: padding,
-      child: Row(
-        children: [
-          for (final (i, chip) in children.indexed) ...[
-            if (i > 0) const SizedBox(width: 6),
-            chip,
+    // Full width, so a centring parent such as a Column keeps the chips at
+    // the start.
+    return SizedBox(
+      width: double.infinity,
+      child: SingleChildScrollView(
+        scrollDirection: Axis.horizontal,
+        padding: padding,
+        child: Row(
+          children: [
+            for (final (i, chip) in children.indexed) ...[
+              if (i > 0) const SizedBox(width: 6),
+              chip,
+            ],
           ],
-        ],
+        ),
       ),
     );
   }
