@@ -215,8 +215,9 @@ class _SpaceScreenState extends State<SpaceScreen> {
               ),
         ];
       });
-    } catch (_) {
-      // Places are a hint; the next interval tries again.
+    } on Exception {
+      // Places are a hint: a failed request waits for the next interval.
+      // Parse errors are bugs and are not caught.
     }
   }
 

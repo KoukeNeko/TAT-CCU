@@ -157,7 +157,14 @@ class CampusSessionState extends State<CampusSession> {
   }
 
   void _received(JavaScriptMessage message) {
-    final json = jsonDecode(message.message) as Map<String, dynamic>;
+    // A script can finish after its page was closed.
+    if (!mounted) return;
+    Map<String, dynamic> json;
+    try {
+      json = jsonDecode(message.message) as Map<String, dynamic>;
+    } on FormatException catch (e) {
+      json = {'error': 'Unreadable page reply: ${e.message}'};
+    }
     // Signed in: keep this session for the next launch.
     if (json['error'] == null) CampusCookies.save();
     widget.onMessage(json);

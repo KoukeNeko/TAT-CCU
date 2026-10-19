@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 
 import '../../data/repositories/campus_cache.dart';
@@ -81,6 +83,13 @@ class _AbsenceScreenState extends State<AbsenceScreen> {
     if (request == null || !mounted) return;
     setState(() => _sending = true);
     await _session.currentState?.run(submitAbsence(widget.cmid, request));
+    // An expired session may never answer; let the button work again.
+    Timer(const Duration(seconds: 30), () {
+      if (!mounted || !_sending) return;
+      setState(() => _sending = false);
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text(context.l10n.loadFailed)));
+    });
   }
 
   Future<void> _reload() async {

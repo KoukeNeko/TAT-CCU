@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'dart:io';
 
+import 'package:flutter/foundation.dart';
 import 'package:path_provider/path_provider.dart';
 
 typedef CachedPage = ({Map<String, dynamic> json, DateTime savedAt});
@@ -27,15 +28,22 @@ class CampusCache {
     if (await dir.exists()) await dir.delete(recursive: true);
   }
 
+  /// Null when nothing was saved, or the file is damaged (a write cut
+  /// short), so the page reads the school again instead of never loading.
   static Future<CachedPage?> read(String key) async {
     final file = await _file(key);
     if (!await file.exists()) return null;
-    final stored =
-        jsonDecode(await file.readAsString()) as Map<String, dynamic>;
-    return (
-      json: stored['json'] as Map<String, dynamic>,
-      savedAt: DateTime.fromMillisecondsSinceEpoch(stored['savedAt'] as int),
-    );
+    try {
+      final stored =
+          jsonDecode(await file.readAsString()) as Map<String, dynamic>;
+      return (
+        json: stored['json'] as Map<String, dynamic>,
+        savedAt: DateTime.fromMillisecondsSinceEpoch(stored['savedAt'] as int),
+      );
+    } on Object catch (e) {
+      debugPrint('campus cache $key unreadable: $e');
+      return null;
+    }
   }
 
   static Future<DateTime> write(String key, Map<String, dynamic> json) async {

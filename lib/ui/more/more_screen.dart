@@ -89,11 +89,25 @@ class _MoreScreenState extends State<MoreScreen> {
     };
   }
 
+  /// The four tiles: saved routes that no longer exist (a renamed page) are
+  /// skipped and the rest filled up from the other pages.
+  List<String> _tilesOf(PortalPrefs prefs, Map<String, _Page> pages) {
+    final kept = {
+      for (final t in prefs.tiles)
+        if (pages.containsKey(t)) t,
+    };
+    return [
+      ...kept,
+      ...pages.keys.where((p) => !kept.contains(p)),
+    ].take(4).toList();
+  }
+
   Future<void> _replace(
     PortalPrefs prefs,
     Map<String, _Page> pages,
     int i,
   ) async {
+    final tiles = _tilesOf(prefs, pages);
     final box = _slots[i].currentContext!.findRenderObject()! as RenderBox;
     final path = await showGlassMenu<String>(
       context,
@@ -101,7 +115,7 @@ class _MoreScreenState extends State<MoreScreen> {
       title: context.l10n.replaceWith,
       items: [
         for (final p in pages.values)
-          if (!prefs.tiles.contains(p.path))
+          if (!tiles.contains(p.path))
             (
               value: p.path,
               tone: p.tone,
@@ -112,11 +126,11 @@ class _MoreScreenState extends State<MoreScreen> {
       ],
     );
     if (path == null) return;
-    prefs.setTiles([...prefs.tiles]..[i] = path);
+    prefs.setTiles(tiles..[i] = path);
   }
 
-  void _swap(PortalPrefs prefs, int from, int to) {
-    final tiles = [...prefs.tiles];
+  void _swap(PortalPrefs prefs, Map<String, _Page> pages, int from, int to) {
+    final tiles = _tilesOf(prefs, pages);
     final moved = tiles[from];
     tiles[from] = tiles[to];
     tiles[to] = moved;
@@ -125,7 +139,7 @@ class _MoreScreenState extends State<MoreScreen> {
   }
 
   Widget _slot(PortalPrefs prefs, Map<String, _Page> pages, int i) {
-    final page = pages[prefs.tiles[i]]!;
+    final page = pages[_tilesOf(prefs, pages)[i]]!;
     return Expanded(
       child: KeyedSubtree(
         key: _slots[i],
@@ -141,7 +155,7 @@ class _MoreScreenState extends State<MoreScreen> {
               // Dropped where it started: a long press without a drag.
               onAcceptWithDetails: (d) => d.data == i
                   ? _replace(prefs, pages, i)
-                  : _swap(prefs, d.data, i),
+                  : _swap(prefs, pages, d.data, i),
               builder: (context, hovering, _) => LongPressDraggable<int>(
                 data: i,
                 feedback: SizedBox(
