@@ -198,167 +198,147 @@ class _ParttimeScreenState extends State<ParttimeScreen> {
         ),
       ),
       body: Builder(
-        builder: (context) => Stack(
+        builder: (context) => PinnedActionList(
+          padding: scrollPadding(context),
+          action: selected == null
+              ? FilledButton(
+                  onPressed: () => context.push('/more/parttime/add'),
+                  child: Text(l10n.ptAdd),
+                )
+              : FilledButton(
+                  onPressed: selected.isEmpty ? null : _delete,
+                  style: FilledButton.styleFrom(
+                    backgroundColor: tones.peach.strong,
+                    foregroundColor: tones.peach.fill,
+                  ),
+                  child: Text(l10n.ptDeleteCount(selected.length)),
+                ),
           children: [
-            Positioned.fill(
-              child: ListView(
-                padding: scrollPadding(
-                  context,
-                ).copyWith(bottom: MediaQuery.paddingOf(context).bottom + 90),
+            if (selected == null) ...[
+              Row(
                 children: [
-                  if (selected == null) ...[
-                    Row(
-                      children: [
-                        for (final (i, s) in HoursState.values.indexed) ...[
-                          if (i > 0) const SizedBox(width: rowGap),
-                          Expanded(
-                            child: ToneBlock(
-                              tone: _statePill(context, s).$1,
-                              radius: Corners.row,
-                              padding: const EdgeInsets.all(12),
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    _h(hoursIn(s)),
-                                    style: const TextStyle(
-                                      fontSize: 24,
-                                      fontWeight: FontWeight.w900,
-                                    ),
-                                  ),
-                                  Text(
-                                    '${stateLabel(s)}・${l10n.unitHours}',
-                                    style: const TextStyle(
-                                      fontSize: 11,
-                                      fontWeight: FontWeight.w800,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ),
-                        ],
-                      ],
-                    ),
-                    const SizedBox(height: rowGap),
-                    Card(
-                      color: scheme.surfaceContainerLow,
-                      child: Padding(
-                        padding: const EdgeInsets.all(14),
+                  for (final (i, s) in HoursState.values.indexed) ...[
+                    if (i > 0) const SizedBox(width: rowGap),
+                    Expanded(
+                      child: ToneBlock(
+                        tone: _statePill(context, s).$1,
+                        radius: Corners.row,
+                        padding: const EdgeInsets.all(12),
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
-                              l10n.ptWeek(_h(week), weeklyLimit),
+                              _h(hoursIn(s)),
                               style: const TextStyle(
+                                fontSize: 24,
                                 fontWeight: FontWeight.w900,
                               ),
                             ),
-                            const SizedBox(height: 8),
-                            ClipRRect(
-                              borderRadius: BorderRadius.circular(4),
-                              child: LinearProgressIndicator(
-                                value: (week / weeklyLimit).clamp(0, 1),
-                                minHeight: 8,
-                                color: week > weeklyLimit * 0.8
-                                    ? tones.peach.strong
-                                    : tones.mint.strong,
-                                backgroundColor: scheme.surfaceContainerHigh,
+                            Text(
+                              '${stateLabel(s)}・${l10n.unitHours}',
+                              style: const TextStyle(
+                                fontSize: 11,
+                                fontWeight: FontWeight.w800,
                               ),
                             ),
                           ],
                         ),
-                      ),
-                    ),
-                  ],
-                  if (shown.isEmpty)
-                    Padding(
-                      padding: const EdgeInsets.symmetric(vertical: 48),
-                      child: Text(
-                        l10n.ptNoRecords,
-                        textAlign: TextAlign.center,
-                        style: Theme.of(context).textTheme.titleMedium,
-                      ),
-                    ),
-                  for (final MapEntry(key: day, value: entries)
-                      in groups.entries) ...[
-                    SectionLabel(dayLabel(context, day)),
-                    Card(
-                      color: scheme.surfaceContainerLow,
-                      clipBehavior: Clip.antiAlias,
-                      child: Column(
-                        children: [
-                          for (final (i, e) in entries.indexed) ...[
-                            if (i > 0) const Divider(height: 1),
-                            _EntryRow(
-                              entry: e,
-                              selected: selected?.contains(e.id),
-                              onTap: selected == null
-                                  ? null
-                                  : e.state == HoursState.unconfirmed
-                                  ? () => setState(
-                                      () => selected.contains(e.id)
-                                          ? selected.remove(e.id)
-                                          : selected.add(e.id),
-                                    )
-                                  : null,
-                            ),
-                          ],
-                        ],
-                      ),
-                    ),
-                  ],
-                  if (selected == null) ...[
-                    SectionLabel(l10n.ptOther),
-                    Card(
-                      color: scheme.surfaceContainerLow,
-                      clipBehavior: Clip.antiAlias,
-                      child: Column(
-                        children: [
-                          for (final (i, (title, path)) in [
-                            (l10n.ptPayroll, '/more/parttime/pay'),
-                            (l10n.ptPrint, '/more/parttime/print'),
-                          ].indexed) ...[
-                            if (i > 0) const Divider(height: 1),
-                            ListTile(
-                              title: Text(
-                                title,
-                                style: const TextStyle(
-                                  fontWeight: FontWeight.w800,
-                                ),
-                              ),
-                              trailing: const Icon(Icons.chevron_right),
-                              onTap: () => context.push(path),
-                            ),
-                          ],
-                        ],
                       ),
                     ),
                   ],
                 ],
               ),
-            ),
-            Positioned(
-              left: pageMargin,
-              right: pageMargin,
-              bottom: MediaQuery.paddingOf(context).bottom + 12,
-              child: SizedBox(
-                height: 54,
-                child: selected == null
-                    ? FilledButton(
-                        onPressed: () => context.push('/more/parttime/add'),
-                        child: Text(l10n.ptAdd),
-                      )
-                    : FilledButton(
-                        onPressed: selected.isEmpty ? null : _delete,
-                        style: FilledButton.styleFrom(
-                          backgroundColor: tones.peach.strong,
-                          foregroundColor: tones.peach.fill,
-                        ),
-                        child: Text(l10n.ptDeleteCount(selected.length)),
+              const SizedBox(height: rowGap),
+              Card(
+                color: scheme.surfaceContainerLow,
+                child: Padding(
+                  padding: const EdgeInsets.all(14),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        l10n.ptWeek(_h(week), weeklyLimit),
+                        style: const TextStyle(fontWeight: FontWeight.w900),
                       ),
+                      const SizedBox(height: 8),
+                      ClipRRect(
+                        borderRadius: BorderRadius.circular(4),
+                        child: LinearProgressIndicator(
+                          value: (week / weeklyLimit).clamp(0, 1),
+                          minHeight: 8,
+                          color: week > weeklyLimit * 0.8
+                              ? tones.peach.strong
+                              : tones.mint.strong,
+                          backgroundColor: scheme.surfaceContainerHigh,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
               ),
-            ),
+            ],
+            if (shown.isEmpty)
+              Padding(
+                padding: const EdgeInsets.symmetric(vertical: 48),
+                child: Text(
+                  l10n.ptNoRecords,
+                  textAlign: TextAlign.center,
+                  style: Theme.of(context).textTheme.titleMedium,
+                ),
+              ),
+            for (final MapEntry(key: day, value: entries)
+                in groups.entries) ...[
+              SectionLabel(dayLabel(context, day)),
+              Card(
+                color: scheme.surfaceContainerLow,
+                clipBehavior: Clip.antiAlias,
+                child: Column(
+                  children: [
+                    for (final (i, e) in entries.indexed) ...[
+                      if (i > 0) const Divider(height: 1),
+                      _EntryRow(
+                        entry: e,
+                        selected: selected?.contains(e.id),
+                        onTap: selected == null
+                            ? null
+                            : e.state == HoursState.unconfirmed
+                            ? () => setState(
+                                () => selected.contains(e.id)
+                                    ? selected.remove(e.id)
+                                    : selected.add(e.id),
+                              )
+                            : null,
+                      ),
+                    ],
+                  ],
+                ),
+              ),
+            ],
+            if (selected == null) ...[
+              SectionLabel(l10n.ptOther),
+              Card(
+                color: scheme.surfaceContainerLow,
+                clipBehavior: Clip.antiAlias,
+                child: Column(
+                  children: [
+                    for (final (i, (title, path)) in [
+                      (l10n.ptPayroll, '/more/parttime/pay'),
+                      (l10n.ptPrint, '/more/parttime/print'),
+                    ].indexed) ...[
+                      if (i > 0) const Divider(height: 1),
+                      ListTile(
+                        title: Text(
+                          title,
+                          style: const TextStyle(fontWeight: FontWeight.w800),
+                        ),
+                        trailing: const Icon(Icons.chevron_right),
+                        onTap: () => context.push(path),
+                      ),
+                    ],
+                  ],
+                ),
+              ),
+            ],
           ],
         ),
       ),
@@ -616,157 +596,138 @@ class _ParttimeAddScreenState extends State<ParttimeAddScreen> {
         action: const SchoolSiteButton('0014'),
       ),
       body: Builder(
-        builder: (context) => Stack(
+        builder: (context) => PinnedActionList(
+          padding: scrollPadding(context),
+          action: FilledButton(
+            onPressed: _staged.isEmpty ? null : _save,
+            child: Text(l10n.ptSaveCount(_staged.length)),
+          ),
           children: [
-            Positioned.fill(
-              child: ListView(
-                padding: scrollPadding(
-                  context,
-                ).copyWith(bottom: MediaQuery.paddingOf(context).bottom + 90),
+            Card(
+              color: scheme.surfaceContainerLow,
+              clipBehavior: Clip.antiAlias,
+              child: Column(
                 children: [
-                  Card(
-                    color: scheme.surfaceContainerLow,
-                    clipBehavior: Clip.antiAlias,
-                    child: Column(
+                  field(
+                    l10n.ptDate,
+                    '${rocYear(_date)}/${_date.month}/${_date.day} '
+                    '${weekdayName(context, _date.weekday)}'
+                    '${isHoliday(_date) ? '・${l10n.ptHoliday}' : ''}',
+                    _pickDate,
+                  ),
+                  const Divider(height: 1),
+                  field(l10n.ptUnit, _unit, _pickUnit),
+                  const Divider(height: 1),
+                  ListTile(
+                    leading: SizedBox(
+                      width: 48,
+                      child: Text(
+                        l10n.ptTime,
+                        style: TextStyle(
+                          color: scheme.onSurfaceVariant,
+                          fontWeight: FontWeight.w800,
+                        ),
+                      ),
+                    ),
+                    title: Row(
                       children: [
-                        field(
-                          l10n.ptDate,
-                          '${rocYear(_date)}/${_date.month}/${_date.day} '
-                          '${weekdayName(context, _date.weekday)}'
-                          '${isHoliday(_date) ? '・${l10n.ptHoliday}' : ''}',
-                          _pickDate,
+                        TextButton(
+                          onPressed: () => _pickTime(true),
+                          child: Text(clock(_start)),
                         ),
-                        const Divider(height: 1),
-                        field(l10n.ptUnit, _unit, _pickUnit),
-                        const Divider(height: 1),
-                        ListTile(
-                          leading: SizedBox(
-                            width: 48,
-                            child: Text(
-                              l10n.ptTime,
-                              style: TextStyle(
-                                color: scheme.onSurfaceVariant,
-                                fontWeight: FontWeight.w800,
-                              ),
-                            ),
-                          ),
-                          title: Row(
-                            children: [
-                              TextButton(
-                                onPressed: () => _pickTime(true),
-                                child: Text(clock(_start)),
-                              ),
-                              const Text('–'),
-                              TextButton(
-                                onPressed: () => _pickTime(false),
-                                child: Text(clock(_end)),
-                              ),
-                            ],
-                          ),
-                          trailing: Text(
-                            _end > _start
-                                ? l10n.ptHours(_h((_end - _start) / 60))
-                                : '',
-                            style: TextStyle(
-                              color: scheme.onSurfaceVariant,
-                              fontWeight: FontWeight.w900,
-                            ),
-                          ),
-                        ),
-                        const Divider(height: 1),
-                        Padding(
-                          padding: const EdgeInsets.fromLTRB(16, 4, 16, 8),
-                          child: TextField(
-                            controller: _work,
-                            maxLength: 80,
-                            onChanged: (_) => setState(() {}),
-                            decoration: InputDecoration(
-                              labelText: l10n.ptWork,
-                              border: InputBorder.none,
-                              counterText: '',
-                            ),
-                          ),
+                        const Text('–'),
+                        TextButton(
+                          onPressed: () => _pickTime(false),
+                          child: Text(clock(_end)),
                         ),
                       ],
                     ),
-                  ),
-                  if (problem != null)
-                    Padding(
-                      padding: const EdgeInsets.only(top: rowGap),
-                      child: ToneBlock(
-                        tone: tones.peach,
-                        radius: Corners.inset,
-                        padding: const EdgeInsets.all(12),
-                        child: Text(
-                          problem,
-                          style: const TextStyle(fontWeight: FontWeight.w800),
-                        ),
+                    trailing: Text(
+                      _end > _start
+                          ? l10n.ptHours(_h((_end - _start) / 60))
+                          : '',
+                      style: TextStyle(
+                        color: scheme.onSurfaceVariant,
+                        fontWeight: FontWeight.w900,
                       ),
                     ),
-                  const SizedBox(height: rowGap),
-                  SizedBox(
-                    height: 48,
-                    child: FilledButton.tonal(
-                      onPressed: problem == null && _work.text.trim().isNotEmpty
-                          ? () => setState(() {
-                              _staged.add(_draft);
-                              _work.clear();
-                            })
-                          : null,
-                      child: Text(l10n.ptStage),
-                    ),
                   ),
-                  if (_staged.isNotEmpty) ...[
-                    SectionLabel(l10n.ptStaged(_staged.length, _h(staged))),
-                    Card(
-                      color: scheme.surfaceContainerLow,
-                      clipBehavior: Clip.antiAlias,
-                      child: Column(
-                        children: [
-                          for (final (i, e) in _staged.indexed) ...[
-                            if (i > 0) const Divider(height: 1),
-                            ListTile(
-                              title: Text(
-                                '${dayLabel(context, e.date)} ${_span(e)}・${e.unit}',
-                                style: const TextStyle(
-                                  fontWeight: FontWeight.w900,
-                                ),
-                              ),
-                              subtitle: Text(
-                                [
-                                  if (isHoliday(e.date)) l10n.ptHoliday,
-                                  l10n.ptHours(_h(hoursOf(e))),
-                                  e.work,
-                                ].join('・'),
-                              ),
-                              trailing: IconButton(
-                                tooltip: MaterialLocalizations.of(context)
-                                    .deleteButtonTooltip,
-                                icon: const Icon(Icons.close),
-                                onPressed: () =>
-                                    setState(() => _staged.removeAt(i)),
-                              ),
-                            ),
-                          ],
-                        ],
+                  const Divider(height: 1),
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(16, 4, 16, 8),
+                    child: TextField(
+                      controller: _work,
+                      maxLength: 80,
+                      onChanged: (_) => setState(() {}),
+                      decoration: InputDecoration(
+                        labelText: l10n.ptWork,
+                        border: InputBorder.none,
+                        counterText: '',
                       ),
                     ),
-                  ],
+                  ),
                 ],
               ),
             ),
-            Positioned(
-              left: pageMargin,
-              right: pageMargin,
-              bottom: MediaQuery.paddingOf(context).bottom + 12,
-              child: SizedBox(
-                height: 54,
-                child: FilledButton(
-                  onPressed: _staged.isEmpty ? null : _save,
-                  child: Text(l10n.ptSaveCount(_staged.length)),
+            if (problem != null)
+              Padding(
+                padding: const EdgeInsets.only(top: rowGap),
+                child: ToneBlock(
+                  tone: tones.peach,
+                  radius: Corners.inset,
+                  padding: const EdgeInsets.all(12),
+                  child: Text(
+                    problem,
+                    style: const TextStyle(fontWeight: FontWeight.w800),
+                  ),
                 ),
               ),
+            const SizedBox(height: rowGap),
+            SizedBox(
+              height: 48,
+              child: FilledButton.tonal(
+                onPressed: problem == null && _work.text.trim().isNotEmpty
+                    ? () => setState(() {
+                        _staged.add(_draft);
+                        _work.clear();
+                      })
+                    : null,
+                child: Text(l10n.ptStage),
+              ),
             ),
+            if (_staged.isNotEmpty) ...[
+              SectionLabel(l10n.ptStaged(_staged.length, _h(staged))),
+              Card(
+                color: scheme.surfaceContainerLow,
+                clipBehavior: Clip.antiAlias,
+                child: Column(
+                  children: [
+                    for (final (i, e) in _staged.indexed) ...[
+                      if (i > 0) const Divider(height: 1),
+                      ListTile(
+                        title: Text(
+                          '${dayLabel(context, e.date)} ${_span(e)}・${e.unit}',
+                          style: const TextStyle(fontWeight: FontWeight.w900),
+                        ),
+                        subtitle: Text(
+                          [
+                            if (isHoliday(e.date)) l10n.ptHoliday,
+                            l10n.ptHours(_h(hoursOf(e))),
+                            e.work,
+                          ].join('・'),
+                        ),
+                        trailing: IconButton(
+                          tooltip: MaterialLocalizations.of(context)
+                              .deleteButtonTooltip,
+                          icon: const Icon(Icons.close),
+                          onPressed: () => setState(() => _staged.removeAt(i)),
+                        ),
+                      ),
+                    ],
+                  ],
+                ),
+              ),
+            ],
           ],
         ),
       ),

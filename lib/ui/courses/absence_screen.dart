@@ -268,142 +268,116 @@ class _AbsenceFormScreenState extends State<AbsenceFormScreen> {
       extendBodyBehindAppBar: true,
       appBar: subBar(context, l10n.absenceNew),
       body: Builder(
-        builder: (context) => Stack(
+        builder: (context) => PinnedActionList(
+          padding: scrollPadding(context),
+          action: FilledButton(onPressed: _submit, child: Text(l10n.submit)),
           children: [
-            Positioned.fill(
-              child: ListView(
-                padding: scrollPadding(
-                  context,
-                ).copyWith(bottom: MediaQuery.paddingOf(context).bottom + 90),
+            Card(
+              color: scheme.surfaceContainerLow,
+              clipBehavior: Clip.antiAlias,
+              child: Column(
                 children: [
-                  Card(
-                    color: scheme.surfaceContainerLow,
-                    clipBehavior: Clip.antiAlias,
-                    child: Column(
+                  row(l10n.absenceCourse, Text(widget.course, style: value)),
+                  const Divider(height: 1),
+                  InkWell(
+                    onTap: _pickDate,
+                    child: row(
+                      l10n.absenceDate,
+                      Row(
+                        children: [
+                          Icon(
+                            Icons.calendar_today_outlined,
+                            size: 18,
+                            color: scheme.onSurfaceVariant,
+                          ),
+                          const SizedBox(width: 8),
+                          Text(
+                            '${_date.month}/${_date.day} '
+                            '${weekdayName(context, _date.weekday)}',
+                            style: value,
+                          ),
+                          const Spacer(),
+                          Icon(
+                            Icons.chevron_right,
+                            color: scheme.onSurfaceVariant,
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                  const Divider(height: 1),
+                  row(
+                    l10n.absenceType,
+                    Wrap(
+                      spacing: 6,
+                      runSpacing: 6,
                       children: [
-                        row(
-                          l10n.absenceCourse,
-                          Text(widget.course, style: value),
-                        ),
-                        const Divider(height: 1),
-                        InkWell(
-                          onTap: _pickDate,
-                          child: row(
-                            l10n.absenceDate,
-                            Row(
-                              children: [
-                                Icon(
-                                  Icons.calendar_today_outlined,
-                                  size: 18,
-                                  color: scheme.onSurfaceVariant,
-                                ),
-                                const SizedBox(width: 8),
-                                Text(
-                                  '${_date.month}/${_date.day} '
-                                  '${weekdayName(context, _date.weekday)}',
-                                  style: value,
-                                ),
-                                const Spacer(),
-                                Icon(
-                                  Icons.chevron_right,
-                                  color: scheme.onSurfaceVariant,
-                                ),
-                              ],
-                            ),
+                        for (final (i, name) in _types(l10n).indexed)
+                          BarChip(
+                            label: name,
+                            selected: _type == i,
+                            tone: tones.peach,
+                            onTap: () => setState(() => _type = i),
                           ),
-                        ),
-                        const Divider(height: 1),
-                        row(
-                          l10n.absenceType,
-                          Wrap(
-                            spacing: 6,
-                            runSpacing: 6,
-                            children: [
-                              for (final (i, name) in _types(l10n).indexed)
-                                BarChip(
-                                  label: name,
-                                  selected: _type == i,
-                                  tone: tones.peach,
-                                  onTap: () => setState(() => _type = i),
-                                ),
-                            ],
-                          ),
-                        ),
-                        const Divider(height: 1),
-                        row(
-                          l10n.absenceMode,
-                          SegmentedButton<bool>(
-                            showSelectedIcon: false,
-                            segments: [
-                              ButtonSegment(
-                                value: false,
-                                label: Text(l10n.absenceInPerson),
-                              ),
-                              ButtonSegment(
-                                value: true,
-                                label: Text(l10n.absenceOnline),
-                              ),
-                            ],
-                            selected: {_online},
-                            onSelectionChanged: (s) =>
-                                setState(() => _online = s.first),
-                          ),
-                        ),
-                        const Divider(height: 1),
-                        row(
-                          l10n.absenceRemark,
-                          TextField(
-                            controller: _remark,
-                            minLines: 3,
-                            maxLines: 6,
-                            decoration: const InputDecoration(
-                              border: InputBorder.none,
-                              isDense: true,
-                              contentPadding: EdgeInsets.symmetric(vertical: 6),
-                            ),
-                          ),
-                        ),
                       ],
                     ),
                   ),
-                  const SizedBox(height: rowGap),
-                  ToneBlock(
-                    tone: tones.sun,
-                    padding: const EdgeInsets.all(14),
-                    child: Row(
-                      children: [
-                        Icon(
-                          Icons.info_outline,
-                          size: 18,
-                          color: tones.sun.ink,
+                  const Divider(height: 1),
+                  row(
+                    l10n.absenceMode,
+                    SegmentedButton<bool>(
+                      showSelectedIcon: false,
+                      segments: [
+                        ButtonSegment(
+                          value: false,
+                          label: Text(l10n.absenceInPerson),
                         ),
-                        const SizedBox(width: 10),
-                        Expanded(
-                          child: Text(
-                            l10n.absenceWarning,
-                            style: const TextStyle(
-                              fontSize: 12,
-                              height: 1.5,
-                              fontWeight: FontWeight.w800,
-                            ),
-                          ),
+                        ButtonSegment(
+                          value: true,
+                          label: Text(l10n.absenceOnline),
                         ),
                       ],
+                      selected: {_online},
+                      onSelectionChanged: (s) =>
+                          setState(() => _online = s.first),
+                    ),
+                  ),
+                  const Divider(height: 1),
+                  row(
+                    l10n.absenceRemark,
+                    TextField(
+                      controller: _remark,
+                      minLines: 3,
+                      maxLines: 6,
+                      decoration: const InputDecoration(
+                        border: InputBorder.none,
+                        isDense: true,
+                        contentPadding: EdgeInsets.symmetric(vertical: 6),
+                      ),
                     ),
                   ),
                 ],
               ),
             ),
-            Positioned(
-              left: pageMargin,
-              right: pageMargin,
-              bottom: MediaQuery.paddingOf(context).bottom + 12,
-              child: SizedBox(
-                height: 54,
-                child: FilledButton(
-                  onPressed: _submit,
-                  child: Text(l10n.submit),
-                ),
+            const SizedBox(height: rowGap),
+            ToneBlock(
+              tone: tones.sun,
+              padding: const EdgeInsets.all(14),
+              child: Row(
+                children: [
+                  Icon(Icons.info_outline, size: 18, color: tones.sun.ink),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: Text(
+                      l10n.absenceWarning,
+                      style: const TextStyle(
+                        fontSize: 12,
+                        height: 1.5,
+                        fontWeight: FontWeight.w800,
+                      ),
+                    ),
+                  ),
+                ],
               ),
             ),
           ],

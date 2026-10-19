@@ -29,67 +29,48 @@ class DormRepairScreen extends StatelessWidget {
         listenable: store,
         builder: (context, _) {
           final requests = store.requests;
-          return Stack(
+          return PinnedActionList(
+            padding: scrollPadding(context, top: 0),
+            action: FilledButton(
+              onPressed: () => context.push('/more/dorm-repair/new'),
+              child: Text(l10n.drRequest),
+            ),
             children: [
-              Positioned.fill(
-                child: ListView(
-                  padding: scrollPadding(
-                    context,
-                    top: 0,
-                  ).copyWith(bottom: MediaQuery.paddingOf(context).bottom + 90),
-                  children: [
-                    SectionLabel(l10n.drHistory),
-                    if (requests.isEmpty)
-                      Padding(
-                        padding: const EdgeInsets.symmetric(vertical: 48),
-                        child: Text(
-                          l10n.drNone,
-                          textAlign: TextAlign.center,
-                          style: Theme.of(context).textTheme.titleMedium,
+              SectionLabel(l10n.drHistory),
+              if (requests.isEmpty)
+                Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 48),
+                  child: Text(
+                    l10n.drNone,
+                    textAlign: TextAlign.center,
+                    style: Theme.of(context).textTheme.titleMedium,
+                  ),
+                )
+              else
+                Card(
+                  color: scheme.surfaceContainerLow,
+                  clipBehavior: Clip.antiAlias,
+                  child: Column(
+                    children: [
+                      for (final (i, r) in requests.indexed) ...[
+                        if (i > 0) const Divider(height: 1),
+                        ListTile(
+                          title: Text(
+                            r.memo,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: const TextStyle(fontWeight: FontWeight.w900),
+                          ),
+                          subtitle: Text(
+                            '${r.date.month}/${r.date.day} '
+                            '${weekdayName(context, r.date.weekday)}'
+                            '・${r.room}',
+                          ),
                         ),
-                      )
-                    else
-                      Card(
-                        color: scheme.surfaceContainerLow,
-                        clipBehavior: Clip.antiAlias,
-                        child: Column(
-                          children: [
-                            for (final (i, r) in requests.indexed) ...[
-                              if (i > 0) const Divider(height: 1),
-                              ListTile(
-                                title: Text(
-                                  r.memo,
-                                  maxLines: 1,
-                                  overflow: TextOverflow.ellipsis,
-                                  style: const TextStyle(
-                                    fontWeight: FontWeight.w900,
-                                  ),
-                                ),
-                                subtitle: Text(
-                                  '${r.date.month}/${r.date.day} '
-                                  '${weekdayName(context, r.date.weekday)}'
-                                  '・${r.room}',
-                                ),
-                              ),
-                            ],
-                          ],
-                        ),
-                      ),
-                  ],
-                ),
-              ),
-              Positioned(
-                left: pageMargin,
-                right: pageMargin,
-                bottom: MediaQuery.paddingOf(context).bottom + 12,
-                child: SizedBox(
-                  height: 54,
-                  child: FilledButton(
-                    onPressed: () => context.push('/more/dorm-repair/new'),
-                    child: Text(l10n.drRequest),
+                      ],
+                    ],
                   ),
                 ),
-              ),
             ],
           );
         },
@@ -218,140 +199,122 @@ class _DormRepairFormScreenState extends State<DormRepairFormScreen> {
         action: const SchoolSiteButton('0011'),
       ),
       body: Builder(
-        builder: (context) => Stack(
+        builder: (context) => PinnedActionList(
+          padding: scrollPadding(context),
+          action: FilledButton(
+            onPressed: _valid ? _submit : null,
+            child: Text(l10n.submit),
+          ),
           children: [
-            Positioned.fill(
-              child: ListView(
-                padding: scrollPadding(
-                  context,
-                ).copyWith(bottom: MediaQuery.paddingOf(context).bottom + 90),
+            Card(
+              color: scheme.surfaceContainerLow,
+              clipBehavior: Clip.antiAlias,
+              child: Column(
                 children: [
-                  Card(
-                    color: scheme.surfaceContainerLow,
-                    clipBehavior: Clip.antiAlias,
+                  row(
+                    l10n.drRoom,
+                    TextField(
+                      controller: _room,
+                      maxLength: 6,
+                      textCapitalization: TextCapitalization.characters,
+                      autocorrect: false,
+                      inputFormatters: [
+                        FilteringTextInputFormatter.allow(
+                          RegExp(r'[0-9A-Za-z-]'),
+                        ),
+                      ],
+                      onChanged: (_) => setState(() {}),
+                      decoration: field(
+                        l10n.drRoomHint,
+                        room.isEmpty || roomPattern.hasMatch(room)
+                            ? null
+                            : l10n.drRoomInvalid,
+                      ),
+                    ),
+                  ),
+                  const Divider(height: 1),
+                  row(
+                    'E-mail',
+                    TextField(
+                      controller: _email,
+                      maxLength: 50,
+                      keyboardType: TextInputType.emailAddress,
+                      autocorrect: false,
+                      onChanged: (_) => setState(() {}),
+                      decoration: field(
+                        l10n.drEmailHint,
+                        email.isEmpty || emailPattern.hasMatch(email)
+                            ? null
+                            : l10n.drEmailInvalid,
+                      ),
+                    ),
+                  ),
+                  const Divider(height: 1),
+                  row(
+                    l10n.drMemo,
+                    TextField(
+                      controller: _memo,
+                      maxLength: 255,
+                      minLines: 3,
+                      maxLines: 6,
+                      onChanged: (_) => setState(() {}),
+                      decoration: field(
+                        l10n.drMemoHint,
+                        null,
+                      ).copyWith(counterText: null),
+                    ),
+                  ),
+                  const Divider(height: 1),
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(16, 12, 16, 14),
                     child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
-                        row(
-                          l10n.drRoom,
-                          TextField(
-                            controller: _room,
-                            maxLength: 6,
-                            textCapitalization: TextCapitalization.characters,
-                            autocorrect: false,
-                            inputFormatters: [
-                              FilteringTextInputFormatter.allow(
-                                RegExp(r'[0-9A-Za-z-]'),
-                              ),
-                            ],
-                            onChanged: (_) => setState(() {}),
-                            decoration: field(
-                              l10n.drRoomHint,
-                              room.isEmpty || roomPattern.hasMatch(room)
-                                  ? null
-                                  : l10n.drRoomInvalid,
+                        Text(l10n.drPresence, style: labelStyle),
+                        const SizedBox(height: 8),
+                        SegmentedButton<bool>(
+                          showSelectedIcon: false,
+                          segments: [
+                            ButtonSegment(
+                              value: false,
+                              label: Text(l10n.drNoNeed),
                             ),
-                          ),
-                        ),
-                        const Divider(height: 1),
-                        row(
-                          'E-mail',
-                          TextField(
-                            controller: _email,
-                            maxLength: 50,
-                            keyboardType: TextInputType.emailAddress,
-                            autocorrect: false,
-                            onChanged: (_) => setState(() {}),
-                            decoration: field(
-                              l10n.drEmailHint,
-                              email.isEmpty || emailPattern.hasMatch(email)
-                                  ? null
-                                  : l10n.drEmailInvalid,
+                            ButtonSegment(
+                              value: true,
+                              label: Text(l10n.drNeed),
                             ),
-                          ),
+                          ],
+                          selected: {_needPresence},
+                          onSelectionChanged: (s) =>
+                              setState(() => _needPresence = s.first),
                         ),
-                        const Divider(height: 1),
-                        row(
-                          l10n.drMemo,
-                          TextField(
-                            controller: _memo,
-                            maxLength: 255,
-                            minLines: 3,
-                            maxLines: 6,
-                            onChanged: (_) => setState(() {}),
-                            decoration: field(
-                              l10n.drMemoHint,
-                              null,
-                            ).copyWith(counterText: null),
-                          ),
-                        ),
-                        const Divider(height: 1),
-                        Padding(
-                          padding: const EdgeInsets.fromLTRB(16, 12, 16, 14),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.stretch,
-                            children: [
-                              Text(l10n.drPresence, style: labelStyle),
-                              const SizedBox(height: 8),
-                              SegmentedButton<bool>(
-                                showSelectedIcon: false,
-                                segments: [
-                                  ButtonSegment(
-                                    value: false,
-                                    label: Text(l10n.drNoNeed),
-                                  ),
-                                  ButtonSegment(
-                                    value: true,
-                                    label: Text(l10n.drNeed),
-                                  ),
-                                ],
-                                selected: {_needPresence},
-                                onSelectionChanged: (s) =>
-                                    setState(() => _needPresence = s.first),
-                              ),
-                              const SizedBox(height: 8),
-                              Text(
-                                _needPresence
-                                    ? l10n.drNeedNote
-                                    : l10n.drNoNeedNote,
-                                style: TextStyle(
-                                  fontSize: 12,
-                                  height: 1.5,
-                                  fontWeight: FontWeight.w700,
-                                  color: scheme.onSurfaceVariant,
-                                ),
-                              ),
-                            ],
+                        const SizedBox(height: 8),
+                        Text(
+                          _needPresence ? l10n.drNeedNote : l10n.drNoNeedNote,
+                          style: TextStyle(
+                            fontSize: 12,
+                            height: 1.5,
+                            fontWeight: FontWeight.w700,
+                            color: scheme.onSurfaceVariant,
                           ),
                         ),
                       ],
                     ),
                   ),
-                  const SizedBox(height: rowGap),
-                  Card(
-                    color: scheme.surfaceContainerLow,
-                    clipBehavior: Clip.antiAlias,
-                    child: SwitchListTile(
-                      title: Text(
-                        l10n.drRemember,
-                        style: const TextStyle(fontWeight: FontWeight.w800),
-                      ),
-                      value: _remember,
-                      onChanged: (v) => setState(() => _remember = v),
-                    ),
-                  ),
                 ],
               ),
             ),
-            Positioned(
-              left: pageMargin,
-              right: pageMargin,
-              bottom: MediaQuery.paddingOf(context).bottom + 12,
-              child: SizedBox(
-                height: 54,
-                child: FilledButton(
-                  onPressed: _valid ? _submit : null,
-                  child: Text(l10n.submit),
+            const SizedBox(height: rowGap),
+            Card(
+              color: scheme.surfaceContainerLow,
+              clipBehavior: Clip.antiAlias,
+              child: SwitchListTile(
+                title: Text(
+                  l10n.drRemember,
+                  style: const TextStyle(fontWeight: FontWeight.w800),
                 ),
+                value: _remember,
+                onChanged: (v) => setState(() => _remember = v),
               ),
             ),
           ],
