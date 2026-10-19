@@ -27,6 +27,17 @@ class _TimetableScreenState extends State<TimetableScreen> {
   /// One page per weekday shown; rebuilt when the semester changes.
   PageController? _pages;
 
+  /// Shared by every card, so swiping between days asks eCourse2 once.
+  late final Stream<_Shared> _shared = context.read<EcourseRepository>().watch((
+    repo,
+  ) async {
+    final (due, grades) = await (
+      repo.dueSoon(days: 60),
+      repo.gradeOverview(),
+    ).wait;
+    return (due: due, grades: grades);
+  });
+
   /// The progress bar and countdowns move with the clock.
   late final _tick = Timer.periodic(
     const Duration(minutes: 1),
@@ -126,13 +137,19 @@ class _TimetableScreenState extends State<TimetableScreen> {
                 ),
               ),
             ),
-            body: Builder(
-              builder: (context) => PageView(
+            body: StreamBuilder<_Shared>(
+              stream: _shared,
+              builder: (context, shared) => PageView(
                 controller: pages,
                 onPageChanged: (i) => setState(() => _day = weekdays[i]),
                 children: [
                   for (final d in weekdays)
-                    _DayView(courses: courses, day: d, now: DateTime.now()),
+                    _DayView(
+                      courses: courses,
+                      day: d,
+                      now: DateTime.now(),
+                      shared: shared.data,
+                    ),
                 ],
               ),
             ),
@@ -143,36 +160,59 @@ class _TimetableScreenState extends State<TimetableScreen> {
   }
 }
 
-typedef _Slot = ({Course course, ClassSession session});
+typedef DaySlot = ({Course course, ClassSession session});
+
+/// Which class of the day leads, and which gets the next-class card. Today:
+/// the class on now, else the next one, and the class after it only while
+/// one is in progress (before the first class the focus card already says
+/// 下一堂). Other days: the first class, alone.
+({DaySlot? focus, DaySlot? after}) dayFocus(
+  List<DaySlot> slots, {
+  required bool today,
+  required int minute,
+}) {
+  if (!today) return (focus: slots.firstOrNull, after: null);
+  final focus = slots.where((s) => s.session.end > minute).firstOrNull;
+  final inClass = focus != null && focus.session.start <= minute;
+  return (
+    focus: focus,
+    after: inClass
+        ? slots.skipWhile((s) => s != focus).skip(1).firstOrNull
+        : null,
+  );
+}
+
+/// Deadlines and grades for every course, loaded once for the screen.
+typedef _Shared = ({List<DueItem> due, Map<int, String> grades});
 
 /// Design round-11 timetable 2C: one class in focus with its period
 /// progress, deadline, notice and grade; on today the class after it gets
 /// its own card; the rest are one line each, those already over dimmed.
 class _DayView extends StatelessWidget {
-  const _DayView({required this.courses, required this.day, required this.now});
+  const _DayView({
+    required this.courses,
+    required this.day,
+    required this.now,
+    required this.shared,
+  });
 
   final List<Course> courses;
   final int day;
   final DateTime now;
+  final _Shared? shared;
 
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
     final theme = Theme.of(context);
-    final slots = <_Slot>[
+    final slots = <DaySlot>[
       for (final c in courses)
         for (final s in c.sessions)
           if (s.weekday == day) (course: c, session: s),
     ]..sort((a, b) => a.session.start.compareTo(b.session.start));
     final today = day == now.weekday;
     final minute = now.hour * 60 + now.minute;
-    // Today: the class on now, else the next one. Other days: the first.
-    final focus = today
-        ? slots.where((s) => s.session.end > minute).firstOrNull
-        : slots.firstOrNull;
-    final after = focus == null || !today
-        ? null
-        : slots.skipWhile((s) => s != focus).skip(1).firstOrNull;
+    final (:focus, :after) = dayFocus(slots, today: today, minute: minute);
     return ListView(
       padding: scrollPadding(context),
       children: [
@@ -190,12 +230,16 @@ class _DayView extends StatelessWidget {
           if (s == focus)
             Padding(
               padding: const EdgeInsets.only(bottom: rowGap),
-              child: _FocusCard(slot: s, minute: today ? minute : null),
+              child: _FocusCard(
+                slot: s,
+                minute: today ? minute : null,
+                shared: shared,
+              ),
             )
           else if (s == after)
             Padding(
               padding: const EdgeInsets.only(bottom: rowGap),
-              child: _NextCard(slot: s, minute: minute),
+              child: _NextCard(slot: s, minute: minute, shared: shared),
             )
           else
             Padding(
@@ -242,7 +286,7 @@ class _DayView extends StatelessWidget {
 
 /// `CD` for lettered periods; `8–9` for numbered ones, which would
 /// otherwise read as one number.
-String _periodLabel(List<String> periods) =>
+String periodLabel(List<String> periods) =>
     periods.length > 1 && int.tryParse(periods.first) != null
     ? '${periods.first}–${periods.last}'
     : periods.join();
@@ -257,9 +301,14 @@ String _until(AppLocalizations l10n, int minutes) => minutes >= 60
 typedef _Facts = ({DueItem? due, String? post, String? grade});
 
 class _FactsLoader extends StatefulWidget {
-  const _FactsLoader({required this.courseId, required this.builder});
+  const _FactsLoader({
+    required this.courseId,
+    required this.shared,
+    required this.builder,
+  });
 
   final int courseId;
+  final _Shared? shared;
   final Widget Function(BuildContext context, _Facts? facts) builder;
 
   @override
@@ -268,46 +317,52 @@ class _FactsLoader extends StatefulWidget {
 
 class _FactsLoaderState extends State<_FactsLoader> {
   // Made once per course: the screen rebuilds every minute for the clock.
-  late Stream<_Facts> _facts = _load();
+  late Stream<String?> _post = _load();
 
-  Stream<_Facts> _load() {
+  /// The course's newest notice; `[公告] …` loses its tag, since the tile
+  /// already says it is a notice.
+  Stream<String?> _load() {
     final courseId = widget.courseId;
-    return context.read<EcourseRepository>().watch((repo) async {
-      final (due, posts, grades) = await (
-        repo.dueSoon(days: 60),
-        repo.announcements(courseId),
-        repo.gradeOverview(),
-      ).wait;
-      return (
-        due: due.where((d) => d.courseId == courseId).firstOrNull,
-        // `[公告] …`: the tile already says it is a notice.
-        post: posts.firstOrNull?.subject.replaceFirst(
-          RegExp(r'^\s*(\[[^\]]*\]|【[^】]*】)\s*'),
-          '',
-        ),
-        grade: grades[courseId],
-      );
-    });
+    return context.read<EcourseRepository>().watch(
+      (repo) async =>
+          (await repo.announcements(courseId)).firstOrNull?.subject
+              .replaceFirst(RegExp(r'^\s*(\[[^\]]*\]|【[^】]*】)\s*'), ''),
+    );
   }
 
   @override
   void didUpdateWidget(_FactsLoader old) {
     super.didUpdateWidget(old);
-    if (old.courseId != widget.courseId) _facts = _load();
+    if (old.courseId != widget.courseId) _post = _load();
   }
 
   @override
-  Widget build(BuildContext context) => StreamBuilder<_Facts>(
-    stream: _facts,
+  Widget build(BuildContext context) => StreamBuilder<String?>(
+    stream: _post,
     // A failure leaves the card without its extras, not an error.
-    builder: (context, snap) => widget.builder(context, snap.data),
+    builder: (context, snap) {
+      final shared = widget.shared;
+      if (shared == null && !snap.hasData) return widget.builder(context, null);
+      return widget.builder(context, (
+        due: shared?.due
+            .where((d) => d.courseId == widget.courseId)
+            .firstOrNull,
+        post: snap.data,
+        grade: shared?.grades[widget.courseId],
+      ));
+    },
   );
 }
 
 class _FocusCard extends StatelessWidget {
-  const _FocusCard({required this.slot, required this.minute});
+  const _FocusCard({
+    required this.slot,
+    required this.minute,
+    required this.shared,
+  });
 
-  final _Slot slot;
+  final DaySlot slot;
+  final _Shared? shared;
 
   /// Now, in minutes after midnight, when the day shown is today.
   final int? minute;
@@ -429,7 +484,7 @@ class _FocusCard extends StatelessWidget {
               ),
               const SizedBox(width: 12),
               CookieBadge(
-                value: _periodLabel(s.periods),
+                value: periodLabel(s.periods),
                 color: tone.strong,
                 ink: tone.fill,
                 size: 56,
@@ -442,6 +497,7 @@ class _FocusCard extends StatelessWidget {
           const SizedBox(height: 12),
           _FactsLoader(
             courseId: c.id,
+            shared: shared,
             builder: (context, facts) {
               final due = facts?.due;
               final post = facts?.post;
@@ -564,9 +620,14 @@ class _PeriodBar extends StatelessWidget {
 /// Today's class after the one in focus, with its own nearest deadline so
 /// it can be prepared for.
 class _NextCard extends StatelessWidget {
-  const _NextCard({required this.slot, required this.minute});
+  const _NextCard({
+    required this.slot,
+    required this.minute,
+    required this.shared,
+  });
 
-  final _Slot slot;
+  final DaySlot slot;
+  final _Shared? shared;
   final int minute;
 
   @override
@@ -630,6 +691,7 @@ class _NextCard extends StatelessWidget {
           ),
           _FactsLoader(
             courseId: c.id,
+            shared: shared,
             builder: (context, facts) {
               final due = facts?.due;
               if (due == null) return const SizedBox();
@@ -681,7 +743,7 @@ class _NextCard extends StatelessWidget {
 class _ClassLine extends StatelessWidget {
   const _ClassLine({required this.slot});
 
-  final _Slot slot;
+  final DaySlot slot;
 
   @override
   Widget build(BuildContext context) {
@@ -726,7 +788,7 @@ class _ClassLine extends StatelessWidget {
             ),
           ),
           CookieBadge(
-            value: _periodLabel(s.periods),
+            value: periodLabel(s.periods),
             color: tone.strong,
             ink: tone.fill,
             size: 36,
