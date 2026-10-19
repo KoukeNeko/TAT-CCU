@@ -7,9 +7,10 @@ import 'widgets.dart';
 /// Opens a campus system inside the app. Every campus page uses this one
 /// kind of WebView: they share the default cookie store, so the portal and
 /// CAS sign-in made in any of them carries to the rest, and to the iCCU
-/// loader, while the app runs.
+/// loader, while the app runs. It covers the nav bar: the school's pages
+/// bring their own navigation and need the whole height.
 Future<void> openCampusPage(BuildContext context, String url, String title) =>
-    Navigator.of(context).push(
+    Navigator.of(context, rootNavigator: true).push(
       MaterialPageRoute(
         builder: (_) => CampusWebScreen(url: url, title: title),
       ),
