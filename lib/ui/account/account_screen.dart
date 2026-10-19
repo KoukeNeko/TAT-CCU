@@ -100,8 +100,8 @@ class _AccountScreenState extends State<AccountScreen> {
                 const SizedBox(height: 12),
                 _SessionCard(
                   tone: context.tones.mint,
-                  // The CAS sign-in lives in the system browser, which the app
-                  // cannot inspect; see docs/登入狀態設計.md.
+                  // The app does not track the CAS session itself; see
+                  // docs/登入狀態設計.md.
                   signedIn: null,
                   title: context.l10n.portalCas,
                   status: [
@@ -143,7 +143,7 @@ class _SessionCard extends StatelessWidget {
 
   final Tone tone;
 
-  /// null when the app cannot know (CAS in the system browser).
+  /// null when the app cannot know (the CAS session).
   final bool? signedIn;
   final String title;
   final String status;

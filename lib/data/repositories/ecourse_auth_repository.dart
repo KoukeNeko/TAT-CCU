@@ -4,7 +4,6 @@ import 'dart:math';
 import 'package:crypto/crypto.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
-import 'package:flutter_web_auth_2/flutter_web_auth_2.dart';
 
 import '../services/moodle_client.dart';
 import '../services/response_cache.dart';
@@ -15,8 +14,7 @@ const eCourse2Url = 'https://ecourse2.ccu.edu.tw';
 /// Custom scheme Moodle redirects to with the token.
 const callbackScheme = 'tatccu';
 
-/// Owns the eCourse2 web service token. Only the token is stored; the app
-/// never sees the SSO password. Independent of the CAS session, see
+/// Owns the eCourse2 web service token. Independent of the CAS session, see
 /// docs/登入狀態設計.md.
 class EcourseAuthRepository extends ChangeNotifier {
   EcourseAuthRepository({FlutterSecureStorage? storage})
@@ -41,29 +39,24 @@ class EcourseAuthRepository extends ChangeNotifier {
     notifyListeners();
   }
 
-  /// Runs the `admin/tool/mobile/launch.php` flow in the system browser; the
-  /// user signs in to CAS there.
-  Future<void> signIn() async {
+  /// A new `admin/tool/mobile/launch.php` sign-in: the page signs in to
+  /// CAS and ends by redirecting to `tatccu://token=...` for this passport.
+  ({Uri url, String passport}) newLaunch() {
     final random = Random.secure();
     final passport = List.generate(
       16,
       (_) => random.nextInt(256).toRadixString(16).padLeft(2, '0'),
     ).join();
-    final launch = Uri.parse('$eCourse2Url/admin/tool/mobile/launch.php')
-        .replace(
-          queryParameters: {
-            'service': 'moodle_mobile_app',
-            'passport': passport,
-            'urlscheme': callbackScheme,
-            'oauthsso': '1',
-            'confirmed': '1',
-          },
-        );
-    final callback = await FlutterWebAuth2.authenticate(
-      url: launch.toString(),
-      callbackUrlScheme: callbackScheme,
+    final url = Uri.parse('$eCourse2Url/admin/tool/mobile/launch.php').replace(
+      queryParameters: {
+        'service': 'moodle_mobile_app',
+        'passport': passport,
+        'urlscheme': callbackScheme,
+        'oauthsso': '1',
+        'confirmed': '1',
+      },
     );
-    await signInWithCallback(callback, passport);
+    return (url: url, passport: passport);
   }
 
   /// Completes the launch flow with the `<scheme>://token=...` callback.

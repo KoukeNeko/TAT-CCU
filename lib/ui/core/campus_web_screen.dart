@@ -16,9 +16,18 @@ Future<void> openCampusPage(BuildContext context, String url, String title) =>
     );
 
 class CampusWebScreen extends StatefulWidget {
-  const CampusWebScreen({super.key, required this.url, required this.title});
+  const CampusWebScreen({
+    super.key,
+    required this.url,
+    required this.title,
+    this.returnScheme,
+  });
 
   final String url, title;
+
+  /// When the page navigates to this URL scheme, the screen closes and
+  /// returns that URL instead (the eCourse2 token callback).
+  final String? returnScheme;
 
   @override
   State<CampusWebScreen> createState() => _CampusWebScreenState();
@@ -36,6 +45,18 @@ class _CampusWebScreenState extends State<CampusWebScreen> {
       ..setNavigationDelegate(
         NavigationDelegate(
           onProgress: (p) => setState(() => _progress = p),
+          onNavigationRequest: (request) {
+            final scheme = widget.returnScheme;
+            if (scheme == null || !request.url.startsWith('$scheme:')) {
+              return NavigationDecision.navigate;
+            }
+            // Ask about the password first, so closing pops this screen and
+            // not the dialog.
+            _cas.signedIn().then((_) {
+              if (mounted) Navigator.of(context).pop(request.url);
+            });
+            return NavigationDecision.prevent;
+          },
           onPageFinished: (url) => _cas.pageFinished(url),
         ),
       );

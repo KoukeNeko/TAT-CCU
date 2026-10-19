@@ -163,8 +163,8 @@ class _AccountCard extends StatelessWidget {
                     : context.l10n.ecourseSignedOut,
               ),
               const SizedBox(width: 6),
-              // CAS lives in the system browser; the app can only say it is
-              // shared with the eCourse2 sign-in.
+              // The app does not track the CAS session; it can only say it
+              // is shared with the eCourse2 sign-in.
               _Status(on: true, label: context.l10n.portalShared),
             ],
           ),

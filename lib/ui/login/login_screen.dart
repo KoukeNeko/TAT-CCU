@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../../data/repositories/ecourse_auth_repository.dart';
+import '../core/campus_web_screen.dart';
 import '../core/theme.dart';
 import '../core/widgets.dart';
 import '../../l10n/l10n.dart';
@@ -19,7 +20,20 @@ class _LoginScreenState extends State<LoginScreen> {
   Future<void> _signIn() async {
     setState(() => _busy = true);
     try {
-      await context.read<EcourseAuthRepository>().signIn();
+      final auth = context.read<EcourseAuthRepository>();
+      final launch = auth.newLaunch();
+      final callback = await Navigator.of(context).push<String>(
+        MaterialPageRoute(
+          builder: (context) => CampusWebScreen(
+            url: launch.url.toString(),
+            title: context.l10n.signInPortal,
+            returnScheme: callbackScheme,
+          ),
+        ),
+      );
+      // Closed without finishing: nothing to report.
+      if (callback == null) return;
+      await auth.signInWithCallback(callback, launch.passport);
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -72,8 +86,8 @@ class _LoginScreenState extends State<LoginScreen> {
               Text('TAT CCU', style: Theme.of(context).textTheme.displaySmall),
               const Spacer(),
               // One CAS sign-in covers both: the eCourse2 launch flow signs
-              // in to CAS in the system sheet, then returns to the app with
-              // the token, and campus systems reuse that CAS session.
+              // in to CAS in the shared campus WebView, which then hands the
+              // token back, and campus systems reuse that CAS session.
               FilledButton(
                 onPressed: _busy ? null : _signIn,
                 child: Text(context.l10n.signInWithPortal),
