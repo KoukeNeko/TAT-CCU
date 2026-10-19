@@ -637,7 +637,13 @@
   "events": "活動報名",
   "searchEvents": "搜尋活動",
   "searchFor": "搜尋「{query}」",
-  "@searchFor": {"placeholders": {"query": {"type": "String"}}},
+  "@searchFor": {
+    "placeholders": {
+      "query": {
+        "type": "String"
+      }
+    }
+  },
   "within3Days": "3 日內",
   "withinWeek": "一週內",
   "withinMonth": "一個月內",
@@ -651,11 +657,35 @@
   "myEvents": "我的活動",
   "nextSignedUp": "下一場・已報名",
   "inDays": "{count} 天後",
-  "@inDays": {"placeholders": {"count": {"type": "int"}}},
+  "@inDays": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "waitlistSpots": "備取 {taken}/{total}",
-  "@waitlistSpots": {"placeholders": {"taken": {"type": "int"}, "total": {"type": "int"}}},
+  "@waitlistSpots": {
+    "placeholders": {
+      "taken": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
   "waitlistOnly": "正取已滿・備取 {taken} / {total}",
-  "@waitlistOnly": {"placeholders": {"taken": {"type": "int"}, "total": {"type": "int"}}},
+  "@waitlistOnly": {
+    "placeholders": {
+      "taken": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
   "externalSignUp": "外部報名",
   "signUpClosed": "已截止",
   "signedUp": "已報名",
@@ -678,7 +708,13 @@
   "noMatchingEvents": "沒有符合的活動",
   "searchAnyTimeStatus": "搜尋全部時間與狀態",
   "eventsAttended": "已參加・{hours} 小時",
-  "@eventsAttended": {"placeholders": {"hours": {"type": "String"}}},
+  "@eventsAttended": {
+    "placeholders": {
+      "hours": {
+        "type": "String"
+      }
+    }
+  },
   "pastEvents": "歷史活動",
   "noEventRecords": "沒有紀錄",
   "signUpFailed": "無法報名",
@@ -687,15 +723,39 @@
   "ptSelect": "選取",
   "ptDone": "完成",
   "ptMonth": "{year} 年 {month} 月",
-  "@ptMonth": {"placeholders": {"year": {"type": "int"}, "month": {"type": "int"}}},
+  "@ptMonth": {
+    "placeholders": {
+      "year": {
+        "type": "int"
+      },
+      "month": {
+        "type": "int"
+      }
+    }
+  },
   "ptAllUnits": "所有單位",
   "ptUnconfirmed": "未確認",
   "ptConfirmed": "已確認",
   "ptPaid": "已報帳",
   "ptHours": "{hours} 小時",
-  "@ptHours": {"placeholders": {"hours": {"type": "String"}}},
+  "@ptHours": {
+    "placeholders": {
+      "hours": {
+        "type": "String"
+      }
+    }
+  },
   "ptWeek": "本週 {used} / {limit} 小時",
-  "@ptWeek": {"placeholders": {"used": {"type": "String"}, "limit": {"type": "int"}}},
+  "@ptWeek": {
+    "placeholders": {
+      "used": {
+        "type": "String"
+      },
+      "limit": {
+        "type": "int"
+      }
+    }
+  },
   "ptOther": "其他",
   "ptPayroll": "付款清冊",
   "ptPrint": "列印簽到退表與批號",
@@ -706,24 +766,78 @@
   "ptWork": "內容",
   "ptStage": "加入待儲存",
   "ptStaged": "待儲存 {count} 筆・{hours} 小時",
-  "@ptStaged": {"placeholders": {"count": {"type": "int"}, "hours": {"type": "String"}}},
+  "@ptStaged": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      },
+      "hours": {
+        "type": "String"
+      }
+    }
+  },
   "ptSaveCount": "儲存 {count} 筆",
-  "@ptSaveCount": {"placeholders": {"count": {"type": "int"}}},
+  "@ptSaveCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "ptSaveTitle": "儲存 {count} 筆時數？",
-  "@ptSaveTitle": {"placeholders": {"count": {"type": "int"}}},
+  "@ptSaveTitle": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "ptSave": "儲存",
   "ptEndAfterStart": "結束時間要晚於開始時間",
   "ptOverlap": "與 {slot} 重疊",
-  "@ptOverlap": {"placeholders": {"slot": {"type": "String"}}},
+  "@ptOverlap": {
+    "placeholders": {
+      "slot": {
+        "type": "String"
+      }
+    }
+  },
   "ptWeekOver": "本週會到 {total} 小時，超過每週 {limit} 小時",
-  "@ptWeekOver": {"placeholders": {"total": {"type": "String"}, "limit": {"type": "int"}}},
+  "@ptWeekOver": {
+    "placeholders": {
+      "total": {
+        "type": "String"
+      },
+      "limit": {
+        "type": "int"
+      }
+    }
+  },
   "ptDeleteCount": "刪除 {count} 筆",
-  "@ptDeleteCount": {"placeholders": {"count": {"type": "int"}}},
+  "@ptDeleteCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "ptDeleteTitle": "刪除 {count} 筆時數？",
-  "@ptDeleteTitle": {"placeholders": {"count": {"type": "int"}}},
+  "@ptDeleteTitle": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "ptDelete": "刪除",
   "ptSelected": "已選 {count} 筆",
-  "@ptSelected": {"placeholders": {"count": {"type": "int"}}},
+  "@ptSelected": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "ptNoRecords": "沒有時數紀錄",
   "ptSearchUnits": "搜尋單位",
   "ptMyUnits": "我的單位",
@@ -747,7 +861,39 @@
   "ptSubtotal": "小計",
   "ptHoliday": "例假日",
   "ptEntries": "{count} 筆",
-  "@ptEntries": {"placeholders": {"count": {"type": "int"}}},
+  "@ptEntries": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "demoMode": "Demo 模式",
-  "demoModeDetail": "ALPHA 功能顯示模擬資料"
+  "demoModeDetail": "ALPHA 功能顯示模擬資料",
+  "drTitle": "宿舍維修",
+  "drRequest": "申請維修",
+  "drHistory": "歷次申請",
+  "drNone": "沒有申請紀錄",
+  "drRoom": "寢號及床位",
+  "drRoomHint": "例：3316A、1325、A301、5108-1",
+  "drRoomInvalid": "只接受 3316A、1325、A301、5108-1 這四種格式",
+  "drEmailHint": "修好後寄到這裡",
+  "drEmailInvalid": "E-mail 格式不正確",
+  "drMemo": "維修項目及損壞情形",
+  "drMemoHint": "哪裡壞了、什麼情形",
+  "drPresence": "是否需要住宿生在場",
+  "drNoNeed": "不需要",
+  "drNeed": "需要在場",
+  "drNoNeedNote": "管理員直接前往維修，修好後寄 E-mail 通知；請告知室友，貴重物品自行保管",
+  "drNeedNote": "請到宿舍服務中心約維修時間",
+  "drRemember": "記住寢號與 E-mail",
+  "drSubmitTitle": "送出維修申請？",
+  "drResultTo": "結果寄到 {email}",
+  "@drResultTo": {
+    "placeholders": {
+      "email": {
+        "type": "String"
+      }
+    }
+  }
 }

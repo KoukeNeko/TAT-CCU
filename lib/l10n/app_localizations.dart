@@ -2319,6 +2319,120 @@ abstract class AppLocalizations {
   /// In zh, this message translates to:
   /// **'ALPHA 功能顯示模擬資料'**
   String get demoModeDetail;
+
+  /// No description provided for @drTitle.
+  ///
+  /// In zh, this message translates to:
+  /// **'宿舍維修'**
+  String get drTitle;
+
+  /// No description provided for @drRequest.
+  ///
+  /// In zh, this message translates to:
+  /// **'申請維修'**
+  String get drRequest;
+
+  /// No description provided for @drHistory.
+  ///
+  /// In zh, this message translates to:
+  /// **'歷次申請'**
+  String get drHistory;
+
+  /// No description provided for @drNone.
+  ///
+  /// In zh, this message translates to:
+  /// **'沒有申請紀錄'**
+  String get drNone;
+
+  /// No description provided for @drRoom.
+  ///
+  /// In zh, this message translates to:
+  /// **'寢號及床位'**
+  String get drRoom;
+
+  /// No description provided for @drRoomHint.
+  ///
+  /// In zh, this message translates to:
+  /// **'例：3316A、1325、A301、5108-1'**
+  String get drRoomHint;
+
+  /// No description provided for @drRoomInvalid.
+  ///
+  /// In zh, this message translates to:
+  /// **'只接受 3316A、1325、A301、5108-1 這四種格式'**
+  String get drRoomInvalid;
+
+  /// No description provided for @drEmailHint.
+  ///
+  /// In zh, this message translates to:
+  /// **'修好後寄到這裡'**
+  String get drEmailHint;
+
+  /// No description provided for @drEmailInvalid.
+  ///
+  /// In zh, this message translates to:
+  /// **'E-mail 格式不正確'**
+  String get drEmailInvalid;
+
+  /// No description provided for @drMemo.
+  ///
+  /// In zh, this message translates to:
+  /// **'維修項目及損壞情形'**
+  String get drMemo;
+
+  /// No description provided for @drMemoHint.
+  ///
+  /// In zh, this message translates to:
+  /// **'哪裡壞了、什麼情形'**
+  String get drMemoHint;
+
+  /// No description provided for @drPresence.
+  ///
+  /// In zh, this message translates to:
+  /// **'是否需要住宿生在場'**
+  String get drPresence;
+
+  /// No description provided for @drNoNeed.
+  ///
+  /// In zh, this message translates to:
+  /// **'不需要'**
+  String get drNoNeed;
+
+  /// No description provided for @drNeed.
+  ///
+  /// In zh, this message translates to:
+  /// **'需要在場'**
+  String get drNeed;
+
+  /// No description provided for @drNoNeedNote.
+  ///
+  /// In zh, this message translates to:
+  /// **'管理員直接前往維修，修好後寄 E-mail 通知；請告知室友，貴重物品自行保管'**
+  String get drNoNeedNote;
+
+  /// No description provided for @drNeedNote.
+  ///
+  /// In zh, this message translates to:
+  /// **'請到宿舍服務中心約維修時間'**
+  String get drNeedNote;
+
+  /// No description provided for @drRemember.
+  ///
+  /// In zh, this message translates to:
+  /// **'記住寢號與 E-mail'**
+  String get drRemember;
+
+  /// No description provided for @drSubmitTitle.
+  ///
+  /// In zh, this message translates to:
+  /// **'送出維修申請？'**
+  String get drSubmitTitle;
+
+  /// No description provided for @drResultTo.
+  ///
+  /// In zh, this message translates to:
+  /// **'結果寄到 {email}'**
+  String drResultTo(String email);
 }
 
 class _AppLocalizationsDelegate

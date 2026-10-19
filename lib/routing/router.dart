@@ -18,6 +18,7 @@ import '../ui/more/library_collections_screen.dart';
 import '../ui/more/library_record_screen.dart';
 import '../ui/more/library_screen.dart';
 import '../ui/more/library_search_screen.dart';
+import '../ui/more/dorm_repair_screen.dart';
 import '../ui/more/event_detail_screen.dart';
 import '../ui/more/events_data.dart';
 import '../ui/more/events_screen.dart';
@@ -157,6 +158,16 @@ GoRouter buildRouter(EcourseAuthRepository auth) => GoRouter(
                       path: 'poster',
                       builder: (_, state) =>
                           PosterScreen(url: state.extra! as String),
+                    ),
+                  ],
+                ),
+                GoRoute(
+                  path: 'dorm-repair',
+                  builder: (_, _) => const DormRepairScreen(),
+                  routes: [
+                    GoRoute(
+                      path: 'new',
+                      builder: (_, _) => const DormRepairFormScreen(),
                     ),
                   ],
                 ),

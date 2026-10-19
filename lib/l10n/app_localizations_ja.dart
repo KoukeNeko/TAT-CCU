@@ -1288,4 +1288,64 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get demoModeDetail => 'ALPHA 機能でサンプルデータを表示';
+
+  @override
+  String get drTitle => '寮の修理';
+
+  @override
+  String get drRequest => '修理を申請';
+
+  @override
+  String get drHistory => '申請履歴';
+
+  @override
+  String get drNone => '申請履歴なし';
+
+  @override
+  String get drRoom => '部屋とベッド';
+
+  @override
+  String get drRoomHint => '例：3316A、1325、A301、5108-1';
+
+  @override
+  String get drRoomInvalid => '3316A、1325、A301、5108-1 のいずれかの形式で入力してください';
+
+  @override
+  String get drEmailHint => '修理結果の送信先';
+
+  @override
+  String get drEmailInvalid => 'メールアドレスの形式が正しくありません';
+
+  @override
+  String get drMemo => '修理内容';
+
+  @override
+  String get drMemoHint => 'どこがどう壊れたか';
+
+  @override
+  String get drPresence => '立ち会いが必要か';
+
+  @override
+  String get drNoNeed => '不要';
+
+  @override
+  String get drNeed => '必要';
+
+  @override
+  String get drNoNeedNote =>
+      '管理員が直接修理し、終了後にメールで通知します。ルームメイトに伝え、貴重品は各自で保管してください。';
+
+  @override
+  String get drNeedNote => '寮サービスセンターで修理日時を予約してください';
+
+  @override
+  String get drRemember => '部屋とメールを記憶';
+
+  @override
+  String get drSubmitTitle => '修理を申請しますか？';
+
+  @override
+  String drResultTo(String email) {
+    return '結果の送信先：$email';
+  }
 }

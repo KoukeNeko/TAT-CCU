@@ -1300,4 +1300,63 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get demoModeDetail => 'ALPHA 功能顯示模擬資料';
+
+  @override
+  String get drTitle => '宿舍維修';
+
+  @override
+  String get drRequest => '申請維修';
+
+  @override
+  String get drHistory => '歷次申請';
+
+  @override
+  String get drNone => '沒有申請紀錄';
+
+  @override
+  String get drRoom => '寢號及床位';
+
+  @override
+  String get drRoomHint => '例：3316A、1325、A301、5108-1';
+
+  @override
+  String get drRoomInvalid => '只接受 3316A、1325、A301、5108-1 這四種格式';
+
+  @override
+  String get drEmailHint => '修好後寄到這裡';
+
+  @override
+  String get drEmailInvalid => 'E-mail 格式不正確';
+
+  @override
+  String get drMemo => '維修項目及損壞情形';
+
+  @override
+  String get drMemoHint => '哪裡壞了、什麼情形';
+
+  @override
+  String get drPresence => '是否需要住宿生在場';
+
+  @override
+  String get drNoNeed => '不需要';
+
+  @override
+  String get drNeed => '需要在場';
+
+  @override
+  String get drNoNeedNote => '管理員直接前往維修，修好後寄 E-mail 通知；請告知室友，貴重物品自行保管';
+
+  @override
+  String get drNeedNote => '請到宿舍服務中心約維修時間';
+
+  @override
+  String get drRemember => '記住寢號與 E-mail';
+
+  @override
+  String get drSubmitTitle => '送出維修申請？';
+
+  @override
+  String drResultTo(String email) {
+    return '結果寄到 $email';
+  }
 }

@@ -12,6 +12,7 @@ import 'data/services/campus_cookies.dart';
 import 'l10n/l10n.dart';
 import 'routing/router.dart';
 import 'ui/core/theme.dart';
+import 'ui/more/dorm_repair_data.dart';
 import 'ui/more/parttime_data.dart';
 
 Future<void> main() async {
@@ -30,7 +31,10 @@ Future<void> main() async {
   final auth = EcourseAuthRepository();
   final settings = AppSettings();
   // Alpha features read demo mode from here.
-  settings.addListener(() => HoursStore.instance.demo = settings.demoMode);
+  settings.addListener(() {
+    HoursStore.instance.demo = settings.demoMode;
+    DormRepairStore.instance.demo = settings.demoMode;
+  });
   unawaited(settings.load());
   await (auth.load(), CampusCookies.restore()).wait;
   // iOS may end a backgrounded app without notice, so save on the way out.

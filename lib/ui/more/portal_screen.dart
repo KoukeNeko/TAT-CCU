@@ -116,7 +116,7 @@ void openCampusSystem(BuildContext context, PortalPrefs prefs, CampusSystem s) {
 }
 
 /// `linkId` → in-app page: 選課系統 (iCCU), 學籍系統, 學生請假系統, My圖書館
-/// 圖書館資源探索, 自學空間, 活動報名系統 and 學習暨勞僱時數登錄.
+/// 圖書館資源探索, 自學空間, 活動報名系統, 學習暨勞僱時數登錄 and 宿舍維修系統.
 const inAppPages = {
   '0075': '/more/iccu',
   '0004': '/more/academic',
@@ -126,10 +126,35 @@ const inAppPages = {
   '0059': '/more/space',
   '0060': '/more/events',
   '0014': '/more/parttime',
+  '0011': '/more/dorm-repair',
 };
 
-/// In-app pages still on made-up data; the list marks them ALPHA.
-const alphaPages = {'0014'};
+/// In-app pages not yet finished, marked in the list: ALPHA still shows
+/// made-up data, BETA reads the real site but is new.
+const pageStages = {'0014': 'ALPHA', '0011': 'ALPHA'};
+
+/// For an in-app page: opens the school's own site for [systemId], signed
+/// in through the portal.
+class SchoolSiteButton extends StatelessWidget {
+  const SchoolSiteButton(this.systemId, {super.key});
+
+  final String systemId;
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    final system = campusSystems[systemId]!;
+    return IconButton(
+      tooltip: context.l10n.onSchoolWebsite,
+      style: IconButton.styleFrom(
+        backgroundColor: scheme.surfaceContainerHigh,
+        fixedSize: const Size(40, 40),
+      ),
+      icon: Icon(Icons.north_east, size: 18, color: scheme.onSurfaceVariant),
+      onPressed: () => openCampusPage(context, entryUrl(system), system.name),
+    );
+  }
+}
 
 String entryUrl(CampusSystem s) => s.service.startsWith('http')
     ? s.service
@@ -418,9 +443,14 @@ class _SystemRow extends StatelessWidget {
                           ),
                         ),
                       ),
-                      if (alphaPages.contains(system.id)) ...[
+                      if (pageStages[system.id] case final stage?) ...[
                         const SizedBox(width: 6),
-                        StatusPill(tone: context.tones.peach, label: 'ALPHA'),
+                        StatusPill(
+                          tone: stage == 'ALPHA'
+                              ? context.tones.peach
+                              : context.tones.lilac,
+                          label: stage,
+                        ),
                       ],
                     ],
                   ),

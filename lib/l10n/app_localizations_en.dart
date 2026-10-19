@@ -1389,4 +1389,65 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get demoModeDetail => 'Alpha features show sample data';
+
+  @override
+  String get drTitle => 'Dorm repairs';
+
+  @override
+  String get drRequest => 'Request a repair';
+
+  @override
+  String get drHistory => 'Past requests';
+
+  @override
+  String get drNone => 'No requests';
+
+  @override
+  String get drRoom => 'Room and bed';
+
+  @override
+  String get drRoomHint => 'e.g. 3316A, 1325, A301, 5108-1';
+
+  @override
+  String get drRoomInvalid =>
+      'Use one of these forms: 3316A, 1325, A301, 5108-1';
+
+  @override
+  String get drEmailHint => 'The result is emailed here';
+
+  @override
+  String get drEmailInvalid => 'Not a valid email';
+
+  @override
+  String get drMemo => 'What needs repair';
+
+  @override
+  String get drMemoHint => 'What is broken and how';
+
+  @override
+  String get drPresence => 'Need a resident there?';
+
+  @override
+  String get drNoNeed => 'No';
+
+  @override
+  String get drNeed => 'Yes';
+
+  @override
+  String get drNoNeedNote =>
+      'Staff go straight in and email you after the repair. Tell your roommates and keep valuables safe.';
+
+  @override
+  String get drNeedNote => 'Book a time at the dorm service centre';
+
+  @override
+  String get drRemember => 'Remember room and email';
+
+  @override
+  String get drSubmitTitle => 'Send the repair request?';
+
+  @override
+  String drResultTo(String email) {
+    return 'Result to $email';
+  }
 }

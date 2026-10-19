@@ -26,29 +26,6 @@ String _span(HoursEntry e) => '${clock(e.start)}–${clock(e.end)}';
 String _day(BuildContext context, DateTime d) =>
     '${d.month}/${d.day} ${weekdayName(context, d.weekday)}';
 
-/// Opens the school's own site, signed in through the portal.
-class _SiteButton extends StatelessWidget {
-  const _SiteButton();
-
-  @override
-  Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
-    return IconButton(
-      tooltip: context.l10n.onSchoolWebsite,
-      style: IconButton.styleFrom(
-        backgroundColor: scheme.surfaceContainerHigh,
-        fixedSize: const Size(40, 40),
-      ),
-      icon: Icon(Icons.north_east, size: 18, color: scheme.onSurfaceVariant),
-      onPressed: () => openCampusPage(
-        context,
-        entryUrl(campusSystems['0014']!),
-        context.l10n.ptTitle,
-      ),
-    );
-  }
-}
-
 (Tone, String) _statePill(BuildContext context, HoursState s) {
   final tones = context.tones;
   final l10n = context.l10n;
@@ -173,7 +150,7 @@ class _ParttimeScreenState extends State<ParttimeScreen> {
                   setState(() => _selected = selected == null ? {} : null),
             ),
             const SizedBox(width: 8),
-            const _SiteButton(),
+            const SchoolSiteButton('0014'),
           ],
         ),
         bottom: ChipBar(
@@ -638,7 +615,11 @@ class _ParttimeAddScreenState extends State<ParttimeAddScreen> {
     );
     return Scaffold(
       extendBodyBehindAppBar: true,
-      appBar: subBar(context, l10n.ptAdd, action: const _SiteButton()),
+      appBar: subBar(
+        context,
+        l10n.ptAdd,
+        action: const SchoolSiteButton('0014'),
+      ),
       body: Builder(
         builder: (context) => Stack(
           children: [
@@ -902,7 +883,7 @@ class _ParttimePayScreenState extends State<ParttimePayScreen> {
       appBar: subBar(
         context,
         l10n.ptPayroll,
-        action: const _SiteButton(),
+        action: const SchoolSiteButton('0014'),
         bottom: ChipBar(
           children: [
             BarChip(
@@ -1101,7 +1082,7 @@ class _ParttimePrintScreenState extends State<ParttimePrintScreen> {
       appBar: subBar(
         context,
         l10n.ptPrint,
-        action: const _SiteButton(),
+        action: const SchoolSiteButton('0014'),
         bottom: ChipBar(
           children: [
             BarChip(
@@ -1224,7 +1205,7 @@ class _ParttimePrintScreenState extends State<ParttimePrintScreen> {
                 onPressed: () => openCampusPage(
                   context,
                   entryUrl(campusSystems['0014']!),
-                  l10n.ptTitle,
+                  campusSystems['0014']!.name,
                 ),
                 child: Text('${l10n.ptOpenSheet} ↗'),
               ),
