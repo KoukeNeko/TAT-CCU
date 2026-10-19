@@ -492,15 +492,24 @@ int daysUntil(DateTime start, DateTime now) => DateTime(
 /// The event's poster, whole; the same picture blurred fills the space a
 /// poster of another shape leaves.
 class EventPoster extends StatelessWidget {
-  const EventPoster({super.key, required this.url, this.padding});
+  const EventPoster({
+    super.key,
+    required this.url,
+    this.padding,
+    this.fadeOut = false,
+  });
 
   final String url;
 
   /// Keeps the poster itself clear of bars drawn over it.
   final EdgeInsets? padding;
 
+  /// Fades the backdrop into the page at the bottom.
+  final bool fadeOut;
+
   @override
   Widget build(BuildContext context) {
+    final surface = Theme.of(context).colorScheme.surface;
     final width =
         (MediaQuery.sizeOf(context).width *
                 MediaQuery.devicePixelRatioOf(context))
@@ -508,13 +517,16 @@ class EventPoster extends StatelessWidget {
     return Stack(
       fit: StackFit.expand,
       children: [
-        ImageFiltered(
-          imageFilter: ImageFilter.blur(sigmaX: 18, sigmaY: 18),
-          child: Image.network(
-            url,
-            fit: BoxFit.cover,
-            cacheWidth: width ~/ 4,
-            errorBuilder: (_, _, _) => const SizedBox.shrink(),
+        // Clipped: a blur spills past its box, leaving an edge below it.
+        ClipRect(
+          child: ImageFiltered(
+            imageFilter: ImageFilter.blur(sigmaX: 18, sigmaY: 18),
+            child: Image.network(
+              url,
+              fit: BoxFit.cover,
+              cacheWidth: width ~/ 4,
+              errorBuilder: (_, _, _) => const SizedBox.shrink(),
+            ),
           ),
         ),
         Padding(
@@ -528,6 +540,26 @@ class EventPoster extends StatelessWidget {
             errorBuilder: (_, _, _) => const SizedBox.shrink(),
           ),
         ),
+        if (fadeOut)
+          // Below the poster: clear at its edge, the page colour at the
+          // bottom, so the backdrop ends without a line.
+          Positioned(
+            left: 0,
+            right: 0,
+            bottom: 0,
+            height: padding?.bottom ?? 0,
+            child: IgnorePointer(
+              child: DecoratedBox(
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    begin: Alignment.topCenter,
+                    end: Alignment.bottomCenter,
+                    colors: [surface.withValues(alpha: 0), surface],
+                  ),
+                ),
+              ),
+            ),
+          ),
       ],
     );
   }

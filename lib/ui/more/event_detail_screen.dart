@@ -193,7 +193,6 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
     final l10n = context.l10n;
     final tones = context.tones;
     final scheme = Theme.of(context).colorScheme;
-    final light = Theme.of(context).brightness == Brightness.light;
     final e = _event;
     final now = DateTime.now();
     final status = statusOf(e, now);
@@ -237,77 +236,57 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
           : '${dateTimeLabel(context, start)} – ${dateTimeLabel(context, end)}';
     }
 
-    final title = Container(
-      width: double.infinity,
-      padding: const EdgeInsets.fromLTRB(16, 18, 16, 16),
-      decoration: BoxDecoration(
-        color: tone.fill,
-        borderRadius: e.image == null
-            ? const BorderRadius.vertical(bottom: Radius.circular(Corners.card))
-            : const BorderRadius.vertical(top: Radius.circular(Corners.card)),
-      ),
-      child: DefaultTextStyle.merge(
-        style: TextStyle(color: tone.ink),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            if (e.category.isNotEmpty)
-              StatusPill(
-                tone: Tone(
-                  Colors.white.withValues(alpha: light ? 0.6 : 0.12),
-                  tone.ink,
-                  tone.ink,
-                ),
-                label: e.category,
-              ),
-            const SizedBox(height: 8),
-            Text(
-              e.title,
-              style: const TextStyle(
-                fontSize: 20,
-                fontWeight: FontWeight.w900,
-                height: 1.3,
-              ),
+    final title = Padding(
+      padding: const EdgeInsets.fromLTRB(pageMargin, 0, pageMargin, 8),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Wrap(
+            spacing: 6,
+            runSpacing: 6,
+            children: [
+              if (e.category.isNotEmpty)
+                StatusPill(tone: tone, label: e.category),
+              if (e.signedUp)
+                StatusPill(tone: tones.lilac, label: l10n.signedUp),
+            ],
+          ),
+          const SizedBox(height: 8),
+          Text(
+            e.title,
+            style: const TextStyle(
+              fontSize: 22,
+              fontWeight: FontWeight.w900,
+              height: 1.3,
             ),
-            if (quota case (final text, final ratio)) ...[
-              const SizedBox(height: 12),
-              Row(
-                children: [
-                  Text(
-                    text,
-                    style: const TextStyle(
-                      fontSize: 13,
-                      fontWeight: FontWeight.w900,
-                    ),
+          ),
+          if (quota case (final text, final ratio)) ...[
+            const SizedBox(height: 12),
+            Row(
+              children: [
+                Text(
+                  text,
+                  style: const TextStyle(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w900,
                   ),
-                  const SizedBox(width: 10),
-                  Expanded(
-                    child: ClipRRect(
-                      borderRadius: BorderRadius.circular(4),
-                      child: LinearProgressIndicator(
-                        value: ratio.clamp(0, 1).toDouble(),
-                        minHeight: 8,
-                        color: tone.ink,
-                        backgroundColor: tone.ink.withValues(alpha: 0.12),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ],
-            if (e.signedUp) ...[
-              const SizedBox(height: 10),
-              StatusPill(
-                tone: Tone(
-                  Colors.white.withValues(alpha: light ? 0.6 : 0.12),
-                  tone.ink,
-                  tone.ink,
                 ),
-                label: l10n.signedUp,
-              ),
-            ],
+                const SizedBox(width: 10),
+                Expanded(
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(4),
+                    child: LinearProgressIndicator(
+                      value: ratio.clamp(0, 1).toDouble(),
+                      minHeight: 8,
+                      color: tone.strong,
+                      backgroundColor: scheme.onSurface.withValues(alpha: 0.1),
+                    ),
+                  ),
+                ),
+              ],
+            ),
           ],
-        ),
+        ],
       ),
     );
 
@@ -317,30 +296,37 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
       ),
       children: [
         if (e.image case final url?)
-          // The poster sits between the app bar and the title, which
-          // overlaps its last 26 px.
+          // The poster's blurred backdrop fades into the page; the title
+          // sits on the fade, below the poster itself.
           Stack(
             children: [
-              GestureDetector(
-                onTap: () => context.push('/more/events/poster', extra: url),
-                child: SizedBox(
-                  height: top + 236 - 26,
-                  width: double.infinity,
-                  child: EventPoster(
-                    url: url,
-                    padding: EdgeInsets.fromLTRB(0, top + 8, 0, 12),
-                  ),
+              SizedBox(
+                height: top + 300,
+                width: double.infinity,
+                child: Stack(
+                  fit: StackFit.expand,
+                  children: [
+                    GestureDetector(
+                      onTap: () =>
+                          context.push('/more/events/poster', extra: url),
+                      child: EventPoster(
+                        url: url,
+                        padding: EdgeInsets.fromLTRB(0, top + 8, 0, 100),
+                        fadeOut: true,
+                      ),
+                    ),
+                  ],
                 ),
               ),
               Padding(
-                padding: EdgeInsets.only(top: top + 236 - 26),
+                padding: EdgeInsets.only(top: top + 212),
                 child: title,
               ),
             ],
           )
         else
           Padding(
-            padding: EdgeInsets.only(top: top),
+            padding: EdgeInsets.only(top: top + pageTop),
             child: title,
           ),
         Padding(
