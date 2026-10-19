@@ -849,7 +849,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get sortTitle => 'Title';
 
   @override
-  String get anyTime => 'Any';
+  String get anyTime => 'Any time';
 
   @override
   String lastYears(int count) {
@@ -1052,4 +1052,149 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get loadingShelves => 'Loading new books and best sellers';
+
+  @override
+  String get events => 'Event sign-up';
+
+  @override
+  String get searchEvents => 'Search events';
+
+  @override
+  String searchFor(String query) {
+    return 'Search \"$query\"';
+  }
+
+  @override
+  String get within3Days => 'Next 3 days';
+
+  @override
+  String get withinWeek => 'Next 7 days';
+
+  @override
+  String get withinMonth => 'Next 30 days';
+
+  @override
+  String get eventsOpen => 'Open';
+
+  @override
+  String get eventsOngoing => 'Happening now';
+
+  @override
+  String get eventsClosed => 'Closed';
+
+  @override
+  String get anyStatus => 'Any status';
+
+  @override
+  String get eventCategory => 'Category';
+
+  @override
+  String get anyCategory => 'All categories';
+
+  @override
+  String get myEvents => 'My events';
+
+  @override
+  String get nextSignedUp => 'Next・signed up';
+
+  @override
+  String inDays(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'In $count days',
+      one: 'Tomorrow',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String waitlistSpots(int taken, int total) {
+    return 'Waitlist $taken/$total';
+  }
+
+  @override
+  String waitlistOnly(int taken, int total) {
+    return 'Full・waitlist $taken / $total';
+  }
+
+  @override
+  String get externalSignUp => 'External';
+
+  @override
+  String get signUpClosed => 'Closed';
+
+  @override
+  String get signedUp => 'Signed up';
+
+  @override
+  String get eventFull => 'Full';
+
+  @override
+  String get happeningNow => 'Now';
+
+  @override
+  String get eventDate => 'Date';
+
+  @override
+  String get eventPlace => 'Place';
+
+  @override
+  String get eventOrganizer => 'Organizer';
+
+  @override
+  String get eventContact => 'Contact';
+
+  @override
+  String get eventIntro => 'About';
+
+  @override
+  String get signUp => 'Sign up';
+
+  @override
+  String get signUpWaitlist => 'Join waitlist';
+
+  @override
+  String get goSignUp => 'Sign up on website';
+
+  @override
+  String get cancelSignUp => 'Cancel sign-up';
+
+  @override
+  String get cancelSignUpTitle => 'Cancel sign-up?';
+
+  @override
+  String get keepSignUp => 'Keep';
+
+  @override
+  String get signUpName => 'Name';
+
+  @override
+  String get signUpEmail => 'Email';
+
+  @override
+  String get submit => 'Submit';
+
+  @override
+  String get noMatchingEvents => 'No matching events';
+
+  @override
+  String get searchAnyTimeStatus => 'Search any time and status';
+
+  @override
+  String eventsAttended(String hours) {
+    return 'Attended・$hours h';
+  }
+
+  @override
+  String get pastEvents => 'Past events';
+
+  @override
+  String get noEventRecords => 'None';
+
+  @override
+  String get signUpFailed => 'Couldn\'t sign up';
+
+  @override
+  String get cancelSignUpFailed => 'Couldn\'t cancel the sign-up';
 }

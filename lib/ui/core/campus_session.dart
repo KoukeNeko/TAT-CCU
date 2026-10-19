@@ -29,9 +29,13 @@ class CampusSession extends StatefulWidget {
     required this.child,
     this.loadOnStart = true,
     this.via = const [],
+    this.bottom,
   });
 
   final String title, entry, host;
+
+  /// Shown under the title once signed in, such as a search field.
+  final PreferredSizeWidget? bottom;
 
   /// `host/path` prefixes the hand-off passes through on its own (e.g. a
   /// SAML form that posts itself); they are not sign-in pages.
@@ -169,6 +173,7 @@ class CampusSessionState extends State<CampusSession> {
       appBar: subBar(
         context,
         _signingIn ? context.l10n.signInPortal : widget.title,
+        bottom: _signingIn ? null : widget.bottom,
       ),
       // Builder: the capsule reads insets from inside this Scaffold, where
       // the glass app bar's height is part of the top padding.

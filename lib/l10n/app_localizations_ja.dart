@@ -760,7 +760,7 @@ class AppLocalizationsJa extends AppLocalizations {
   String get sortTitle => 'タイトル';
 
   @override
-  String get anyTime => '指定なし';
+  String get anyTime => 'すべての期間';
 
   @override
   String lastYears(int count) {
@@ -957,4 +957,143 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get loadingShelves => '新着とベストセラーを読み込み中';
+
+  @override
+  String get events => 'イベント申込';
+
+  @override
+  String get searchEvents => 'イベントを検索';
+
+  @override
+  String searchFor(String query) {
+    return '「$query」を検索';
+  }
+
+  @override
+  String get within3Days => '3日以内';
+
+  @override
+  String get withinWeek => '1週間以内';
+
+  @override
+  String get withinMonth => '1か月以内';
+
+  @override
+  String get eventsOpen => '受付中';
+
+  @override
+  String get eventsOngoing => '開催中';
+
+  @override
+  String get eventsClosed => '受付終了';
+
+  @override
+  String get anyStatus => 'すべての状態';
+
+  @override
+  String get eventCategory => 'カテゴリ';
+
+  @override
+  String get anyCategory => 'すべてのカテゴリ';
+
+  @override
+  String get myEvents => 'マイイベント';
+
+  @override
+  String get nextSignedUp => '次回・申込済み';
+
+  @override
+  String inDays(int count) {
+    return '$count日後';
+  }
+
+  @override
+  String waitlistSpots(int taken, int total) {
+    return '補欠 $taken/$total';
+  }
+
+  @override
+  String waitlistOnly(int taken, int total) {
+    return '満員・補欠 $taken / $total';
+  }
+
+  @override
+  String get externalSignUp => '外部申込';
+
+  @override
+  String get signUpClosed => '締切';
+
+  @override
+  String get signedUp => '申込済み';
+
+  @override
+  String get eventFull => '満員';
+
+  @override
+  String get happeningNow => '開催中';
+
+  @override
+  String get eventDate => '日時';
+
+  @override
+  String get eventPlace => '場所';
+
+  @override
+  String get eventOrganizer => '主催';
+
+  @override
+  String get eventContact => '連絡先';
+
+  @override
+  String get eventIntro => '概要';
+
+  @override
+  String get signUp => '申し込む';
+
+  @override
+  String get signUpWaitlist => '補欠で申し込む';
+
+  @override
+  String get goSignUp => '申込ページへ';
+
+  @override
+  String get cancelSignUp => '申込を取り消す';
+
+  @override
+  String get cancelSignUpTitle => '申込を取り消しますか？';
+
+  @override
+  String get keepSignUp => '取り消さない';
+
+  @override
+  String get signUpName => '氏名';
+
+  @override
+  String get signUpEmail => 'メール';
+
+  @override
+  String get submit => '送信';
+
+  @override
+  String get noMatchingEvents => '該当するイベントはありません';
+
+  @override
+  String get searchAnyTimeStatus => 'すべての期間と状態で検索';
+
+  @override
+  String eventsAttended(String hours) {
+    return '参加済み・$hours 時間';
+  }
+
+  @override
+  String get pastEvents => '過去のイベント';
+
+  @override
+  String get noEventRecords => 'なし';
+
+  @override
+  String get signUpFailed => '申し込めませんでした';
+
+  @override
+  String get cancelSignUpFailed => '取り消せませんでした';
 }

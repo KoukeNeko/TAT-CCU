@@ -1351,7 +1351,7 @@ abstract class AppLocalizations {
   /// No description provided for @anyTime.
   ///
   /// In zh, this message translates to:
-  /// **'不限'**
+  /// **'全部時間'**
   String get anyTime;
 
   /// No description provided for @lastYears.
@@ -1725,6 +1725,264 @@ abstract class AppLocalizations {
   /// In zh, this message translates to:
   /// **'讀取新書與暢銷榜'**
   String get loadingShelves;
+
+  /// No description provided for @events.
+  ///
+  /// In zh, this message translates to:
+  /// **'活動報名'**
+  String get events;
+
+  /// No description provided for @searchEvents.
+  ///
+  /// In zh, this message translates to:
+  /// **'搜尋活動'**
+  String get searchEvents;
+
+  /// No description provided for @searchFor.
+  ///
+  /// In zh, this message translates to:
+  /// **'搜尋「{query}」'**
+  String searchFor(String query);
+
+  /// No description provided for @within3Days.
+  ///
+  /// In zh, this message translates to:
+  /// **'3 日內'**
+  String get within3Days;
+
+  /// No description provided for @withinWeek.
+  ///
+  /// In zh, this message translates to:
+  /// **'一週內'**
+  String get withinWeek;
+
+  /// No description provided for @withinMonth.
+  ///
+  /// In zh, this message translates to:
+  /// **'一個月內'**
+  String get withinMonth;
+
+  /// No description provided for @eventsOpen.
+  ///
+  /// In zh, this message translates to:
+  /// **'接受報名中'**
+  String get eventsOpen;
+
+  /// No description provided for @eventsOngoing.
+  ///
+  /// In zh, this message translates to:
+  /// **'活動進行中'**
+  String get eventsOngoing;
+
+  /// No description provided for @eventsClosed.
+  ///
+  /// In zh, this message translates to:
+  /// **'已截止報名'**
+  String get eventsClosed;
+
+  /// No description provided for @anyStatus.
+  ///
+  /// In zh, this message translates to:
+  /// **'全部狀態'**
+  String get anyStatus;
+
+  /// No description provided for @eventCategory.
+  ///
+  /// In zh, this message translates to:
+  /// **'類別'**
+  String get eventCategory;
+
+  /// No description provided for @anyCategory.
+  ///
+  /// In zh, this message translates to:
+  /// **'全部類別'**
+  String get anyCategory;
+
+  /// No description provided for @myEvents.
+  ///
+  /// In zh, this message translates to:
+  /// **'我的活動'**
+  String get myEvents;
+
+  /// No description provided for @nextSignedUp.
+  ///
+  /// In zh, this message translates to:
+  /// **'下一場・已報名'**
+  String get nextSignedUp;
+
+  /// No description provided for @inDays.
+  ///
+  /// In zh, this message translates to:
+  /// **'{count} 天後'**
+  String inDays(int count);
+
+  /// No description provided for @waitlistSpots.
+  ///
+  /// In zh, this message translates to:
+  /// **'備取 {taken}/{total}'**
+  String waitlistSpots(int taken, int total);
+
+  /// No description provided for @waitlistOnly.
+  ///
+  /// In zh, this message translates to:
+  /// **'正取已滿・備取 {taken} / {total}'**
+  String waitlistOnly(int taken, int total);
+
+  /// No description provided for @externalSignUp.
+  ///
+  /// In zh, this message translates to:
+  /// **'外部報名'**
+  String get externalSignUp;
+
+  /// No description provided for @signUpClosed.
+  ///
+  /// In zh, this message translates to:
+  /// **'已截止'**
+  String get signUpClosed;
+
+  /// No description provided for @signedUp.
+  ///
+  /// In zh, this message translates to:
+  /// **'已報名'**
+  String get signedUp;
+
+  /// No description provided for @eventFull.
+  ///
+  /// In zh, this message translates to:
+  /// **'額滿'**
+  String get eventFull;
+
+  /// No description provided for @happeningNow.
+  ///
+  /// In zh, this message translates to:
+  /// **'進行中'**
+  String get happeningNow;
+
+  /// No description provided for @eventDate.
+  ///
+  /// In zh, this message translates to:
+  /// **'日期'**
+  String get eventDate;
+
+  /// No description provided for @eventPlace.
+  ///
+  /// In zh, this message translates to:
+  /// **'地點'**
+  String get eventPlace;
+
+  /// No description provided for @eventOrganizer.
+  ///
+  /// In zh, this message translates to:
+  /// **'承辦'**
+  String get eventOrganizer;
+
+  /// No description provided for @eventContact.
+  ///
+  /// In zh, this message translates to:
+  /// **'聯絡'**
+  String get eventContact;
+
+  /// No description provided for @eventIntro.
+  ///
+  /// In zh, this message translates to:
+  /// **'活動介紹'**
+  String get eventIntro;
+
+  /// No description provided for @signUp.
+  ///
+  /// In zh, this message translates to:
+  /// **'報名'**
+  String get signUp;
+
+  /// No description provided for @signUpWaitlist.
+  ///
+  /// In zh, this message translates to:
+  /// **'報名備取'**
+  String get signUpWaitlist;
+
+  /// No description provided for @goSignUp.
+  ///
+  /// In zh, this message translates to:
+  /// **'前往報名'**
+  String get goSignUp;
+
+  /// No description provided for @cancelSignUp.
+  ///
+  /// In zh, this message translates to:
+  /// **'取消報名'**
+  String get cancelSignUp;
+
+  /// No description provided for @cancelSignUpTitle.
+  ///
+  /// In zh, this message translates to:
+  /// **'取消報名？'**
+  String get cancelSignUpTitle;
+
+  /// No description provided for @keepSignUp.
+  ///
+  /// In zh, this message translates to:
+  /// **'保留'**
+  String get keepSignUp;
+
+  /// No description provided for @signUpName.
+  ///
+  /// In zh, this message translates to:
+  /// **'報名者姓名'**
+  String get signUpName;
+
+  /// No description provided for @signUpEmail.
+  ///
+  /// In zh, this message translates to:
+  /// **'報名信箱'**
+  String get signUpEmail;
+
+  /// No description provided for @submit.
+  ///
+  /// In zh, this message translates to:
+  /// **'送出'**
+  String get submit;
+
+  /// No description provided for @noMatchingEvents.
+  ///
+  /// In zh, this message translates to:
+  /// **'沒有符合的活動'**
+  String get noMatchingEvents;
+
+  /// No description provided for @searchAnyTimeStatus.
+  ///
+  /// In zh, this message translates to:
+  /// **'搜尋全部時間與狀態'**
+  String get searchAnyTimeStatus;
+
+  /// No description provided for @eventsAttended.
+  ///
+  /// In zh, this message translates to:
+  /// **'已參加・{hours} 小時'**
+  String eventsAttended(String hours);
+
+  /// No description provided for @pastEvents.
+  ///
+  /// In zh, this message translates to:
+  /// **'歷史活動'**
+  String get pastEvents;
+
+  /// No description provided for @noEventRecords.
+  ///
+  /// In zh, this message translates to:
+  /// **'沒有紀錄'**
+  String get noEventRecords;
+
+  /// No description provided for @signUpFailed.
+  ///
+  /// In zh, this message translates to:
+  /// **'無法報名'**
+  String get signUpFailed;
+
+  /// No description provided for @cancelSignUpFailed.
+  ///
+  /// In zh, this message translates to:
+  /// **'無法取消報名'**
+  String get cancelSignUpFailed;
 }
 
 class _AppLocalizationsDelegate

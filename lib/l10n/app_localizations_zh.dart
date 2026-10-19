@@ -772,7 +772,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get sortTitle => '題名';
 
   @override
-  String get anyTime => '不限';
+  String get anyTime => '全部時間';
 
   @override
   String lastYears(int count) {
@@ -969,4 +969,143 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get loadingShelves => '讀取新書與暢銷榜';
+
+  @override
+  String get events => '活動報名';
+
+  @override
+  String get searchEvents => '搜尋活動';
+
+  @override
+  String searchFor(String query) {
+    return '搜尋「$query」';
+  }
+
+  @override
+  String get within3Days => '3 日內';
+
+  @override
+  String get withinWeek => '一週內';
+
+  @override
+  String get withinMonth => '一個月內';
+
+  @override
+  String get eventsOpen => '接受報名中';
+
+  @override
+  String get eventsOngoing => '活動進行中';
+
+  @override
+  String get eventsClosed => '已截止報名';
+
+  @override
+  String get anyStatus => '全部狀態';
+
+  @override
+  String get eventCategory => '類別';
+
+  @override
+  String get anyCategory => '全部類別';
+
+  @override
+  String get myEvents => '我的活動';
+
+  @override
+  String get nextSignedUp => '下一場・已報名';
+
+  @override
+  String inDays(int count) {
+    return '$count 天後';
+  }
+
+  @override
+  String waitlistSpots(int taken, int total) {
+    return '備取 $taken/$total';
+  }
+
+  @override
+  String waitlistOnly(int taken, int total) {
+    return '正取已滿・備取 $taken / $total';
+  }
+
+  @override
+  String get externalSignUp => '外部報名';
+
+  @override
+  String get signUpClosed => '已截止';
+
+  @override
+  String get signedUp => '已報名';
+
+  @override
+  String get eventFull => '額滿';
+
+  @override
+  String get happeningNow => '進行中';
+
+  @override
+  String get eventDate => '日期';
+
+  @override
+  String get eventPlace => '地點';
+
+  @override
+  String get eventOrganizer => '承辦';
+
+  @override
+  String get eventContact => '聯絡';
+
+  @override
+  String get eventIntro => '活動介紹';
+
+  @override
+  String get signUp => '報名';
+
+  @override
+  String get signUpWaitlist => '報名備取';
+
+  @override
+  String get goSignUp => '前往報名';
+
+  @override
+  String get cancelSignUp => '取消報名';
+
+  @override
+  String get cancelSignUpTitle => '取消報名？';
+
+  @override
+  String get keepSignUp => '保留';
+
+  @override
+  String get signUpName => '報名者姓名';
+
+  @override
+  String get signUpEmail => '報名信箱';
+
+  @override
+  String get submit => '送出';
+
+  @override
+  String get noMatchingEvents => '沒有符合的活動';
+
+  @override
+  String get searchAnyTimeStatus => '搜尋全部時間與狀態';
+
+  @override
+  String eventsAttended(String hours) {
+    return '已參加・$hours 小時';
+  }
+
+  @override
+  String get pastEvents => '歷史活動';
+
+  @override
+  String get noEventRecords => '沒有紀錄';
+
+  @override
+  String get signUpFailed => '無法報名';
+
+  @override
+  String get cancelSignUpFailed => '無法取消報名';
 }
