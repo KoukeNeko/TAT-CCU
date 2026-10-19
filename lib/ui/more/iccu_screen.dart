@@ -385,11 +385,18 @@ class _Bar extends StatelessWidget {
           children: [
             SizedBox(
               width: 72,
-              child: Text(
-                value,
-                style: const TextStyle(
-                  fontSize: 26,
-                  fontWeight: FontWeight.w900,
+              // Units differ in length by language (門, 科目): shrink to
+              // one line rather than wrap.
+              child: FittedBox(
+                fit: BoxFit.scaleDown,
+                alignment: Alignment.centerLeft,
+                child: Text(
+                  value,
+                  maxLines: 1,
+                  style: const TextStyle(
+                    fontSize: 26,
+                    fontWeight: FontWeight.w900,
+                  ),
                 ),
               ),
             ),
