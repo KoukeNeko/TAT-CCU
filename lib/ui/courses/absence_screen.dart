@@ -2,7 +2,6 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 
-import '../../data/repositories/campus_cache.dart';
 import '../../l10n/l10n.dart';
 import '../core/campus_session.dart';
 import '../core/theme.dart';
@@ -21,68 +20,41 @@ class AbsenceScreen extends StatefulWidget {
   State<AbsenceScreen> createState() => _AbsenceScreenState();
 }
 
-class _AbsenceScreenState extends State<AbsenceScreen> {
-  final _session = GlobalKey<CampusSessionState>();
-  late final _cacheKey = 'absences-${widget.cmid}';
-  Map<String, dynamic>? _json;
-  DateTime? _savedAt;
-  String? _error;
+class _AbsenceScreenState extends State<AbsenceScreen> with CampusPageState {
   var _sending = false;
 
   @override
-  void initState() {
-    super.initState();
-    CampusCache.read(_cacheKey).then((cached) {
-      if (!mounted) return;
-      if (cached != null) {
-        setState(() {
-          _json = cached.json;
-          _savedAt = cached.savedAt;
-        });
-      }
-      _session.currentState?.reload();
-    });
-  }
+  String get cacheKey => 'absences-${widget.cmid}';
 
-  Future<void> _received(Map<String, dynamic> json) async {
-    if (json['kind'] == 'submitted') {
+  /// A submitted request answers `submitted`; the list then reads again.
+  @override
+  Future<void> received(Map<String, dynamic> message) async {
+    if (message['kind'] == 'submitted') {
       setState(() => _sending = false);
-      if (json['ok'] == true) {
-        await _session.currentState?.reload();
+      if (message['ok'] == true) {
+        await session.currentState?.reload();
       } else if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('${json['error'] ?? context.l10n.loadFailed}'),
+            content: Text('${message['error'] ?? context.l10n.loadFailed}'),
           ),
         );
       }
       return;
     }
-    if (json['error'] != null) {
-      setState(() {
-        _error = '${json['error']}';
-        _sending = false;
-      });
-      return;
-    }
-    final savedAt = await CampusCache.write(_cacheKey, json);
-    if (!mounted) return;
-    setState(() {
-      _error = null;
-      _json = json;
-      _savedAt = savedAt;
-    });
+    if (message['error'] != null) _sending = false;
+    await super.received(message);
   }
 
   Future<void> _new() async {
     final request = await Navigator.of(context).push<AbsenceRequest>(
       MaterialPageRoute(
-        builder: (_) => AbsenceFormScreen(course: '${_json?['course'] ?? ''}'),
+        builder: (_) => AbsenceFormScreen(course: '${json?['course'] ?? ''}'),
       ),
     );
     if (request == null || !mounted) return;
     setState(() => _sending = true);
-    await _session.currentState?.run(submitAbsence(widget.cmid, request));
+    await session.currentState?.run(submitAbsence(widget.cmid, request));
     // An expired session may never answer; let the button work again.
     Timer(const Duration(seconds: 30), () {
       if (!mounted || !_sending) return;
@@ -92,27 +64,22 @@ class _AbsenceScreenState extends State<AbsenceScreen> {
     });
   }
 
-  Future<void> _reload() async {
-    setState(() => _error = null);
-    await _session.currentState?.reload();
-  }
-
   @override
   Widget build(BuildContext context) {
-    final json = _json;
+    final saved = json;
     return CampusSession(
-      key: _session,
+      key: session,
       title: widget.title ?? '',
       entry: ecourseEntry,
       host: ecourseHost,
       loadOnStart: false,
       script: () => readAbsences(widget.cmid),
-      onMessage: _received,
-      child: _error != null
-          ? CampusError(message: _error!, onRetry: _reload)
-          : json == null
+      onMessage: received,
+      child: error != null
+          ? CampusError(message: error!, onRetry: retry)
+          : saved == null
           ? null
-          : Builder(builder: (context) => _body(context, json)),
+          : Builder(builder: (context) => _body(context, saved)),
     );
   }
 
@@ -129,7 +96,7 @@ class _AbsenceScreenState extends State<AbsenceScreen> {
         Positioned.fill(
           child: RefreshIndicator(
             edgeOffset: MediaQuery.paddingOf(context).top,
-            onRefresh: () async => _session.currentState?.refresh(),
+            onRefresh: () async => session.currentState?.refresh(),
             child: ListView(
               padding: scrollPadding(context)
                   .copyWith(bottom: MediaQuery.paddingOf(context).bottom + 90),
@@ -175,7 +142,7 @@ class _AbsenceScreenState extends State<AbsenceScreen> {
                       ],
                     ),
                   ),
-                if (_savedAt case final time?) UpdatedAt(time),
+                if (savedAt case final time?) UpdatedAt(time),
               ],
             ),
           ),

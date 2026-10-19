@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 
-import '../../data/repositories/campus_cache.dart';
 import '../../l10n/l10n.dart';
 import '../core/campus_session.dart';
 import '../core/theme.dart';
@@ -19,66 +18,32 @@ class AttendanceScreen extends StatefulWidget {
   State<AttendanceScreen> createState() => _AttendanceScreenState();
 }
 
-class _AttendanceScreenState extends State<AttendanceScreen> {
-  final _session = GlobalKey<CampusSessionState>();
-  late final _cacheKey = 'attendance-${widget.cmid}';
-  Attendance? _data;
-  DateTime? _savedAt;
-  String? _error;
-
+class _AttendanceScreenState extends State<AttendanceScreen>
+    with CampusPageState {
   @override
-  void initState() {
-    super.initState();
-    CampusCache.read(_cacheKey).then((cached) {
-      if (!mounted) return;
-      if (cached != null) {
-        setState(() {
-          _data = attendanceOf(cached.json);
-          _savedAt = cached.savedAt;
-        });
-      }
-      _session.currentState?.reload();
-    });
-  }
+  String get cacheKey => 'attendance-${widget.cmid}';
 
-  Future<void> _received(Map<String, dynamic> json) async {
-    if (json['error'] != null) {
-      setState(() => _error = '${json['error']}');
-      return;
-    }
-    final savedAt = await CampusCache.write(_cacheKey, json);
-    if (!mounted) return;
-    setState(() {
-      _error = null;
-      _data = attendanceOf(json);
-      _savedAt = savedAt;
-    });
-  }
-
-  Future<void> _reload() async {
-    setState(() => _error = null);
-    await _session.currentState?.reload();
-  }
+  Attendance? get _data => json == null ? null : attendanceOf(json!);
 
   @override
   Widget build(BuildContext context) {
     final data = _data;
     return CampusSession(
-      key: _session,
+      key: session,
       title: widget.title ?? '',
       entry: ecourseEntry,
       host: ecourseHost,
       loadOnStart: false,
       script: () => readAttendance(widget.cmid),
-      onMessage: _received,
-      child: _error != null
-          ? CampusError(message: _error!, onRetry: _reload)
+      onMessage: received,
+      child: error != null
+          ? CampusError(message: error!, onRetry: retry)
           : data == null
           ? null
           : Builder(
               builder: (context) => RefreshIndicator(
                 edgeOffset: MediaQuery.paddingOf(context).top,
-                onRefresh: () async => _session.currentState?.refresh(),
+                onRefresh: () async => session.currentState?.refresh(),
                 child: _body(context, data),
               ),
             ),
@@ -126,7 +91,7 @@ class _AttendanceScreenState extends State<AttendanceScreen> {
           SectionLabel(l10n.attendanceNotTaken, detail: '${pending.length}'),
           list(pending),
         ],
-        if (_savedAt case final time?) UpdatedAt(time),
+        if (savedAt case final time?) UpdatedAt(time),
       ],
     );
   }

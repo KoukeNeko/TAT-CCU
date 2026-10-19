@@ -113,47 +113,27 @@ class LibraryScreen extends StatefulWidget {
   State<LibraryScreen> createState() => _LibraryScreenState();
 }
 
-class _LibraryScreenState extends State<LibraryScreen> {
-  final _session = GlobalKey<CampusSessionState>();
-  Map<String, dynamic>? _account;
-  DateTime? _savedAt;
-  String? _error;
+class _LibraryScreenState extends State<LibraryScreen> with CampusPageState {
+  @override
+  String get cacheKey => LibraryScreen.cacheKey;
+
+  // Show the last read at once; due dates still count from today.
+  @override
+  bool get readOnOpen => false;
+
+  Map<String, dynamic>? get _account => this.json;
 
   /// Sent with the next read: renew a loan, renew all, or cancel a hold.
   Map<String, String>? _action;
 
+  /// A renew or cancel reports its result beside the account, which is
+  /// saved without it.
   @override
-  void initState() {
-    super.initState();
-    // Show the last read at once; due dates still count from today.
-    CampusCache.read(LibraryScreen.cacheKey).then((cached) {
-      if (!mounted) return;
-      if (cached == null) {
-        _session.currentState?.reload();
-      } else {
-        setState(() {
-          _account = cached.json;
-          _savedAt = cached.savedAt;
-        });
-      }
-    });
-  }
-
-  Future<void> _received(Map<String, dynamic> json) async {
-    if (json['error'] != null) {
-      setState(() => _error = '${json['error']}');
-      return;
-    }
-    final result = json.remove('result');
-    _action = null;
-    final savedAt = await CampusCache.write(LibraryScreen.cacheKey, json);
-    if (!mounted) return;
-    setState(() {
-      _error = null;
-      _account = json;
-      _savedAt = savedAt;
-    });
-    if (result is Map) _report(result);
+  Future<void> received(Map<String, dynamic> message) async {
+    final result = message.remove('result');
+    if (message['error'] == null) _action = null;
+    await super.received(message);
+    if (mounted && result is Map) _report(result);
   }
 
   /// Success shows in the list itself (a later due date, a hold gone);
@@ -182,19 +162,14 @@ class _LibraryScreenState extends State<LibraryScreen> {
 
   void _act(Map<String, String> action) {
     _action = action;
-    _session.currentState?.refresh();
-  }
-
-  Future<void> _reload() async {
-    setState(() => _error = null);
-    await _session.currentState?.reload();
+    session.currentState?.refresh();
   }
 
   @override
   Widget build(BuildContext context) {
     final account = _account;
     return CampusSession(
-      key: _session,
+      key: session,
       title: context.l10n.library,
       entry: _accountUrl,
       host: _host,
@@ -202,9 +177,9 @@ class _LibraryScreenState extends State<LibraryScreen> {
       via: const ['idm.lib.ccu.edu.tw'],
       loadOnStart: false,
       script: () => _readAccount(_action),
-      onMessage: _received,
-      child: _error != null
-          ? CampusError(message: _error!, onRetry: _reload)
+      onMessage: received,
+      child: error != null
+          ? CampusError(message: error!, onRetry: retry)
           : account == null
           ? null
           : Builder(
@@ -212,11 +187,11 @@ class _LibraryScreenState extends State<LibraryScreen> {
               builder: (context) => RefreshIndicator(
                 // Below the glass app bar, which the body extends under.
                 edgeOffset: MediaQuery.paddingOf(context).top,
-                onRefresh: () async => _session.currentState?.refresh(),
+                onRefresh: () async => session.currentState?.refresh(),
                 child: _Body(
                   loans: loansOf(account),
                   holds: holdsOf(account),
-                  savedAt: _savedAt,
+                  savedAt: savedAt,
                   onRenew: (loan) => _act({'renew': loan.id}),
                   onRenewAll: () => _act({'renewAll': '1'}),
                   onCancel: (hold) =>

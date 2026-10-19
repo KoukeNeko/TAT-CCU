@@ -8,7 +8,6 @@ import 'package:path_provider/path_provider.dart';
 import 'package:pdfrx/pdfrx.dart';
 import 'package:share_plus/share_plus.dart';
 
-import '../../data/repositories/campus_cache.dart';
 import '../../data/repositories/certificate_store.dart';
 import '../../data/services/payment_data.dart';
 import '../../l10n/l10n.dart';
@@ -51,37 +50,25 @@ class PaymentScreen extends StatefulWidget {
   State<PaymentScreen> createState() => _PaymentScreenState();
 }
 
-class _PaymentScreenState extends State<PaymentScreen> {
-  final _session = GlobalKey<CampusSessionState>();
+class _PaymentScreenState extends State<PaymentScreen> with CampusPageState {
   final _yearKey = GlobalKey();
   var _year = rocYear(DateTime.now());
-  Map<String, dynamic>? _json;
-  DateTime? _savedAt;
-  String? _error;
   int? _month;
   String? _open;
   ({String title, String file})? _pdf;
   Timer? _pdfWatchdog;
 
   @override
-  void initState() {
-    super.initState();
-    CampusCache.read(PaymentScreen.cacheKey).then((cached) {
-      if (!mounted) return;
-      if (cached != null && cached.json['year'] == _year) {
-        setState(() {
-          _json = cached.json;
-          _savedAt = cached.savedAt;
-        });
-      }
-      _session.currentState?.reload();
-    });
-  }
+  String get cacheKey => PaymentScreen.cacheKey;
+
+  /// Only the year on screen; another one waits for its read.
+  @override
+  bool keepsSaved(Map<String, dynamic> saved) => saved['year'] == _year;
 
   void _openPdf(String url, String title, String file) {
     if (_pdf != null) return;
     _pdf = (title: title, file: file);
-    _session.currentState?.run(fetchPdfScript(url));
+    session.currentState?.run(fetchPdfScript(url));
     // An expired session may never answer; let the buttons work again.
     _pdfWatchdog = Timer(const Duration(seconds: 30), () {
       if (!mounted || _pdf == null) return;
@@ -164,20 +151,12 @@ class _PaymentScreenState extends State<PaymentScreen> {
     );
   }
 
-  Future<void> _received(Map<String, dynamic> json) async {
-    if (json['kind'] == 'pdf') return _showPdf(json);
-    if (json['error'] != null) {
-      setState(() => _error = '${json['error']}');
-      return;
-    }
-    final savedAt = await CampusCache.write(PaymentScreen.cacheKey, json);
-    if (!mounted) return;
-    setState(() {
-      _error = null;
-      _json = json;
-      _savedAt = savedAt;
-      _month = null;
-    });
+  /// A statement answers `pdf`; a new read also clears the chosen month.
+  @override
+  Future<void> received(Map<String, dynamic> message) async {
+    if (message['kind'] == 'pdf') return _showPdf(message);
+    if (message['error'] == null) _month = null;
+    await super.received(message);
   }
 
   Future<void> _pickYear() async {
@@ -201,22 +180,17 @@ class _PaymentScreenState extends State<PaymentScreen> {
     if (y == null || y == _year) return;
     setState(() {
       _year = y;
-      _json = null;
+      this.json = null;
       _month = null;
     });
-    _session.currentState?.reload();
-  }
-
-  Future<void> _reload() async {
-    setState(() => _error = null);
-    await _session.currentState?.reload();
+    session.currentState?.reload();
   }
 
   @override
   Widget build(BuildContext context) {
-    final json = _json;
+    final saved = this.json;
     return CampusSession(
-      key: _session,
+      key: session,
       title: context.l10n.payTitle,
       entry: entryUrl(campusSystems['0042']!),
       host: _host,
@@ -234,16 +208,16 @@ class _PaymentScreenState extends State<PaymentScreen> {
         ],
       ),
       script: () => readPayments(_year),
-      onMessage: _received,
-      child: _error != null
-          ? CampusError(message: _error!, onRetry: _reload)
-          : json == null
+      onMessage: received,
+      child: error != null
+          ? CampusError(message: error!, onRetry: retry)
+          : saved == null
           ? null
           : Builder(
               builder: (context) => RefreshIndicator(
                 edgeOffset: MediaQuery.paddingOf(context).top,
-                onRefresh: () async => _session.currentState?.refresh(),
-                child: _body(context, json),
+                onRefresh: () async => session.currentState?.refresh(),
+                child: _body(context, saved),
               ),
             ),
     );
@@ -327,7 +301,7 @@ class _PaymentScreenState extends State<PaymentScreen> {
               padding: const EdgeInsets.only(bottom: rowGap),
               child: _IncomeCard(year: year, income: item, onOpen: _openPdf),
             ),
-        if (_savedAt case final time?) UpdatedAt(time),
+        if (savedAt case final time?) UpdatedAt(time),
       ],
     );
   }

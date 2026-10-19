@@ -5,6 +5,7 @@ import 'dart:ui' show ImageFilter;
 import 'package:flutter/material.dart';
 import 'package:webview_flutter/webview_flutter.dart';
 
+import '../../data/repositories/campus_cache.dart';
 import '../../data/services/campus_cookies.dart';
 import 'cas_autofill.dart';
 import 'theme.dart';
@@ -25,6 +26,62 @@ String fetchPdfScript(String url) =>
   Campus.postMessage(JSON.stringify({ kind: 'pdf', data: btoa(bin) }));
 })().catch(e => Campus.postMessage(JSON.stringify({ kind: 'pdf', error: String(e) })));
 ''';
+
+/// State for a screen read through [CampusSession] and kept in
+/// [CampusCache]: the last read shows at once, and a new read replaces it.
+/// Pass [session] as the CampusSession's key and [received] as its
+/// onMessage.
+mixin CampusPageState<W extends StatefulWidget> on State<W> {
+  final session = GlobalKey<CampusSessionState>();
+  Map<String, dynamic>? json;
+  DateTime? savedAt;
+  String? error;
+
+  String get cacheKey;
+
+  /// Reads the school again on opening even when a read is saved; false
+  /// waits for pull to refresh, for pages that change rarely.
+  bool get readOnOpen => true;
+
+  /// Whether a saved read still fits what the screen shows.
+  bool keepsSaved(Map<String, dynamic> saved) => true;
+
+  @override
+  void initState() {
+    super.initState();
+    CampusCache.read(cacheKey).then((cached) {
+      if (!mounted) return;
+      final keep = cached != null && keepsSaved(cached.json);
+      if (keep) {
+        setState(() {
+          json = cached.json;
+          savedAt = cached.savedAt;
+        });
+      }
+      if (!keep || readOnOpen) session.currentState?.reload();
+    });
+  }
+
+  /// An error to show, or a new read to save and show.
+  Future<void> received(Map<String, dynamic> message) async {
+    if (message['error'] != null) {
+      setState(() => error = '${message['error']}');
+      return;
+    }
+    final at = await CampusCache.write(cacheKey, message);
+    if (!mounted) return;
+    setState(() {
+      error = null;
+      json = message;
+      savedAt = at;
+    });
+  }
+
+  Future<void> retry() async {
+    setState(() => error = null);
+    await session.currentState?.reload();
+  }
+}
 
 /// A campus system read in-app. A hidden WebView goes through the portal
 /// hand-off at [entry]; once it lands on [host] it runs [script], which

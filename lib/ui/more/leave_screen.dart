@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 
-import '../../data/repositories/campus_cache.dart';
 import '../../l10n/l10n.dart';
 import '../core/campus_systems.dart';
 import '../core/campus_session.dart';
@@ -87,62 +86,30 @@ class LeaveScreen extends StatefulWidget {
   State<LeaveScreen> createState() => _LeaveScreenState();
 }
 
-class _LeaveScreenState extends State<LeaveScreen> {
-  final _session = GlobalKey<CampusSessionState>();
-  List<_Request>? _requests;
-  DateTime? _savedAt;
-  String? _error;
-
+class _LeaveScreenState extends State<LeaveScreen> with CampusPageState {
   @override
-  void initState() {
-    super.initState();
-    // Requests change rarely: show the last read and fetch only when there
-    // is none or the user pulls to refresh.
-    CampusCache.read(LeaveScreen.cacheKey).then((cached) {
-      if (!mounted) return;
-      if (cached == null) {
-        _session.currentState?.reload();
-      } else {
-        setState(() {
-          _requests = _requestsOf(cached.json);
-          _savedAt = cached.savedAt;
-        });
-      }
-    });
-  }
+  String get cacheKey => LeaveScreen.cacheKey;
 
-  Future<void> _received(Map<String, dynamic> json) async {
-    if (json['error'] != null) {
-      setState(() => _error = '${json['error']}');
-      return;
-    }
-    final savedAt = await CampusCache.write(LeaveScreen.cacheKey, json);
-    if (!mounted) return;
-    setState(() {
-      _error = null;
-      _requests = _requestsOf(json);
-      _savedAt = savedAt;
-    });
-  }
+  // Requests change rarely: show the last read and fetch only when there
+  // is none or the user pulls to refresh.
+  @override
+  bool get readOnOpen => false;
 
-  Future<void> _reload() async {
-    setState(() => _error = null);
-    await _session.currentState?.reload();
-  }
+  List<_Request>? get _requests => json == null ? null : _requestsOf(json!);
 
   @override
   Widget build(BuildContext context) {
     final requests = _requests;
     return CampusSession(
-      key: _session,
+      key: session,
       title: context.l10n.leave,
       entry: _entry,
       host: _host,
       loadOnStart: false,
       script: () => _readRequests,
-      onMessage: _received,
-      child: _error != null
-          ? CampusError(message: _error!, onRetry: _reload)
+      onMessage: received,
+      child: error != null
+          ? CampusError(message: error!, onRetry: retry)
           : requests == null
           ? null
           : Builder(
@@ -150,8 +117,8 @@ class _LeaveScreenState extends State<LeaveScreen> {
               builder: (context) => RefreshIndicator(
                 // Below the glass app bar, which the body extends under.
                 edgeOffset: MediaQuery.paddingOf(context).top,
-                onRefresh: () async => _session.currentState?.refresh(),
-                child: _Body(requests: requests, savedAt: _savedAt),
+                onRefresh: () async => session.currentState?.refresh(),
+                child: _Body(requests: requests, savedAt: savedAt),
               ),
             ),
     );

@@ -2,7 +2,6 @@ import 'dart:convert';
 
 import 'package:flutter/material.dart';
 
-import '../../data/repositories/campus_cache.dart';
 import '../../data/services/html_text.dart';
 import '../core/campus_session.dart';
 import '../core/campus_web_screen.dart';
@@ -131,55 +130,22 @@ class IccuScreen extends StatefulWidget {
   State<IccuScreen> createState() => _IccuScreenState();
 }
 
-class _IccuScreenState extends State<IccuScreen> {
-  static const _cacheKey = 'iccu';
-  final _session = GlobalKey<CampusSessionState>();
-  _Snapshot? _snapshot;
-  DateTime? _savedAt;
-  String? _error;
-
+class _IccuScreenState extends State<IccuScreen> with CampusPageState {
   @override
-  void initState() {
-    super.initState();
-    // Selections change rarely: show the last read and fetch only when
-    // there is none or the user pulls to refresh.
-    CampusCache.read(_cacheKey).then((cached) {
-      if (!mounted) return;
-      if (cached == null) {
-        _session.currentState?.reload();
-      } else {
-        setState(() {
-          _snapshot = _Snapshot(cached.json);
-          _savedAt = cached.savedAt;
-        });
-      }
-    });
-  }
+  String get cacheKey => 'iccu';
 
-  Future<void> _received(Map<String, dynamic> json) async {
-    if (json['error'] != null) {
-      setState(() => _error = '${json['error']}');
-      return;
-    }
-    final savedAt = await CampusCache.write(_cacheKey, json);
-    if (!mounted) return;
-    setState(() {
-      _error = null;
-      _snapshot = _Snapshot(json);
-      _savedAt = savedAt;
-    });
-  }
+  // Selections change rarely: show the last read and fetch only when
+  // there is none or the user pulls to refresh.
+  @override
+  bool get readOnOpen => false;
 
-  Future<void> _reload() async {
-    setState(() => _error = null);
-    await _session.currentState?.reload();
-  }
+  _Snapshot? get _snapshot => this.json == null ? null : _Snapshot(this.json!);
 
   @override
   Widget build(BuildContext context) {
     final snapshot = _snapshot;
     return CampusSession(
-      key: _session,
+      key: session,
       title: context.l10n.courseSelection,
       entry: _entry,
       host: Uri.parse(_iccu).host,
@@ -188,17 +154,17 @@ class _IccuScreenState extends State<IccuScreen> {
         [_courses, _changes, _programs, ..._applications.keys],
         [..._seasonal.keys],
       ),
-      onMessage: _received,
-      child: _error != null
-          ? CampusError(message: _error!, onRetry: _reload)
+      onMessage: received,
+      child: error != null
+          ? CampusError(message: error!, onRetry: retry)
           : snapshot == null
           ? null
           : Builder(
               // Reads insets from inside the session's Scaffold.
               builder: (context) => _Hub(
                 snapshot: snapshot,
-                savedAt: _savedAt,
-                onRefresh: () async => _session.currentState?.refresh(),
+                savedAt: savedAt,
+                onRefresh: () async => session.currentState?.refresh(),
                 openWeb: (path, title) =>
                     openCampusPage(context, '$_iccu$path', title),
               ),
