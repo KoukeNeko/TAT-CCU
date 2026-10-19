@@ -22,7 +22,9 @@ class _LoginScreenState extends State<LoginScreen> {
   void initState() {
     super.initState();
     // With a saved password the sign-in runs by itself; once, so backing
-    // out or a failure leaves the button to the user.
+    // out or a failure leaves the button to the user. Not after the user
+    // signed out, or it would sign straight back in.
+    if (context.read<EcourseAuthRepository>().signedOutByUser) return;
     CasCredentials.read().then((login) {
       if (login != null && mounted && !_busy) _signIn();
     });

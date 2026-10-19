@@ -2,6 +2,7 @@ import 'dart:convert';
 
 import 'package:flutter/services.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'package:webview_flutter/webview_flutter.dart';
 
 /// Keeps the campus sign-in (portal, CAS, each system's session cookie and
 /// the library's Primo sign-in)
@@ -33,5 +34,12 @@ class CampusCookies {
     } on MissingPluginException {
       // Only iOS registers the channel.
     }
+  }
+
+  /// Signs out of every campus system: the WebViews' cookies and the
+  /// Keychain copy.
+  static Future<void> clear() async {
+    await WebViewCookieManager().clearCookies();
+    await _storage.delete(key: _key);
   }
 }

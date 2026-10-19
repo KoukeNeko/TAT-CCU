@@ -91,7 +91,7 @@ class _AccountScreenState extends State<AccountScreen> {
                         child: Text(context.l10n.verify),
                       ),
                       TextButton(
-                        onPressed: ecourse.signOut,
+                        onPressed: () => ecourse.signOut(byUser: true),
                         child: Text(context.l10n.signOut),
                       ),
                     ],

@@ -12,12 +12,19 @@ typedef CachedPage = ({Map<String, dynamic> json, DateTime savedAt});
 class CampusCache {
   const CampusCache._();
 
+  static Future<Directory> _dir() async =>
+      Directory('${(await getApplicationSupportDirectory()).path}/campus');
+
   static Future<File> _file(String key) async {
-    final dir = Directory(
-      '${(await getApplicationSupportDirectory()).path}/campus',
-    );
+    final dir = await _dir();
     await dir.create(recursive: true);
     return File('${dir.path}/$key.json');
+  }
+
+  /// Every page's last read, for signing out.
+  static Future<void> clear() async {
+    final dir = await _dir();
+    if (await dir.exists()) await dir.delete(recursive: true);
   }
 
   static Future<CachedPage?> read(String key) async {

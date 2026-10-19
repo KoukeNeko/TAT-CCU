@@ -5,8 +5,10 @@ import 'package:crypto/crypto.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
+import '../services/campus_cookies.dart';
 import '../services/moodle_client.dart';
 import '../services/response_cache.dart';
+import 'campus_cache.dart';
 
 /// eCourse2 site root; the mobile launch flow hashes it exactly as written.
 const eCourse2Url = 'https://ecourse2.ccu.edu.tw';
@@ -21,12 +23,18 @@ class EcourseAuthRepository extends ChangeNotifier {
     : _storage = storage ?? const FlutterSecureStorage();
 
   static const _tokenKey = 'ecourse2_token';
+  static const _signedOutKey = 'signed_out_by_user';
 
   final FlutterSecureStorage _storage;
   String? _token;
+  var _signedOutByUser = false;
 
   String? get token => _token;
   bool get isSignedIn => _token != null;
+
+  /// The user pressed 登出: no signing in by itself with a saved password
+  /// until the user signs in again.
+  bool get signedOutByUser => _signedOutByUser;
 
   MoodleClient client() => MoodleClient(
     siteUrl: Uri.parse('$eCourse2Url/'),
@@ -36,6 +44,7 @@ class EcourseAuthRepository extends ChangeNotifier {
 
   Future<void> load() async {
     _token = await _storage.read(key: _tokenKey);
+    _signedOutByUser = await _storage.read(key: _signedOutKey) != null;
     notifyListeners();
   }
 
@@ -63,7 +72,9 @@ class EcourseAuthRepository extends ChangeNotifier {
   Future<void> signInWithCallback(String callback, String passport) async {
     final token = parseLaunchCallback(callback, passport);
     await _storage.write(key: _tokenKey, value: token);
+    await _storage.delete(key: _signedOutKey);
     _token = token;
+    _signedOutByUser = false;
     notifyListeners();
   }
 
@@ -79,9 +90,16 @@ class EcourseAuthRepository extends ChangeNotifier {
     }
   }
 
-  Future<void> signOut() async {
+  /// [byUser] also ends the CAS and campus sessions, which otherwise sign
+  /// the next sign-in straight back in, and drops their cached pages.
+  Future<void> signOut({bool byUser = false}) async {
     await _storage.delete(key: _tokenKey);
     await ResponseCache.clear();
+    if (byUser) {
+      await _storage.write(key: _signedOutKey, value: '1');
+      await (CampusCookies.clear(), CampusCache.clear()).wait;
+      _signedOutByUser = true;
+    }
     _token = null;
     notifyListeners();
   }
