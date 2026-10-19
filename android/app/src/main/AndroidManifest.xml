@@ -4,6 +4,7 @@
         android:label="tat_ccu"
         android:name="${applicationName}"
         android:localeConfig="@xml/locales_config"
+        android:enableOnBackInvokedCallback="true"
         android:icon="@mipmap/ic_launcher">
         <activity
             android:name=".MainActivity"

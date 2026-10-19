@@ -366,3 +366,45 @@ class _TabSlot extends StatelessWidget {
     );
   }
 }
+
+/// Keeps every tab's navigator alive like an IndexedStack, but cross-fades
+/// the incoming tab in with a slight rise instead of cutting to it.
+class AnimatedBranches extends StatelessWidget {
+  const AnimatedBranches({
+    super.key,
+    required this.index,
+    required this.children,
+  });
+
+  final int index;
+  final List<Widget> children;
+
+  static const _duration = Duration(milliseconds: 260);
+
+  @override
+  Widget build(BuildContext context) {
+    return Stack(
+      fit: StackFit.expand,
+      children: [
+        for (final (i, child) in children.indexed)
+          IgnorePointer(
+            ignoring: i != index,
+            // The fade itself must keep ticking for the outgoing tab, or it
+            // freezes half-visible over the new one; only the tab's own
+            // content pauses.
+            child: AnimatedOpacity(
+              opacity: i == index ? 1 : 0,
+              duration: _duration,
+              curve: _settle,
+              child: AnimatedSlide(
+                offset: i == index ? Offset.zero : const Offset(0, 0.015),
+                duration: _duration,
+                curve: _settle,
+                child: TickerMode(enabled: i == index, child: child),
+              ),
+            ),
+          ),
+      ],
+    );
+  }
+}

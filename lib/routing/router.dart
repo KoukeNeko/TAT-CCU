@@ -29,8 +29,10 @@ GoRouter buildRouter(EcourseAuthRepository auth) => GoRouter(
   },
   routes: [
     GoRoute(path: '/login', builder: (_, _) => const LoginScreen()),
-    StatefulShellRoute.indexedStack(
+    StatefulShellRoute(
       builder: (_, _, shell) => AppShell(shell: shell),
+      navigatorContainerBuilder: (_, shell, children) =>
+          AnimatedBranches(index: shell.currentIndex, children: children),
       branches: [
         StatefulShellBranch(
           routes: [
