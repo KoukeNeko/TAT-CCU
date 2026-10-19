@@ -103,7 +103,7 @@ void openDueItem(BuildContext context, DueItem item) {
     Uri.tryParse(item.url ?? '')?.queryParameters['id'] ?? '',
   );
   if (cmid != null && moduleTypesWithPage.contains(item.module)) {
-    context.go('/courses/${item.courseId}/modules/$cmid');
+    context.push('/courses/${item.courseId}/modules/$cmid');
   } else if (item.url != null) {
     openExternal(item.url!);
   }

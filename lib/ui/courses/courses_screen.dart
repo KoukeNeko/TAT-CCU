@@ -86,7 +86,7 @@ class _CourseBlock extends StatelessWidget {
     return ToneBlock(
       tone: tone,
       padding: const EdgeInsets.all(14),
-      onTap: () => context.go('/courses/${course.id}'),
+      onTap: () => context.push('/courses/${course.id}'),
       child: Row(
         children: [
           CourseMark(courseId: course.id, size: 48),

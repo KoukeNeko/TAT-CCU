@@ -51,7 +51,7 @@ class _MoreScreenState extends State<MoreScreen> {
                   detail: snap.hasData
                       ? context.l10n.courseCount(snap.data!.length)
                       : null,
-                  onTap: () => context.go('/more/grades'),
+                  onTap: () => context.push('/more/grades'),
                 ),
               ),
             ),
@@ -65,7 +65,7 @@ class _MoreScreenState extends State<MoreScreen> {
                     tone: t.peach,
                     icon: Icons.apps,
                     title: context.l10n.allCampusSystems,
-                    onTap: () => context.go('/more/portal'),
+                    onTap: () => context.push('/more/portal'),
                   ),
                   if (favorites.isNotEmpty)
                     Padding(
@@ -126,7 +126,7 @@ class _AccountCard extends StatelessWidget {
       tone: tone,
       radius: 28,
       padding: const EdgeInsets.all(16),
-      onTap: () => context.go('/more/account'),
+      onTap: () => context.push('/more/account'),
       child: Column(
         children: [
           Row(

@@ -242,7 +242,7 @@ class _ClassBlock extends StatelessWidget {
     final height = (end - start) * 0.9 + 40;
     return ToneBlock(
       tone: tone,
-      onTap: () => context.go('/courses/${course.id}'),
+      onTap: () => context.push('/courses/${course.id}'),
       child: SizedBox(
         height: height,
         child: Row(

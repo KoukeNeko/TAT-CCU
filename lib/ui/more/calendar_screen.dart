@@ -443,7 +443,7 @@ class _DayEvents extends StatelessWidget {
                   radius: 22,
                   padding: const EdgeInsets.all(14),
                   onTap: e.cmid != null && e.courseId != 0
-                      ? () => context.go(
+                      ? () => context.push(
                           '/courses/${e.courseId}/modules/${e.cmid}',
                         )
                       : e.url == null

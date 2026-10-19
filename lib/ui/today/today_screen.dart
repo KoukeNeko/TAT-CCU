@@ -147,7 +147,7 @@ class _TodayScreenState extends State<TodayScreen> {
                         const SizedBox(width: 12),
                         _BellButton(
                           unread: d.notices + d.mail,
-                          onTap: () => context.go('/today/notifications'),
+                          onTap: () => context.push('/today/notifications'),
                         ),
                       ],
                     ),
@@ -187,7 +187,7 @@ class _TodayScreenState extends State<TodayScreen> {
                           ? null
                           : '${firstDue.name} ${weekdayName(context, firstDue.due.weekday)} '
                                 '${clock(firstDue.due.hour * 60 + firstDue.due.minute)}',
-                      onTap: () => context.go('/today/due'),
+                      onTap: () => context.push('/today/due'),
                     ),
                   ),
                   const SizedBox(width: 12),
@@ -197,7 +197,7 @@ class _TodayScreenState extends State<TodayScreen> {
                       value: '${d.notices + d.mail}',
                       label: l10n.unread,
                       detail: l10n.unreadDetail(d.notices, d.mail),
-                      onTap: () => context.go('/today/notifications'),
+                      onTap: () => context.push('/today/notifications'),
                     ),
                   ),
                 ],
@@ -231,7 +231,7 @@ class _Hero extends StatelessWidget {
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(36)),
       clipBehavior: Clip.antiAlias,
       child: InkWell(
-        onTap: () => context.go('/courses/${slot.course.id}'),
+        onTap: () => context.push('/courses/${slot.course.id}'),
         child: SizedBox(
           height: 226,
           child: Stack(
@@ -352,7 +352,7 @@ class _NextPill extends StatelessWidget {
       tone: context.tones.mint,
       radius: 999,
       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
-      onTap: () => context.go('/courses/${slot.course.id}'),
+      onTap: () => context.push('/courses/${slot.course.id}'),
       child: Row(
         children: [
           Text(context.l10n.nextClass, style: bold),

@@ -102,7 +102,7 @@ class CourseDetailScreen extends StatelessWidget {
                     tone: tones.sun,
                     value: '${summary.posts.length}',
                     label: context.l10n.announcementsUnit,
-                    onTap: () => context.go('$base/announcements'),
+                    onTap: () => context.push('$base/announcements'),
                   ),
                   const SizedBox(width: 8),
                   _Stat(
@@ -113,7 +113,7 @@ class CourseDetailScreen extends StatelessWidget {
                     ),
                     value: summary.total ?? '-',
                     label: context.l10n.currentGrade,
-                    onTap: () => context.go('$base/grades'),
+                    onTap: () => context.push('$base/grades'),
                   ),
                 ],
               ),
@@ -135,19 +135,19 @@ class CourseDetailScreen extends StatelessWidget {
                       icon: Icons.folder_outlined,
                       title: context.l10n.allSections,
                       detail: context.l10n.sectionCount(summary.sections),
-                      onTap: () => context.go('$base/contents'),
+                      onTap: () => context.push('$base/contents'),
                     ),
                     _Entry(
                       icon: Icons.campaign_outlined,
                       title: context.l10n.announcements,
                       detail: context.l10n.postCount(summary.posts.length),
-                      onTap: () => context.go('$base/announcements'),
+                      onTap: () => context.push('$base/announcements'),
                     ),
                     _Entry(
                       icon: Icons.grading_outlined,
                       title: context.l10n.grades,
                       detail: context.l10n.itemCount(summary.grades.length),
-                      onTap: () => context.go('$base/grades'),
+                      onTap: () => context.push('$base/grades'),
                     ),
                   ],
                 ),
@@ -664,7 +664,7 @@ class _ModuleRow extends StatelessWidget {
     final overdue = due != null && due.isBefore(DateTime.now());
     return InkWell(
       onTap: moduleTypesWithPage.contains(module.type)
-          ? () => context.go('/courses/$courseId/modules/${module.id}')
+          ? () => context.push('/courses/$courseId/modules/${module.id}')
           : module.url == null
           ? null
           : () => openExternal(module.url!),

@@ -38,7 +38,7 @@ class GradesScreen extends StatelessWidget {
               return ToneBlock(
                 tone: tone,
                 padding: const EdgeInsets.all(14),
-                onTap: () => context.go('/courses/${c.id}'),
+                onTap: () => context.push('/courses/${c.id}'),
                 child: Row(
                   children: [
                     Expanded(

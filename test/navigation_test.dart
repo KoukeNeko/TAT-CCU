@@ -53,4 +53,51 @@ void main() {
     expect(find.text('detail'), findsNothing);
     debugDefaultTargetPlatformOverride = null;
   });
+
+  testWidgets('back from a page opened in another tab returns to the opener', (
+    t,
+  ) async {
+    final router = GoRouter(
+      initialLocation: '/a',
+      routes: [
+        StatefulShellRoute(
+          builder: (_, _, shell) => Scaffold(body: shell),
+          navigatorContainerBuilder: (_, shell, children) =>
+              AnimatedBranches(index: shell.currentIndex, children: children),
+          branches: [
+            StatefulShellBranch(
+              routes: [
+                GoRoute(
+                  path: '/a',
+                  builder: (_, _) => const Scaffold(body: Text('today')),
+                ),
+              ],
+            ),
+            StatefulShellBranch(
+              routes: [
+                GoRoute(
+                  path: '/c',
+                  builder: (_, _) => const Scaffold(body: Text('courses')),
+                  routes: [
+                    GoRoute(
+                      path: 'd',
+                      builder: (_, _) => const Scaffold(body: Text('detail')),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ],
+        ),
+      ],
+    );
+    await t.pumpWidget(MaterialApp.router(routerConfig: router));
+    router.push('/c/d');
+    await t.pumpAndSettle();
+    expect(find.text('detail'), findsOneWidget);
+    router.pop();
+    await t.pumpAndSettle();
+    expect(find.text('today'), findsOneWidget);
+    expect(router.state.uri.path, '/a');
+  });
 }
