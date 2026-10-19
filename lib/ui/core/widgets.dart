@@ -3,6 +3,7 @@ import 'dart:ui' show ImageFilter;
 
 import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:flutter/services.dart';
 
 import 'theme.dart';
 import '../../l10n/l10n.dart';
@@ -216,24 +217,61 @@ AppBar subBar(
   ),
 );
 
-class RoundBackButton extends StatelessWidget {
+/// Round back button: sinks and darkens while pressed and ticks when it
+/// goes back, matching the nav bar's feel.
+class RoundBackButton extends StatefulWidget {
   const RoundBackButton({super.key, this.color, this.iconColor});
 
   final Color? color, iconColor;
 
   @override
+  @override
+  State<RoundBackButton> createState() => _RoundBackButtonState();
+}
+
+class _RoundBackButtonState extends State<RoundBackButton> {
+  var _pressed = false;
+
+  void _press(bool down) => setState(() => _pressed = down);
+
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
-    return Material(
-      color: color ?? scheme.surfaceContainer,
-      shape: const CircleBorder(),
-      child: InkWell(
-        customBorder: const CircleBorder(),
-        onTap: () => Navigator.of(context).maybePop(),
-        child: SizedBox(
-          width: 40,
-          height: 40,
-          child: Icon(Icons.chevron_left, color: iconColor ?? scheme.onSurface),
+    final fill = widget.color ?? scheme.surfaceContainer;
+    return Semantics(
+      button: true,
+      label: MaterialLocalizations.of(context).backButtonTooltip,
+      child: GestureDetector(
+        behavior: HitTestBehavior.opaque,
+        onTapDown: (_) => _press(true),
+        onTapCancel: () => _press(false),
+        onTapUp: (_) => _press(false),
+        onTap: () {
+          HapticFeedback.lightImpact();
+          Navigator.of(context).maybePop();
+        },
+        child: AnimatedScale(
+          scale: _pressed ? 0.86 : 1,
+          duration: const Duration(milliseconds: 240),
+          curve: Curves.easeOutQuart,
+          child: AnimatedContainer(
+            duration: const Duration(milliseconds: 240),
+            curve: Curves.easeOutQuart,
+            width: 40,
+            height: 40,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              color: _pressed
+                  ? Color.alphaBlend(
+                      scheme.onSurface.withValues(alpha: 0.12),
+                      fill,
+                    )
+                  : fill,
+            ),
+            child: Icon(
+              Icons.chevron_left,
+              color: widget.iconColor ?? scheme.onSurface,
+            ),
+          ),
         ),
       ),
     );
