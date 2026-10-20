@@ -2889,6 +2889,72 @@ abstract class AppLocalizations {
   /// In zh, this message translates to:
   /// **'{count} 筆'**
   String savedItems(int count);
+
+  /// No description provided for @onThisDevice.
+  ///
+  /// In zh, this message translates to:
+  /// **'這台裝置上'**
+  String get onThisDevice;
+
+  /// No description provided for @savedCourses.
+  ///
+  /// In zh, this message translates to:
+  /// **'課程與課表'**
+  String get savedCourses;
+
+  /// No description provided for @savedContents.
+  ///
+  /// In zh, this message translates to:
+  /// **'課程內容'**
+  String get savedContents;
+
+  /// No description provided for @savedWork.
+  ///
+  /// In zh, this message translates to:
+  /// **'作業與測驗'**
+  String get savedWork;
+
+  /// No description provided for @savedForums.
+  ///
+  /// In zh, this message translates to:
+  /// **'公告與討論'**
+  String get savedForums;
+
+  /// No description provided for @savedMessages.
+  ///
+  /// In zh, this message translates to:
+  /// **'通知與信件'**
+  String get savedMessages;
+
+  /// No description provided for @savedCalendar.
+  ///
+  /// In zh, this message translates to:
+  /// **'待辦與行事曆'**
+  String get savedCalendar;
+
+  /// No description provided for @savedOther.
+  ///
+  /// In zh, this message translates to:
+  /// **'其他'**
+  String get savedOther;
+
+  /// No description provided for @signedIn.
+  ///
+  /// In zh, this message translates to:
+  /// **'已登入'**
+  String get signedIn;
+
+  /// No description provided for @signInExpired.
+  ///
+  /// In zh, this message translates to:
+  /// **'登入已失效'**
+  String get signInExpired;
+
+  /// No description provided for @maintenance.
+  ///
+  /// In zh, this message translates to:
+  /// **'維護中'**
+  String get maintenance;
 }
 
 class _AppLocalizationsDelegate

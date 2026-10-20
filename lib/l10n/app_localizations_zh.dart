@@ -1607,4 +1607,37 @@ class AppLocalizationsZh extends AppLocalizations {
   String savedItems(int count) {
     return '$count 筆';
   }
+
+  @override
+  String get onThisDevice => '這台裝置上';
+
+  @override
+  String get savedCourses => '課程與課表';
+
+  @override
+  String get savedContents => '課程內容';
+
+  @override
+  String get savedWork => '作業與測驗';
+
+  @override
+  String get savedForums => '公告與討論';
+
+  @override
+  String get savedMessages => '通知與信件';
+
+  @override
+  String get savedCalendar => '待辦與行事曆';
+
+  @override
+  String get savedOther => '其他';
+
+  @override
+  String get signedIn => '已登入';
+
+  @override
+  String get signInExpired => '登入已失效';
+
+  @override
+  String get maintenance => '維護中';
 }

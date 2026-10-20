@@ -46,6 +46,8 @@ typedef _Detail = ({
 class AcademicScreen extends StatefulWidget {
   const AcademicScreen({super.key});
 
+  static const cacheKey = 'academic';
+
   @override
   State<AcademicScreen> createState() => _AcademicScreenState();
 }
@@ -65,15 +67,13 @@ class _AcademicScreenState extends State<AcademicScreen> {
   var _signedIn = false;
   var _printWhenSignedIn = false;
 
-  static const _cacheKey = 'academic';
-
   @override
   void initState() {
     super.initState();
     _refreshList();
     // The record rarely changes: show the last read and fetch only when
     // there is none or the user pulls to refresh.
-    CampusCache.read(_cacheKey).then((cached) {
+    CampusCache.read(AcademicScreen.cacheKey).then((cached) {
       if (!mounted) return;
       if (cached == null) {
         _session.currentState?.reload();
@@ -129,7 +129,7 @@ class _AcademicScreenState extends State<AcademicScreen> {
     switch (json['kind']) {
       case 'detail':
         _signedIn = true;
-        final savedAt = await CampusCache.write(_cacheKey, json);
+        final savedAt = await CampusCache.write(AcademicScreen.cacheKey, json);
         if (!mounted) return;
         setState(() {
           _detail = _detailOf(json);

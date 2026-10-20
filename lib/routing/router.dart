@@ -27,6 +27,7 @@ import '../data/services/events_data.dart';
 import '../ui/more/events_screen.dart';
 import '../ui/more/parttime_screen.dart';
 import '../ui/more/payment_screen.dart';
+import '../ui/more/saved_data_screen.dart';
 import '../ui/more/settings_screen.dart';
 import '../ui/more/space_screen.dart';
 import '../ui/more/design_language_screen.dart';
@@ -234,6 +235,12 @@ GoRouter buildRouter(EcourseAuthRepository auth) => GoRouter(
                 GoRoute(
                   path: 'settings',
                   builder: (_, _) => const SettingsScreen(),
+                  routes: [
+                    GoRoute(
+                      path: 'saved',
+                      builder: (_, _) => const SavedDataScreen(),
+                    ),
+                  ],
                 ),
                 GoRoute(
                   path: 'design',

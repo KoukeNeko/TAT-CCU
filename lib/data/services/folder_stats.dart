@@ -1,22 +1,33 @@
 import 'dart:io';
 
-/// How much a cache folder holds, for the settings page.
+/// One saved file, named without its extension, for the settings pages.
+typedef SavedFile = ({String name, int bytes, DateTime modified});
+
 typedef FolderStats = ({int files, int bytes, DateTime? latest});
 
 /// Every file under [dir]; empty when the folder does not exist.
-Future<FolderStats> folderStats(Directory dir) async {
-  var files = 0, bytes = 0;
-  DateTime? latest;
-  if (await dir.exists()) {
-    await for (final entity in dir.list(recursive: true)) {
-      if (entity is! File) continue;
-      final stat = await entity.stat();
-      files++;
-      bytes += stat.size;
-      if (latest == null || stat.modified.isAfter(latest)) {
-        latest = stat.modified;
-      }
-    }
-  }
-  return (files: files, bytes: bytes, latest: latest);
+Future<List<SavedFile>> savedFiles(Directory dir) async {
+  if (!await dir.exists()) return [];
+  return [
+    await for (final entity in dir.list(recursive: true))
+      if (entity is File)
+        await entity.stat().then(
+          (stat) => (
+            name: entity.uri.pathSegments.last.replaceFirst(
+              RegExp(r'\.json$'),
+              '',
+            ),
+            bytes: stat.size,
+            modified: stat.modified,
+          ),
+        ),
+  ];
 }
+
+FolderStats summarize(Iterable<SavedFile> files) => (
+  files: files.length,
+  bytes: files.fold(0, (sum, f) => sum + f.bytes),
+  latest: files
+      .map((f) => f.modified)
+      .fold<DateTime?>(null, (a, b) => a == null || b.isAfter(a) ? b : a),
+);

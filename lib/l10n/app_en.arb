@@ -465,5 +465,16 @@
   "ecourseBack": "eCourse2 is back",
   "savedData": "Saved data",
   "campusSystems": "Campus systems",
-  "savedItems": "{count} items"
+  "savedItems": "{count} items",
+  "onThisDevice": "On this device",
+  "savedCourses": "Courses and timetable",
+  "savedContents": "Course content",
+  "savedWork": "Assignments and quizzes",
+  "savedForums": "Announcements and forums",
+  "savedMessages": "Notifications and mail",
+  "savedCalendar": "To-do and calendar",
+  "savedOther": "Other",
+  "signedIn": "Signed in",
+  "signInExpired": "Sign-in expired",
+  "maintenance": "Maintenance"
 }

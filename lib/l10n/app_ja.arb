@@ -465,5 +465,16 @@
   "ecourseBack": "eCourse2 が復旧しました",
   "savedData": "保存データ",
   "campusSystems": "学内システム",
-  "savedItems": "{count} 件"
+  "savedItems": "{count} 件",
+  "onThisDevice": "この端末",
+  "savedCourses": "授業と時間割",
+  "savedContents": "授業内容",
+  "savedWork": "課題と小テスト",
+  "savedForums": "お知らせと掲示板",
+  "savedMessages": "通知とメール",
+  "savedCalendar": "ToDo とカレンダー",
+  "savedOther": "その他",
+  "signedIn": "ログイン中",
+  "signInExpired": "ログイン期限切れ",
+  "maintenance": "メンテナンス中"
 }

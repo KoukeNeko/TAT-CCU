@@ -882,5 +882,16 @@
   "savedData": "已存資料",
   "campusSystems": "校務系統",
   "savedItems": "{count} 筆",
-  "@savedItems": {"placeholders": {"count": {"type": "int"}}}
+  "@savedItems": {"placeholders": {"count": {"type": "int"}}},
+  "onThisDevice": "這台裝置上",
+  "savedCourses": "課程與課表",
+  "savedContents": "課程內容",
+  "savedWork": "作業與測驗",
+  "savedForums": "公告與討論",
+  "savedMessages": "通知與信件",
+  "savedCalendar": "待辦與行事曆",
+  "savedOther": "其他",
+  "signedIn": "已登入",
+  "signInExpired": "登入已失效",
+  "maintenance": "維護中"
 }

@@ -1709,4 +1709,37 @@ class AppLocalizationsEn extends AppLocalizations {
   String savedItems(int count) {
     return '$count items';
   }
+
+  @override
+  String get onThisDevice => 'On this device';
+
+  @override
+  String get savedCourses => 'Courses and timetable';
+
+  @override
+  String get savedContents => 'Course content';
+
+  @override
+  String get savedWork => 'Assignments and quizzes';
+
+  @override
+  String get savedForums => 'Announcements and forums';
+
+  @override
+  String get savedMessages => 'Notifications and mail';
+
+  @override
+  String get savedCalendar => 'To-do and calendar';
+
+  @override
+  String get savedOther => 'Other';
+
+  @override
+  String get signedIn => 'Signed in';
+
+  @override
+  String get signInExpired => 'Sign-in expired';
+
+  @override
+  String get maintenance => 'Maintenance';
 }

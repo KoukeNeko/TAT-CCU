@@ -5,6 +5,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:http/http.dart' as http;
 import 'package:http/testing.dart';
 import 'package:tat_ccu/data/repositories/ecourse_repository.dart';
+import 'package:tat_ccu/data/services/folder_stats.dart';
 import 'package:tat_ccu/data/services/moodle_client.dart';
 import 'package:tat_ccu/data/services/response_cache.dart';
 
@@ -134,5 +135,27 @@ void main() {
         isTrue,
       ),
     );
+  });
+
+  test('saved answers are named by function and add up', () async {
+    final dir = await Directory.systemTemp.createTemp('cache');
+    addTearDown(() => dir.delete(recursive: true));
+    final cache = ResponseCache('t', dir: dir);
+    final key = ResponseCache.keyOf('mod_forum_get_forum_discussions', {
+      'forumid': '3',
+    });
+    await cache.write(key, [1, 2, 3]);
+    await cache.write(ResponseCache.keyOf('local_mail_get_index', {}), {});
+    expect(await cache.read(key), [1, 2, 3]);
+
+    final files = await savedFiles(dir);
+    expect(files.map((f) => ResponseCache.functionOf(f.name)).toSet(), {
+      'mod_forum_get_forum_discussions',
+      'local_mail_get_index',
+    });
+    expect(ResponseCache.functionOf('0a1b2c'), isNull);
+    final stats = summarize(files);
+    expect((stats.files, stats.bytes), (2, '[1,2,3]'.length + '{}'.length));
+    expect(stats.latest, isNotNull);
   });
 }

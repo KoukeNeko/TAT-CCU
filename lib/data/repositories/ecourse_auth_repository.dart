@@ -55,6 +55,9 @@ class EcourseAuthRepository extends ChangeNotifier {
   /// Signed in to eCourse2, or using the demo account.
   bool get isSignedIn => _demo || _token != null;
 
+  /// The sign-in expired by itself; its saved answers are still shown.
+  bool get signInExpired => !_demo && _token == null && _expiredToken != null;
+
   /// The demo account: every screen shows made-up data, nothing is read
   /// from or sent to the school, and its saved pages are kept apart. The
   /// real sign-in stays as it was, to switch back to.

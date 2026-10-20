@@ -1596,4 +1596,37 @@ class AppLocalizationsJa extends AppLocalizations {
   String savedItems(int count) {
     return '$count 件';
   }
+
+  @override
+  String get onThisDevice => 'この端末';
+
+  @override
+  String get savedCourses => '授業と時間割';
+
+  @override
+  String get savedContents => '授業内容';
+
+  @override
+  String get savedWork => '課題と小テスト';
+
+  @override
+  String get savedForums => 'お知らせと掲示板';
+
+  @override
+  String get savedMessages => '通知とメール';
+
+  @override
+  String get savedCalendar => 'ToDo とカレンダー';
+
+  @override
+  String get savedOther => 'その他';
+
+  @override
+  String get signedIn => 'ログイン中';
+
+  @override
+  String get signInExpired => 'ログイン期限切れ';
+
+  @override
+  String get maintenance => 'メンテナンス中';
 }

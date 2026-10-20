@@ -25,12 +25,18 @@ class ResponseCache {
       Directory('${(await getApplicationSupportDirectory()).path}/ecourse');
 
   /// One file per function and parameters; the token is not part of it.
+  /// Named after the function too, so the settings can say what is saved.
   static String keyOf(String function, Map<String, String> params) {
     final sorted = Map.fromEntries(
       params.entries.toList()..sort((a, b) => a.key.compareTo(b.key)),
     );
-    return _hash('$function ${jsonEncode(sorted)}');
+    return '$function-${_hash('$function ${jsonEncode(sorted)}')}';
   }
+
+  /// The function a saved file answers, from its [keyOf] name; null for
+  /// files saved before names carried it.
+  static String? functionOf(String name) =>
+      name.contains('-') ? name.split('-').first : null;
 
   Future<File> _file(String key) async {
     final dir = Directory('${(_dir ?? await _root()).path}/$_account');
@@ -48,8 +54,8 @@ class ResponseCache {
   Future<void> write(String key, Object? value) async =>
       (await _file(key)).writeAsString(jsonEncode(value));
 
-  /// Every account's answers, for the settings page.
-  static Future<FolderStats> stats() async => folderStats(await _root());
+  /// Every account's answers, for the settings pages.
+  static Future<List<SavedFile>> files() async => savedFiles(await _root());
 
   /// Removes every account's answers.
   static Future<void> clear() async {

@@ -28,8 +28,9 @@ class CampusCache {
     return File('${dir.path}/$key.json');
   }
 
-  /// The current account's pages, for the settings page.
-  static Future<FolderStats> stats() async => folderStats(await _dir());
+  /// The current account's pages, named by their keys, for the settings
+  /// pages.
+  static Future<List<SavedFile>> files() async => savedFiles(await _dir());
 
   /// Every page's last read, for signing out.
   static Future<void> clear() async {

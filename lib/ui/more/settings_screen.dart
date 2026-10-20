@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 
 import '../../data/repositories/ecourse_auth_repository.dart';
@@ -353,7 +354,8 @@ class _Notifications extends StatelessWidget {
   }
 }
 
-/// How much each cache holds on the device, read once when the page opens.
+/// How much each cache holds on the device, read once when the page opens;
+/// either row opens the details.
 class _SavedData extends StatefulWidget {
   const _SavedData();
 
@@ -362,7 +364,10 @@ class _SavedData extends StatefulWidget {
 }
 
 class _SavedDataState extends State<_SavedData> {
-  final _stats = (ResponseCache.stats(), CampusCache.stats()).wait;
+  final _stats = (
+    ResponseCache.files().then(summarize),
+    CampusCache.files().then(summarize),
+  ).wait;
 
   @override
   Widget build(BuildContext context) {
@@ -394,6 +399,8 @@ class _SavedDataState extends State<_SavedData> {
                     style: const TextStyle(fontWeight: FontWeight.w800),
                   ),
                   subtitle: Text(s == null ? '' : describe(s)),
+                  trailing: const Icon(Icons.chevron_right),
+                  onTap: () => context.push('/more/settings/saved'),
                 ),
             ],
           );
