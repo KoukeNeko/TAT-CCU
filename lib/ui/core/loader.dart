@@ -58,7 +58,10 @@ class _LoaderState<T> extends State<Loader<T>> {
   var _back = false;
   Timer? _backTimer;
 
-  bool get _capsule => _maintenance || _back;
+  /// Asking eCourse2 while something is already shown.
+  var _loading = false;
+
+  bool get _capsule => _maintenance || _back || _hasData && _loading;
 
   @override
   void initState() {
@@ -96,7 +99,9 @@ class _LoaderState<T> extends State<Loader<T>> {
   Future<void> _start() {
     _sub?.cancel();
     final done = Completer<void>();
+    if (mounted) setState(() => _loading = true);
     void finish() {
+      if (mounted) setState(() => _loading = false);
       if (!done.isCompleted) done.complete();
     }
 
@@ -191,10 +196,23 @@ class _LoaderState<T> extends State<Loader<T>> {
         RefreshIndicator(
           // Bodies extend under the glass app bar; start the spinner below it.
           edgeOffset: MediaQuery.paddingOf(context).top,
-          onRefresh: _start,
+          // The capsule shows the progress, as on the campus pages.
+          onRefresh: () async => unawaited(_start()),
           child: widget.builder(context, _data as T),
         ),
-        CapsuleSlot(capsule: capsule ? MaintenanceCapsule(back: _back) : null),
+        CapsuleSlot(
+          capsule: !capsule
+              ? null
+              : _maintenance || _back
+              ? MaintenanceCapsule(back: _back)
+              : StatusCapsule(
+                  leading: MorphingCookie(
+                    size: 26,
+                    color: context.tones.lilac.strong,
+                  ),
+                  text: context.l10n.campusReading,
+                ),
+        ),
       ],
     );
   }

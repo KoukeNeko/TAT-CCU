@@ -126,7 +126,14 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
         // Reads insets from inside the session's Scaffold.
         builder: (context) => Stack(
           children: [
-            Positioned.fill(child: _body(context)),
+            Positioned.fill(
+              child: RefreshIndicator(
+                // Below the glass app bar, which the body extends under.
+                edgeOffset: MediaQuery.paddingOf(context).top,
+                onRefresh: () async => _session.currentState?.refresh(),
+                child: _body(context),
+              ),
+            ),
             Positioned(
               left: pageMargin,
               right: pageMargin,

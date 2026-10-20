@@ -7,6 +7,7 @@ import 'package:provider/provider.dart';
 
 import '../../data/repositories/ecourse_repository.dart';
 import '../../data/services/school_calendar.dart';
+import '../core/status_capsule.dart';
 import '../core/theme.dart';
 import '../core/widgets.dart';
 import '../../l10n/l10n.dart';
@@ -77,6 +78,9 @@ class _CalendarScreenState extends State<CalendarScreen> {
   final _errors = <int, Object>{};
   final _loads = <int, StreamSubscription<List<CalendarEvent>>>{};
 
+  /// Months still waiting for eCourse2's answer.
+  final _pending = <int>{};
+
   @override
   void initState() {
     super.initState();
@@ -92,12 +96,14 @@ class _CalendarScreenState extends State<CalendarScreen> {
     super.dispose();
   }
 
-  /// Loads [page] and the months beside it, once each; a failed month is
-  /// dropped so coming back to it tries again.
-  void _load(int page) {
+  /// Loads [page] and the months beside it, once each unless [again]; a
+  /// failed month is dropped so coming back to it tries again.
+  void _load(int page, {bool again = false}) {
     final repo = context.read<EcourseRepository>();
     for (final p in [page, page - 1, page + 1]) {
-      if (_loads.containsKey(p)) continue;
+      if (_loads.containsKey(p) && !(again && p == page)) continue;
+      _loads.remove(p)?.cancel();
+      setState(() => _pending.add(p));
       _loads[p] = repo
           .watch((r) => r.monthEvents(_monthOf(p)))
           .listen(
@@ -110,8 +116,14 @@ class _CalendarScreenState extends State<CalendarScreen> {
             },
             onError: (Object e) {
               if (!mounted) return;
-              setState(() => _errors[p] = e);
+              setState(() {
+                _errors[p] = e;
+                _pending.remove(p);
+              });
               _loads.remove(p);
+            },
+            onDone: () {
+              if (mounted) setState(() => _pending.remove(p));
             },
           );
     }
@@ -163,59 +175,79 @@ class _CalendarScreenState extends State<CalendarScreen> {
         ],
       ),
       body: Builder(
-        builder: (context) => ListView(
-          padding: scrollPadding(context),
+        builder: (context) => Stack(
           children: [
-            Card(
-              color: scheme.surfaceContainerLow,
-              child: Padding(
-                padding: const EdgeInsets.fromLTRB(8, 10, 8, 8),
-                child: Column(
-                  children: [
-                    Row(
-                      children: [
-                        for (var d = 1; d <= 7; d++)
-                          Expanded(
-                            child: Text(
-                              weekdayShort(context, d),
-                              textAlign: TextAlign.center,
-                              style: TextStyle(
-                                fontSize: 11,
-                                fontWeight: FontWeight.w800,
-                                color: scheme.onSurfaceVariant,
+            RefreshIndicator(
+              edgeOffset: MediaQuery.paddingOf(context).top,
+              // The capsule shows the progress, as on the other pages.
+              onRefresh: () async => _load(_page, again: true),
+              child: ListView(
+                padding: scrollPadding(context),
+                children: [
+                  Card(
+                    color: scheme.surfaceContainerLow,
+                    child: Padding(
+                      padding: const EdgeInsets.fromLTRB(8, 10, 8, 8),
+                      child: Column(
+                        children: [
+                          Row(
+                            children: [
+                              for (var d = 1; d <= 7; d++)
+                                Expanded(
+                                  child: Text(
+                                    weekdayShort(context, d),
+                                    textAlign: TextAlign.center,
+                                    style: TextStyle(
+                                      fontSize: 11,
+                                      fontWeight: FontWeight.w800,
+                                      color: scheme.onSurfaceVariant,
+                                    ),
+                                  ),
+                                ),
+                            ],
+                          ),
+                          const SizedBox(height: 4),
+                          SizedBox(
+                            height: _rowHeight * 6,
+                            child: PageView.builder(
+                              controller: _pages,
+                              onPageChanged: (p) {
+                                setState(() => _page = p);
+                                _load(p);
+                              },
+                              itemBuilder: (context, page) => _MonthGrid(
+                                month: _monthOf(page),
+                                today: _today,
+                                selected: _selected,
+                                events: _months[page] ?? const [],
+                                onTap: _select,
                               ),
                             ),
                           ),
-                      ],
-                    ),
-                    const SizedBox(height: 4),
-                    SizedBox(
-                      height: _rowHeight * 6,
-                      child: PageView.builder(
-                        controller: _pages,
-                        onPageChanged: (p) {
-                          setState(() => _page = p);
-                          _load(p);
-                        },
-                        itemBuilder: (context, page) => _MonthGrid(
-                          month: _monthOf(page),
-                          today: _today,
-                          selected: _selected,
-                          events: _months[page] ?? const [],
-                          onTap: _select,
-                        ),
+                        ],
                       ),
                     ),
-                  ],
-                ),
+                  ),
+                  _Legend(month: month, events: _months[_page] ?? const []),
+                  _DayEvents(
+                    key: ValueKey(_selected),
+                    day: _selected,
+                    events: _months[_pageOf(_selected)],
+                    error: _errors[_pageOf(_selected)],
+                  ),
+                ],
               ),
             ),
-            _Legend(month: month, events: _months[_page] ?? const []),
-            _DayEvents(
-              key: ValueKey(_selected),
-              day: _selected,
-              events: _months[_pageOf(_selected)],
-              error: _errors[_pageOf(_selected)],
+            CapsuleSlot(
+              capsule: _pending.contains(_page) && _months.containsKey(_page)
+                  ? StatusCapsule(
+                      leading: MorphingCookie(
+                        size: 26,
+                        color: context.tones.lilac.strong,
+                      ),
+                      text: context.l10n.campusReading,
+                    )
+                  : null,
             ),
           ],
         ),
