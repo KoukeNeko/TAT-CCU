@@ -28,9 +28,13 @@ void main() {
     expect((r.focus, r.after), (morning, null));
   });
 
-  test('between classes the next one leads; after the last, none', () {
+  test('between classes the next one leads', () {
     expect(dayFocus(slots, today: true, minute: 785).focus, afternoon);
-    expect(dayFocus(slots, today: true, minute: 1000).focus, isNull);
+  });
+
+  test('after the last class: the day reads like any other', () {
+    final r = dayFocus(slots, today: true, minute: 1000);
+    expect((r.focus, r.after), (morning, null));
   });
 
   test('another day: the first class, alone', () {

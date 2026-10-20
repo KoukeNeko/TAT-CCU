@@ -171,9 +171,12 @@ typedef DaySlot = ({Course course, ClassSession session});
   required bool today,
   required int minute,
 }) {
-  if (!today) return (focus: slots.firstOrNull, after: null);
-  final focus = slots.where((s) => s.session.end > minute).firstOrNull;
-  final inClass = focus != null && focus.session.start <= minute;
+  final focus = today
+      ? slots.where((s) => s.session.end > minute).firstOrNull
+      : null;
+  // Another day, or today once its classes are over: the first class.
+  if (focus == null) return (focus: slots.firstOrNull, after: null);
+  final inClass = focus.session.start <= minute;
   return (
     focus: focus,
     after: inClass
@@ -210,8 +213,10 @@ class _DayView extends StatelessWidget {
         for (final s in c.sessions)
           if (s.weekday == day) (course: c, session: s),
     ]..sort((a, b) => a.session.start.compareTo(b.session.start));
-    final today = day == now.weekday;
     final minute = now.hour * 60 + now.minute;
+    // Once today's classes are over it reads like any other day.
+    final today =
+        day == now.weekday && slots.any((s) => s.session.end > minute);
     final (:focus, :after) = dayFocus(slots, today: today, minute: minute);
     return ListView(
       padding: scrollPadding(context),
