@@ -22,8 +22,7 @@ const callbackScheme = 'tatccu';
 /// docs/登入狀態設計.md.
 class EcourseAuthRepository extends ChangeNotifier {
   EcourseAuthRepository({FlutterSecureStorage? storage})
-    : _storage = storage ?? _keychain,
-      _migrate = storage == null;
+    : _storage = storage ?? _keychain;
 
   /// Readable after the first unlock, so the background check for new
   /// notices works while the phone is locked.
@@ -43,7 +42,6 @@ class EcourseAuthRepository extends ChangeNotifier {
   static const _expiredTokenKey = 'ecourse2_expired_token';
 
   final FlutterSecureStorage _storage;
-  final bool _migrate;
   String? _token;
   String? _expiredToken;
   var _signedOutByUser = false;
@@ -101,16 +99,6 @@ class EcourseAuthRepository extends ChangeNotifier {
   }
 
   Future<void> load() async {
-    if (_migrate) {
-      // Saved before with access only while unlocked: move them over.
-      const legacy = FlutterSecureStorage();
-      for (final key in [_tokenKey, _signedOutKey]) {
-        if (await legacy.read(key: key) case final value?) {
-          await _storage.write(key: key, value: value);
-          await legacy.delete(key: key);
-        }
-      }
-    }
     _token = await _storage.read(key: _tokenKey);
     _expiredToken = await _storage.read(key: _expiredTokenKey);
     _signedOutByUser = await _storage.read(key: _signedOutKey) != null;
