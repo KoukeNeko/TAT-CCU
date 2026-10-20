@@ -1,11 +1,14 @@
 import 'package:flutter/widgets.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:tat_ccu/data/services/school_calendar.dart';
 import 'package:tat_ccu/domain/models/course.dart';
 import 'package:tat_ccu/domain/models/timetable.dart';
 import 'package:tat_ccu/l10n/app_localizations.dart';
 import 'package:tat_ccu/ui/home_widgets/home_widgets.dart';
 
-void main() {
+Future<void> main() async {
+  TestWidgetsFlutterBinding.ensureInitialized();
+  await loadSchoolCalendar();
   final zh = lookupAppLocalizations(const Locale('zh'));
   // 2026-10-20 is a Tuesday, during a 10:15–12:05 class.
   final now = DateTime(2026, 10, 20, 10, 42);

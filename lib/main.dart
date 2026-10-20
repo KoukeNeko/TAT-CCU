@@ -13,6 +13,7 @@ import 'data/repositories/more_tiles_prefs.dart';
 import 'data/services/campus_cookies.dart';
 import 'data/services/reminders.dart';
 import 'l10n/l10n.dart';
+import 'data/services/school_calendar.dart';
 import 'routing/router.dart';
 import 'ui/home_widgets/home_widgets.dart';
 import 'ui/core/theme.dart';
@@ -49,6 +50,7 @@ Future<void> main() async {
     CampusCookies.restore(),
     Reminders.init(),
   ).wait;
+    loadSchoolCalendar(),
   // iOS may end a backgrounded app without notice, so save on the way out.
   AppLifecycleListener(
     onHide: CampusCookies.save,
@@ -192,7 +194,12 @@ void backgroundTask() {
     WidgetsFlutterBinding.ensureInitialized();
     final settings = AppSettings();
     final auth = EcourseAuthRepository();
-    await (settings.load(), auth.load(), Reminders.init()).wait;
+    await (
+      settings.load(),
+      auth.load(),
+      Reminders.init(),
+      loadSchoolCalendar(),
+    ).wait;
     await _updateWidgets(auth, settings);
     if (!auth.isSignedIn || auth.isDemo) return true;
     final repo = EcourseRepository(auth.client());

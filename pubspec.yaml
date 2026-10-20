@@ -36,6 +36,8 @@ dev_dependencies:
 flutter:
   uses-material-design: true
   generate: true
+  assets:
+    - assets/school_calendar.txt
 
   # LINE Seed (SIL OFL 1.1; licenses in assets/fonts). Thin is left out to
   # keep the app smaller; w900 falls back to ExtraBold.

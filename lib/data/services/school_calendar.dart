@@ -1,56 +1,66 @@
-/// Key dates from CCU's 115 academic year calendar
-/// (https://www.ccu.edu.tw/var/file/0/1000/img/570/332785444.pdf, listed on
-/// https://www.ccu.edu.tw/p/412-1000-1078.php). Only what a student counts
-/// down to: classes, exams, add/drop and withdrawal deadlines, days off.
-// shortcut: typed in by hand once a year; add the next year's PDF when the
-// school publishes it.
+/// CCU's academic calendar (校務行事曆), kept in assets/school_calendar.txt
+/// so a new year is copied in from the school's PDF rather than written as
+/// code; the file's header explains the format.
 library;
+
+import 'package:flutter/services.dart';
 
 typedef SchoolDate = ({DateTime start, DateTime? end, String title});
 
-SchoolDate _d(int y, int m, int d, String title, [DateTime? end]) =>
-    (start: DateTime(y, m, d), end: end, title: title);
+typedef SchoolCalendar = ({
+  List<SchoolDate> dates,
+  List<({DateTime start, DateTime end})> terms,
+});
 
-final schoolCalendar = <SchoolDate>[
-  _d(2026, 9, 7, '第 1 學期上課開始'),
-  _d(2026, 9, 7, '加退選（第二階段）', DateTime(2026, 9, 18)),
-  _d(2026, 9, 25, '中秋節'),
-  _d(2026, 9, 28, '孔子誕辰紀念日'),
-  _d(2026, 10, 9, '國慶日補假'),
-  _d(2026, 10, 16, '休學退費達 1/3 基準日'),
-  _d(2026, 10, 26, '臺灣光復節補假'),
-  _d(2026, 11, 2, '期中考試週', DateTime(2026, 11, 8)),
-  _d(2026, 11, 7, '校慶運動會'),
-  _d(2026, 11, 9, '科目棄選開始'),
-  _d(2026, 11, 27, '休學退費達 2/3 基準日'),
-  _d(2026, 12, 7, '科目棄選截止'),
-  _d(2026, 12, 25, '行憲紀念日'),
-  _d(2026, 12, 31, '第 1 學期上課最後一天'),
-  _d(2027, 1, 1, '中華民國開國紀念日'),
-  _d(2027, 1, 2, '期末考試', DateTime(2027, 1, 8)),
-  _d(2027, 1, 31, '第 1 學期結束'),
-  _d(2027, 2, 22, '第 2 學期上課開始'),
-  _d(2027, 2, 22, '加退選（第二階段）', DateTime(2027, 3, 5)),
-  _d(2027, 3, 1, '和平紀念日補假'),
-  _d(2027, 4, 2, '補運動會活動未放假'),
-  _d(2027, 4, 5, '兒童節、民族掃墓節', DateTime(2027, 4, 6)),
-  _d(2027, 4, 7, '校際活動（停課）', DateTime(2027, 4, 8)),
-  _d(2027, 4, 12, '期中考試週', DateTime(2027, 4, 18)),
-  _d(2027, 4, 19, '科目棄選開始'),
-  _d(2027, 4, 30, '勞動節補假'),
-  _d(2027, 5, 24, '科目棄選截止'),
-  _d(2027, 6, 5, '畢業典禮'),
-  _d(2027, 6, 9, '端午節'),
-  _d(2027, 6, 18, '第 2 學期上課最後一天'),
-  _d(2027, 6, 21, '期末考試', DateTime(2027, 6, 27)),
-  _d(2027, 7, 31, '第 2 學期結束'),
-];
+/// Parses [source] in the format of assets/school_calendar.txt, dates
+/// sorted.
+/// Throws a [FormatException] naming the first line it cannot read.
+SchoolCalendar parseSchoolCalendar(String source) {
+  final dates = <SchoolDate>[];
+  final terms = <({DateTime start, DateTime end})>[];
+  final line = RegExp(
+    r'^(學期 )?(\d{4}-\d{2}-\d{2})(?:~(\d{4}-\d{2}-\d{2}))?(?: (.+))?$',
+  );
+  for (final raw in source.split('\n')) {
+    final text = raw.split('#').first.trim();
+    if (text.isEmpty) continue;
+    final m = line.firstMatch(text);
+    final start = DateTime.tryParse(m?[2] ?? '');
+    final end = m?[3] == null ? null : DateTime.tryParse(m![3]!);
+    final term = m?[1] != null;
+    if (m == null ||
+        start == null ||
+        (m[3] != null && (end == null || end.isBefore(start))) ||
+        (term ? end == null || m[4] != null : m[4] == null)) {
+      throw FormatException('school calendar: $raw');
+    }
+    if (term) {
+      terms.add((start: start, end: end!));
+    } else {
+      dates.add((start: start, end: end, title: m[4]!.trim()));
+    }
+  }
+  dates.sort((a, b) => a.start.compareTo(b.start));
+  terms.sort((a, b) => a.start.compareTo(b.start));
+  return (dates: dates, terms: terms);
+}
+
+/// Asset holding the calendar.
+const schoolCalendarAsset = 'assets/school_calendar.txt';
+
+late SchoolCalendar _calendar;
+
+/// Reads the calendar; before anything uses it, in each isolate.
+Future<void> loadSchoolCalendar() async {
+  _calendar = parseSchoolCalendar(
+    await rootBundle.loadString(schoolCalendarAsset),
+  );
+}
+
+List<SchoolDate> get schoolCalendar => _calendar.dates;
 
 /// Semester spans, for how far along the term is.
-final schoolTerms = <({DateTime start, DateTime end})>[
-  (start: DateTime(2026, 9, 7), end: DateTime(2027, 1, 8)),
-  (start: DateTime(2027, 2, 22), end: DateTime(2027, 6, 27)),
-];
+List<({DateTime start, DateTime end})> get schoolTerms => _calendar.terms;
 
 /// The next calendar date still to come, counting one in progress.
 SchoolDate? nextSchoolDate(DateTime now) {
