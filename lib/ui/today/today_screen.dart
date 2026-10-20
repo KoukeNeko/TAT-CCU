@@ -9,6 +9,7 @@ import '../../domain/models/course.dart';
 import '../../domain/models/timetable.dart';
 import '../core/theme.dart';
 import '../core/widgets.dart';
+import '../courses/attendance_scan_screen.dart';
 import '../notifications/notifications_screen.dart';
 import 'due_screen.dart';
 import '../../l10n/l10n.dart';
@@ -186,6 +187,9 @@ class _TodayScreenState extends State<TodayScreen> {
                   detail: l10n.untilTime(clock(current.session.end)),
                   minutes: current.session.end - minute,
                   later: false,
+                  // shortcut: shown in every class, whether or not the course
+                  // takes attendance; check its modules if that gets noisy.
+                  onAttendance: () => scanAttendance(context),
                 )
               else if (next != null)
                 _Hero(
@@ -280,6 +284,7 @@ class _Hero extends StatelessWidget {
     required this.minutes,
     required this.later,
     this.tone,
+    this.onAttendance,
   });
 
   final _Slot slot;
@@ -291,6 +296,9 @@ class _Hero extends StatelessWidget {
 
   /// Lilac for today; another day's class reads apart in mint.
   final Tone? tone;
+
+  /// Opens the attendance scanner; only while the class is on.
+  final VoidCallback? onAttendance;
 
   @override
   Widget build(BuildContext context) {
@@ -392,7 +400,7 @@ class _Hero extends StatelessWidget {
                     const SizedBox(height: 12),
                     Text(
                       context.courseName(slot.course),
-                      maxLines: 3,
+                      maxLines: onAttendance == null ? 3 : 2,
                       overflow: TextOverflow.ellipsis,
                       style: TextStyle(
                         color: tone.ink,
@@ -410,6 +418,39 @@ class _Hero extends StatelessWidget {
                         fontWeight: FontWeight.w700,
                       ),
                     ),
+                    if (onAttendance case final onTap?) ...[
+                      const Spacer(),
+                      Material(
+                        color: tone.ink,
+                        shape: const StadiumBorder(),
+                        clipBehavior: Clip.antiAlias,
+                        child: InkWell(
+                          onTap: onTap,
+                          child: Padding(
+                            padding: const EdgeInsets.fromLTRB(14, 9, 18, 9),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Icon(
+                                  Icons.qr_code_scanner,
+                                  size: 18,
+                                  color: tone.fill,
+                                ),
+                                const SizedBox(width: 6),
+                                Text(
+                                  l10n.takeAttendance,
+                                  style: TextStyle(
+                                    color: tone.fill,
+                                    fontSize: 15,
+                                    fontWeight: FontWeight.w900,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
                   ],
                 ),
               ),

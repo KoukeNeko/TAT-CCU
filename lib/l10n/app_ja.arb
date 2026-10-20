@@ -483,5 +483,9 @@
   "busStartsOn": "{date} から運行",
   "busNoTrips": "今週の運行なし",
   "busDepartsShort": "発",
-  "busUpNext": "次の便"
+  "busUpNext": "次の便",
+  "takeAttendance": "出席登録",
+  "notAttendanceCode": "出席用の QR コードではありません",
+  "cameraUnavailable": "カメラを使用できません。設定でカメラへのアクセスを許可してください。",
+  "flashlight": "ライト"
 }

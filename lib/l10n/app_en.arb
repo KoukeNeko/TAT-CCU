@@ -483,5 +483,9 @@
   "busStartsOn": "Runs from {date}",
   "busNoTrips": "No buses this week",
   "busDepartsShort": " departs",
-  "busUpNext": "Up next"
+  "busUpNext": "Up next",
+  "takeAttendance": "Attendance",
+  "notAttendanceCode": "Not an attendance QR code",
+  "cameraUnavailable": "Camera unavailable. Allow camera access in Settings.",
+  "flashlight": "Flashlight"
 }

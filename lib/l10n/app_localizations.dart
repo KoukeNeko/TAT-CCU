@@ -2997,6 +2997,30 @@ abstract class AppLocalizations {
   /// In zh, this message translates to:
   /// **'接下來'**
   String get busUpNext;
+
+  /// No description provided for @takeAttendance.
+  ///
+  /// In zh, this message translates to:
+  /// **'點名'**
+  String get takeAttendance;
+
+  /// No description provided for @notAttendanceCode.
+  ///
+  /// In zh, this message translates to:
+  /// **'不是點名的 QR Code'**
+  String get notAttendanceCode;
+
+  /// No description provided for @cameraUnavailable.
+  ///
+  /// In zh, this message translates to:
+  /// **'無法使用相機，請到設定開啟相機權限'**
+  String get cameraUnavailable;
+
+  /// No description provided for @flashlight.
+  ///
+  /// In zh, this message translates to:
+  /// **'手電筒'**
+  String get flashlight;
 }
 
 class _AppLocalizationsDelegate

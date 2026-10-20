@@ -1665,4 +1665,16 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get busUpNext => '接下來';
+
+  @override
+  String get takeAttendance => '點名';
+
+  @override
+  String get notAttendanceCode => '不是點名的 QR Code';
+
+  @override
+  String get cameraUnavailable => '無法使用相機，請到設定開啟相機權限';
+
+  @override
+  String get flashlight => '手電筒';
 }

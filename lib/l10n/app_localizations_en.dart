@@ -1767,4 +1767,17 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get busUpNext => 'Up next';
+
+  @override
+  String get takeAttendance => 'Attendance';
+
+  @override
+  String get notAttendanceCode => 'Not an attendance QR code';
+
+  @override
+  String get cameraUnavailable =>
+      'Camera unavailable. Allow camera access in Settings.';
+
+  @override
+  String get flashlight => 'Flashlight';
 }

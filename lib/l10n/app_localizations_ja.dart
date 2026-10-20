@@ -1654,4 +1654,16 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get busUpNext => '次の便';
+
+  @override
+  String get takeAttendance => '出席登録';
+
+  @override
+  String get notAttendanceCode => '出席用の QR コードではありません';
+
+  @override
+  String get cameraUnavailable => 'カメラを使用できません。設定でカメラへのアクセスを許可してください。';
+
+  @override
+  String get flashlight => 'ライト';
 }

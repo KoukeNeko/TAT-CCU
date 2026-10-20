@@ -896,5 +896,9 @@
   "@busDirectionFrom": {"placeholders": {"direction": {"type": "String"}, "stop": {"type": "String"}}},
   "@busStartsOn": {"placeholders": {"date": {"type": "String"}}},
   "busDepartsShort": "發車",
-  "busUpNext": "接下來"
+  "busUpNext": "接下來",
+  "takeAttendance": "點名",
+  "notAttendanceCode": "不是點名的 QR Code",
+  "cameraUnavailable": "無法使用相機，請到設定開啟相機權限",
+  "flashlight": "手電筒"
 }
