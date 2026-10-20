@@ -307,27 +307,35 @@ class CampusSessionState extends State<CampusSession> {
       body: Builder(
         builder: (context) => Stack(
           children: [
-            // Kept in the tree so it can load; shown only for signing in.
+            // Kept in the tree so it can load. During a hand-off it stays on
+            // screen under the cover below: WebKit holds back a page that is
+            // not shown, and Turnstile then waits until the user opens it.
             Positioned.fill(
               child: Offstage(
-                offstage: !_signingIn,
-                child: Padding(
-                  padding: EdgeInsets.only(
-                    bottom: MediaQuery.paddingOf(context).bottom,
+                offstage: !_signingIn && _pending == null,
+                child: IgnorePointer(
+                  ignoring: !_signingIn,
+                  child: Padding(
+                    padding: EdgeInsets.only(
+                      bottom: MediaQuery.paddingOf(context).bottom,
+                    ),
+                    child: WebViewWidget(controller: _web),
                   ),
-                  child: WebViewWidget(controller: _web),
                 ),
               ),
             ),
             if (!_signingIn)
               Positioned.fill(
-                child:
-                    widget.child ??
-                    _Progress(
-                      step: _step,
-                      where: _where,
-                      onShowPage: _slow ? _showPage : null,
-                    ),
+                child: ColoredBox(
+                  color: Theme.of(context).colorScheme.surface,
+                  child:
+                      widget.child ??
+                      _Progress(
+                        step: _step,
+                        where: _where,
+                        onShowPage: _slow ? _showPage : null,
+                      ),
+                ),
               ),
             // Refreshing a page that already shows its content.
             if (!_signingIn && widget.child != null)
