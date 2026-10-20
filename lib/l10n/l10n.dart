@@ -1,3 +1,5 @@
+import 'dart:ui';
+
 import 'package:flutter/widgets.dart';
 
 import '../domain/models/course.dart';
@@ -13,3 +15,12 @@ extension L10nContext on BuildContext {
   String courseName(Course c) =>
       c.name(chinese: Localizations.localeOf(this).languageCode == 'zh');
 }
+
+/// Strings outside the widget tree (notifications, home screen widgets):
+/// the language chosen in settings, else the device's.
+AppLocalizations l10nFor(Locale? chosen) => lookupAppLocalizations(
+  basicLocaleListResolution([
+    ?chosen,
+    ...PlatformDispatcher.instance.locales,
+  ], AppLocalizations.supportedLocales),
+);

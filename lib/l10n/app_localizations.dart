@@ -2823,6 +2823,36 @@ abstract class AppLocalizations {
   /// In zh, this message translates to:
   /// **'登入'**
   String get signIn;
+
+  /// Widget label above the next school day's first class; day is 明天 or a weekday.
+  ///
+  /// In zh, this message translates to:
+  /// **'{day}第一堂'**
+  String firstClassOn(String day);
+
+  /// No description provided for @nothingDueThisWeek.
+  ///
+  /// In zh, this message translates to:
+  /// **'本週沒有到期項目'**
+  String get nothingDueThisWeek;
+
+  /// No description provided for @termWeekShort.
+  ///
+  /// In zh, this message translates to:
+  /// **'第 {week} 週・共 {weeks} 週'**
+  String termWeekShort(int week, int weeks);
+
+  /// No description provided for @classesUnit.
+  ///
+  /// In zh, this message translates to:
+  /// **'堂'**
+  String get classesUnit;
+
+  /// No description provided for @itemsUnit.
+  ///
+  /// In zh, this message translates to:
+  /// **'項'**
+  String get itemsUnit;
 }
 
 class _AppLocalizationsDelegate

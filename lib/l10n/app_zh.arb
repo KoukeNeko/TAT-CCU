@@ -863,5 +863,17 @@
   "countdownEnded": "這學年的行事曆已經結束",
   "ecourseMaintenance": "eCourse2 維護中，請稍後再試",
   "useCampusSystems": "使用校務系統",
-  "signIn": "登入"
+  "signIn": "登入",
+  "firstClassOn": "{day}第一堂",
+  "@firstClassOn": {
+    "description": "Widget label above the next school day's first class; day is 明天 or a weekday.",
+    "placeholders": {"day": {"type": "String"}}
+  },
+  "nothingDueThisWeek": "本週沒有到期項目",
+  "termWeekShort": "第 {week} 週・共 {weeks} 週",
+  "@termWeekShort": {
+    "placeholders": {"week": {"type": "int"}, "weeks": {"type": "int"}}
+  },
+  "classesUnit": "堂",
+  "itemsUnit": "項"
 }

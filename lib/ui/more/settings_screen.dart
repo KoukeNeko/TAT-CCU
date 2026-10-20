@@ -8,6 +8,7 @@ import '../../data/repositories/ecourse_repository.dart';
 import '../../data/services/reminders.dart';
 import '../../l10n/l10n.dart';
 import '../core/theme.dart';
+import '../home_widgets/home_widgets.dart';
 import '../core/widgets.dart';
 
 /// The app's languages by code; null follows the system. Each language is
@@ -290,7 +291,10 @@ class _Notifications extends StatelessWidget {
     // The demo account's made-up deadlines never become reminders; they
     // are scheduled for the real account when it is back.
     if (demo) return;
-    await Reminders.updateBackground(settings);
+    await Reminders.updateBackground(
+      settings,
+      widgets: await HomeWidgets.installed(),
+    );
     if (due != null || classes != null) {
       try {
         await Reminders.sync(repo, settings);

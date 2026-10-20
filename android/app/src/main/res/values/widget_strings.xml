@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Widget picker names; what the widgets show comes from the app (lib/ui/home_widgets). -->
+<resources>
+    <string name="widget_next_label">下一堂</string>
+    <string name="widget_next_description">上課中與下一堂課</string>
+    <string name="widget_today_label">今日課表</string>
+    <string name="widget_today_description">今天剩下的課</string>
+    <string name="widget_overview_label">今天</string>
+    <string name="widget_overview_description">現在這堂、接下來的課與本週到期</string>
+    <string name="widget_due_label">待辦</string>
+    <string name="widget_due_description">本週到期的作業與活動</string>
+    <string name="widget_countdown_label">學期倒數</string>
+    <string name="widget_countdown_description">行事曆上的下一件事</string>
+</resources>

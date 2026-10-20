@@ -21,9 +21,7 @@ class CountdownScreen extends StatelessWidget {
       for (final d in schoolCalendar)
         if (!(d.end ?? d.start).isBefore(today)) d,
     ];
-    final term = schoolTerms
-        .where((s) => !today.isBefore(s.start) && !today.isAfter(s.end))
-        .firstOrNull;
+    final term = termProgress(today);
     String range(SchoolDate d) => [
       dayLabel(context, d.start),
       if (d.end case final end?) dayLabel(context, end),
@@ -61,9 +59,7 @@ class CountdownScreen extends StatelessWidget {
                                 ClipRRect(
                                   borderRadius: BorderRadius.circular(5),
                                   child: LinearProgressIndicator(
-                                    value:
-                                        today.difference(term.start).inDays /
-                                        term.end.difference(term.start).inDays,
+                                    value: term.progress,
                                     minHeight: 10,
                                     color: t.mint.ink,
                                     backgroundColor: Colors.black.withValues(
@@ -73,12 +69,7 @@ class CountdownScreen extends StatelessWidget {
                                 ),
                                 const SizedBox(height: 6),
                                 Text(
-                                  l10n.termWeek(
-                                    today.difference(term.start).inDays ~/ 7 +
-                                        1,
-                                    (term.end.difference(term.start).inDays / 7)
-                                        .ceil(),
-                                  ),
+                                  l10n.termWeek(term.week, term.weeks),
                                   style: TextStyle(
                                     color: t.mint.ink.withValues(alpha: 0.85),
                                     fontSize: 12,

@@ -1568,4 +1568,23 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get signIn => '登入';
+
+  @override
+  String firstClassOn(String day) {
+    return '$day第一堂';
+  }
+
+  @override
+  String get nothingDueThisWeek => '本週沒有到期項目';
+
+  @override
+  String termWeekShort(int week, int weeks) {
+    return '第 $week 週・共 $weeks 週';
+  }
+
+  @override
+  String get classesUnit => '堂';
+
+  @override
+  String get itemsUnit => '項';
 }

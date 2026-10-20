@@ -454,5 +454,10 @@
   "countdownEnded": "今年度の行事予定は終了しました",
   "ecourseMaintenance": "eCourse2 はメンテナンス中です。後でもう一度お試しください",
   "useCampusSystems": "校務システムを使う",
-  "signIn": "ログイン"
+  "signIn": "ログイン",
+  "firstClassOn": "{day}の最初の授業",
+  "nothingDueThisWeek": "今週の期限なし",
+  "termWeekShort": "第 {week} 週・全 {weeks} 週",
+  "classesUnit": "コマ",
+  "itemsUnit": "件"
 }

@@ -64,14 +64,6 @@ class ToolsScreen extends StatelessWidget {
 int daysTo(DateTime d) =>
     DateUtils.dateOnly(d).difference(DateUtils.dateOnly(DateTime.now())).inDays;
 
-/// The next calendar date still to come, counting one in progress.
-SchoolDate? nextSchoolDate(DateTime now) {
-  final today = DateUtils.dateOnly(now);
-  return schoolCalendar
-      .where((d) => !(d.end ?? d.start).isBefore(today))
-      .firstOrNull;
-}
-
 /// Each tool's main card: the answer large, what it rests on small.
 class ToolHero extends StatelessWidget {
   const ToolHero({

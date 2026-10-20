@@ -1557,4 +1557,23 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get signIn => 'ログイン';
+
+  @override
+  String firstClassOn(String day) {
+    return '$dayの最初の授業';
+  }
+
+  @override
+  String get nothingDueThisWeek => '今週の期限なし';
+
+  @override
+  String termWeekShort(int week, int weeks) {
+    return '第 $week 週・全 $weeks 週';
+  }
+
+  @override
+  String get classesUnit => 'コマ';
+
+  @override
+  String get itemsUnit => '件';
 }

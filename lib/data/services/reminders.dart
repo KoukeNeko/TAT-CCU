@@ -1,6 +1,3 @@
-import 'dart:ui';
-
-import 'package:flutter/widgets.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:timezone/data/latest.dart' as tz;
@@ -9,9 +6,8 @@ import 'package:workmanager/workmanager.dart';
 
 import '../../domain/models/course.dart';
 import '../../domain/models/timetable.dart';
-import '../../l10n/app_localizations.dart';
+import '../../l10n/l10n.dart';
 import '../repositories/app_settings.dart';
-import '../repositories/ecourse_auth_repository.dart';
 import '../repositories/ecourse_repository.dart';
 
 /// Moodle only pushes to the official app, so notifications here are local:
@@ -77,7 +73,7 @@ class Reminders {
     for (final p in await _plugin.pendingNotificationRequests()) {
       if (p.id < _newsIds) await _plugin.cancel(id: p.id);
     }
-    final l10n = _l10n(settings);
+    final l10n = l10nFor(settings.locale);
     for (final r in remindersFor(
       courses: courses,
       due: due,
@@ -115,7 +111,7 @@ class Reminders {
     final prefs = await SharedPreferences.getInstance();
     final seen = prefs.getInt(_seenKey);
     final (notices, mail) = await (repo.notices(), repo.inbox()).wait;
-    final l10n = _l10n(settings);
+    final l10n = l10nFor(settings.locale);
     final fresh = [
       for (final n in notices)
         if (!n.read && seen != null && n.time.millisecondsSinceEpoch > seen)
@@ -140,10 +136,16 @@ class Reminders {
   }
 
   /// Runs the background check every hour or so, as iOS allows, while any
-  /// notification is on.
-  static Future<void> updateBackground(AppSettings settings) async {
+  /// notification is on or a home screen widget needs fresh [widgets] data.
+  static Future<void> updateBackground(
+    AppSettings settings, {
+    bool widgets = false,
+  }) async {
     final on =
-        settings.notifyDue || settings.notifyClass || settings.notifyNews;
+        widgets ||
+        settings.notifyDue ||
+        settings.notifyClass ||
+        settings.notifyNews;
     if (on) {
       await Workmanager().registerPeriodicTask(
         backgroundTask,
@@ -155,31 +157,6 @@ class Reminders {
       await Workmanager().cancelByUniqueName(backgroundTask);
     }
   }
-
-  static AppLocalizations _l10n(AppSettings settings) => lookupAppLocalizations(
-    basicLocaleListResolution([
-      ?settings.locale,
-      ...PlatformDispatcher.instance.locales,
-    ], AppLocalizations.supportedLocales),
-  );
-}
-
-/// Entry point of the background task, in its own isolate.
-@pragma('vm:entry-point')
-void reminderTask() {
-  Workmanager().executeTask((task, _) async {
-    WidgetsFlutterBinding.ensureInitialized();
-    final settings = AppSettings();
-    final auth = EcourseAuthRepository();
-    await (settings.load(), auth.load(), Reminders.init()).wait;
-    if (!auth.isSignedIn || auth.isDemo) return true;
-    final repo = EcourseRepository(auth.client());
-    if (settings.notifyDue || settings.notifyClass) {
-      await Reminders.sync(repo, settings);
-    }
-    if (settings.notifyNews) await Reminders.checkNews(repo, settings);
-    return true;
-  });
 }
 
 typedef Reminder = ({int id, DateTime at, String title, String body});

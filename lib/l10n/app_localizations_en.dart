@@ -1670,4 +1670,23 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get signIn => 'Sign in';
+
+  @override
+  String firstClassOn(String day) {
+    return 'First class $day';
+  }
+
+  @override
+  String get nothingDueThisWeek => 'Nothing due this week';
+
+  @override
+  String termWeekShort(int week, int weeks) {
+    return 'Week $week of $weeks';
+  }
+
+  @override
+  String get classesUnit => 'classes';
+
+  @override
+  String get itemsUnit => 'items';
 }

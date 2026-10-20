@@ -14,6 +14,7 @@ import 'data/services/campus_cookies.dart';
 import 'data/services/reminders.dart';
 import 'l10n/l10n.dart';
 import 'routing/router.dart';
+import 'ui/home_widgets/home_widgets.dart';
 import 'ui/core/theme.dart';
 import 'data/repositories/dorm_repair_data.dart';
 import 'data/repositories/parttime_data.dart';
@@ -40,6 +41,8 @@ Future<void> main() async {
   }
 
   auth.addListener(showDemo);
+  // Signing in or out, or into the demo, changes what the widgets show.
+  auth.addListener(() => _updateWidgets(auth, settings));
   await (
     settings.load(),
     auth.load(),
@@ -52,12 +55,14 @@ Future<void> main() async {
     onResume: () {
       _remind(auth, settings);
       _prefetch(auth);
+      _updateWidgets(auth, settings);
     },
   );
   showDemo();
-  await Workmanager().initialize(reminderTask);
+  await Workmanager().initialize(backgroundTask);
   unawaited(_remind(auth, settings));
   unawaited(_prefetch(auth));
+  unawaited(_updateWidgets(auth, settings));
   runApp(
     MultiProvider(
       providers: [
@@ -135,7 +140,10 @@ class _TatCcuAppState extends State<TatCcuApp> {
 Future<void> _remind(EcourseAuthRepository auth, AppSettings settings) async {
   if (!auth.isSignedIn || auth.isDemo) return;
   try {
-    await Reminders.updateBackground(settings);
+    await Reminders.updateBackground(
+      settings,
+      widgets: await HomeWidgets.installed(),
+    );
     if (settings.notifyDue || settings.notifyClass) {
       await Reminders.sync(EcourseRepository(auth.client()), settings);
     }
@@ -163,4 +171,35 @@ Future<void> _prefetch(EcourseAuthRepository auth) async {
     // Offline or a stalled request: the screens load what they need.
     debugPrint('prefetch: $e');
   }
+}
+
+Future<void> _updateWidgets(
+  EcourseAuthRepository auth,
+  AppSettings settings,
+) async {
+  try {
+    await HomeWidgets.sync(auth, settings);
+  } catch (e) {
+    // Offline: the widgets keep the frames written last time.
+    debugPrint('widgets: $e');
+  }
+}
+
+/// Entry point of the background task, in its own isolate.
+@pragma('vm:entry-point')
+void backgroundTask() {
+  Workmanager().executeTask((task, _) async {
+    WidgetsFlutterBinding.ensureInitialized();
+    final settings = AppSettings();
+    final auth = EcourseAuthRepository();
+    await (settings.load(), auth.load(), Reminders.init()).wait;
+    await _updateWidgets(auth, settings);
+    if (!auth.isSignedIn || auth.isDemo) return true;
+    final repo = EcourseRepository(auth.client());
+    if (settings.notifyDue || settings.notifyClass) {
+      await Reminders.sync(repo, settings);
+    }
+    if (settings.notifyNews) await Reminders.checkNews(repo, settings);
+    return true;
+  });
 }

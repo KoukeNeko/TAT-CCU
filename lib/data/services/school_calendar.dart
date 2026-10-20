@@ -51,3 +51,26 @@ final schoolTerms = <({DateTime start, DateTime end})>[
   (start: DateTime(2026, 9, 7), end: DateTime(2027, 1, 8)),
   (start: DateTime(2027, 2, 22), end: DateTime(2027, 6, 27)),
 ];
+
+/// The next calendar date still to come, counting one in progress.
+SchoolDate? nextSchoolDate(DateTime now) {
+  final today = DateTime(now.year, now.month, now.day);
+  return schoolCalendar
+      .where((d) => !(d.end ?? d.start).isBefore(today))
+      .firstOrNull;
+}
+
+/// How far into its semester [day] is, or null outside the semesters.
+({int week, int weeks, double progress})? termProgress(DateTime day) {
+  final term = schoolTerms
+      .where((s) => !day.isBefore(s.start) && !day.isAfter(s.end))
+      .firstOrNull;
+  if (term == null) return null;
+  final done = day.difference(term.start).inDays;
+  final length = term.end.difference(term.start).inDays;
+  return (
+    week: done ~/ 7 + 1,
+    weeks: (length / 7).ceil(),
+    progress: done / length,
+  );
+}
