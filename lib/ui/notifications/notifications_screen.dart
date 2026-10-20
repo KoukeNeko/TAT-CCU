@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 
 import '../../data/repositories/ecourse_repository.dart';
 import '../core/theme.dart';
+import '../courses/module_screen.dart';
 import '../core/widgets.dart';
 import '../../l10n/l10n.dart';
 
@@ -19,6 +21,36 @@ class NotificationsScreen extends StatelessWidget {
         body: TabBarView(children: [_Notices(), _Mail()]),
       ),
     );
+  }
+}
+
+/// Opens an eCourse2 link on its page in the app when there is one, and on
+/// eCourse2 otherwise.
+Future<void> openEcourseLink(
+  BuildContext context,
+  String url, {
+  String? title,
+}) async {
+  final uri = Uri.parse(url);
+  final id = int.tryParse(uri.queryParameters['id'] ?? '');
+  final discussion = int.tryParse(uri.queryParameters['d'] ?? '');
+  final type = RegExp(r'/mod/(\w+)/view\.php$').firstMatch(uri.path)?[1];
+  if (uri.path.endsWith('/mod/forum/discuss.php') && discussion != null) {
+    // The discussion page loads by its id alone; the course is not used.
+    context.push('/courses/0/discussions/$discussion', extra: title);
+  } else if (uri.path.endsWith('/course/view.php') && id != null) {
+    context.push('/courses/$id');
+  } else if (id != null && moduleTypesWithPage.contains(type)) {
+    final int course;
+    try {
+      course = await context.read<EcourseRepository>().courseOfModule(id);
+    } on Exception {
+      openExternal(url);
+      return;
+    }
+    if (context.mounted) context.push('/courses/$course/modules/$id');
+  } else {
+    openExternal(url);
   }
 }
 
@@ -78,7 +110,9 @@ class _Notices extends StatelessWidget {
               unread: !n.read,
               title: n.subject,
               subtitle: dateTimeLabel(context, n.time),
-              onTap: n.url == null ? null : () => openExternal(n.url!),
+              onTap: n.url == null
+                  ? null
+                  : () => openEcourseLink(context, n.url!, title: n.subject),
             );
           },
         );

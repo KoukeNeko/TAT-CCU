@@ -355,6 +355,14 @@ class EcourseRepository {
   }
 
   /// The course's 公佈欄 (the news forum).
+  /// The course a module belongs to, for links that only carry its cmid.
+  Future<int> courseOfModule(int cmid) async {
+    final r = await _client.call('core_course_get_course_module', {
+      'cmid': cmid,
+    }) as Map;
+    return (r['cm']['course'] as num).toInt();
+  }
+
   Future<List<Discussion>> announcements(int courseId) async {
     final forums = await _client.call('mod_forum_get_forums_by_courses', {
       'courseids': [courseId],
