@@ -1585,4 +1585,15 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get ecourseBack => 'eCourse2 が復旧しました';
+
+  @override
+  String get savedData => '保存データ';
+
+  @override
+  String get campusSystems => '学内システム';
+
+  @override
+  String savedItems(int count) {
+    return '$count 件';
+  }
 }

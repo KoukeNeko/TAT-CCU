@@ -462,5 +462,8 @@
   "itemsUnit": "件",
   "ecourseInMaintenance": "eCourse2 メンテナンス中",
   "maintenanceChecking": "確認中",
-  "ecourseBack": "eCourse2 が復旧しました"
+  "ecourseBack": "eCourse2 が復旧しました",
+  "savedData": "保存データ",
+  "campusSystems": "学内システム",
+  "savedItems": "{count} 件"
 }

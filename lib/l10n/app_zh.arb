@@ -878,5 +878,9 @@
   "itemsUnit": "項",
   "ecourseInMaintenance": "eCourse2 維護中",
   "maintenanceChecking": "檢查中",
-  "ecourseBack": "eCourse2 已恢復"
+  "ecourseBack": "eCourse2 已恢復",
+  "savedData": "已存資料",
+  "campusSystems": "校務系統",
+  "savedItems": "{count} 筆",
+  "@savedItems": {"placeholders": {"count": {"type": "int"}}}
 }

@@ -4,6 +4,8 @@ import 'dart:io';
 import 'package:crypto/crypto.dart';
 import 'package:path_provider/path_provider.dart';
 
+import 'folder_stats.dart';
+
 /// Last eCourse2 answer for each request, kept on the device so screens can
 /// show it at once while asking again. Answers are stored per account (the
 /// token's hash), so another sign-in never sees them, and are removed on
@@ -45,6 +47,9 @@ class ResponseCache {
 
   Future<void> write(String key, Object? value) async =>
       (await _file(key)).writeAsString(jsonEncode(value));
+
+  /// Every account's answers, for the settings page.
+  static Future<FolderStats> stats() async => folderStats(await _root());
 
   /// Removes every account's answers.
   static Future<void> clear() async {

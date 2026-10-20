@@ -1596,4 +1596,15 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get ecourseBack => 'eCourse2 已恢復';
+
+  @override
+  String get savedData => '已存資料';
+
+  @override
+  String get campusSystems => '校務系統';
+
+  @override
+  String savedItems(int count) {
+    return '$count 筆';
+  }
 }

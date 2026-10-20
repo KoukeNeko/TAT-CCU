@@ -2871,6 +2871,24 @@ abstract class AppLocalizations {
   /// In zh, this message translates to:
   /// **'eCourse2 已恢復'**
   String get ecourseBack;
+
+  /// No description provided for @savedData.
+  ///
+  /// In zh, this message translates to:
+  /// **'已存資料'**
+  String get savedData;
+
+  /// No description provided for @campusSystems.
+  ///
+  /// In zh, this message translates to:
+  /// **'校務系統'**
+  String get campusSystems;
+
+  /// No description provided for @savedItems.
+  ///
+  /// In zh, this message translates to:
+  /// **'{count} 筆'**
+  String savedItems(int count);
 }
 
 class _AppLocalizationsDelegate

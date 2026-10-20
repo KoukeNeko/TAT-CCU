@@ -1698,4 +1698,15 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get ecourseBack => 'eCourse2 is back';
+
+  @override
+  String get savedData => 'Saved data';
+
+  @override
+  String get campusSystems => 'Campus systems';
+
+  @override
+  String savedItems(int count) {
+    return '$count items';
+  }
 }

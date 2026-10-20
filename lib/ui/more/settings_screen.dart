@@ -6,6 +6,9 @@ import '../../data/repositories/ecourse_auth_repository.dart';
 import '../../data/repositories/app_settings.dart';
 import '../../data/repositories/ecourse_repository.dart';
 import '../../data/services/reminders.dart';
+import '../../data/services/response_cache.dart';
+import '../../data/services/folder_stats.dart';
+import '../../data/repositories/campus_cache.dart';
 import '../../l10n/l10n.dart';
 import '../core/theme.dart';
 import '../home_widgets/home_widgets.dart';
@@ -66,6 +69,8 @@ class SettingsScreen extends StatelessWidget {
             ),
             SectionLabel(l10n.notifications),
             const _Notifications(),
+            SectionLabel(l10n.savedData),
+            const _SavedData(),
             SectionLabel(l10n.aboutApp),
             Card(
               color: Theme.of(context).colorScheme.surfaceContainerLow,
@@ -343,6 +348,56 @@ class _Notifications extends StatelessWidget {
             (on) => _set(context, news: on),
           ),
         ],
+      ),
+    );
+  }
+}
+
+/// How much each cache holds on the device, read once when the page opens.
+class _SavedData extends StatefulWidget {
+  const _SavedData();
+
+  @override
+  State<_SavedData> createState() => _SavedDataState();
+}
+
+class _SavedDataState extends State<_SavedData> {
+  final _stats = (ResponseCache.stats(), CampusCache.stats()).wait;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = context.l10n;
+    String describe(FolderStats s) => switch (s.latest) {
+      final latest? when s.files > 0 => [
+        l10n.savedItems(s.files),
+        fileSize(s.bytes),
+        l10n.updatedAt(monthDayTime(latest)),
+      ].join('・'),
+      _ => l10n.noData,
+    };
+    return Card(
+      color: Theme.of(context).colorScheme.surfaceContainerLow,
+      clipBehavior: Clip.antiAlias,
+      child: FutureBuilder(
+        future: _stats,
+        builder: (context, snapshot) {
+          final stats = snapshot.data;
+          return Column(
+            children: [
+              for (final (title, s) in [
+                ('eCourse2', stats?.$1),
+                (l10n.campusSystems, stats?.$2),
+              ])
+                ListTile(
+                  title: Text(
+                    title,
+                    style: const TextStyle(fontWeight: FontWeight.w800),
+                  ),
+                  subtitle: Text(s == null ? '' : describe(s)),
+                ),
+            ],
+          );
+        },
       ),
     );
   }

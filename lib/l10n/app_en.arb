@@ -462,5 +462,8 @@
   "itemsUnit": "items",
   "ecourseInMaintenance": "eCourse2 maintenance",
   "maintenanceChecking": "Checking",
-  "ecourseBack": "eCourse2 is back"
+  "ecourseBack": "eCourse2 is back",
+  "savedData": "Saved data",
+  "campusSystems": "Campus systems",
+  "savedItems": "{count} items"
 }

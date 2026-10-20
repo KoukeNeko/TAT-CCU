@@ -4,6 +4,8 @@ import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:path_provider/path_provider.dart';
 
+import '../services/folder_stats.dart';
+
 typedef CachedPage = ({Map<String, dynamic> json, DateTime savedAt});
 
 /// The last data a campus page read, kept on the device so the page opens
@@ -25,6 +27,9 @@ class CampusCache {
     await dir.create(recursive: true);
     return File('${dir.path}/$key.json');
   }
+
+  /// The current account's pages, for the settings page.
+  static Future<FolderStats> stats() async => folderStats(await _dir());
 
   /// Every page's last read, for signing out.
   static Future<void> clear() async {
