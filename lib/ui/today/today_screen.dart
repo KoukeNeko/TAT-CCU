@@ -4,17 +4,18 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 
-import '../../data/repositories/campus_cache.dart';
 import '../../data/repositories/ecourse_repository.dart';
 import '../../domain/models/course.dart';
 import '../../domain/models/timetable.dart';
 import '../core/theme.dart';
 import '../core/widgets.dart';
-import '../more/library_screen.dart';
+import '../notifications/notifications_screen.dart';
+import 'due_screen.dart';
 import '../../l10n/l10n.dart';
 
 // Layout follows design/round-11/today-c-variants.html C1: headline, one
-// hero block, a pill for the class after it, then four status tiles.
+// hero block, a card for the class after it, then (today-final.html) what
+// is due and what is unread as two short lists.
 
 typedef _Slot = ({Course course, ClassSession session});
 
@@ -23,12 +24,8 @@ typedef _Today = ({
   List<DueItem> due,
   int notices,
   int mail,
-  CachedPage? library,
+  List<NoticeItem> latest,
 });
-
-/// `創新大樓 322` → `322`; the pill only has room for the room number.
-String _roomNumber(String? room) =>
-    RegExp(r'\d+\S*$').stringMatch(room ?? '') ?? (room ?? '');
 
 class TodayScreen extends StatefulWidget {
   const TodayScreen({super.key});
@@ -74,13 +71,17 @@ class _TodayScreenState extends State<TodayScreen> {
       repo.dueSoon(days: 7),
       repo.unreadNotices(),
       repo.unreadMail(),
+      repo.notices(),
     ]);
     return (
       courses: results[0] as List<Course>,
       due: results[1] as List<DueItem>,
       notices: results[2] as int,
       mail: results[3] as int,
-      library: await CampusCache.read(LibraryScreen.cacheKey),
+      latest: [
+        for (final n in results[4] as List<NoticeItem>)
+          if (!n.read) n,
+      ].take(3).toList(),
     );
   }
 
@@ -120,7 +121,22 @@ class _TodayScreenState extends State<TodayScreen> {
           final after = hero == null
               ? null
               : remaining.skipWhile((s) => s != hero).skip(1).firstOrNull;
-          final loan = loanStatus(l10n, d.library);
+          // Once today's classes are over: the next school day's first.
+          final upcoming = hero != null
+              ? null
+              : [
+                  for (var day = 1; day <= 7; day++)
+                    if ([
+                          for (final c in d.courses)
+                            for (final s in c.sessions)
+                              if (s.weekday == (now.weekday + day - 1) % 7 + 1)
+                                (course: c, session: s),
+                        ]..sort(
+                          (a, b) => a.session.start.compareTo(b.session.start),
+                        )
+                        case [final first, ...])
+                      (slot: first, days: day),
+                ].firstOrNull;
           return ListView(
             padding: scrollPadding(context),
             children: [
@@ -178,53 +194,75 @@ class _TodayScreenState extends State<TodayScreen> {
                   detail: l10n.startsAt(clock(next.session.start)),
                   minutes: next.session.start - minute,
                   later: true,
+                )
+              else if (upcoming != null)
+                _Hero(
+                  slot: upcoming.slot,
+                  label: l10n.firstClassOn(
+                    upcoming.days == 1
+                        ? l10n.tomorrow
+                        : weekdayName(context, upcoming.slot.session.weekday),
+                  ),
+                  detail: l10n.startsAt(clock(upcoming.slot.session.start)),
+                  minutes:
+                      upcoming.days * 24 * 60 +
+                      upcoming.slot.session.start -
+                      minute,
+                  later: true,
+                  tone: tones.mint,
                 ),
               if (after != null) ...[
-                const SizedBox(height: 10),
-                _AfterPill(slot: after),
+                const SizedBox(height: rowGap),
+                _AfterCard(slot: after),
               ],
-              const SizedBox(height: rowGap),
-              for (final (i, row) in [
-                [
-                  StatusTile(
-                    tone: tones.peach,
-                    icon: Icons.assignment_outlined,
-                    title: l10n.dueThisWeek,
-                    status: '${d.due.length}',
-                    onTap: () => context.push('/today/due'),
-                  ),
-                  StatusTile(
-                    tone: tones.sun,
-                    icon: Icons.notifications_none,
-                    title: l10n.unread,
-                    status: '${d.notices + d.mail}',
-                    onTap: () => context.push('/today/notifications'),
-                  ),
-                ],
-                [
-                  StatusTile(
-                    tone: loan?.overdue == true ? tones.peach : tones.mint,
-                    icon: Icons.menu_book_outlined,
-                    title: l10n.library,
-                    status: loan?.text,
-                    onTap: () => context.push('/more/library'),
-                  ),
-                  StatusTile(
-                    tone: tones.lilac,
-                    icon: Icons.qr_code_2,
-                    title: l10n.studySpace,
-                    onTap: () => context.push('/more/space'),
-                  ),
-                ],
-              ].indexed) ...[
-                if (i > 0) const SizedBox(height: rowGap),
-                Row(
-                  children: [
-                    Expanded(child: row[0]),
-                    const SizedBox(width: rowGap),
-                    Expanded(child: row[1]),
-                  ],
+              if (d.due.isNotEmpty) ...[
+                _GroupHeader(
+                  title: l10n.dueThisWeek,
+                  count: d.due.length,
+                  color: tones.peach.strong,
+                  onAll: () => context.push('/today/due'),
                 ),
+                for (final (i, item) in d.due.take(3).indexed) ...[
+                  if (i > 0) const Divider(height: 1),
+                  _ListRow(
+                    // Within two days, as on the due page.
+                    dot: item.due.difference(now).inHours < 48
+                        ? tones.peach.strong
+                        : tones.forCourse(item.courseId).strong,
+                    title: item.name,
+                    subtitle: item.course,
+                    // Within a week, the weekday is enough.
+                    trailing:
+                        '${weekdayName(context, item.due.weekday)} '
+                        '${clock(item.due.hour * 60 + item.due.minute)}',
+                    onTap: item.url == null
+                        ? null
+                        : () => openDueItem(context, item),
+                  ),
+                ],
+              ],
+              if (d.notices + d.mail > 0) ...[
+                _GroupHeader(
+                  title: l10n.unread,
+                  count: d.notices + d.mail,
+                  color: tones.sun.strong,
+                  onAll: () => context.push('/today/notifications'),
+                ),
+                for (final (i, n) in d.latest.indexed) ...[
+                  if (i > 0) const Divider(height: 1),
+                  _ListRow(
+                    dot: tones.sun.strong,
+                    title: n.subject,
+                    subtitle: dateTimeLabel(context, n.time),
+                    onTap: n.url == null
+                        ? null
+                        : () => openEcourseLink(
+                            context,
+                            n.url!,
+                            title: n.subject,
+                          ),
+                  ),
+                ],
               ],
             ],
           );
@@ -241,6 +279,7 @@ class _Hero extends StatelessWidget {
     required this.detail,
     required this.minutes,
     required this.later,
+    this.tone,
   });
 
   final _Slot slot;
@@ -250,9 +289,12 @@ class _Hero extends StatelessWidget {
   /// Counting down to the start rather than to the end.
   final bool later;
 
+  /// Lilac for today; another day's class reads apart in mint.
+  final Tone? tone;
+
   @override
   Widget build(BuildContext context) {
-    final tone = context.tones.lilac;
+    final tone = this.tone ?? context.tones.lilac;
     final l10n = context.l10n;
     // Past an hour, minutes are hard to read: 557 → 9 小時後.
     final hours = minutes >= 60;
@@ -379,49 +421,66 @@ class _Hero extends StatelessWidget {
   }
 }
 
-/// The class after the hero's: its time, name and room on one line.
-class _AfterPill extends StatelessWidget {
-  const _AfterPill({required this.slot});
+/// The class after the hero's: name and room, its start on the right.
+class _AfterCard extends StatelessWidget {
+  const _AfterCard({required this.slot});
 
   final _Slot slot;
 
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
-    const bold = TextStyle(fontSize: 14, fontWeight: FontWeight.w800);
-    return Material(
+    final l10n = context.l10n;
+    return Card(
       color: scheme.surfaceContainerLow,
-      shape: const StadiumBorder(),
       clipBehavior: Clip.antiAlias,
       child: InkWell(
         onTap: () => context.push('/courses/${slot.course.id}'),
         child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 13),
+          padding: const EdgeInsets.fromLTRB(18, 14, 18, 14),
           child: Row(
             children: [
-              Container(
-                width: 8,
-                height: 8,
-                decoration: BoxDecoration(
-                  color: context.tones.forCourse(slot.course.id).strong,
-                  shape: BoxShape.circle,
-                ),
-              ),
-              const SizedBox(width: 10),
-              Text(clock(slot.session.start), style: bold),
-              const SizedBox(width: 10),
               Expanded(
-                child: Text(
-                  context.courseName(slot.course),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: bold,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      l10n.nextClass,
+                      style: TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w800,
+                        color: scheme.onSurfaceVariant,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      context.courseName(slot.course),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w900,
+                      ),
+                    ),
+                    if (slot.course.room case final room?)
+                      Text(
+                        room,
+                        style: TextStyle(
+                          fontSize: 13,
+                          fontWeight: FontWeight.w700,
+                          color: scheme.onSurfaceVariant,
+                        ),
+                      ),
+                  ],
                 ),
               ),
-              const SizedBox(width: 10),
+              const SizedBox(width: 12),
               Text(
-                _roomNumber(slot.course.room),
-                style: bold.copyWith(color: scheme.onSurfaceVariant),
+                clock(slot.session.start),
+                style: const TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.w900,
+                ),
               ),
             ],
           ),
@@ -431,8 +490,119 @@ class _AfterPill extends StatelessWidget {
   }
 }
 
+/// A list's name with its count in the list's colour, and 全部.
+class _GroupHeader extends StatelessWidget {
+  const _GroupHeader({
+    required this.title,
+    required this.count,
+    required this.color,
+    required this.onAll,
+  });
+
+  final String title;
+  final int count;
+  final Color color;
+  final VoidCallback onAll;
+
+  @override
+  Widget build(BuildContext context) {
+    const style = TextStyle(fontSize: 20, fontWeight: FontWeight.w900);
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(4, 20, 0, 2),
+      child: Row(
+        children: [
+          Text(title, style: style),
+          const SizedBox(width: 8),
+          Text('$count', style: style.copyWith(color: color)),
+          const Spacer(),
+          TextButton(onPressed: onAll, child: Text(context.l10n.viewAll)),
+        ],
+      ),
+    );
+  }
+}
+
+/// One item under a group: a dot, its name, a line under it and maybe a
+/// time on the right.
+class _ListRow extends StatelessWidget {
+  const _ListRow({
+    required this.dot,
+    required this.title,
+    required this.subtitle,
+    this.trailing,
+    this.onTap,
+  });
+
+  final Color dot;
+  final String title, subtitle;
+  final String? trailing;
+  final VoidCallback? onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    return InkWell(
+      onTap: onTap,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 13),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Padding(
+              padding: const EdgeInsets.fromLTRB(4, 7, 14, 0),
+              child: Container(
+                width: 10,
+                height: 10,
+                decoration: BoxDecoration(color: dot, shape: BoxShape.circle),
+              ),
+            ),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    title,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w800,
+                    ),
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    subtitle,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w700,
+                      color: scheme.onSurfaceVariant,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            if (trailing case final t?)
+              Padding(
+                padding: const EdgeInsets.only(left: 12, top: 2),
+                child: Text(
+                  t,
+                  style: const TextStyle(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w900,
+                  ),
+                ),
+              ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
 /// Notifications live behind this bell instead of a nav tab; the badge is
-/// the same unread count as the 未讀 tile.
+/// the same unread count as the 未讀 list.
 class _BellButton extends StatelessWidget {
   const _BellButton({required this.unread, required this.onTap});
 
