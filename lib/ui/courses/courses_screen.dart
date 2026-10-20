@@ -23,7 +23,7 @@ class _CoursesScreenState extends State<CoursesScreen> {
     final repo = context.read<EcourseRepository>();
     return Scaffold(
       extendBodyBehindAppBar: true,
-      appBar: topBar(context.l10n.navCourses),
+      appBar: subBar(context, context.l10n.navCourses),
       body: Loader<List<Course>>.watch(
         watch: () => repo.watch((repo) => repo.courses()),
         builder: (context, all) {

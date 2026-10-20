@@ -96,6 +96,17 @@ class _TimetableScreenState extends State<TimetableScreen> {
             appBar: topBar(
               context.l10n.navTimetable,
               actions: [
+                IconButton(
+                  tooltip: context.l10n.searchCourses,
+                  style: IconButton.styleFrom(
+                    backgroundColor: Theme.of(context)
+                        .colorScheme
+                        .surfaceContainer,
+                  ),
+                  onPressed: () => context.push('/courses'),
+                  icon: const Icon(Icons.search),
+                ),
+                const SizedBox(width: 8),
                 if (semesters.isNotEmpty)
                   Padding(
                     padding: const EdgeInsets.only(right: 16),
@@ -279,11 +290,14 @@ class _DayView extends StatelessWidget {
         if (courses.any((c) => c.sessions.isEmpty)) ...[
           SectionLabel(l10n.unscheduled),
           for (final c in courses.where((c) => c.sessions.isEmpty))
-            Padding(
-              padding: const EdgeInsets.only(bottom: 8),
-              child: Text(
-                context.courseName(c),
-                style: theme.textTheme.bodyMedium,
+            InkWell(
+              onTap: () => context.push('/courses/${c.id}'),
+              child: Padding(
+                padding: const EdgeInsets.symmetric(vertical: 8),
+                child: Text(
+                  context.courseName(c),
+                  style: theme.textTheme.bodyMedium,
+                ),
               ),
             ),
         ],

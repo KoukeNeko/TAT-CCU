@@ -127,7 +127,6 @@ class _AppShellState extends State<AppShell> {
         t.mint,
         clover,
       ),
-      (Icons.school_outlined, context.l10n.navCourses, t.peach, scallop),
       (Icons.event_outlined, context.l10n.navCalendar, t.sun, scallop),
       (Icons.apps, context.l10n.navMore, gray, clover),
     ];

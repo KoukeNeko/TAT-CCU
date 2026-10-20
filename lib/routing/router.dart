@@ -77,10 +77,8 @@ GoRouter buildRouter(EcourseAuthRepository auth) => GoRouter(
               path: '/timetable',
               builder: (_, _) => const TimetableScreen(),
             ),
-          ],
-        ),
-        StatefulShellBranch(
-          routes: [
+            // Courses open from the timetable's search and from anywhere
+            // else; pushing one shows the 課表 tab.
             GoRoute(
               path: '/courses',
               builder: (_, _) => const CoursesScreen(),
