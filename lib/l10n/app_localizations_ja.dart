@@ -1629,4 +1629,7 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get maintenance => 'メンテナンス中';
+
+  @override
+  String get schoolCalendar => '学年暦';
 }

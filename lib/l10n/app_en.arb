@@ -476,5 +476,6 @@
   "savedOther": "Other",
   "signedIn": "Signed in",
   "signInExpired": "Sign-in expired",
-  "maintenance": "Maintenance"
+  "maintenance": "Maintenance",
+  "schoolCalendar": "School calendar"
 }

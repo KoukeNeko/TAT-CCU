@@ -893,5 +893,6 @@
   "savedOther": "其他",
   "signedIn": "已登入",
   "signInExpired": "登入已失效",
-  "maintenance": "維護中"
+  "maintenance": "維護中",
+  "schoolCalendar": "校務行事曆"
 }

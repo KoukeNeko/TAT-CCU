@@ -1742,4 +1742,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get maintenance => 'Maintenance';
+
+  @override
+  String get schoolCalendar => 'School calendar';
 }

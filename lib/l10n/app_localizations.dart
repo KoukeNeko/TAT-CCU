@@ -2955,6 +2955,12 @@ abstract class AppLocalizations {
   /// In zh, this message translates to:
   /// **'維護中'**
   String get maintenance;
+
+  /// No description provided for @schoolCalendar.
+  ///
+  /// In zh, this message translates to:
+  /// **'校務行事曆'**
+  String get schoolCalendar;
 }
 
 class _AppLocalizationsDelegate

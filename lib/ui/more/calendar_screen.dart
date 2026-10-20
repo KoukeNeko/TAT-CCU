@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 
 import '../../data/repositories/ecourse_repository.dart';
+import '../../data/services/school_calendar.dart';
 import '../core/theme.dart';
 import '../core/widgets.dart';
 import '../../l10n/l10n.dart';
@@ -22,6 +23,46 @@ int _pageOf(DateTime d) => (d.year - 2000) * 12 + d.month - 1;
 DateTime _monthOf(int page) => DateTime(2000 + page ~/ 12, page % 12 + 1);
 
 const _rowHeight = 46.0;
+
+/// What an event is; each kind has its own color in the grid and the list.
+enum _Kind { school, assign, quiz, course, personal, site }
+
+/// eCourse2 events by module, or by Moodle's event type for the rest:
+/// course, group and other activities read as course events.
+_Kind _kindOf(CalendarEvent e) => switch (e.kind) {
+  'assign' => _Kind.assign,
+  'quiz' => _Kind.quiz,
+  'user' => _Kind.personal,
+  'site' || 'category' => _Kind.site,
+  _ => _Kind.course,
+};
+
+extension on _Kind {
+  // School dates take mint as on the countdown; sun is the selected day.
+  Tone tone(Tones t) => switch (this) {
+    _Kind.school => t.mint,
+    _Kind.assign => t.peach,
+    _Kind.quiz => t.identity[9],
+    _Kind.course => t.identity[2],
+    _Kind.personal => t.identity[6],
+    _Kind.site => t.identity[1],
+  };
+
+  String label(AppLocalizations l10n) => switch (this) {
+    _Kind.school => l10n.schoolCalendar,
+    _Kind.assign => l10n.eventLabel('assign', ''),
+    _Kind.quiz => l10n.eventLabel('quiz', ''),
+    _Kind.course => l10n.eventLabel('course', ''),
+    _Kind.personal => l10n.eventLabel('user', ''),
+    _Kind.site => l10n.eventLabel('site', ''),
+  };
+}
+
+/// School calendar entries on [day], counting every day of a range.
+List<SchoolDate> _schoolOn(DateTime day) => [
+  for (final d in schoolCalendar)
+    if (!day.isBefore(d.start) && !day.isAfter(d.end ?? d.start)) d,
+];
 
 class _CalendarScreenState extends State<CalendarScreen> {
   final _today = DateUtils.dateOnly(DateTime.now());
@@ -142,6 +183,11 @@ class _CalendarScreenState extends State<CalendarScreen> {
                 ),
               ),
             ),
+            FutureBuilder<List<CalendarEvent>>(
+              future: _events(_page),
+              builder: (context, snap) =>
+                  _Legend(month: month, events: snap.data ?? const []),
+            ),
             _DayEvents(
               key: ValueKey(_selected),
               day: _selected,
@@ -227,15 +273,18 @@ class _MonthGrid extends StatelessWidget {
                         );
                         final inMonth = day.month == month.month;
                         final isSelected = day == selected;
-                        final dots = byDay[day] ?? const [];
+                        final kinds = {
+                          if (_schoolOn(day).isNotEmpty) _Kind.school,
+                          for (final e in byDay[day] ?? const <CalendarEvent>[])
+                            _kindOf(e),
+                        };
                         return _DayCell(
                           day: day,
                           inMonth: inMonth,
                           isToday: day == today,
                           isSelected: isSelected,
                           dots: [
-                            for (final e in dots.take(3))
-                              tones.forCourse(e.courseId).strong,
+                            for (final k in kinds.take(3)) k.tone(tones).strong,
                           ],
                           onTap: () => onTap(day),
                         );
@@ -395,20 +444,53 @@ class _DayEvents extends StatelessWidget {
           for (final e in snap.data ?? const <CalendarEvent>[])
             if (DateUtils.dateOnly(e.time) == day) e,
         ]..sort((a, b) => a.time.compareTo(b.time));
+        final school = _schoolOn(day);
+        final count = school.length + events.length;
         return Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             SectionLabel(
               '${day.month}/${day.day} ${weekdayName(context, day.weekday)}',
-              detail: events.isEmpty
-                  ? null
-                  : context.l10n.itemCount(events.length),
+              detail: count == 0 ? null : context.l10n.itemCount(count),
             ),
+            for (final d in school)
+              Padding(
+                padding: const EdgeInsets.only(bottom: 8),
+                child: ToneBlock(
+                  tone: _Kind.school.tone(tones),
+                  radius: Corners.row,
+                  padding: const EdgeInsets.all(14),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        d.title,
+                        style: const TextStyle(
+                          fontSize: 15,
+                          fontWeight: FontWeight.w900,
+                        ),
+                      ),
+                      const SizedBox(height: 2),
+                      Text(
+                        [
+                          _Kind.school.label(context.l10n),
+                          if (d.end case final end?)
+                            '${monthDay(d.start)} – ${monthDay(end)}',
+                        ].join('・'),
+                        style: const TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
             if (snap.hasError)
               Text('${snap.error}', textAlign: TextAlign.center)
             else if (snap.connectionState != ConnectionState.done)
               const Center(child: CircularProgressIndicator())
-            else if (events.isEmpty)
+            else if (count == 0)
               Padding(
                 padding: const EdgeInsets.only(top: 24),
                 child: Text(
@@ -421,7 +503,7 @@ class _DayEvents extends StatelessWidget {
               Padding(
                 padding: const EdgeInsets.only(bottom: 8),
                 child: ToneBlock(
-                  tone: tones.forCourse(e.courseId),
+                  tone: _kindOf(e).tone(tones),
                   radius: Corners.row,
                   padding: const EdgeInsets.all(14),
                   onTap: e.cmid != null && e.courseId != 0
@@ -470,6 +552,61 @@ class _DayEvents extends StatelessWidget {
           ],
         );
       },
+    );
+  }
+}
+
+/// The colors in use this month and what they mean.
+class _Legend extends StatelessWidget {
+  const _Legend({required this.month, required this.events});
+
+  final DateTime month;
+  final List<CalendarEvent> events;
+
+  @override
+  Widget build(BuildContext context) {
+    final tones = context.tones;
+    final scheme = Theme.of(context).colorScheme;
+    final last = DateTime(month.year, month.month + 1, 0);
+    final kinds = {
+      if (schoolCalendar.any(
+        (d) => !d.start.isAfter(last) && !(d.end ?? d.start).isBefore(month),
+      ))
+        _Kind.school,
+      for (final e in events) _kindOf(e),
+    };
+    if (kinds.isEmpty) return const SizedBox.shrink();
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(8, 12, 8, 0),
+      child: Wrap(
+        spacing: 14,
+        runSpacing: 6,
+        children: [
+          for (final k in _Kind.values)
+            if (kinds.contains(k))
+              Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  DecoratedBox(
+                    decoration: BoxDecoration(
+                      color: k.tone(tones).strong,
+                      shape: BoxShape.circle,
+                    ),
+                    child: const SizedBox.square(dimension: 8),
+                  ),
+                  const SizedBox(width: 6),
+                  Text(
+                    k.label(context.l10n),
+                    style: TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w800,
+                      color: scheme.onSurfaceVariant,
+                    ),
+                  ),
+                ],
+              ),
+        ],
+      ),
     );
   }
 }

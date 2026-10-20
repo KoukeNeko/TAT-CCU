@@ -476,5 +476,6 @@
   "savedOther": "その他",
   "signedIn": "ログイン中",
   "signInExpired": "ログイン期限切れ",
-  "maintenance": "メンテナンス中"
+  "maintenance": "メンテナンス中",
+  "schoolCalendar": "学年暦"
 }

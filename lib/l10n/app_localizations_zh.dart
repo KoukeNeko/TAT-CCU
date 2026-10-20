@@ -1640,4 +1640,7 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get maintenance => '維護中';
+
+  @override
+  String get schoolCalendar => '校務行事曆';
 }
