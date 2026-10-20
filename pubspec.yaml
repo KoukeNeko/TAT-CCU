@@ -38,6 +38,7 @@ flutter:
   generate: true
   assets:
     - assets/school_calendar.txt
+    - assets/bus_timetable.txt
 
   # LINE Seed (SIL OFL 1.1; licenses in assets/fonts). Thin is left out to
   # keep the app smaller; w900 falls back to ExtraBold.

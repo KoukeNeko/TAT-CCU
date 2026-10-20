@@ -2746,30 +2746,6 @@ abstract class AppLocalizations {
   /// **'學期倒數'**
   String get toolCountdown;
 
-  /// No description provided for @busStop.
-  ///
-  /// In zh, this message translates to:
-  /// **'活動中心前候車亭'**
-  String get busStop;
-
-  /// No description provided for @busMinxiong.
-  ///
-  /// In zh, this message translates to:
-  /// **'民雄火車站 ⇄ 中正大學'**
-  String get busMinxiong;
-
-  /// No description provided for @busChiayi.
-  ///
-  /// In zh, this message translates to:
-  /// **'嘉義火車站 ⇄ 中正大學'**
-  String get busChiayi;
-
-  /// No description provided for @busMinutes.
-  ///
-  /// In zh, this message translates to:
-  /// **'約 {minutes} 分鐘'**
-  String busMinutes(int minutes);
-
   /// No description provided for @busLive.
   ///
   /// In zh, this message translates to:
@@ -2967,6 +2943,60 @@ abstract class AppLocalizations {
   /// In zh, this message translates to:
   /// **'形狀與動態'**
   String get dlShapes;
+
+  /// No description provided for @busDeparts.
+  ///
+  /// In zh, this message translates to:
+  /// **'{stop} {time} 發車'**
+  String busDeparts(String stop, String time);
+
+  /// No description provided for @busRoutes.
+  ///
+  /// In zh, this message translates to:
+  /// **'路線'**
+  String get busRoutes;
+
+  /// No description provided for @busFares.
+  ///
+  /// In zh, this message translates to:
+  /// **'票價'**
+  String get busFares;
+
+  /// No description provided for @busFareKinds.
+  ///
+  /// In zh, this message translates to:
+  /// **'全票／半票'**
+  String get busFareKinds;
+
+  /// No description provided for @busDirectionFrom.
+  ///
+  /// In zh, this message translates to:
+  /// **'{direction}・{stop}發車'**
+  String busDirectionFrom(String direction, String stop);
+
+  /// No description provided for @busStartsOn.
+  ///
+  /// In zh, this message translates to:
+  /// **'{date} 起行駛'**
+  String busStartsOn(String date);
+
+  /// No description provided for @busNoTrips.
+  ///
+  /// In zh, this message translates to:
+  /// **'本週沒有班次'**
+  String get busNoTrips;
+
+  /// No description provided for @busDepartsShort.
+  ///
+  /// In zh, this message translates to:
+  /// **'發車'**
+  String get busDepartsShort;
+
+  /// No description provided for @busUpNext.
+  ///
+  /// In zh, this message translates to:
+  /// **'接下來'**
+  String get busUpNext;
 }
 
 class _AppLocalizationsDelegate

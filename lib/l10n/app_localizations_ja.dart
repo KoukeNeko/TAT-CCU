@@ -1516,20 +1516,6 @@ class AppLocalizationsJa extends AppLocalizations {
   String get toolCountdown => '学期カウントダウン';
 
   @override
-  String get busStop => '活動センター前のバス停';
-
-  @override
-  String get busMinxiong => '民雄駅 ⇄ 中正大学';
-
-  @override
-  String get busChiayi => '嘉義駅 ⇄ 中正大学';
-
-  @override
-  String busMinutes(int minutes) {
-    return '約 $minutes 分';
-  }
-
-  @override
   String get busLive => '運行状況';
 
   @override
@@ -1635,4 +1621,37 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get dlShapes => '形と動き';
+
+  @override
+  String busDeparts(String stop, String time) {
+    return '$stop $time 発';
+  }
+
+  @override
+  String get busRoutes => '路線';
+
+  @override
+  String get busFares => '運賃';
+
+  @override
+  String get busFareKinds => '大人／小人';
+
+  @override
+  String busDirectionFrom(String direction, String stop) {
+    return '$direction・$stop発';
+  }
+
+  @override
+  String busStartsOn(String date) {
+    return '$date から運行';
+  }
+
+  @override
+  String get busNoTrips => '今週の運行なし';
+
+  @override
+  String get busDepartsShort => '発';
+
+  @override
+  String get busUpNext => '次の便';
 }

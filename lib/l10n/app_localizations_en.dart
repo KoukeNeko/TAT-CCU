@@ -1628,20 +1628,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get toolCountdown => 'Semester dates';
 
   @override
-  String get busStop => 'Stop in front of the Activity Center';
-
-  @override
-  String get busMinxiong => 'Minxiong Station ⇄ CCU';
-
-  @override
-  String get busChiayi => 'Chiayi Station ⇄ CCU';
-
-  @override
-  String busMinutes(int minutes) {
-    return 'About $minutes min';
-  }
-
-  @override
   String get busLive => 'Live times';
 
   @override
@@ -1748,4 +1734,37 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get dlShapes => 'Shapes and motion';
+
+  @override
+  String busDeparts(String stop, String time) {
+    return '$time from $stop';
+  }
+
+  @override
+  String get busRoutes => 'Routes';
+
+  @override
+  String get busFares => 'Fares';
+
+  @override
+  String get busFareKinds => 'Full／half';
+
+  @override
+  String busDirectionFrom(String direction, String stop) {
+    return '$direction・from $stop';
+  }
+
+  @override
+  String busStartsOn(String date) {
+    return 'Runs from $date';
+  }
+
+  @override
+  String get busNoTrips => 'No buses this week';
+
+  @override
+  String get busDepartsShort => ' departs';
+
+  @override
+  String get busUpNext => 'Up next';
 }

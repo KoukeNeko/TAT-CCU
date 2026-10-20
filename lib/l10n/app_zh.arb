@@ -834,17 +834,6 @@
   "tools": "小工具",
   "toolBus": "公車",
   "toolCountdown": "學期倒數",
-  "busStop": "活動中心前候車亭",
-  "busMinxiong": "民雄火車站 ⇄ 中正大學",
-  "busChiayi": "嘉義火車站 ⇄ 中正大學",
-  "busMinutes": "約 {minutes} 分鐘",
-  "@busMinutes": {
-    "placeholders": {
-      "minutes": {
-        "type": "int"
-      }
-    }
-  },
   "busLive": "即時動態",
   "daysUnit": "天",
   "termWeek": "學期進行到第 {week} 週・共 {weeks} 週",
@@ -895,5 +884,17 @@
   "signInExpired": "登入已失效",
   "maintenance": "維護中",
   "schoolCalendar": "校務行事曆",
-  "dlShapes": "形狀與動態"
+  "dlShapes": "形狀與動態",
+  "busDeparts": "{stop} {time} 發車",
+  "@busDeparts": {"placeholders": {"stop": {"type": "String"}, "time": {"type": "String"}}},
+  "busRoutes": "路線",
+  "busFares": "票價",
+  "busFareKinds": "全票／半票",
+  "busDirectionFrom": "{direction}・{stop}發車",
+  "busStartsOn": "{date} 起行駛",
+  "busNoTrips": "本週沒有班次",
+  "@busDirectionFrom": {"placeholders": {"direction": {"type": "String"}, "stop": {"type": "String"}}},
+  "@busStartsOn": {"placeholders": {"date": {"type": "String"}}},
+  "busDepartsShort": "發車",
+  "busUpNext": "接下來"
 }

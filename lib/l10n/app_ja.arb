@@ -442,10 +442,6 @@
   "tools": "ツール",
   "toolBus": "バス",
   "toolCountdown": "学期カウントダウン",
-  "busStop": "活動センター前のバス停",
-  "busMinxiong": "民雄駅 ⇄ 中正大学",
-  "busChiayi": "嘉義駅 ⇄ 中正大学",
-  "busMinutes": "約 {minutes} 分",
   "busLive": "運行状況",
   "daysUnit": "日",
   "termWeek": "第 {week} 週・全 {weeks} 週",
@@ -478,5 +474,14 @@
   "signInExpired": "ログイン期限切れ",
   "maintenance": "メンテナンス中",
   "schoolCalendar": "学年暦",
-  "dlShapes": "形と動き"
+  "dlShapes": "形と動き",
+  "busDeparts": "{stop} {time} 発",
+  "busRoutes": "路線",
+  "busFares": "運賃",
+  "busFareKinds": "大人／小人",
+  "busDirectionFrom": "{direction}・{stop}発",
+  "busStartsOn": "{date} から運行",
+  "busNoTrips": "今週の運行なし",
+  "busDepartsShort": "発",
+  "busUpNext": "次の便"
 }

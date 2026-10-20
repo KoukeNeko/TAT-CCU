@@ -1527,20 +1527,6 @@ class AppLocalizationsZh extends AppLocalizations {
   String get toolCountdown => '學期倒數';
 
   @override
-  String get busStop => '活動中心前候車亭';
-
-  @override
-  String get busMinxiong => '民雄火車站 ⇄ 中正大學';
-
-  @override
-  String get busChiayi => '嘉義火車站 ⇄ 中正大學';
-
-  @override
-  String busMinutes(int minutes) {
-    return '約 $minutes 分鐘';
-  }
-
-  @override
   String get busLive => '即時動態';
 
   @override
@@ -1646,4 +1632,37 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get dlShapes => '形狀與動態';
+
+  @override
+  String busDeparts(String stop, String time) {
+    return '$stop $time 發車';
+  }
+
+  @override
+  String get busRoutes => '路線';
+
+  @override
+  String get busFares => '票價';
+
+  @override
+  String get busFareKinds => '全票／半票';
+
+  @override
+  String busDirectionFrom(String direction, String stop) {
+    return '$direction・$stop發車';
+  }
+
+  @override
+  String busStartsOn(String date) {
+    return '$date 起行駛';
+  }
+
+  @override
+  String get busNoTrips => '本週沒有班次';
+
+  @override
+  String get busDepartsShort => '發車';
+
+  @override
+  String get busUpNext => '接下來';
 }

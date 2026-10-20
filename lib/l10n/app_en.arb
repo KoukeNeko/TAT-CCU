@@ -442,10 +442,6 @@
   "tools": "Tools",
   "toolBus": "Buses",
   "toolCountdown": "Semester dates",
-  "busStop": "Stop in front of the Activity Center",
-  "busMinxiong": "Minxiong Station ⇄ CCU",
-  "busChiayi": "Chiayi Station ⇄ CCU",
-  "busMinutes": "About {minutes} min",
   "busLive": "Live times",
   "daysUnit": "days",
   "termWeek": "Week {week} of {weeks}",
@@ -478,5 +474,14 @@
   "signInExpired": "Sign-in expired",
   "maintenance": "Maintenance",
   "schoolCalendar": "School calendar",
-  "dlShapes": "Shapes and motion"
+  "dlShapes": "Shapes and motion",
+  "busDeparts": "{time} from {stop}",
+  "busRoutes": "Routes",
+  "busFares": "Fares",
+  "busFareKinds": "Full／half",
+  "busDirectionFrom": "{direction}・from {stop}",
+  "busStartsOn": "Runs from {date}",
+  "busNoTrips": "No buses this week",
+  "busDepartsShort": " departs",
+  "busUpNext": "Up next"
 }
