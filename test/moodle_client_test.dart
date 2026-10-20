@@ -136,6 +136,23 @@ void main() {
     expect(calls, 2);
   });
 
+  test('a write is never sent twice, even on a dropped connection', () async {
+    var calls = 0;
+    final client = MoodleClient(
+      siteUrl: Uri.parse('https://example.test/'),
+      token: 't',
+      newHttpClient: () => MockClient((_) async {
+        calls++;
+        throw http.ClientException('Connection reset by peer');
+      }),
+    );
+    await expectLater(
+      client.send('mod_forum_add_discussion_post'),
+      throwsA(isA<http.ClientException>()),
+    );
+    expect(calls, 1);
+  });
+
   test('gives up after the retry fails too', () async {
     var calls = 0;
     final client = MoodleClient(

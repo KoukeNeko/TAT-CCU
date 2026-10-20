@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../../data/repositories/ecourse_repository.dart';
+import '../core/compose_screen.dart';
 import '../core/theme.dart';
 import '../core/widgets.dart';
 import '../../l10n/l10n.dart';
@@ -57,7 +58,8 @@ class ModuleScreen extends StatelessWidget {
               watch: () => repo.watch(
                 (repo) => repo.assignment(courseId, module!.instance),
               ),
-              builder: (context, a) => _AssignmentBody(assignment: a),
+              builder: (context, a) =>
+                  _AssignmentBody(assignment: a, cmid: cmid),
             ),
             'forum' => ForumBody(courseId: courseId, forumId: module!.instance),
             'quiz' => Loader<Quiz>.watch(
@@ -74,9 +76,10 @@ class ModuleScreen extends StatelessWidget {
 }
 
 class _AssignmentBody extends StatelessWidget {
-  const _AssignmentBody({required this.assignment});
+  const _AssignmentBody({required this.assignment, required this.cmid});
 
   final Assignment assignment;
+  final int cmid;
 
   @override
   Widget build(BuildContext context) {
@@ -123,7 +126,185 @@ class _AssignmentBody extends StatelessWidget {
           SectionLabel(l10n.attachments),
           FileList(files: a.attachments, detail: (f) => fileSize(f.size)),
         ],
+        if (a.commentsOn case final submission?)
+          _Comments(cmid: cmid, submission: submission),
       ],
+    );
+  }
+}
+
+/// Submission comments with the teacher and TAs, oldest first; one's own
+/// can be deleted with a long press.
+class _Comments extends StatefulWidget {
+  const _Comments({required this.cmid, required this.submission});
+
+  final int cmid, submission;
+
+  @override
+  State<_Comments> createState() => _CommentsState();
+}
+
+class _CommentsState extends State<_Comments> {
+  late Future<({List<SubmissionComment> comments, bool canPost})> _load =
+      _fetch();
+
+  Future<({List<SubmissionComment> comments, bool canPost})> _fetch() => context
+      .read<EcourseRepository>()
+      .submissionComments(widget.cmid, widget.submission);
+
+  void _reload() => setState(() => _load = _fetch());
+
+  Future<void> _add() async {
+    final l10n = context.l10n;
+    final repo = context.read<EcourseRepository>();
+    final sent = await compose(
+      context,
+      title: l10n.submissionComments,
+      hint: l10n.commentHint,
+      send: (_, text) =>
+          repo.addSubmissionComment(widget.cmid, widget.submission, text),
+    );
+    if (sent && mounted) _reload();
+  }
+
+  Future<void> _delete(SubmissionComment c) async {
+    final l10n = context.l10n;
+    final ok = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text(l10n.deleteComment),
+        content: Text(c.text, maxLines: 3, overflow: TextOverflow.ellipsis),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: Text(l10n.cancel),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(context, true),
+            child: Text(l10n.delete),
+          ),
+        ],
+      ),
+    );
+    if (ok != true || !mounted) return;
+    try {
+      await context.read<EcourseRepository>().deleteSubmissionComment(c.id);
+      if (mounted) _reload();
+    } catch (e) {
+      if (mounted) showSendError(context, e);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    final mint = context.tones.mint;
+    return FutureBuilder(
+      future: _load,
+      builder: (context, snap) {
+        final data = snap.data;
+        if (snap.hasError) {
+          return Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              SectionLabel(context.l10n.submissionComments),
+              Row(
+                children: [
+                  Text(context.l10n.loadFailed),
+                  TextButton(
+                    onPressed: _reload,
+                    child: Text(context.l10n.retry),
+                  ),
+                ],
+              ),
+            ],
+          );
+        }
+        if (data == null) return const SizedBox.shrink();
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            SectionLabel(
+              context.l10n.submissionComments,
+              detail: '${data.comments.length}',
+            ),
+            for (final c in data.comments)
+              InkWell(
+                onLongPress: c.mine ? () => _delete(c) : null,
+                borderRadius: BorderRadius.circular(Corners.small),
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 4,
+                    vertical: 10,
+                  ),
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      CircleAvatar(
+                        radius: 16,
+                        backgroundColor: c.mine
+                            ? mint.fill
+                            : scheme.surfaceContainerHigh,
+                        foregroundColor: c.mine
+                            ? mint.ink
+                            : scheme.onSurfaceVariant,
+                        child: Text(
+                          c.author.characters.firstOrNull ?? '',
+                          style: const TextStyle(
+                            fontSize: 13,
+                            fontWeight: FontWeight.w900,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 10),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text.rich(
+                              TextSpan(
+                                children: [
+                                  TextSpan(
+                                    text: c.author,
+                                    style: const TextStyle(
+                                      fontWeight: FontWeight.w900,
+                                    ),
+                                  ),
+                                  TextSpan(
+                                    text: '  ${dateTimeLabel(context, c.time)}',
+                                    style: TextStyle(
+                                      fontSize: 12,
+                                      fontWeight: FontWeight.w700,
+                                      color: scheme.onSurfaceVariant,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                            const SizedBox(height: 3),
+                            SelectableText(
+                              c.text,
+                              style: const TextStyle(height: 1.55),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            if (data.canPost)
+              Padding(
+                padding: const EdgeInsets.only(top: 8),
+                child: ComposeBar(
+                  hint: context.l10n.commentHint,
+                  onTap: _add,
+                  inline: true,
+                ),
+              ),
+          ],
+        );
+      },
     );
   }
 }

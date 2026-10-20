@@ -1678,4 +1678,48 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get openSourceLicenses => 'オープンソースライセンス';
+
+  @override
+  String get sendFailed => '送信できませんでした。もう一度お試しください。';
+
+  @override
+  String get reply => '返信';
+
+  @override
+  String get replyToThread => 'このディスカッションに返信';
+
+  @override
+  String replyingTo(String name) {
+    return '$name に返信';
+  }
+
+  @override
+  String get newDiscussion => '新しいディスカッション';
+
+  @override
+  String get subject => '件名';
+
+  @override
+  String get messageBody => '本文';
+
+  @override
+  String get cancel => 'キャンセル';
+
+  @override
+  String get submissionComments => '提出物へのコメント';
+
+  @override
+  String get commentHint => '教員・TA へのコメント';
+
+  @override
+  String get deleteComment => 'このコメントを削除しますか？';
+
+  @override
+  String get delete => '削除';
+
+  @override
+  String get markUnread => '未読にする';
+
+  @override
+  String get compose => '作成';
 }

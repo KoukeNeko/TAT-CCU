@@ -73,11 +73,18 @@ class MoodleClient {
     required ResponseCache cache,
   }) = _SavedOnlyMoodleClient;
 
-  Future<http.Response> _post(Uri url, Map<String, String> body) async {
+  /// [once]: a write. It goes out a single time with the full timeout, since
+  /// a stalled or dropped request may still have reached eCourse2 and
+  /// sending it again could post twice.
+  Future<http.Response> _post(
+    Uri url,
+    Map<String, String> body, {
+    bool once = false,
+  }) async {
     var resent = false;
     for (var attempt = 0; ; attempt++) {
       final client = _http;
-      final last = attempt == _switches;
+      final last = once || attempt == _switches;
       final watch = Stopwatch()..start();
       try {
         final response = await client
@@ -104,8 +111,8 @@ class MoodleClient {
         // A pooled keep-alive connection can be dead without the client
         // knowing, most often after the app was suspended or the phone
         // switched networks, or [_leave] closed it under this request.
-        // Sending again opens a fresh one; safe because every function this
-        // app calls only reads.
+        // Sending again opens a fresh one; a write ([once]) is last, so it
+        // is never sent again.
         if (last || resent) rethrow;
         resent = true;
       }
@@ -125,6 +132,26 @@ class MoodleClient {
     String function, [
     Map<String, Object?> params = const {},
   ]) async {
+    final decoded = await _request(function, params);
+    await cache?.write(
+      ResponseCache.keyOf(function, flattenParams(params)),
+      decoded,
+    );
+    return decoded;
+  }
+
+  /// Calls a function that changes something on eCourse2: sent once and
+  /// never saved for [offline].
+  Future<dynamic> send(
+    String function, [
+    Map<String, Object?> params = const {},
+  ]) => _request(function, params, once: true);
+
+  Future<dynamic> _request(
+    String function,
+    Map<String, Object?> params, {
+    bool once = false,
+  }) async {
     final body = {
       'wstoken': token,
       'wsfunction': function,
@@ -134,6 +161,7 @@ class MoodleClient {
     final response = await _post(
       siteUrl.resolve('webservice/rest/server.php'),
       body,
+      once: once,
     );
     if (response.statusCode != 200) {
       throw MoodleException('http${response.statusCode}', function);
@@ -142,10 +170,6 @@ class MoodleClient {
     if (decoded is Map && decoded['exception'] != null) {
       throw MoodleException('${decoded['errorcode']}', '${decoded['message']}');
     }
-    await cache?.write(
-      ResponseCache.keyOf(function, flattenParams(params)),
-      decoded,
-    );
     return decoded;
   }
 }
@@ -184,6 +208,12 @@ class _SavedOnlyMoodleClient extends MoodleClient {
 
   @override
   Future<dynamic> call(
+    String function, [
+    Map<String, Object?> params = const {},
+  ]) async => throw MoodleException('invalidtoken', function);
+
+  @override
+  Future<dynamic> send(
     String function, [
     Map<String, Object?> params = const {},
   ]) async => throw MoodleException('invalidtoken', function);

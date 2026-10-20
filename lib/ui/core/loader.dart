@@ -394,3 +394,19 @@ class CapsuleArea extends StatelessWidget {
     );
   }
 }
+
+/// A write to eCourse2 failed: why, in a snack bar. The typed text stays
+/// where it was, so the student can send it again.
+void showSendError(BuildContext context, Object error) {
+  final l10n = context.l10n;
+  ScaffoldMessenger.of(context).showSnackBar(
+    SnackBar(
+      content: Text(switch (error) {
+        MoodleException(errorCode: 'demo') => l10n.demoUnavailable,
+        MoodleException(isMaintenance: true) => l10n.ecourseMaintenance,
+        MoodleException(needsSignIn: true) => l10n.ecourseSignedOut,
+        _ => l10n.sendFailed,
+      }),
+    ),
+  );
+}

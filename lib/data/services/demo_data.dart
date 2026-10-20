@@ -300,6 +300,12 @@ List<Map<String, Object?>> _posts(int discussion) {
   ];
 }
 
+/// The demo inbox: id, subject, sender, course id, hours ago, unread.
+const _mail = [
+  (1, '專題進度會議時間', '王教授', 9004, 5, true),
+  (2, 'Lab 4 繳交方式', '助教', 9002, 72, false),
+];
+
 /// Answers every eCourse2 function the app calls, without the network.
 class DemoMoodleClient extends MoodleClient {
   DemoMoodleClient()
@@ -308,6 +314,13 @@ class DemoMoodleClient extends MoodleClient {
   /// Saved answers are the live ones: there is nothing to wait for.
   @override
   MoodleClient offline() => this;
+
+  /// The demo account has nothing on eCourse2 to change.
+  @override
+  Future<dynamic> send(
+    String function, [
+    Map<String, Object?> params = const {},
+  ]) async => throw MoodleException('demo', function);
 
   @override
   Future<dynamic> call(
@@ -394,22 +407,36 @@ class DemoMoodleClient extends MoodleClient {
       'local_mail_get_unread_count' => 1,
       'local_mail_get_index' => {
         'messages': [
-          {
-            'subject': '專題進度會議時間',
-            'sender': {'fullname': '王教授'},
-            'course': {'shortname': '$semester 計算機專題（三）'},
-            'time': _ts(now.subtract(const Duration(hours: 5))),
-            'unread': true,
-          },
-          {
-            'subject': 'Lab 4 繳交方式',
-            'sender': {'fullname': '助教'},
-            'course': {'shortname': '$semester 網路安全攻防技術'},
-            'time': _ts(now.subtract(const Duration(days: 3))),
-            'unread': false,
-          },
+          for (final (id, subject, sender, course, hours, unread) in _mail)
+            {
+              'id': id,
+              'subject': subject,
+              'sender': {'fullname': sender},
+              'course': {'id': course, 'shortname': semester},
+              'time': _ts(now.subtract(Duration(hours: hours))),
+              'unread': unread,
+            },
         ],
       },
+      'local_mail_get_menu' => {
+        'courses': [
+          {'id': 9004, 'fullname': '深度學習導論', 'unread': 1},
+          {'id': 9002, 'fullname': '網路安全攻防技術', 'unread': 0},
+        ],
+      },
+      'local_mail_get_message' => {
+        for (final (mid, subject, sender, course, hours, _) in _mail)
+          if (mid == id('id')) ...{
+            'subject': subject,
+            'content': '各位同學好，請在週五前回覆可以出席的時段。',
+            'sender': {'fullname': sender},
+            'course': {'shortname': course == 9004 ? '深度學習導論' : '網路安全攻防技術'},
+            'time': _ts(now.subtract(Duration(hours: hours))),
+            'attachments': [],
+          },
+      },
+      'mod_forum_can_add_discussion' => {'status': false},
+      'core_comment_get_comments' => {'comments': [], 'canpost': false},
       'core_course_get_contents' => _contents(id('courseid')),
       'mod_forum_get_forums_by_courses' => [
         {'id': id('courseids[0]') * 10 + 1, 'type': 'news'},

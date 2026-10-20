@@ -491,5 +491,19 @@
   "about": "このアプリについて",
   "contributors": "コントリビューター",
   "project": "プロジェクト",
-  "openSourceLicenses": "オープンソースライセンス"
+  "openSourceLicenses": "オープンソースライセンス",
+  "sendFailed": "送信できませんでした。もう一度お試しください。",
+  "reply": "返信",
+  "replyToThread": "このディスカッションに返信",
+  "replyingTo": "{name} に返信",
+  "newDiscussion": "新しいディスカッション",
+  "subject": "件名",
+  "messageBody": "本文",
+  "cancel": "キャンセル",
+  "submissionComments": "提出物へのコメント",
+  "commentHint": "教員・TA へのコメント",
+  "deleteComment": "このコメントを削除しますか？",
+  "delete": "削除",
+  "markUnread": "未読にする",
+  "compose": "作成"
 }

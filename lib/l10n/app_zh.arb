@@ -904,5 +904,20 @@
   "about": "關於",
   "contributors": "貢獻者",
   "project": "專案",
-  "openSourceLicenses": "開放原始碼授權"
+  "openSourceLicenses": "開放原始碼授權",
+  "sendFailed": "沒有送出，請再試一次",
+  "reply": "回覆",
+  "replyToThread": "回覆這則討論",
+  "replyingTo": "回覆 {name}",
+  "@replyingTo": {"placeholders": {"name": {"type": "String"}}},
+  "newDiscussion": "新增討論",
+  "subject": "主旨",
+  "messageBody": "內容",
+  "cancel": "取消",
+  "submissionComments": "繳交留言",
+  "commentHint": "留言給老師與助教",
+  "deleteComment": "刪除這則留言？",
+  "delete": "刪除",
+  "markUnread": "標為未讀",
+  "compose": "寫信"
 }

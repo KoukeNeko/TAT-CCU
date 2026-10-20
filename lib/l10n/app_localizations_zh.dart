@@ -1689,4 +1689,48 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get openSourceLicenses => '開放原始碼授權';
+
+  @override
+  String get sendFailed => '沒有送出，請再試一次';
+
+  @override
+  String get reply => '回覆';
+
+  @override
+  String get replyToThread => '回覆這則討論';
+
+  @override
+  String replyingTo(String name) {
+    return '回覆 $name';
+  }
+
+  @override
+  String get newDiscussion => '新增討論';
+
+  @override
+  String get subject => '主旨';
+
+  @override
+  String get messageBody => '內容';
+
+  @override
+  String get cancel => '取消';
+
+  @override
+  String get submissionComments => '繳交留言';
+
+  @override
+  String get commentHint => '留言給老師與助教';
+
+  @override
+  String get deleteComment => '刪除這則留言？';
+
+  @override
+  String get delete => '刪除';
+
+  @override
+  String get markUnread => '標為未讀';
+
+  @override
+  String get compose => '寫信';
 }

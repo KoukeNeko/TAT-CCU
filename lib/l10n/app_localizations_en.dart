@@ -1792,4 +1792,48 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get openSourceLicenses => 'Open source licenses';
+
+  @override
+  String get sendFailed => 'Not sent. Try again.';
+
+  @override
+  String get reply => 'Reply';
+
+  @override
+  String get replyToThread => 'Reply to this discussion';
+
+  @override
+  String replyingTo(String name) {
+    return 'Replying to $name';
+  }
+
+  @override
+  String get newDiscussion => 'New discussion';
+
+  @override
+  String get subject => 'Subject';
+
+  @override
+  String get messageBody => 'Message';
+
+  @override
+  String get cancel => 'Cancel';
+
+  @override
+  String get submissionComments => 'Submission comments';
+
+  @override
+  String get commentHint => 'Comment to the teacher and TAs';
+
+  @override
+  String get deleteComment => 'Delete this comment?';
+
+  @override
+  String get delete => 'Delete';
+
+  @override
+  String get markUnread => 'Mark as unread';
+
+  @override
+  String get compose => 'Compose';
 }

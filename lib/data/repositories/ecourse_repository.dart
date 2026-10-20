@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import '../../domain/models/course.dart';
 import '../services/html_text.dart';
 import '../services/moodle_client.dart';
@@ -21,11 +23,32 @@ typedef NoticeItem = ({
 });
 
 typedef MailItem = ({
+  int id,
+  int courseId,
   String subject,
   String sender,
   String course,
   DateTime time,
   bool unread,
+});
+
+/// One message in full; reading it marks it read on eCourse2.
+typedef MailMessage = ({
+  String subject,
+  String sender,
+  String course,
+  DateTime time,
+  String body,
+  List<ModuleFile> attachments,
+});
+
+/// A comment on an assignment submission; [mine] can be deleted.
+typedef SubmissionComment = ({
+  int id,
+  String author,
+  DateTime time,
+  String text,
+  bool mine,
 });
 
 typedef ModuleFile = ({String name, int size, String url, DateTime modified});
@@ -91,6 +114,10 @@ typedef Assignment = ({
   DateTime? submittedAt,
   List<ModuleFile> submission,
   String? grade,
+
+  /// Set when the assignment takes submission comments; they hang off the
+  /// student's submission.
+  int? commentsOn,
 });
 
 /// [finished] is the latest finished attempt; [grade] is null until graded.
@@ -109,8 +136,13 @@ typedef Quiz = ({
 DateTime _ts(Object? s) =>
     DateTime.fromMillisecondsSinceEpoch(((s as num?) ?? 0).toInt() * 1000);
 
-/// Read-only access to eCourse2. Every function here was verified with a
-/// student token; see CCU 研究報告彙整/eCourse2 功能分類.md.
+/// Typed text as the HTML that forum posts are stored in.
+String _html(String text) =>
+    const HtmlEscape().convert(text).replaceAll('\n', '<br>');
+
+/// Access to eCourse2. Every read here was verified with a student token
+/// (see CCU 研究報告彙整/eCourse2 功能分類.md); writes go through
+/// [MoodleClient.send].
 class EcourseRepository {
   EcourseRepository(this._client);
 
@@ -292,6 +324,8 @@ class EcourseRepository {
     return [
       for (final m in r['messages'] as List)
         (
+          id: (m['id'] as num).toInt(),
+          courseId: (m['course']?['id'] as num?)?.toInt() ?? 0,
           subject: '${m['subject']}',
           sender: '${m['sender']?['fullname'] ?? ''}',
           course: '${m['course']?['shortname'] ?? ''}',
@@ -300,6 +334,111 @@ class EcourseRepository {
         ),
     ];
   }
+  /// Courses with mail and their unread counts, as eCourse2's menu lists them.
+  Future<List<({int id, String name, int unread})>> mailCourses() async {
+    final r = await _client.call('local_mail_get_menu') as Map;
+    return [
+      for (final c in r['courses'] as List)
+        (
+          id: (c['id'] as num).toInt(),
+          name: multilang('${c['fullname']}'),
+          unread: (c['unread'] as num).toInt(),
+        ),
+    ];
+  }
+
+  Future<MailMessage> mailMessage(int id) async {
+    final m = await _client.call('local_mail_get_message', {'id': id}) as Map;
+    return (
+      subject: '${m['subject']}',
+      sender: '${m['sender']?['fullname'] ?? ''}',
+      course: '${m['course']?['shortname'] ?? ''}',
+      time: _ts(m['time']),
+      body: plainText('${m['content'] ?? ''}'),
+      attachments: [
+        for (final f in m['attachments'] as List? ?? const [])
+          (
+            name: '${f['filename']}',
+            size: (f['filesize'] as num).toInt(),
+            url: '${f['fileurl']}',
+            modified: _ts(m['time']),
+          ),
+      ],
+    );
+  }
+
+  Future<void> markMailUnread(int id) =>
+      _client.send('local_mail_set_unread', {'id': id, 'unread': true});
+
+  /// Replies under [postId]; the text is sent as HTML, so it is escaped.
+  Future<void> replyToPost(int postId, String subject, String text) =>
+      _client.send('mod_forum_add_discussion_post', {
+        'postid': postId,
+        'subject': subject,
+        'message': _html(text),
+      });
+
+  Future<bool> canStartDiscussion(int forumId) async {
+    final r = await _client.call('mod_forum_can_add_discussion', {
+      'forumid': forumId,
+    }) as Map;
+    return r['status'] == true;
+  }
+
+  Future<void> startDiscussion(int forumId, String subject, String text) =>
+      _client.send('mod_forum_add_discussion', {
+        'forumid': forumId,
+        'subject': subject,
+        'message': _html(text),
+      });
+
+  /// Submission comments sit on the assignment's module context.
+  static Map<String, Object?> _commentArea(int cmid, int submissionId) => {
+    'contextlevel': 'module',
+    'instanceid': cmid,
+    'component': 'assignsubmission_comments',
+    'itemid': submissionId,
+    'area': 'submission_comments',
+  };
+
+  /// Oldest first, as a conversation reads; [canPost] is eCourse2's say on
+  /// whether this student may add one.
+  Future<({List<SubmissionComment> comments, bool canPost})>
+  submissionComments(int cmid, int submissionId) async {
+    final r = await _client.call(
+      'core_comment_get_comments',
+      _commentArea(cmid, submissionId),
+    ) as Map;
+    return (
+      comments: [
+        for (final c in (r['comments'] as List).reversed)
+          (
+            id: (c['id'] as num).toInt(),
+            author: '${c['fullname'] ?? ''}',
+            time: _ts(c['timecreated']),
+            text: plainText('${c['content'] ?? ''}'),
+            mine: c['delete'] == true,
+          ),
+      ],
+      canPost: r['canpost'] == true,
+    );
+  }
+
+  Future<void> addSubmissionComment(
+    int cmid,
+    int submissionId,
+    String text,
+  ) => _client.send('core_comment_add_comments', {
+    'comments': [
+      {..._commentArea(cmid, submissionId), 'content': text},
+    ],
+  });
+
+  Future<void> deleteSubmissionComment(int id) =>
+      _client.send('core_comment_delete_comments', {
+        'comments': [id],
+      });
+
 
   Future<List<Section>> contents(int courseId) async {
     final r = await _client.call('core_course_get_contents', {
@@ -354,7 +493,6 @@ class EcourseRepository {
     await (worker(), worker()).wait;
   }
 
-  /// The course's 公佈欄 (the news forum).
   /// The course a module belongs to, for links that only carry its cmid.
   Future<int> courseOfModule(int cmid) async {
     final r = await _client.call('core_course_get_course_module', {
@@ -363,6 +501,7 @@ class EcourseRepository {
     return (r['cm']['course'] as num).toInt();
   }
 
+  /// The course's 公佈欄 (the news forum).
   Future<List<Discussion>> announcements(int courseId) async {
     final forums = await _client.call('mod_forum_get_forums_by_courses', {
       'courseids': [courseId],
@@ -461,6 +600,12 @@ class EcourseRepository {
       ],
       // `100.00&nbsp;/&nbsp;100.00`: keep the score, the page shows the max.
       grade: grade == null ? null : plainText(grade).split('/').first.trim(),
+      commentsOn:
+          (submission?['plugins'] as List? ?? const []).any(
+            (p) => p['type'] == 'comments',
+          )
+          ? (submission!['id'] as num?)?.toInt()
+          : null,
     );
   }
 

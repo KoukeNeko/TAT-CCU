@@ -3,6 +3,8 @@ import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 
 import '../../data/repositories/ecourse_repository.dart';
+import '../../data/services/ecourse_web.dart';
+import '../core/campus_web_screen.dart';
 import '../core/theme.dart';
 import '../courses/module_screen.dart';
 import '../core/widgets.dart';
@@ -121,31 +123,221 @@ class _Notices extends StatelessWidget {
   }
 }
 
-class _Mail extends StatelessWidget {
+/// eCourse2 mail (local_mail 1.x): read here, written on eCourse2's own
+/// pages, since the plugin offers apps no way to send.
+const _mailPages = 'https://$ecourseHost/local/mail';
+
+class _Mail extends StatefulWidget {
   const _Mail();
+
+  @override
+  State<_Mail> createState() => _MailState();
+}
+
+class _MailState extends State<_Mail> {
+  /// Bumped after reading a message, so its unread mark updates.
+  var _version = 0;
+
+  /// The course chip picked; null for all mail.
+  int? _course;
+
+  Future<void> _open(MailItem m) async {
+    await Navigator.of(context)
+        .push(MaterialPageRoute(builder: (_) => MailScreen(id: m.id)));
+    if (mounted) setState(() => _version++);
+  }
 
   @override
   Widget build(BuildContext context) {
     final repo = context.read<EcourseRepository>();
-    return Loader<List<MailItem>>.watch(
-      watch: () => repo.watch((repo) => repo.inbox()),
-      builder: (context, items) {
-        if (items.isEmpty) return EmptyState(context.l10n.noMail);
-        return ListView.separated(
-          padding: scrollPadding(context),
-          itemCount: items.length,
-          separatorBuilder: (_, _) => const SizedBox(height: 8),
-          itemBuilder: (context, i) {
-            final m = items[i];
-            return _Row(
-              unread: m.unread,
-              title: m.subject,
-              subtitle:
-                  '${m.sender}・${m.course}・${dateTimeLabel(context, m.time)}',
+    final sun = context.tones.sun;
+    return Stack(
+      children: [
+        Loader.watch(
+          key: ValueKey(_version),
+          watch: () => repo.watch(
+            (repo) async =>
+                (items: await repo.inbox(), courses: await repo.mailCourses()),
+          ),
+          builder: (context, d) {
+            final names = {for (final c in d.courses) c.id: c.name};
+            final shown = [
+              for (final m in d.items)
+                if (_course == null || m.courseId == _course) m,
+            ];
+            return ListView(
+              // Room for the 寫信 button over the last message.
+              padding: scrollPadding(context)
+                  .copyWith(bottom: scrollPadding(context).bottom + 72),
+              children: [
+                SingleChildScrollView(
+                  scrollDirection: Axis.horizontal,
+                  child: Row(
+                    children: [
+                      for (final (id, label) in [
+                        (null, context.l10n.viewAll),
+                        for (final c in d.courses)
+                          if (d.items.any((m) => m.courseId == c.id))
+                            (
+                              c.id,
+                              c.unread > 0 ? '${c.name} ${c.unread}' : c.name,
+                            ),
+                      ])
+                        Padding(
+                          padding: const EdgeInsets.only(right: 8),
+                          child: BarChip(
+                            label: label,
+                            selected: _course == id,
+                            tone: sun,
+                            onTap: () => setState(() => _course = id),
+                          ),
+                        ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 12),
+                if (shown.isEmpty)
+                  Padding(
+                    padding: const EdgeInsets.only(top: 80),
+                    child: Center(
+                      child: Text(
+                        context.l10n.noMail,
+                        style: Theme.of(context).textTheme.titleMedium,
+                      ),
+                    ),
+                  ),
+                for (final m in shown)
+                  Padding(
+                    padding: const EdgeInsets.only(bottom: 8),
+                    child: _Row(
+                      unread: m.unread,
+                      title: m.subject,
+                      subtitle:
+                          '${m.sender}・${names[m.courseId] ?? m.course}・${dateTimeLabel(context, m.time)}',
+                      onTap: () => _open(m),
+                    ),
+                  ),
+              ],
             );
           },
-        );
-      },
+        ),
+        Positioned(
+          right: pageMargin,
+          bottom: MediaQuery.paddingOf(context).bottom + 16,
+          child: FloatingActionButton.extended(
+            onPressed: () => openCampusPage(
+              context,
+              '$_mailPages/create.php',
+              context.l10n.compose,
+            ),
+            icon: const Icon(Icons.edit_outlined),
+            label: Text(context.l10n.compose),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+/// One message, read in the app; opening it marks it read on eCourse2.
+/// Replying and forwarding happen on eCourse2's page for the message.
+class MailScreen extends StatelessWidget {
+  const MailScreen({super.key, required this.id});
+
+  final int id;
+
+  @override
+  Widget build(BuildContext context) {
+    final repo = context.read<EcourseRepository>();
+    final l10n = context.l10n;
+    final scheme = Theme.of(context).colorScheme;
+    return Scaffold(
+      extendBodyBehindAppBar: true,
+      appBar: subBar(
+        context,
+        '',
+        action: IconButton(
+          tooltip: l10n.markUnread,
+          icon: const Icon(Icons.mark_email_unread_outlined),
+          onPressed: () async {
+            try {
+              await repo.markMailUnread(id);
+              if (context.mounted) Navigator.of(context).pop();
+            } catch (e) {
+              if (context.mounted) showSendError(context, e);
+            }
+          },
+        ),
+      ),
+      body: Loader.watch(
+        watch: () => repo.watch((repo) => repo.mailMessage(id)),
+        builder: (context, m) => Column(
+          children: [
+            Expanded(
+              child: ListView(
+                padding: scrollPadding(context).copyWith(bottom: 16),
+                children: [
+                  Text(
+                    m.course,
+                    style: TextStyle(
+                      color: scheme.onSurfaceVariant,
+                      fontWeight: FontWeight.w800,
+                    ),
+                  ),
+                  const SizedBox(height: 6),
+                  SelectableText(
+                    m.subject,
+                    style: const TextStyle(
+                      fontSize: 24,
+                      fontWeight: FontWeight.w900,
+                      height: 1.25,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    '${m.sender}・${dateTimeLabel(context, m.time)}',
+                    style: TextStyle(
+                      color: scheme.onSurfaceVariant,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  SelectableText(
+                    m.body,
+                    style: const TextStyle(fontSize: 15, height: 1.7),
+                  ),
+                  if (m.attachments.isNotEmpty) ...[
+                    SectionLabel(l10n.attachments),
+                    FileList(
+                      files: m.attachments,
+                      detail: (f) => fileSize(f.size),
+                    ),
+                  ],
+                ],
+              ),
+            ),
+            Padding(
+              padding: EdgeInsets.fromLTRB(
+                pageMargin,
+                8,
+                pageMargin,
+                MediaQuery.paddingOf(context).bottom + 8,
+              ),
+              child: SizedBox(
+                width: double.infinity,
+                child: FilledButton(
+                  onPressed: () => openCampusPage(
+                    context,
+                    '$_mailPages/view.php?t=inbox&m=$id',
+                    l10n.reply,
+                  ),
+                  child: Text(l10n.reply),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 }

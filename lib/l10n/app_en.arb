@@ -491,5 +491,19 @@
   "about": "About",
   "contributors": "Contributors",
   "project": "Project",
-  "openSourceLicenses": "Open source licenses"
+  "openSourceLicenses": "Open source licenses",
+  "sendFailed": "Not sent. Try again.",
+  "reply": "Reply",
+  "replyToThread": "Reply to this discussion",
+  "replyingTo": "Replying to {name}",
+  "newDiscussion": "New discussion",
+  "subject": "Subject",
+  "messageBody": "Message",
+  "cancel": "Cancel",
+  "submissionComments": "Submission comments",
+  "commentHint": "Comment to the teacher and TAs",
+  "deleteComment": "Delete this comment?",
+  "delete": "Delete",
+  "markUnread": "Mark as unread",
+  "compose": "Compose"
 }

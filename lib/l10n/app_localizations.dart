@@ -3045,6 +3045,90 @@ abstract class AppLocalizations {
   /// In zh, this message translates to:
   /// **'開放原始碼授權'**
   String get openSourceLicenses;
+
+  /// No description provided for @sendFailed.
+  ///
+  /// In zh, this message translates to:
+  /// **'沒有送出，請再試一次'**
+  String get sendFailed;
+
+  /// No description provided for @reply.
+  ///
+  /// In zh, this message translates to:
+  /// **'回覆'**
+  String get reply;
+
+  /// No description provided for @replyToThread.
+  ///
+  /// In zh, this message translates to:
+  /// **'回覆這則討論'**
+  String get replyToThread;
+
+  /// No description provided for @replyingTo.
+  ///
+  /// In zh, this message translates to:
+  /// **'回覆 {name}'**
+  String replyingTo(String name);
+
+  /// No description provided for @newDiscussion.
+  ///
+  /// In zh, this message translates to:
+  /// **'新增討論'**
+  String get newDiscussion;
+
+  /// No description provided for @subject.
+  ///
+  /// In zh, this message translates to:
+  /// **'主旨'**
+  String get subject;
+
+  /// No description provided for @messageBody.
+  ///
+  /// In zh, this message translates to:
+  /// **'內容'**
+  String get messageBody;
+
+  /// No description provided for @cancel.
+  ///
+  /// In zh, this message translates to:
+  /// **'取消'**
+  String get cancel;
+
+  /// No description provided for @submissionComments.
+  ///
+  /// In zh, this message translates to:
+  /// **'繳交留言'**
+  String get submissionComments;
+
+  /// No description provided for @commentHint.
+  ///
+  /// In zh, this message translates to:
+  /// **'留言給老師與助教'**
+  String get commentHint;
+
+  /// No description provided for @deleteComment.
+  ///
+  /// In zh, this message translates to:
+  /// **'刪除這則留言？'**
+  String get deleteComment;
+
+  /// No description provided for @delete.
+  ///
+  /// In zh, this message translates to:
+  /// **'刪除'**
+  String get delete;
+
+  /// No description provided for @markUnread.
+  ///
+  /// In zh, this message translates to:
+  /// **'標為未讀'**
+  String get markUnread;
+
+  /// No description provided for @compose.
+  ///
+  /// In zh, this message translates to:
+  /// **'寫信'**
+  String get compose;
 }
 
 class _AppLocalizationsDelegate

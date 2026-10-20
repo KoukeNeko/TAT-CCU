@@ -4,25 +4,74 @@ import 'package:provider/provider.dart';
 
 import '../../data/repositories/ecourse_repository.dart';
 import '../../l10n/l10n.dart';
+import '../core/compose_screen.dart';
 import '../core/theme.dart';
 import '../core/widgets.dart';
 import 'module_screen.dart';
 
 /// A forum's discussions (design/round-11 course-modules-screens): pinned
 /// ones marked, each with a two-line excerpt, author, date and replies.
-class ForumBody extends StatelessWidget {
+class ForumBody extends StatefulWidget {
   const ForumBody({super.key, required this.courseId, required this.forumId});
 
   final int courseId, forumId;
 
   @override
+  State<ForumBody> createState() => _ForumBodyState();
+}
+
+class _ForumBodyState extends State<ForumBody> {
+  /// Bumped after starting a discussion, so the list loads it.
+  var _version = 0;
+  late final _canStart = context.read<EcourseRepository>().canStartDiscussion(
+    widget.forumId,
+  );
+
+  Future<void> _start() async {
+    final l10n = context.l10n;
+    final repo = context.read<EcourseRepository>();
+    final sent = await compose(
+      context,
+      title: l10n.newDiscussion,
+      hint: l10n.messageBody,
+      withSubject: true,
+      send: (subject, text) =>
+          repo.startDiscussion(widget.forumId, subject, text),
+    );
+    if (sent && mounted) setState(() => _version++);
+  }
+
+  @override
   Widget build(BuildContext context) {
     final repo = context.read<EcourseRepository>();
-    return Loader<List<Discussion>>.watch(
-      watch: () => repo.watch((repo) => repo.discussions(forumId)),
-      builder: (context, discussions) => discussions.isEmpty
-          ? EmptyState(context.l10n.noDiscussions)
-          : DiscussionList(courseId: courseId, discussions: discussions),
+    return Stack(
+      children: [
+        Loader<List<Discussion>>.watch(
+          key: ValueKey(_version),
+          watch: () => repo.watch((repo) => repo.discussions(widget.forumId)),
+          builder: (context, discussions) => discussions.isEmpty
+              ? EmptyState(context.l10n.noDiscussions)
+              : DiscussionList(
+                  courseId: widget.courseId,
+                  discussions: discussions,
+                ),
+        ),
+        // Only where eCourse2 lets this student post; a news forum does not.
+        Positioned(
+          right: pageMargin,
+          bottom: MediaQuery.paddingOf(context).bottom + 16,
+          child: FutureBuilder(
+            future: _canStart,
+            builder: (context, can) => can.data != true
+                ? const SizedBox.shrink()
+                : FloatingActionButton.extended(
+                    onPressed: _start,
+                    icon: const Icon(Icons.add),
+                    label: Text(context.l10n.newDiscussion),
+                  ),
+          ),
+        ),
+      ],
     );
   }
 }
@@ -141,8 +190,9 @@ String dateLabel(DateTime t) => t.year == DateTime.now().year
     ? '${t.month}/${t.day}'
     : '${t.year}/${t.month}/${t.day}';
 
-/// One discussion: the opening post as the hero, replies indented below.
-class DiscussionScreen extends StatelessWidget {
+/// One discussion: the opening post as the hero, replies indented below,
+/// and a bar to reply (design/round-11 reply-comment-mail).
+class DiscussionScreen extends StatefulWidget {
   const DiscussionScreen({super.key, required this.discussionId, this.title});
 
   final int discussionId;
@@ -151,41 +201,88 @@ class DiscussionScreen extends StatelessWidget {
   final String? title;
 
   @override
+  State<DiscussionScreen> createState() => _DiscussionScreenState();
+}
+
+class _DiscussionScreenState extends State<DiscussionScreen> {
+  /// Bumped after a reply, so the posts load again with it.
+  var _version = 0;
+
+  Future<void> _reply(ForumPost to) async {
+    final l10n = context.l10n;
+    final repo = context.read<EcourseRepository>();
+    final subject = to.subject.startsWith('Re: ')
+        ? to.subject
+        : 'Re: ${to.subject}';
+    final sent = await compose(
+      context,
+      title: l10n.reply,
+      hint: l10n.messageBody,
+      replyingTo: to.author,
+      send: (_, text) => repo.replyToPost(to.id, subject, text),
+    );
+    if (sent && mounted) setState(() => _version++);
+  }
+
+  @override
   Widget build(BuildContext context) {
     final repo = context.read<EcourseRepository>();
     return Scaffold(
       extendBodyBehindAppBar: true,
-      appBar: subBar(context, title ?? ''),
+      appBar: subBar(context, widget.title ?? ''),
       body: Loader<List<ForumPost>>.watch(
-        watch: () => repo.watch((repo) => repo.discussionPosts(discussionId)),
+        key: ValueKey(_version),
+        watch: () =>
+            repo.watch((repo) => repo.discussionPosts(widget.discussionId)),
         builder: (context, posts) {
           if (posts.isEmpty) return EmptyState(context.l10n.noDiscussions);
           final [first, ...replies] = posts;
-          return ListView(
-            padding: scrollPadding(context),
+          return Column(
             children: [
-              _Post(post: first, lead: true),
-              if (replies.isNotEmpty) ...[
-                SectionLabel(context.l10n.replyCount(replies.length)),
-                for (final p in replies)
-                  Padding(
-                    padding: const EdgeInsets.only(left: 18, bottom: 8),
-                    child: DecoratedBox(
-                      decoration: BoxDecoration(
-                        border: Border(
-                          left: BorderSide(
-                            color: Theme.of(context).colorScheme.outlineVariant,
-                            width: 2,
+              Expanded(
+                child: ListView(
+                  // The reply bar below clears the nav bar.
+                  padding: scrollPadding(context).copyWith(bottom: 16),
+                  children: [
+                    _Post(
+                      post: first,
+                      lead: true,
+                      onReply: () => _reply(first),
+                    ),
+                    if (replies.isNotEmpty) ...[
+                      SectionLabel(context.l10n.replyCount(replies.length)),
+                      for (final p in replies)
+                        Padding(
+                          padding: const EdgeInsets.only(left: 18, bottom: 8),
+                          child: DecoratedBox(
+                            decoration: BoxDecoration(
+                              border: Border(
+                                left: BorderSide(
+                                  color: Theme.of(context)
+                                      .colorScheme
+                                      .outlineVariant,
+                                  width: 2,
+                                ),
+                              ),
+                            ),
+                            child: Padding(
+                              padding: const EdgeInsets.only(left: 12),
+                              child: _Post(
+                                post: p,
+                                lead: false,
+                                onReply: () => _reply(p),
+                              ),
+                            ),
                           ),
                         ),
-                      ),
-                      child: Padding(
-                        padding: const EdgeInsets.only(left: 12),
-                        child: _Post(post: p, lead: false),
-                      ),
-                    ),
-                  ),
-              ],
+                    ],
+                  ],
+                ),
+              ),
+              ComposeBar(
+                hint: context.l10n.replyToThread,
+                onTap: () => _reply(first),
+              ),
             ],
           );
         },
@@ -195,9 +292,10 @@ class DiscussionScreen extends StatelessWidget {
 }
 
 class _Post extends StatelessWidget {
-  const _Post({required this.post, required this.lead});
+  const _Post({required this.post, required this.lead, required this.onReply});
 
   final ForumPost post;
+  final VoidCallback onReply;
 
   /// The opening post: colored, with its subject.
   final bool lead;
@@ -287,6 +385,18 @@ class _Post extends StatelessWidget {
                   detail: (f) => fileSize(f.size),
                 ),
               ),
+            Padding(
+              padding: const EdgeInsets.only(top: 8),
+              child: TextButton(
+                style: TextButton.styleFrom(
+                  foregroundColor: ink,
+                  backgroundColor: ink.withValues(alpha: 0.1),
+                  visualDensity: VisualDensity.compact,
+                ),
+                onPressed: onReply,
+                child: Text(context.l10n.reply),
+              ),
+            ),
           ],
         ),
       ),
