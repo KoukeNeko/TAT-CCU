@@ -86,14 +86,14 @@ class LibraryRecordScreen extends StatelessWidget {
               SectionLabel(l10n.holdings),
               for (final h in record.holdings)
                 Padding(
-                  padding: const EdgeInsets.only(bottom: 8),
+                  padding: const EdgeInsets.only(bottom: Space.s),
                   child: Material(
                     color: scheme.surfaceContainerLow,
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(Corners.row),
                     ),
                     child: Padding(
-                      padding: const EdgeInsets.all(14),
+                      padding: cardPadding,
                       child: Row(
                         children: [
                           Expanded(

@@ -1,5 +1,3 @@
-import 'dart:convert';
-
 import '../../domain/models/course.dart';
 import '../services/html_text.dart';
 import '../services/moodle_client.dart';
@@ -14,8 +12,10 @@ typedef DueItem = ({
   String? url,
 });
 
+/// [component] is the Moodle part that sent it, such as `mod_forum`.
 typedef NoticeItem = ({
   String subject,
+  String component,
   String text,
   DateTime time,
   bool read,
@@ -135,10 +135,6 @@ typedef Quiz = ({
 
 DateTime _ts(Object? s) =>
     DateTime.fromMillisecondsSinceEpoch(((s as num?) ?? 0).toInt() * 1000);
-
-/// Typed text as the HTML that forum posts are stored in.
-String _html(String text) =>
-    const HtmlEscape().convert(text).replaceAll('\n', '<br>');
 
 /// Access to eCourse2. Every read here was verified with a student token
 /// (see CCU 研究報告彙整/eCourse2 功能分類.md); writes go through
@@ -302,6 +298,7 @@ class EcourseRepository {
       for (final n in r['notifications'] as List)
         (
           subject: '${n['subject']}',
+          component: '${n['component'] ?? ''}',
           text: '${n['smallmessage'] ?? ''}',
           time: _ts(n['timecreated']),
           read: n['read'] == true,
@@ -334,6 +331,7 @@ class EcourseRepository {
         ),
     ];
   }
+
   /// Courses with mail and their unread counts, as eCourse2's menu lists them.
   Future<List<({int id, String name, int unread})>> mailCourses() async {
     final r = await _client.call('local_mail_get_menu') as Map;
@@ -367,6 +365,32 @@ class EcourseRepository {
     );
   }
 
+  /// Everyone in the course a student can write to; [staff] for its
+  /// 教師 (role 3) and 助教 (role 4), whom students mostly write to.
+  Future<List<({int id, String name, bool staff})>> participants(
+    int courseId,
+  ) async {
+    final users = await _client.call('core_enrol_get_enrolled_users', {
+      'courseid': courseId,
+      'options': [
+        {'name': 'userfields', 'value': 'id,fullname,roles'},
+      ],
+    }) as List;
+    final me = await _currentUserId();
+    return [
+      for (final u in users)
+        // Hidden accounts come back without a name.
+        if (u['id'] != me && '${u['fullname'] ?? ''}'.trim().isNotEmpty)
+          (
+            id: (u['id'] as num).toInt(),
+            name: '${u['fullname']}',
+            staff: (u['roles'] as List? ?? const []).any(
+              (r) => r['roleid'] == 3 || r['roleid'] == 4,
+            ),
+          ),
+    ];
+  }
+
   Future<void> markMailUnread(int id) =>
       _client.send('local_mail_set_unread', {'id': id, 'unread': true});
 
@@ -375,7 +399,7 @@ class EcourseRepository {
       _client.send('mod_forum_add_discussion_post', {
         'postid': postId,
         'subject': subject,
-        'message': _html(text),
+        'message': textAsHtml(text),
       });
 
   Future<bool> canStartDiscussion(int forumId) async {
@@ -389,7 +413,7 @@ class EcourseRepository {
       _client.send('mod_forum_add_discussion', {
         'forumid': forumId,
         'subject': subject,
-        'message': _html(text),
+        'message': textAsHtml(text),
       });
 
   /// Submission comments sit on the assignment's module context.
@@ -403,8 +427,10 @@ class EcourseRepository {
 
   /// Oldest first, as a conversation reads; [canPost] is eCourse2's say on
   /// whether this student may add one.
-  Future<({List<SubmissionComment> comments, bool canPost})>
-  submissionComments(int cmid, int submissionId) async {
+  Future<({List<SubmissionComment> comments, bool canPost})> submissionComments(
+    int cmid,
+    int submissionId,
+  ) async {
     final r = await _client.call(
       'core_comment_get_comments',
       _commentArea(cmid, submissionId),
@@ -424,21 +450,17 @@ class EcourseRepository {
     );
   }
 
-  Future<void> addSubmissionComment(
-    int cmid,
-    int submissionId,
-    String text,
-  ) => _client.send('core_comment_add_comments', {
-    'comments': [
-      {..._commentArea(cmid, submissionId), 'content': text},
-    ],
-  });
+  Future<void> addSubmissionComment(int cmid, int submissionId, String text) =>
+      _client.send('core_comment_add_comments', {
+        'comments': [
+          {..._commentArea(cmid, submissionId), 'content': text},
+        ],
+      });
 
   Future<void> deleteSubmissionComment(int id) =>
       _client.send('core_comment_delete_comments', {
         'comments': [id],
       });
-
 
   Future<List<Section>> contents(int courseId) async {
     final r = await _client.call('core_course_get_contents', {

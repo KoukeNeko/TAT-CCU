@@ -12,6 +12,7 @@ import 'cas_autofill.dart';
 import 'status_capsule.dart';
 import 'widgets.dart';
 import '../../l10n/l10n.dart';
+import 'theme.dart';
 
 /// Fetches [url] inside the signed-in page and answers `{kind: 'pdf',
 /// data}` with the bytes as base64, or `{kind: 'pdf', error}`.
@@ -410,7 +411,7 @@ class CampusError extends StatelessWidget {
   Widget build(BuildContext context) {
     return Center(
       child: Padding(
-        padding: const EdgeInsets.all(24),
+        padding: const EdgeInsets.all(Space.xxl),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
@@ -433,7 +434,7 @@ class UpdatedAt extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.only(top: 20),
+      padding: const EdgeInsets.only(top: Space.xl),
       child: Text(
         context.l10n.updatedAt(
           '${time.month}/${time.day} ${clock(time.hour * 60 + time.minute)}',

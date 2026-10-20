@@ -6,6 +6,7 @@ import '../../l10n/l10n.dart';
 import '../core/campus_session.dart';
 import '../core/campus_web_screen.dart';
 import '../core/theme.dart';
+import '../core/glass_sheet.dart';
 import '../core/widgets.dart';
 
 /// 圖書館資源探索 (design: library overview, screens 4–5): search across
@@ -44,10 +45,8 @@ class _LibrarySearchScreenState extends State<LibrarySearchScreen> {
   }
 
   Future<void> _editFilters() async {
-    final picked = await showModalBottomSheet<_Filters>(
-      context: context,
-      showDragHandle: true,
-      isScrollControlled: true,
+    final picked = await showGlassSheet<_Filters>(
+      context,
       builder: (_) => _FilterSheet(initial: _filters),
     );
     if (picked != null) setState(() => _filters = picked);
@@ -56,7 +55,6 @@ class _LibrarySearchScreenState extends State<LibrarySearchScreen> {
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
-    final scheme = Theme.of(context).colorScheme;
     final f = _filters;
     final catalog = _kind == PrimoKind.catalog;
     final searching = _query.isNotEmpty;
@@ -68,11 +66,11 @@ class _LibrarySearchScreenState extends State<LibrarySearchScreen> {
         bottom: PreferredSize(
           preferredSize: Size.fromHeight(searching ? 108 : 60),
           child: Padding(
-            padding: const EdgeInsets.only(bottom: 12),
+            padding: const EdgeInsets.only(bottom: Space.m),
             child: Column(
               children: [
                 Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  padding: const EdgeInsets.symmetric(horizontal: Space.l),
                   child: TextField(
                     controller: _field,
                     textInputAction: TextInputAction.search,
@@ -91,13 +89,6 @@ class _LibrarySearchScreenState extends State<LibrarySearchScreen> {
                               }),
                             )
                           : null,
-                      filled: true,
-                      fillColor: scheme.surfaceContainerHigh,
-                      border: const OutlineInputBorder(
-                        borderRadius: BorderRadius.all(Radius.circular(999)),
-                        borderSide: BorderSide.none,
-                      ),
-                      contentPadding: EdgeInsets.zero,
                     ),
                   ),
                 ),
@@ -365,7 +356,7 @@ class _BrowseState extends State<_Browse> {
                   ToneBlock(
                     tone: tones.cycle[(i + 3) % tones.cycle.length],
                     radius: Corners.row,
-                    padding: const EdgeInsets.all(12),
+                    padding: const EdgeInsets.all(Space.m),
                     onTap: () => context.push(
                       '/more/library/collection/${c.id}',
                       extra: c.name,
@@ -390,7 +381,7 @@ class _BrowseState extends State<_Browse> {
               child: SectionLabel(l10n.onSchoolWebsite),
             ),
             Card(
-              margin: const EdgeInsets.symmetric(horizontal: 16),
+              margin: const EdgeInsets.symmetric(horizontal: Space.l),
               color: scheme.surfaceContainerLow,
               clipBehavior: Clip.antiAlias,
               child: ListTile(
@@ -468,7 +459,7 @@ class _CarouselState extends State<_Carousel> {
                 child: ToneBlock(
                   tone: tone,
                   radius: Corners.card,
-                  padding: const EdgeInsets.all(16),
+                  padding: cardPadding,
                   onTap: () => context.push(
                     '/more/library/record',
                     extra: (record: book, index: i + 4),
@@ -594,7 +585,7 @@ class _Shelf extends StatelessWidget {
       height: 172,
       child: ListView.separated(
         scrollDirection: Axis.horizontal,
-        padding: const EdgeInsets.symmetric(horizontal: 16),
+        padding: const EdgeInsets.symmetric(horizontal: Space.l),
         itemCount: books.length,
         separatorBuilder: (_, _) => const SizedBox(width: 12),
         itemBuilder: (context, i) {
@@ -687,7 +678,7 @@ class _FilterSheetState extends State<_FilterSheet> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Padding(
-          padding: const EdgeInsets.only(top: 16, bottom: 8),
+          padding: const EdgeInsets.only(top: Space.l, bottom: Space.s),
           child: Text(
             title,
             style: TextStyle(
@@ -718,7 +709,7 @@ class _FilterSheetState extends State<_FilterSheet> {
     final f = _f;
     return SafeArea(
       child: Padding(
-        padding: const EdgeInsets.fromLTRB(20, 0, 20, 16),
+        padding: const EdgeInsets.fromLTRB(Space.xl, 0, Space.xl, Space.l),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -831,7 +822,12 @@ class _RecordListState extends State<RecordList> {
           ?widget.header,
           if (total != null)
             Padding(
-              padding: const EdgeInsets.fromLTRB(4, 0, 4, 8),
+              padding: const EdgeInsets.fromLTRB(
+                Space.xs,
+                0,
+                Space.xs,
+                Space.s,
+              ),
               child: Text(
                 l10n.resultCount(total),
                 style: TextStyle(
@@ -843,7 +839,7 @@ class _RecordListState extends State<RecordList> {
             ),
           for (final (i, r) in _records.indexed)
             Padding(
-              padding: const EdgeInsets.only(bottom: 8),
+              padding: const EdgeInsets.only(bottom: Space.s),
               child: RecordRow(record: r, index: i),
             ),
           if (_error != null)
@@ -852,7 +848,7 @@ class _RecordListState extends State<RecordList> {
             )
           else if (_loading)
             const Padding(
-              padding: EdgeInsets.all(24),
+              padding: EdgeInsets.all(Space.xxl),
               child: Center(child: CircularProgressIndicator()),
             ),
         ],
@@ -953,7 +949,7 @@ class RecordRow extends StatelessWidget {
           extra: (record: record, index: index),
         ),
         child: Padding(
-          padding: const EdgeInsets.all(12),
+          padding: const EdgeInsets.all(Space.m),
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [

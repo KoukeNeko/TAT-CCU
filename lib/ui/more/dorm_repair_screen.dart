@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../l10n/l10n.dart';
+import '../core/floating_dock.dart';
 import '../core/theme.dart';
 import '../core/widgets.dart';
 import '../../data/repositories/dorm_repair_data.dart';
@@ -31,8 +32,9 @@ class DormRepairScreen extends StatelessWidget {
           final requests = store.requests;
           return PinnedActionList(
             padding: scrollPadding(context, top: 0),
-            action: FilledButton(
+            action: DockButton(
               onPressed: () => context.push('/more/dorm-repair/new'),
+              tone: context.tones.lilac,
               child: Text(l10n.drRequest),
             ),
             children: [
@@ -177,12 +179,12 @@ class _DormRepairFormScreenState extends State<DormRepairFormScreen> {
       errorMaxLines: 2,
       border: InputBorder.none,
       isDense: true,
-      contentPadding: const EdgeInsets.symmetric(vertical: 6),
+      contentPadding: const EdgeInsets.symmetric(vertical: Space.s),
       counterText: '',
     );
     // The label sits above its field, as the presence choice's does.
     Widget row(String label, Widget child) => Padding(
-      padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
+      padding: const EdgeInsets.fromLTRB(Space.l, Space.m, Space.l, Space.s),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
@@ -201,8 +203,9 @@ class _DormRepairFormScreenState extends State<DormRepairFormScreen> {
       body: Builder(
         builder: (context) => PinnedActionList(
           padding: scrollPadding(context),
-          action: FilledButton(
+          action: DockButton(
             onPressed: _valid ? _submit : null,
+            tone: context.tones.lilac,
             child: Text(l10n.submit),
           ),
           children: [
@@ -266,7 +269,12 @@ class _DormRepairFormScreenState extends State<DormRepairFormScreen> {
                   ),
                   const Divider(height: 1),
                   Padding(
-                    padding: const EdgeInsets.fromLTRB(16, 12, 16, 14),
+                    padding: const EdgeInsets.fromLTRB(
+                      Space.l,
+                      Space.m,
+                      Space.l,
+                      Space.l,
+                    ),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [

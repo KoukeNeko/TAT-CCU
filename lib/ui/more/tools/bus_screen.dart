@@ -169,7 +169,10 @@ class _NextRow extends StatelessWidget {
     return Opacity(
       opacity: today ? 1 : 0.55,
       child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 11),
+        padding: const EdgeInsets.symmetric(
+          horizontal: Space.l,
+          vertical: Space.m,
+        ),
         child: Row(
           children: [
             _RouteBadge(number: trip.route, tone: tone),
@@ -237,7 +240,7 @@ class _RouteBadge extends StatelessWidget {
     return Container(
       constraints: const BoxConstraints(minWidth: 52),
       height: 38,
-      padding: const EdgeInsets.symmetric(horizontal: 8),
+      padding: const EdgeInsets.symmetric(horizontal: Space.s),
       alignment: Alignment.center,
       decoration: BoxDecoration(
         color: tone.fill,
@@ -319,13 +322,13 @@ class _RouteCard extends StatelessWidget {
             InkWell(
               onTap: onToggle,
               child: Padding(
-                padding: const EdgeInsets.all(14),
+                padding: cardPadding,
                 child: Row(
                   children: [
                     Container(
                       constraints: const BoxConstraints(minWidth: 52),
                       height: 38,
-                      padding: const EdgeInsets.symmetric(horizontal: 8),
+                      padding: const EdgeInsets.symmetric(horizontal: Space.s),
                       alignment: Alignment.center,
                       decoration: BoxDecoration(
                         color: tone.fill,
@@ -371,13 +374,21 @@ class _RouteCard extends StatelessWidget {
             ),
             if (open)
               Padding(
-                padding: const EdgeInsets.fromLTRB(14, 0, 14, 14),
+                padding: const EdgeInsets.fromLTRB(
+                  Space.l,
+                  0,
+                  Space.l,
+                  Space.l,
+                ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
                     for (final d in next) ...[
                       Padding(
-                        padding: const EdgeInsets.only(top: 4, bottom: 8),
+                        padding: const EdgeInsets.only(
+                          top: Space.xs,
+                          bottom: Space.s,
+                        ),
                         child: Text(
                           l10n.busDirectionFrom(d.trip.direction, d.trip.stop),
                           style: muted,
@@ -401,7 +412,10 @@ class _RouteCard extends StatelessWidget {
                     ],
                     if (fares.isNotEmpty) ...[
                       Padding(
-                        padding: const EdgeInsets.only(top: 6, bottom: 4),
+                        padding: const EdgeInsets.only(
+                          top: Space.s,
+                          bottom: Space.xs,
+                        ),
                         child: Row(
                           children: [
                             Text(l10n.busFares, style: muted),
@@ -414,7 +428,9 @@ class _RouteCard extends StatelessWidget {
                         if (i > 0)
                           Divider(height: 1, color: scheme.outlineVariant),
                         Padding(
-                          padding: const EdgeInsets.symmetric(vertical: 9),
+                          padding: const EdgeInsets.symmetric(
+                            vertical: Space.s,
+                          ),
                           child: Row(
                             children: [
                               Text(
@@ -439,7 +455,7 @@ class _RouteCard extends StatelessWidget {
                     ],
                     if (note != null)
                       Padding(
-                        padding: const EdgeInsets.only(top: 6),
+                        padding: const EdgeInsets.only(top: Space.s),
                         child: Text(note, style: muted),
                       ),
                     const SizedBox(height: 10),
@@ -494,8 +510,8 @@ class _DayChips extends StatelessWidget {
               ),
               child: Padding(
                 padding: const EdgeInsets.symmetric(
-                  horizontal: 11,
-                  vertical: 7,
+                  horizontal: Space.m,
+                  vertical: Space.s,
                 ),
                 child: Text(
                   clock(time),

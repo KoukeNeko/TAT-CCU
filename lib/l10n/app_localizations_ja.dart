@@ -1722,4 +1722,40 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get compose => '作成';
+
+  @override
+  String get navMessages => 'メッセージ';
+
+  @override
+  String get earlier => '以前';
+
+  @override
+  String get msgForum => 'ディスカッション';
+
+  @override
+  String get msgAssignment => '課題';
+
+  @override
+  String get recipients => '宛先';
+
+  @override
+  String get searchPeople => '他の人を検索';
+
+  @override
+  String get sendTo => '宛先';
+
+  @override
+  String get addRecipient => '宛先を追加';
+
+  @override
+  String get done => '完了';
+
+  @override
+  String get mailSent => '送信しました';
+
+  @override
+  String get staff => '教員と TA';
+
+  @override
+  String get others => 'その他';
 }

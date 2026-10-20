@@ -49,7 +49,12 @@ class AboutScreen extends StatelessWidget {
                 Container(
                   color: _paper,
                   height: 420 + top,
-                  padding: EdgeInsets.fromLTRB(24, top + 8, 24, 28),
+                  padding: EdgeInsets.fromLTRB(
+                    Space.xxl,
+                    top + Space.s,
+                    Space.xxl,
+                    28,
+                  ),
                   child: Stack(
                     clipBehavior: Clip.none,
                     children: [

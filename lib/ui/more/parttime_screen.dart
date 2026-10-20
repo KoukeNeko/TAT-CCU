@@ -2,7 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../l10n/l10n.dart';
+import '../core/floating_dock.dart';
 import '../core/theme.dart';
+import '../core/glass_sheet.dart';
 import '../core/widgets.dart';
 import '../../data/repositories/parttime_data.dart';
 import '../core/campus_systems.dart';
@@ -201,16 +203,14 @@ class _ParttimeScreenState extends State<ParttimeScreen> {
         builder: (context) => PinnedActionList(
           padding: scrollPadding(context),
           action: selected == null
-              ? FilledButton(
+              ? DockButton(
                   onPressed: () => context.push('/more/parttime/add'),
+                  tone: tones.lilac,
                   child: Text(l10n.ptAdd),
                 )
-              : FilledButton(
+              : DockButton(
                   onPressed: selected.isEmpty ? null : _delete,
-                  style: FilledButton.styleFrom(
-                    backgroundColor: tones.peach.strong,
-                    foregroundColor: tones.peach.fill,
-                  ),
+                  tone: tones.peach,
                   child: Text(l10n.ptDeleteCount(selected.length)),
                 ),
           children: [
@@ -223,7 +223,7 @@ class _ParttimeScreenState extends State<ParttimeScreen> {
                       child: ToneBlock(
                         tone: _statePill(context, s).$1,
                         radius: Corners.row,
-                        padding: const EdgeInsets.all(12),
+                        padding: const EdgeInsets.all(Space.m),
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
@@ -252,7 +252,7 @@ class _ParttimeScreenState extends State<ParttimeScreen> {
               Card(
                 color: scheme.surfaceContainerLow,
                 child: Padding(
-                  padding: const EdgeInsets.all(14),
+                  padding: cardPadding,
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
@@ -367,7 +367,10 @@ class _EntryRow extends StatelessWidget {
       child: Opacity(
         opacity: selected != null && !selectable ? 0.45 : 1,
         child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+          padding: const EdgeInsets.symmetric(
+            horizontal: Space.l,
+            vertical: Space.m,
+          ),
           child: Row(
             children: [
               if (selected case final on?) ...[
@@ -515,10 +518,9 @@ class _ParttimeAddScreenState extends State<ParttimeAddScreen> {
   }
 
   Future<void> _pickUnit() async {
-    final u = await showModalBottomSheet<String>(
-      context: context,
-      isScrollControlled: true,
-      showDragHandle: true,
+    final u = await showGlassSheet<String>(
+      context,
+      tall: true,
       builder: (context) => _UnitSheet(current: _unit),
     );
     if (u != null) setState(() => _unit = u);
@@ -598,8 +600,9 @@ class _ParttimeAddScreenState extends State<ParttimeAddScreen> {
       body: Builder(
         builder: (context) => PinnedActionList(
           padding: scrollPadding(context),
-          action: FilledButton(
+          action: DockButton(
             onPressed: _staged.isEmpty ? null : _save,
+            tone: context.tones.lilac,
             child: Text(l10n.ptSaveCount(_staged.length)),
           ),
           children: [
@@ -654,7 +657,12 @@ class _ParttimeAddScreenState extends State<ParttimeAddScreen> {
                   ),
                   const Divider(height: 1),
                   Padding(
-                    padding: const EdgeInsets.fromLTRB(16, 4, 16, 8),
+                    padding: const EdgeInsets.fromLTRB(
+                      Space.l,
+                      Space.xs,
+                      Space.l,
+                      Space.s,
+                    ),
                     child: TextField(
                       controller: _work,
                       maxLength: 80,
@@ -675,7 +683,7 @@ class _ParttimeAddScreenState extends State<ParttimeAddScreen> {
                 child: ToneBlock(
                   tone: tones.peach,
                   radius: Corners.inset,
-                  padding: const EdgeInsets.all(12),
+                  padding: const EdgeInsets.all(Space.m),
                   child: Text(
                     problem,
                     style: const TextStyle(fontWeight: FontWeight.w800),
@@ -751,7 +759,6 @@ class _UnitSheetState extends State<_UnitSheet> {
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
-    final scheme = Theme.of(context).colorScheme;
     final matches = [
       for (final u in allUnits)
         if (u.contains(_query)) u,
@@ -763,38 +770,23 @@ class _UnitSheetState extends State<_UnitSheet> {
           : null,
       onTap: () => Navigator.pop(context, u),
     );
-    return SizedBox(
-      height: MediaQuery.sizeOf(context).height * 0.7,
-      child: ListView(
-        padding: EdgeInsets.fromLTRB(
-          pageMargin,
-          0,
-          pageMargin,
-          MediaQuery.viewInsetsOf(context).bottom + 24,
-        ),
-        children: [
-          TextField(
-            onChanged: (v) => setState(() => _query = v.trim()),
-            decoration: InputDecoration(
-              hintText: l10n.ptSearchUnits,
-              prefixIcon: const Icon(Icons.search),
-              filled: true,
-              fillColor: scheme.surfaceContainerHigh,
-              border: const OutlineInputBorder(
-                borderRadius: BorderRadius.all(Radius.circular(999)),
-                borderSide: BorderSide.none,
-              ),
-              contentPadding: EdgeInsets.zero,
-            ),
+    return ListView(
+      padding: const EdgeInsets.fromLTRB(pageMargin, 0, pageMargin, Space.xxl),
+      children: [
+        TextField(
+          onChanged: (v) => setState(() => _query = v.trim()),
+          decoration: InputDecoration(
+            hintText: l10n.ptSearchUnits,
+            prefixIcon: const Icon(Icons.search),
           ),
-          if (_query.isEmpty) ...[
-            SectionLabel(l10n.ptMyUnits),
-            for (final u in myUnits) unit(u),
-          ],
-          SectionLabel(l10n.ptAllUnits),
-          for (final u in matches) unit(u),
+        ),
+        if (_query.isEmpty) ...[
+          SectionLabel(l10n.ptMyUnits),
+          for (final u in myUnits) unit(u),
         ],
-      ),
+        SectionLabel(l10n.ptAllUnits),
+        for (final u in matches) unit(u),
+      ],
     );
   }
 }
@@ -886,7 +878,7 @@ class _ParttimePayScreenState extends State<ParttimePayScreen> {
                 child: Card(
                   color: scheme.surfaceContainerLow,
                   child: Padding(
-                    padding: const EdgeInsets.all(14),
+                    padding: cardPadding,
                     child: Column(
                       children: [
                         Row(
@@ -1084,7 +1076,7 @@ class _ParttimePrintScreenState extends State<ParttimePrintScreen> {
               ToneBlock(
                 tone: tone,
                 radius: Corners.card,
-                padding: const EdgeInsets.all(16),
+                padding: cardPadding,
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [

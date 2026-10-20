@@ -3,28 +3,11 @@ import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 
 import '../../data/repositories/ecourse_repository.dart';
-import '../../data/services/ecourse_web.dart';
-import '../core/campus_web_screen.dart';
 import '../core/theme.dart';
 import '../courses/module_screen.dart';
 import '../core/widgets.dart';
+import 'mail_compose_screen.dart';
 import '../../l10n/l10n.dart';
-
-class NotificationsScreen extends StatelessWidget {
-  const NotificationsScreen({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return const DefaultTabController(
-      length: 2,
-      child: Scaffold(
-        extendBodyBehindAppBar: true,
-        appBar: _Bar(),
-        body: TabBarView(children: [_Notices(), _Mail()]),
-      ),
-    );
-  }
-}
 
 /// Opens an eCourse2 link on its page in the app when there is one, and on
 /// eCourse2 otherwise.
@@ -56,185 +39,250 @@ Future<void> openEcourseLink(
   }
 }
 
-class _Bar extends StatelessWidget implements PreferredSizeWidget {
-  const _Bar();
+enum _Kind { mail, forum, assignment, notice }
+
+enum _Filter { all, unread, mail, forum, assignment }
+
+typedef _Item = ({
+  _Kind kind,
+  String title,
+  String detail,
+  DateTime time,
+  bool unread,
+  VoidCallback? onTap,
+});
+
+/// The 訊息 tab (design/round-11 messages-tab-variants B): eCourse2's
+/// notifications and mail in one list, unread first, each marked by kind.
+class MessagesScreen extends StatefulWidget {
+  const MessagesScreen({super.key});
 
   @override
-  Size get preferredSize => const Size.fromHeight(72 + 52);
+  State<MessagesScreen> createState() => _MessagesScreenState();
+}
+
+class _MessagesScreenState extends State<MessagesScreen> {
+  /// Bumped after reading a message, so its unread mark updates.
+  var _version = 0;
+  var _filter = _Filter.all;
+
+  Future<void> _openMail(int id) async {
+    await Navigator.of(context)
+        .push(MaterialPageRoute(builder: (_) => MailScreen(id: id)));
+    if (mounted) setState(() => _version++);
+  }
+
+  /// Forum posts and assignment comments and grades reach eCourse2's
+  /// notifications from these parts.
+  static _Kind _kindOf(String component) => switch (component) {
+    'mod_forum' => _Kind.forum,
+    'mod_assign' || 'assignsubmission_comments' => _Kind.assignment,
+    _ => _Kind.notice,
+  };
+
+  bool _shows(_Item i) => switch (_filter) {
+    _Filter.all => true,
+    _Filter.unread => i.unread,
+    _Filter.mail => i.kind == _Kind.mail,
+    _Filter.forum => i.kind == _Kind.forum,
+    _Filter.assignment => i.kind == _Kind.assignment,
+  };
 
   @override
   Widget build(BuildContext context) {
-    final tabs = DefaultTabController.of(context);
-    return subBar(
-      context,
-      context.l10n.notifications,
-      bottom: PreferredSize(
-        preferredSize: const Size.fromHeight(52),
-        child: AnimatedBuilder(
-          animation: tabs,
-          builder: (context, _) => ChipBar(
-            children: [
-              for (final (i, label) in [
-                context.l10n.notifications,
-                context.l10n.mail,
-              ].indexed)
-                BarChip(
-                  label: label,
-                  selected: tabs.index == i,
-                  tone: context.tones.sun,
-                  onTap: () => tabs.animateTo(i),
-                ),
-            ],
+    final repo = context.read<EcourseRepository>();
+    final l10n = context.l10n;
+    return Scaffold(
+      extendBodyBehindAppBar: true,
+      appBar: topBar(
+        l10n.navMessages,
+        bottom: ChipBar(
+          children: [
+            for (final (f, label) in [
+              (_Filter.all, l10n.viewAll),
+              (_Filter.unread, l10n.unread),
+              (_Filter.mail, l10n.mail),
+              (_Filter.forum, l10n.msgForum),
+              (_Filter.assignment, l10n.msgAssignment),
+            ])
+              BarChip(
+                label: label,
+                selected: _filter == f,
+                tone: context.tones.sun,
+                onTap: () => setState(() => _filter = f),
+              ),
+          ],
+        ),
+      ),
+      floatingActionButton: Padding(
+        // Clear the floating nav bar.
+        padding: EdgeInsets.only(bottom: MediaQuery.paddingOf(context).bottom),
+        child: FloatingActionButton.extended(
+          onPressed: () => Navigator.of(
+            context,
+          ).push(MaterialPageRoute(builder: (_) => const MailComposeScreen())),
+          icon: const Icon(Icons.edit_outlined),
+          label: Text(l10n.compose),
+        ),
+      ),
+      body: Loader.watch(
+        key: ValueKey(_version),
+        watch: () => repo.watch(
+          (repo) async => (
+            notices: await repo.notices(),
+            mail: await repo.inbox(),
+            courses: await repo.mailCourses(),
           ),
         ),
+        builder: (context, d) {
+          final names = {for (final c in d.courses) c.id: c.name};
+          final all = <_Item>[
+            for (final m in d.mail)
+              (
+                kind: _Kind.mail,
+                title: m.subject,
+                detail: '${m.sender}・${names[m.courseId] ?? m.course}',
+                time: m.time,
+                unread: m.unread,
+                onTap: () => _openMail(m.id),
+              ),
+            for (final n in d.notices)
+              (
+                kind: _kindOf(n.component),
+                title: n.subject,
+                detail: n.text,
+                time: n.time,
+                unread: !n.read,
+                onTap: n.url == null
+                    ? null
+                    : () => openEcourseLink(context, n.url!, title: n.subject),
+              ),
+          ]..sort((a, b) => b.time.compareTo(a.time));
+          final shown = all.where(_shows).toList();
+          final unread = shown.where((i) => i.unread).toList();
+          final earlier = shown.where((i) => !i.unread).toList();
+          return ListView(
+            // Room for the 寫信 button over the last message.
+            // The list opens with a section label, which brings its own gap.
+            padding: scrollPadding(
+              context,
+              top: 0,
+            ).copyWith(bottom: scrollPadding(context).bottom + 72),
+            children: [
+              if (shown.isEmpty)
+                Padding(
+                  padding: const EdgeInsets.only(top: 80),
+                  child: Center(
+                    child: Text(
+                      l10n.noNotifications,
+                      style: Theme.of(context).textTheme.titleMedium,
+                    ),
+                  ),
+                ),
+              for (final (label, items) in [
+                (l10n.unread, unread),
+                (l10n.earlier, earlier),
+              ])
+                if (items.isNotEmpty) ...[
+                  SectionLabel(label),
+                  for (final (i, item) in items.indexed) ...[
+                    if (i > 0) const Divider(height: 1),
+                    _MessageRow(item: item),
+                  ],
+                ],
+            ],
+          );
+        },
       ),
     );
   }
 }
 
-class _Notices extends StatelessWidget {
-  const _Notices();
+/// A kind square, the title and who or what it is from, and when.
+class _MessageRow extends StatelessWidget {
+  const _MessageRow({required this.item});
+
+  final _Item item;
 
   @override
   Widget build(BuildContext context) {
-    final repo = context.read<EcourseRepository>();
-    return Loader<List<NoticeItem>>.watch(
-      watch: () => repo.watch((repo) => repo.notices()),
-      builder: (context, items) {
-        if (items.isEmpty) return EmptyState(context.l10n.noNotifications);
-        return ListView.separated(
-          padding: scrollPadding(context),
-          itemCount: items.length,
-          separatorBuilder: (_, _) => const SizedBox(height: 8),
-          itemBuilder: (context, i) {
-            final n = items[i];
-            return _Row(
-              unread: !n.read,
-              title: n.subject,
-              subtitle: dateTimeLabel(context, n.time),
-              onTap: n.url == null
-                  ? null
-                  : () => openEcourseLink(context, n.url!, title: n.subject),
-            );
-          },
-        );
-      },
-    );
-  }
-}
-
-/// eCourse2 mail (local_mail 1.x): read here, written on eCourse2's own
-/// pages, since the plugin offers apps no way to send.
-const _mailPages = 'https://$ecourseHost/local/mail';
-
-class _Mail extends StatefulWidget {
-  const _Mail();
-
-  @override
-  State<_Mail> createState() => _MailState();
-}
-
-class _MailState extends State<_Mail> {
-  /// Bumped after reading a message, so its unread mark updates.
-  var _version = 0;
-
-  /// The course chip picked; null for all mail.
-  int? _course;
-
-  Future<void> _open(MailItem m) async {
-    await Navigator.of(context)
-        .push(MaterialPageRoute(builder: (_) => MailScreen(id: m.id)));
-    if (mounted) setState(() => _version++);
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final repo = context.read<EcourseRepository>();
-    final sun = context.tones.sun;
-    return Stack(
-      children: [
-        Loader.watch(
-          key: ValueKey(_version),
-          watch: () => repo.watch(
-            (repo) async =>
-                (items: await repo.inbox(), courses: await repo.mailCourses()),
-          ),
-          builder: (context, d) {
-            final names = {for (final c in d.courses) c.id: c.name};
-            final shown = [
-              for (final m in d.items)
-                if (_course == null || m.courseId == _course) m,
-            ];
-            return ListView(
-              // Room for the 寫信 button over the last message.
-              padding: scrollPadding(context)
-                  .copyWith(bottom: scrollPadding(context).bottom + 72),
-              children: [
-                SingleChildScrollView(
-                  scrollDirection: Axis.horizontal,
-                  child: Row(
-                    children: [
-                      for (final (id, label) in [
-                        (null, context.l10n.viewAll),
-                        for (final c in d.courses)
-                          if (d.items.any((m) => m.courseId == c.id))
-                            (
-                              c.id,
-                              c.unread > 0 ? '${c.name} ${c.unread}' : c.name,
-                            ),
-                      ])
-                        Padding(
-                          padding: const EdgeInsets.only(right: 8),
-                          child: BarChip(
-                            label: label,
-                            selected: _course == id,
-                            tone: sun,
-                            onTap: () => setState(() => _course = id),
-                          ),
-                        ),
-                    ],
+    final scheme = Theme.of(context).colorScheme;
+    final t = context.tones;
+    final (tone, icon) = switch (item.kind) {
+      _Kind.mail => (t.sun, Icons.mail_outline),
+      _Kind.forum => (t.lilac, Icons.forum_outlined),
+      _Kind.assignment => (t.peach, Icons.assignment_outlined),
+      _Kind.notice => (
+        Tone(
+          scheme.surfaceContainerHigh,
+          scheme.onSurfaceVariant,
+          scheme.onSurfaceVariant,
+        ),
+        Icons.notifications_none,
+      ),
+    };
+    return InkWell(
+      onTap: item.onTap,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(
+          horizontal: Space.xs,
+          vertical: Space.m,
+        ),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Container(
+              width: 36,
+              height: 36,
+              decoration: BoxDecoration(
+                color: tone.fill,
+                borderRadius: BorderRadius.circular(Corners.small),
+              ),
+              child: Icon(icon, size: 20, color: tone.ink),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    item.title,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(
+                      fontSize: 15,
+                      fontWeight: item.unread
+                          ? FontWeight.w900
+                          : FontWeight.w700,
+                      height: 1.35,
+                    ),
                   ),
-                ),
-                const SizedBox(height: 12),
-                if (shown.isEmpty)
-                  Padding(
-                    padding: const EdgeInsets.only(top: 80),
-                    child: Center(
-                      child: Text(
-                        context.l10n.noMail,
-                        style: Theme.of(context).textTheme.titleMedium,
+                  if (item.detail.isNotEmpty)
+                    Text(
+                      item.detail,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w700,
+                        color: scheme.onSurfaceVariant,
                       ),
                     ),
-                  ),
-                for (final m in shown)
-                  Padding(
-                    padding: const EdgeInsets.only(bottom: 8),
-                    child: _Row(
-                      unread: m.unread,
-                      title: m.subject,
-                      subtitle:
-                          '${m.sender}・${names[m.courseId] ?? m.course}・${dateTimeLabel(context, m.time)}',
-                      onTap: () => _open(m),
-                    ),
-                  ),
-              ],
-            );
-          },
-        ),
-        Positioned(
-          right: pageMargin,
-          bottom: MediaQuery.paddingOf(context).bottom + 16,
-          child: FloatingActionButton.extended(
-            onPressed: () => openCampusPage(
-              context,
-              '$_mailPages/create.php',
-              context.l10n.compose,
+                ],
+              ),
             ),
-            icon: const Icon(Icons.edit_outlined),
-            label: Text(context.l10n.compose),
-          ),
+            const SizedBox(width: 8),
+            Text(
+              dateTimeLabel(context, item.time),
+              style: TextStyle(
+                fontSize: 12,
+                fontWeight: FontWeight.w800,
+                color: item.unread ? t.sun.strong : scheme.onSurfaceVariant,
+              ),
+            ),
+          ],
         ),
-      ],
+      ),
     );
   }
 }
@@ -319,17 +367,18 @@ class MailScreen extends StatelessWidget {
             Padding(
               padding: EdgeInsets.fromLTRB(
                 pageMargin,
-                8,
+                Space.s,
                 pageMargin,
-                MediaQuery.paddingOf(context).bottom + 8,
+                MediaQuery.paddingOf(context).bottom + Space.s,
               ),
               child: SizedBox(
                 width: double.infinity,
                 child: FilledButton(
-                  onPressed: () => openCampusPage(
-                    context,
-                    '$_mailPages/view.php?t=inbox&m=$id',
-                    l10n.reply,
+                  onPressed: () => Navigator.of(context).push(
+                    MaterialPageRoute(
+                      builder: (_) =>
+                          MailComposeScreen(replyTo: id, replyName: m.sender),
+                    ),
                   ),
                   child: Text(l10n.reply),
                 ),
@@ -337,66 +386,6 @@ class MailScreen extends StatelessWidget {
             ),
           ],
         ),
-      ),
-    );
-  }
-}
-
-/// Unread rows sit on the sun block; read rows fall back to plain surface.
-class _Row extends StatelessWidget {
-  const _Row({
-    required this.unread,
-    required this.title,
-    required this.subtitle,
-    this.onTap,
-  });
-
-  final bool unread;
-  final String title, subtitle;
-  final VoidCallback? onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
-    final sun = context.tones.sun;
-    final tone = unread
-        ? sun
-        : Tone(scheme.surfaceContainerLow, scheme.onSurface, scheme.primary);
-    return ToneBlock(
-      tone: tone,
-      radius: Corners.row,
-      padding: const EdgeInsets.all(14),
-      onTap: onTap,
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Padding(
-            padding: const EdgeInsets.only(top: 6, right: 12),
-            child: Container(
-              width: 10,
-              height: 10,
-              decoration: ShapeDecoration(
-                color: unread ? sun.strong : Colors.transparent,
-                shape: const CookieBorder(lobes: 6, depth: 0.15),
-              ),
-            ),
-          ),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  title,
-                  style: TextStyle(
-                    fontWeight: unread ? FontWeight.w900 : FontWeight.w700,
-                  ),
-                ),
-                const SizedBox(height: 2),
-                Text(subtitle, style: const TextStyle(fontSize: 12)),
-              ],
-            ),
-          ),
-        ],
       ),
     );
   }

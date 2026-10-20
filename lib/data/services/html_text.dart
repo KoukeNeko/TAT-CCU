@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 /// Markup to plain text: line breaks kept, tags dropped, entities decoded.
 String plainText(String html) {
   final text = html
@@ -28,3 +30,7 @@ String plainText(String html) {
       .where((l) => l.isNotEmpty)
       .join('\n');
 }
+
+/// Typed text as HTML for eCourse2 posts and mail: escaped, line breaks kept.
+String textAsHtml(String text) =>
+    const HtmlEscape().convert(text).replaceAll('\n', '<br>');

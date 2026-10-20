@@ -207,10 +207,12 @@ class _MoreScreenState extends State<MoreScreen> {
         builder: (context) => ListView(
           padding: scrollPadding(context),
           children: [
-            SearchBar(
-              hintText: context.l10n.searchSystems,
-              leading: const Icon(Icons.search),
+            TextField(
               onChanged: (v) => setState(() => _query = v.trim()),
+              decoration: InputDecoration(
+                hintText: context.l10n.searchSystems,
+                prefixIcon: const Icon(Icons.search),
+              ),
             ),
             if (!searching) ...[
               const SizedBox(height: rowGap),

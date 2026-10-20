@@ -114,20 +114,77 @@ abstract final class Corners {
   static const card = 28.0;
 }
 
+/// The steps every padding picks from.
+abstract final class Space {
+  static const xs = 4.0;
+  static const s = 8.0;
+  static const m = 12.0;
+  static const l = 16.0;
+  static const xl = 20.0;
+  static const xxl = 24.0;
+}
+
+/// Inside every card and tone block.
+const cardPadding = EdgeInsets.all(Space.l);
+
 /// Gap between the rows of a list.
-const rowGap = 8.0;
+const rowGap = Space.s;
 
 /// Side margin of every page.
-const pageMargin = 16.0;
+const pageMargin = Space.l;
 
 /// Space between the app bar and a page's first content.
-const pageTop = 20.0;
+const pageTop = Space.xl;
 
 /// Space above and below a section label.
-const sectionAbove = 20.0, sectionBelow = 12.0;
+const sectionAbove = Space.xl, sectionBelow = Space.m;
 
 const fontTw = 'LINESeedTW';
 const fontJp = 'LINESeedJP';
+
+/// An input marked only by a bar down its left edge.
+class BarInputBorder extends InputBorder {
+  const BarInputBorder({required this.color});
+
+  final Color color;
+
+  @override
+  bool get isOutline => false;
+
+  @override
+  EdgeInsetsGeometry get dimensions => EdgeInsets.zero;
+
+  @override
+  BarInputBorder copyWith({BorderSide? borderSide}) =>
+      BarInputBorder(color: borderSide?.color ?? color);
+
+  @override
+  Path getInnerPath(Rect rect, {TextDirection? textDirection}) =>
+      Path()..addRect(rect);
+
+  @override
+  Path getOuterPath(Rect rect, {TextDirection? textDirection}) =>
+      Path()..addRect(rect);
+
+  @override
+  BarInputBorder scale(double t) => this;
+
+  @override
+  void paint(
+    Canvas canvas,
+    Rect rect, {
+    double? gapStart,
+    double gapExtent = 0.0,
+    double gapPercentage = 0.0,
+    TextDirection? textDirection,
+  }) => canvas.drawRRect(
+    RRect.fromRectAndRadius(
+      Rect.fromLTWH(rect.left, rect.top + 6, 4, rect.height - 12),
+      const Radius.circular(2),
+    ),
+    Paint()..color = color,
+  );
+}
 
 ThemeData buildTheme(Brightness brightness, {String fontFamily = fontTw}) {
   final light = brightness == Brightness.light;
@@ -158,6 +215,10 @@ ThemeData buildTheme(Brightness brightness, {String fontFamily = fontTw}) {
   final text = base.textTheme;
   return base.copyWith(
     extensions: [tones],
+    // No ripple and no press highlight: the main controls sink with a
+    // tick instead (PressFeedback).
+    splashFactory: NoSplash.splashFactory,
+    highlightColor: Colors.transparent,
     textTheme: text.copyWith(
       displaySmall: text.displaySmall?.copyWith(fontWeight: FontWeight.w900),
       headlineMedium: text.headlineMedium?.copyWith(
@@ -183,11 +244,39 @@ ThemeData buildTheme(Brightness brightness, {String fontFamily = fontTw}) {
         color: colors.onSurface,
       ),
     ),
-    searchBarTheme: SearchBarThemeData(
-      elevation: const WidgetStatePropertyAll(0),
-      backgroundColor: WidgetStatePropertyAll(colors.surfaceContainerHigh),
-      hintStyle: WidgetStatePropertyAll(
-        TextStyle(color: colors.onSurfaceVariant, fontWeight: FontWeight.w700),
+    // Inputs (design/round-11 input-field-variants V3): no box, only a bar
+    // down the left edge; lilac while typing, peach on an error.
+    inputDecorationTheme: InputDecorationTheme(
+      contentPadding: const EdgeInsets.fromLTRB(
+        Space.l,
+        Space.m,
+        Space.xs,
+        Space.m,
+      ),
+      hintStyle: TextStyle(
+        color: colors.onSurfaceVariant,
+        fontWeight: FontWeight.w700,
+      ),
+      floatingLabelStyle: WidgetStateTextStyle.resolveWith(
+        (states) => TextStyle(
+          fontWeight: FontWeight.w900,
+          color: states.contains(WidgetState.error)
+              ? tones.peach.strong
+              : states.contains(WidgetState.focused)
+              ? tones.lilac.strong
+              : colors.onSurfaceVariant,
+        ),
+      ),
+      prefixIconColor: colors.onSurfaceVariant,
+      suffixIconColor: colors.onSurfaceVariant,
+      border: BarInputBorder(color: colors.outlineVariant),
+      enabledBorder: BarInputBorder(color: colors.outlineVariant),
+      focusedBorder: BarInputBorder(color: tones.lilac.strong),
+      errorBorder: BarInputBorder(color: tones.peach.strong),
+      focusedErrorBorder: BarInputBorder(color: tones.peach.strong),
+      errorStyle: TextStyle(
+        color: tones.peach.strong,
+        fontWeight: FontWeight.w800,
       ),
     ),
     cardTheme: const CardThemeData(
@@ -197,12 +286,23 @@ ThemeData buildTheme(Brightness brightness, {String fontFamily = fontTw}) {
         borderRadius: BorderRadius.all(Radius.circular(Corners.card)),
       ),
     ),
+    // No pressed or hovered overlay on any button either; see splashFactory.
     filledButtonTheme: FilledButtonThemeData(
       style: FilledButton.styleFrom(
         minimumSize: const Size(64, 52),
         shape: const StadiumBorder(),
         textStyle: const TextStyle(fontWeight: FontWeight.w800, fontSize: 16),
+        overlayColor: Colors.transparent,
       ),
+    ),
+    textButtonTheme: TextButtonThemeData(
+      style: TextButton.styleFrom(overlayColor: Colors.transparent),
+    ),
+    outlinedButtonTheme: OutlinedButtonThemeData(
+      style: OutlinedButton.styleFrom(overlayColor: Colors.transparent),
+    ),
+    iconButtonTheme: IconButtonThemeData(
+      style: IconButton.styleFrom(overlayColor: Colors.transparent),
     ),
     dialogTheme: const DialogThemeData(
       shape: RoundedRectangleBorder(

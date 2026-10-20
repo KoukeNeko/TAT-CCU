@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:url_launcher/url_launcher.dart';
 
+import 'floating_dock.dart';
 import 'theme.dart';
 
 export 'format.dart';
@@ -93,9 +94,20 @@ AppBar subBar(
 /// and ticks. Listens to pointers only, so the button inside still gets
 /// the tap.
 class PressFeedback extends StatefulWidget {
-  const PressFeedback({super.key, required this.child});
+  const PressFeedback({
+    super.key,
+    required this.child,
+    this.scale = 0.88,
+    this.enabled = true,
+  });
 
   final Widget child;
+
+  /// How far it sinks; wide controls sink less, or the motion is too big.
+  final double scale;
+
+  /// A disabled control neither sinks nor ticks.
+  final bool enabled;
 
   @override
   State<PressFeedback> createState() => _PressFeedbackState();
@@ -105,6 +117,7 @@ class _PressFeedbackState extends State<PressFeedback> {
   var _pressed = false;
 
   void _press(bool down) {
+    if (!widget.enabled) return;
     if (down) HapticFeedback.lightImpact();
     setState(() => _pressed = down);
   }
@@ -116,7 +129,7 @@ class _PressFeedbackState extends State<PressFeedback> {
       onPointerUp: (_) => _press(false),
       onPointerCancel: (_) => _press(false),
       child: AnimatedScale(
-        scale: _pressed ? 0.88 : 1,
+        scale: _pressed ? widget.scale : 1,
         duration: const Duration(milliseconds: 240),
         curve: Curves.easeOutQuart,
         child: widget.child,
@@ -213,7 +226,7 @@ class StatusTile extends StatelessWidget {
       height: height,
       child: ToneBlock(
         tone: tone,
-        padding: const EdgeInsets.all(14),
+        padding: cardPadding,
         onTap: onTap,
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -276,7 +289,7 @@ class ToneBlock extends StatelessWidget {
     required this.child,
     this.onTap,
     this.radius = Corners.card,
-    this.padding = const EdgeInsets.all(18),
+    this.padding = const EdgeInsets.all(Space.xl),
   });
 
   final Tone tone;
@@ -339,7 +352,12 @@ class BarChip extends StatelessWidget {
         child: ConstrainedBox(
           constraints: const BoxConstraints(maxWidth: 200),
           child: Padding(
-            padding: EdgeInsets.fromLTRB(14, 9, dropdown ? 8 : 14, 9),
+            padding: EdgeInsets.fromLTRB(
+              Space.l,
+              Space.s,
+              dropdown ? Space.s : Space.l,
+              Space.s,
+            ),
             child: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
@@ -370,7 +388,7 @@ class ChipRow extends StatelessWidget {
   const ChipRow({
     super.key,
     required this.children,
-    this.padding = const EdgeInsets.symmetric(horizontal: 16),
+    this.padding = const EdgeInsets.symmetric(horizontal: Space.l),
   });
 
   final List<Widget> children;
@@ -414,7 +432,7 @@ class ChipBar extends StatelessWidget implements PreferredSizeWidget {
       child: SizedBox(
         height: 52,
         child: ChipRow(
-          padding: const EdgeInsets.fromLTRB(16, 0, 16, 10),
+          padding: const EdgeInsets.fromLTRB(Space.l, 0, Space.l, Space.m),
           children: children,
         ),
       ),
@@ -437,7 +455,10 @@ class StatusPill extends StatelessWidget {
         shape: const StadiumBorder(),
       ),
       child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 4),
+        padding: const EdgeInsets.symmetric(
+          horizontal: Space.s,
+          vertical: Space.xs,
+        ),
         child: Text(
           label,
           style: TextStyle(
@@ -451,8 +472,8 @@ class StatusPill extends StatelessWidget {
   }
 }
 
-/// A scrolling list with one full-width action pinned above the bottom
-/// edge, such as 送出 on a form; the list scrolls clear of it.
+/// A scrolling list with one action ([DockButton]) floating above the nav
+/// bar, such as 送出 on a form; the list scrolls under it and ends clear.
 class PinnedActionList extends StatelessWidget {
   const PinnedActionList({
     super.key,
@@ -472,16 +493,13 @@ class PinnedActionList extends StatelessWidget {
       children: [
         Positioned.fill(
           child: ListView(
-            padding: padding.copyWith(bottom: bottom + 90),
+            padding: padding.copyWith(
+              bottom: bottom + FloatingDock.clearance + Space.l,
+            ),
             children: children,
           ),
         ),
-        Positioned(
-          left: pageMargin,
-          right: pageMargin,
-          bottom: bottom + 12,
-          child: SizedBox(height: 54, child: action),
-        ),
+        Positioned(left: 0, right: 0, bottom: 0, child: action),
       ],
     );
   }
@@ -507,7 +525,12 @@ class SectionLabel extends StatelessWidget {
       color: theme.colorScheme.onSurfaceVariant,
     );
     return Padding(
-      padding: const EdgeInsets.fromLTRB(4, sectionAbove, 4, sectionBelow),
+      padding: const EdgeInsets.fromLTRB(
+        Space.xs,
+        sectionAbove,
+        Space.xs,
+        sectionBelow,
+      ),
       // One height with or without a button, so sections line up.
       child: SizedBox(
         height: 24,
@@ -527,7 +550,7 @@ class SectionLabel extends StatelessWidget {
                 data: TextButtonThemeData(
                   style: TextButton.styleFrom(
                     visualDensity: VisualDensity.compact,
-                    padding: const EdgeInsets.symmetric(horizontal: 4),
+                    padding: const EdgeInsets.symmetric(horizontal: Space.xs),
                     minimumSize: Size.zero,
                     tapTargetSize: MaterialTapTargetSize.padded,
                     textStyle: const TextStyle(fontWeight: FontWeight.w900),
@@ -559,6 +582,6 @@ EdgeInsets scrollPadding(BuildContext context, {double top = pageTop}) {
     pageMargin,
     top + inset.top,
     pageMargin,
-    24 + inset.bottom,
+    Space.xxl + inset.bottom,
   );
 }

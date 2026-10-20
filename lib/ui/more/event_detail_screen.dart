@@ -4,8 +4,10 @@ import 'package:go_router/go_router.dart';
 
 import '../../data/repositories/ecourse_auth_repository.dart';
 import '../../l10n/l10n.dart';
+import '../core/floating_dock.dart';
 import '../core/campus_session.dart';
 import '../core/theme.dart';
+import '../core/glass_sheet.dart';
 import '../core/widgets.dart';
 import '../../data/services/events_data.dart';
 import 'events_screen.dart';
@@ -78,10 +80,8 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
   Future<void> _signUp() async {
     final form = _form;
     if (form == null) return;
-    final email = await showModalBottomSheet<String>(
-      context: context,
-      isScrollControlled: true,
-      showDragHandle: true,
+    final email = await showGlassSheet<String>(
+      context,
       builder: (context) => _SignUpSheet(event: _event, form: form),
     );
     if (email != null) _act({'signUp': email});
@@ -132,70 +132,42 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
                 child: _body(context),
               ),
             ),
-            Positioned(
-              left: pageMargin,
-              right: pageMargin,
-              bottom: MediaQuery.paddingOf(context).bottom + 12,
-              child: _button(context),
-            ),
+            Positioned(left: 0, right: 0, bottom: 0, child: _dock(context)),
           ],
         ),
       ),
     );
   }
 
-  Widget _button(BuildContext context) {
+  Widget _dock(BuildContext context) {
     final l10n = context.l10n;
     final tones = context.tones;
-    final scheme = Theme.of(context).colorScheme;
     final e = _event;
-    final (label, onPressed, fill, ink) = switch (statusOf(e, DateTime.now())) {
+    final (label, onPressed, tone) = switch (statusOf(e, DateTime.now())) {
       EventStatus.open => (
         l10n.signUp,
         _fresh && _form != null ? _signUp : null,
-        tones.lilac.strong,
-        tones.lilac.fill,
+        tones.lilac,
       ),
       EventStatus.waitlist => (
         l10n.signUpWaitlist,
         _fresh && _form != null ? _signUp : null,
-        tones.sun.strong,
-        tones.sun.fill,
+        tones.sun,
       ),
       EventStatus.mine => (
         l10n.cancelSignUp,
         _fresh ? _cancel : null,
-        scheme.surfaceContainerLow,
-        tones.peach.strong,
+        tones.peach,
       ),
       EventStatus.external => (
         '${l10n.goSignUp} ↗',
         () => openExternal(e.link!),
-        tones.peach.strong,
-        tones.peach.fill,
+        tones.peach,
       ),
-      EventStatus.full => (l10n.eventFull, null, null, null),
-      EventStatus.closed => (l10n.signUpClosed, null, null, null),
+      EventStatus.full => (l10n.eventFull, null, null),
+      EventStatus.closed => (l10n.signUpClosed, null, null),
     };
-    return SizedBox(
-      height: 54,
-      child: FilledButton(
-        onPressed: onPressed,
-        style: FilledButton.styleFrom(
-          backgroundColor: fill ?? scheme.surfaceContainerHigh,
-          foregroundColor: ink ?? scheme.onSurfaceVariant,
-          disabledBackgroundColor: fill == null
-              ? scheme.surfaceContainerHigh
-              : fill.withValues(alpha: 0.5),
-          disabledForegroundColor: ink == null
-              ? scheme.onSurfaceVariant
-              : ink.withValues(alpha: 0.7),
-          textStyle: const TextStyle(fontSize: 16, fontWeight: FontWeight.w900),
-          side: e.signedUp ? BorderSide(color: scheme.outlineVariant) : null,
-        ),
-        child: Text(label),
-      ),
-    );
+    return DockButton(onPressed: onPressed, tone: tone, child: Text(label));
   }
 
   Widget _body(BuildContext context) {
@@ -246,7 +218,7 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
     }
 
     final title = Padding(
-      padding: const EdgeInsets.fromLTRB(pageMargin, 0, pageMargin, 8),
+      padding: const EdgeInsets.fromLTRB(pageMargin, 0, pageMargin, Space.s),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -301,7 +273,8 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
 
     return ListView(
       padding: EdgeInsets.only(
-        bottom: MediaQuery.paddingOf(context).bottom + 90,
+        bottom:
+            MediaQuery.paddingOf(context).bottom + FloatingDock.clearance + 16,
       ),
       children: [
         if (e.image case final url?)
@@ -320,7 +293,7 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
                           context.push('/more/events/poster', extra: url),
                       child: EventPoster(
                         url: url,
-                        padding: EdgeInsets.fromLTRB(0, top + 8, 0, 100),
+                        padding: EdgeInsets.fromLTRB(0, top + Space.s, 0, 100),
                         fadeOut: true,
                       ),
                     ),
@@ -339,7 +312,12 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
             child: title,
           ),
         Padding(
-          padding: const EdgeInsets.fromLTRB(pageMargin, 10, pageMargin, 0),
+          padding: const EdgeInsets.fromLTRB(
+            pageMargin,
+            Space.m,
+            pageMargin,
+            0,
+          ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
@@ -358,8 +336,8 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
                       if (i > 0) const Divider(height: 1),
                       Padding(
                         padding: const EdgeInsets.symmetric(
-                          horizontal: 14,
-                          vertical: 12,
+                          horizontal: Space.l,
+                          vertical: Space.m,
                         ),
                         child: Row(
                           crossAxisAlignment: CrossAxisAlignment.start,
@@ -394,7 +372,7 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
                 Card(
                   color: scheme.surfaceContainerLow,
                   child: Padding(
-                    padding: const EdgeInsets.all(14),
+                    padding: cardPadding,
                     child: SelectableText(
                       e.intro,
                       style: const TextStyle(
@@ -440,14 +418,7 @@ class _SignUpSheetState extends State<_SignUpSheet> {
     final scheme = Theme.of(context).colorScheme;
     final valid = RegExp(r'^\S+@\S+\.\S+$').hasMatch(_email.text.trim());
     return Padding(
-      padding: EdgeInsets.fromLTRB(
-        20,
-        0,
-        20,
-        MediaQuery.viewInsetsOf(context).bottom +
-            MediaQuery.paddingOf(context).bottom +
-            16,
-      ),
+      padding: EdgeInsets.fromLTRB(Space.xl, 0, Space.xl, Space.l),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -485,15 +456,7 @@ class _SignUpSheetState extends State<_SignUpSheet> {
           const SizedBox(height: 14),
           if (widget.form.name.isNotEmpty)
             InputDecorator(
-              decoration: InputDecoration(
-                labelText: l10n.signUpName,
-                filled: true,
-                fillColor: scheme.surfaceContainerLow,
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(18),
-                  borderSide: BorderSide.none,
-                ),
-              ),
+              decoration: InputDecoration(labelText: l10n.signUpName),
               child: Text(
                 widget.form.name,
                 style: const TextStyle(fontWeight: FontWeight.w800),
@@ -505,15 +468,7 @@ class _SignUpSheetState extends State<_SignUpSheet> {
             keyboardType: TextInputType.emailAddress,
             autocorrect: false,
             onChanged: (_) => setState(() {}),
-            decoration: InputDecoration(
-              labelText: l10n.signUpEmail,
-              filled: true,
-              fillColor: scheme.surfaceContainerLow,
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(18),
-                borderSide: BorderSide.none,
-              ),
-            ),
+            decoration: InputDecoration(labelText: l10n.signUpEmail),
           ),
           const SizedBox(height: 14),
           SizedBox(

@@ -338,11 +338,14 @@ class _Bar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.only(bottom: 8),
+      padding: const EdgeInsets.only(bottom: Space.s),
       child: ToneBlock(
         tone: tone,
         radius: Corners.row,
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+        padding: const EdgeInsets.symmetric(
+          horizontal: Space.l,
+          vertical: Space.l,
+        ),
         onTap: onTap,
         child: Row(
           children: [
@@ -419,7 +422,7 @@ class _WebTile extends StatelessWidget {
         child: InkWell(
           onTap: onTap,
           child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 12),
+            padding: const EdgeInsets.symmetric(horizontal: Space.m),
             child: Row(
               children: [
                 Expanded(

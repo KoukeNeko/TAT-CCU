@@ -132,7 +132,7 @@ class _GlassPanel<T> extends StatelessWidget {
           child: Opacity(
             opacity: t,
             child: Container(
-              padding: const EdgeInsets.all(8),
+              padding: const EdgeInsets.all(Space.s),
               decoration: BoxDecoration(
                 borderRadius: radius,
                 color: light
@@ -150,7 +150,12 @@ class _GlassPanel<T> extends StatelessWidget {
                   children: [
                     if (title case final title?)
                       Padding(
-                        padding: const EdgeInsets.fromLTRB(14, 6, 14, 6),
+                        padding: const EdgeInsets.fromLTRB(
+                          Space.l,
+                          Space.s,
+                          Space.l,
+                          Space.s,
+                        ),
                         child: Text(
                           title,
                           style: TextStyle(
@@ -190,8 +195,8 @@ class _GlassPanel<T> extends StatelessWidget {
         onTap: () => Navigator.of(context).pop(item.value),
         child: Padding(
           padding: EdgeInsets.symmetric(
-            horizontal: item.icon == null ? 14 : 10,
-            vertical: item.icon == null ? 13 : 8,
+            horizontal: item.icon == null ? Space.l : Space.m,
+            vertical: item.icon == null ? Space.m : Space.s,
           ),
           child: Row(
             children: [

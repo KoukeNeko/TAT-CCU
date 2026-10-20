@@ -52,7 +52,7 @@ class DueBlock extends StatelessWidget {
         : context.l10n.unitDays;
     return ToneBlock(
       tone: tone,
-      padding: const EdgeInsets.all(14),
+      padding: cardPadding,
       onTap: item.url == null ? null : () => openDueItem(context, item),
       child: Row(
         children: [

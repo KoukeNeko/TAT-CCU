@@ -505,5 +505,17 @@
   "deleteComment": "このコメントを削除しますか？",
   "delete": "削除",
   "markUnread": "未読にする",
-  "compose": "作成"
+  "compose": "作成",
+  "navMessages": "メッセージ",
+  "earlier": "以前",
+  "msgForum": "ディスカッション",
+  "msgAssignment": "課題",
+  "recipients": "宛先",
+  "searchPeople": "他の人を検索",
+  "sendTo": "宛先",
+  "addRecipient": "宛先を追加",
+  "done": "完了",
+  "mailSent": "送信しました",
+  "staff": "教員と TA",
+  "others": "その他"
 }

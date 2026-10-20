@@ -171,7 +171,12 @@ class _Hero extends StatelessWidget {
               ),
             ),
           Padding(
-            padding: const EdgeInsets.fromLTRB(18, 18, 140, 18),
+            padding: const EdgeInsets.fromLTRB(
+              Space.xl,
+              Space.xl,
+              140,
+              Space.xl,
+            ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -204,7 +209,7 @@ class _Hero extends StatelessWidget {
                 ),
                 if (data.points case final points?)
                   Padding(
-                    padding: const EdgeInsets.only(top: 4),
+                    padding: const EdgeInsets.only(top: Space.xs),
                     child: Text(
                       l10n.attendancePoints(points),
                       style: TextStyle(
@@ -222,8 +227,8 @@ class _Hero extends StatelessWidget {
                     for (final MapEntry(:key, :value) in counts.entries)
                       Container(
                         padding: const EdgeInsets.symmetric(
-                          horizontal: 10,
-                          vertical: 6,
+                          horizontal: Space.m,
+                          vertical: Space.s,
                         ),
                         decoration: BoxDecoration(
                           color: Colors.black.withValues(alpha: 0.12),
@@ -265,7 +270,10 @@ class _SessionRow extends StatelessWidget {
     );
     final tone = _statusTone(context, s.status);
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+      padding: const EdgeInsets.symmetric(
+        horizontal: Space.l,
+        vertical: Space.m,
+      ),
       child: Row(
         children: [
           SizedBox(
@@ -316,7 +324,7 @@ class _SessionRow extends StatelessWidget {
                     : StatusPill(tone: tone, label: s.status),
               if (s.points.isNotEmpty)
                 Padding(
-                  padding: const EdgeInsets.only(top: 4),
+                  padding: const EdgeInsets.only(top: Space.xs),
                   child: Text(s.points, style: muted),
                 ),
             ],

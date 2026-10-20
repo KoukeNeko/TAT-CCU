@@ -3129,6 +3129,78 @@ abstract class AppLocalizations {
   /// In zh, this message translates to:
   /// **'寫信'**
   String get compose;
+
+  /// No description provided for @navMessages.
+  ///
+  /// In zh, this message translates to:
+  /// **'訊息'**
+  String get navMessages;
+
+  /// No description provided for @earlier.
+  ///
+  /// In zh, this message translates to:
+  /// **'較早'**
+  String get earlier;
+
+  /// No description provided for @msgForum.
+  ///
+  /// In zh, this message translates to:
+  /// **'討論'**
+  String get msgForum;
+
+  /// No description provided for @msgAssignment.
+  ///
+  /// In zh, this message translates to:
+  /// **'作業'**
+  String get msgAssignment;
+
+  /// No description provided for @recipients.
+  ///
+  /// In zh, this message translates to:
+  /// **'收件者'**
+  String get recipients;
+
+  /// No description provided for @searchPeople.
+  ///
+  /// In zh, this message translates to:
+  /// **'搜尋其他人'**
+  String get searchPeople;
+
+  /// No description provided for @sendTo.
+  ///
+  /// In zh, this message translates to:
+  /// **'寄到'**
+  String get sendTo;
+
+  /// No description provided for @addRecipient.
+  ///
+  /// In zh, this message translates to:
+  /// **'加入收件者'**
+  String get addRecipient;
+
+  /// No description provided for @done.
+  ///
+  /// In zh, this message translates to:
+  /// **'完成'**
+  String get done;
+
+  /// No description provided for @mailSent.
+  ///
+  /// In zh, this message translates to:
+  /// **'已寄出'**
+  String get mailSent;
+
+  /// No description provided for @staff.
+  ///
+  /// In zh, this message translates to:
+  /// **'老師與助教'**
+  String get staff;
+
+  /// No description provided for @others.
+  ///
+  /// In zh, this message translates to:
+  /// **'其他人'**
+  String get others;
 }
 
 class _AppLocalizationsDelegate

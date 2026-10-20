@@ -5,6 +5,7 @@ import 'package:provider/provider.dart';
 import '../../data/repositories/ecourse_repository.dart';
 import '../../l10n/l10n.dart';
 import '../core/compose_screen.dart';
+import '../core/floating_dock.dart';
 import '../core/theme.dart';
 import '../core/widgets.dart';
 import 'module_screen.dart';
@@ -110,7 +111,12 @@ class DiscussionList extends StatelessWidget {
                     extra: d.subject,
                   ),
                   child: Padding(
-                    padding: const EdgeInsets.fromLTRB(16, 13, 16, 13),
+                    padding: const EdgeInsets.fromLTRB(
+                      Space.l,
+                      Space.m,
+                      Space.l,
+                      Space.m,
+                    ),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
@@ -121,7 +127,9 @@ class DiscussionList extends StatelessWidget {
                                 WidgetSpan(
                                   alignment: PlaceholderAlignment.middle,
                                   child: Padding(
-                                    padding: const EdgeInsets.only(right: 4),
+                                    padding: const EdgeInsets.only(
+                                      right: Space.xs,
+                                    ),
                                     child: Icon(
                                       Icons.push_pin,
                                       size: 16,
@@ -140,7 +148,7 @@ class DiscussionList extends StatelessWidget {
                         ),
                         if (d.body.isNotEmpty)
                           Padding(
-                            padding: const EdgeInsets.only(top: 4),
+                            padding: const EdgeInsets.only(top: Space.xs),
                             child: Text(
                               d.body,
                               maxLines: 2,
@@ -237,12 +245,15 @@ class _DiscussionScreenState extends State<DiscussionScreen> {
         builder: (context, posts) {
           if (posts.isEmpty) return EmptyState(context.l10n.noDiscussions);
           final [first, ...replies] = posts;
-          return Column(
+          return Stack(
             children: [
-              Expanded(
+              Positioned.fill(
                 child: ListView(
-                  // The reply bar below clears the nav bar.
-                  padding: scrollPadding(context).copyWith(bottom: 16),
+                  // Ends above the reply dock floating over it.
+                  padding: scrollPadding(context).copyWith(
+                    bottom:
+                        scrollPadding(context).bottom + FloatingDock.clearance,
+                  ),
                   children: [
                     _Post(
                       post: first,
@@ -253,7 +264,10 @@ class _DiscussionScreenState extends State<DiscussionScreen> {
                       SectionLabel(context.l10n.replyCount(replies.length)),
                       for (final p in replies)
                         Padding(
-                          padding: const EdgeInsets.only(left: 18, bottom: 8),
+                          padding: const EdgeInsets.only(
+                            left: Space.xl,
+                            bottom: Space.s,
+                          ),
                           child: DecoratedBox(
                             decoration: BoxDecoration(
                               border: Border(
@@ -266,7 +280,7 @@ class _DiscussionScreenState extends State<DiscussionScreen> {
                               ),
                             ),
                             child: Padding(
-                              padding: const EdgeInsets.only(left: 12),
+                              padding: const EdgeInsets.only(left: Space.m),
                               child: _Post(
                                 post: p,
                                 lead: false,
@@ -279,9 +293,14 @@ class _DiscussionScreenState extends State<DiscussionScreen> {
                   ],
                 ),
               ),
-              ComposeBar(
-                hint: context.l10n.replyToThread,
-                onTap: () => _reply(first),
+              Positioned(
+                left: 0,
+                right: 0,
+                bottom: 0,
+                child: ComposeBar(
+                  hint: context.l10n.replyToThread,
+                  onTap: () => _reply(first),
+                ),
               ),
             ],
           );
@@ -309,7 +328,7 @@ class _Post extends StatelessWidget {
       color: lead ? tone.fill : scheme.surfaceContainerLow,
       margin: lead ? null : EdgeInsets.zero,
       child: Padding(
-        padding: const EdgeInsets.all(16),
+        padding: cardPadding,
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -358,7 +377,7 @@ class _Post extends StatelessWidget {
             ),
             if (lead && post.subject.isNotEmpty)
               Padding(
-                padding: const EdgeInsets.only(top: 12),
+                padding: const EdgeInsets.only(top: Space.m),
                 child: Text(
                   post.subject,
                   style: TextStyle(
@@ -371,7 +390,7 @@ class _Post extends StatelessWidget {
               ),
             if (post.body.isNotEmpty)
               Padding(
-                padding: const EdgeInsets.only(top: 8),
+                padding: const EdgeInsets.only(top: Space.s),
                 child: SelectableText(
                   post.body,
                   style: TextStyle(color: ink, fontSize: 14, height: 1.6),
@@ -379,14 +398,14 @@ class _Post extends StatelessWidget {
               ),
             if (post.attachments.isNotEmpty)
               Padding(
-                padding: const EdgeInsets.only(top: 12),
+                padding: const EdgeInsets.only(top: Space.m),
                 child: FileList(
                   files: post.attachments,
                   detail: (f) => fileSize(f.size),
                 ),
               ),
             Padding(
-              padding: const EdgeInsets.only(top: 8),
+              padding: const EdgeInsets.only(top: Space.s),
               child: TextButton(
                 style: TextButton.styleFrom(
                   foregroundColor: ink,

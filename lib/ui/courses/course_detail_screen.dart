@@ -218,7 +218,12 @@ class _Hero extends StatelessWidget {
             ),
           ),
           Padding(
-            padding: const EdgeInsets.fromLTRB(18, 18, 72, 18),
+            padding: const EdgeInsets.fromLTRB(
+              Space.xl,
+              Space.xl,
+              72,
+              Space.xl,
+            ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -251,8 +256,8 @@ class _Hero extends StatelessWidget {
                     ),
                     child: Padding(
                       padding: const EdgeInsets.symmetric(
-                        horizontal: 12,
-                        vertical: 7,
+                        horizontal: Space.m,
+                        vertical: Space.s,
                       ),
                       child: Text(
                         context.l10n.nextClassAt(next),
@@ -292,7 +297,7 @@ class _Stat extends StatelessWidget {
       child: ToneBlock(
         tone: tone,
         radius: Corners.row,
-        padding: const EdgeInsets.all(12),
+        padding: const EdgeInsets.all(Space.m),
         onTap: onTap,
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -531,7 +536,12 @@ class _SectionListState extends State<_SectionList> {
                 for (final (i, s) in sections.indexed) ...[
                   Padding(
                     key: _headers[i],
-                    padding: const EdgeInsets.fromLTRB(4, 20, 4, 10),
+                    padding: const EdgeInsets.fromLTRB(
+                      Space.xs,
+                      Space.xl,
+                      Space.xs,
+                      Space.m,
+                    ),
                     child: Text.rich(
                       TextSpan(
                         children: [
@@ -620,7 +630,10 @@ class _ModuleRow extends StatelessWidget {
           ? null
           : () => openExternal(module.url!),
       child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 11),
+        padding: const EdgeInsets.symmetric(
+          horizontal: Space.l,
+          vertical: Space.m,
+        ),
         child: Row(
           children: [
             Container(

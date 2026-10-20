@@ -161,7 +161,7 @@ class _SessionCard extends StatelessWidget {
     return ToneBlock(
       tone: tone,
       radius: Corners.card,
-      padding: const EdgeInsets.all(20),
+      padding: const EdgeInsets.all(Space.xl),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [

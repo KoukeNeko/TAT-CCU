@@ -170,7 +170,7 @@ class _AcademicScreenState extends State<AcademicScreen> {
     ];
     if (tickets.length == 1) {
       return Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 16),
+        padding: const EdgeInsets.symmetric(horizontal: Space.l),
         child: tickets.single,
       );
     }
@@ -181,7 +181,10 @@ class _AcademicScreenState extends State<AcademicScreen> {
       onPageChanged: (i) => setState(() => _page = i),
       children: [
         for (final t in tickets)
-          Padding(padding: const EdgeInsets.only(left: 16), child: t),
+          Padding(
+            padding: const EdgeInsets.only(left: Space.l),
+            child: t,
+          ),
       ],
     );
   }
@@ -215,7 +218,7 @@ class _AcademicScreenState extends State<AcademicScreen> {
               ),
               if ((certificates?.length ?? 0) > 1)
                 Padding(
-                  padding: const EdgeInsets.only(top: 12),
+                  padding: const EdgeInsets.only(top: Space.m),
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
@@ -238,11 +241,16 @@ class _AcademicScreenState extends State<AcademicScreen> {
                 ),
               if (_error != null)
                 Padding(
-                  padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
+                  padding: const EdgeInsets.fromLTRB(
+                    Space.l,
+                    Space.s,
+                    Space.l,
+                    0,
+                  ),
                   child: Text(_error!, style: TextStyle(color: scheme.error)),
                 ),
               Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16),
+                padding: const EdgeInsets.symmetric(horizontal: Space.l),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
@@ -251,7 +259,9 @@ class _AcademicScreenState extends State<AcademicScreen> {
                       Card(
                         color: scheme.surfaceContainerLow,
                         child: Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 16),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: Space.l,
+                          ),
                           child: Column(
                             children: [
                               for (final (i, (label, value)) in [
@@ -385,14 +395,19 @@ class _Ticket extends StatelessWidget {
         children: [
           Container(
             color: tone.fill,
-            padding: const EdgeInsets.fromLTRB(14, 14, 16, 14),
+            padding: const EdgeInsets.fromLTRB(
+              Space.l,
+              Space.l,
+              Space.l,
+              Space.l,
+            ),
             child: Row(
               children: [
                 Container(
                   width: 56,
                   height: 56,
                   // Inset so `115-1` stays inside the star's points.
-                  padding: const EdgeInsets.all(11),
+                  padding: const EdgeInsets.all(Space.m),
                   decoration: ShapeDecoration(
                     color: tone.strong,
                     shape: spikyStar,
@@ -442,7 +457,7 @@ class _Ticket extends StatelessWidget {
           Expanded(
             child: Container(
               color: scheme.surfaceContainerHigh,
-              padding: const EdgeInsets.symmetric(vertical: 14),
+              padding: const EdgeInsets.symmetric(vertical: Space.l),
               child: c == null
                   ? Center(
                       child: AspectRatio(
@@ -470,7 +485,7 @@ class _Ticket extends StatelessWidget {
           ),
           if (c != null)
             Padding(
-              padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
+              padding: const EdgeInsets.fromLTRB(Space.l, Space.m, Space.l, 0),
               child: Row(
                 children: [
                   Text(
@@ -500,7 +515,7 @@ class _Ticket extends StatelessWidget {
               alignment: Alignment.center,
               children: [
                 Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 18),
+                  padding: const EdgeInsets.symmetric(horizontal: Space.xl),
                   child: CustomPaint(
                     size: const Size(double.infinity, 2),
                     painter: _Perforation(scheme.outlineVariant),
@@ -523,7 +538,7 @@ class _Ticket extends StatelessWidget {
             ),
           ),
           Padding(
-            padding: const EdgeInsets.fromLTRB(12, 0, 12, 12),
+            padding: const EdgeInsets.fromLTRB(Space.m, 0, Space.m, Space.m),
             child: Row(
               children: [
                 for (final (i, b) in buttons.indexed) ...[
@@ -571,7 +586,7 @@ class _Action extends StatelessWidget {
     final style = FilledButton.styleFrom(
       minimumSize: const Size.fromHeight(48),
       // Three buttons share the ticket; 重新產生 must fit on one line.
-      padding: const EdgeInsets.symmetric(horizontal: 8),
+      padding: const EdgeInsets.symmetric(horizontal: Space.s),
       textStyle: const TextStyle(fontWeight: FontWeight.w900),
     );
     return primary
@@ -597,7 +612,7 @@ class _Field extends StatelessWidget {
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 13),
+      padding: const EdgeInsets.symmetric(vertical: Space.m),
       child: Row(
         children: [
           Text(

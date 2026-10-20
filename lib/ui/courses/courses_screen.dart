@@ -44,11 +44,12 @@ class _CoursesScreenState extends State<CoursesScreen> {
           return ListView(
             padding: scrollPadding(context),
             children: [
-              SearchBar(
-                hintText: context.l10n.searchCourses,
-                leading: const Icon(Icons.search),
-                elevation: const WidgetStatePropertyAll(0),
+              TextField(
                 onChanged: (v) => setState(() => _query = v.trim()),
+                decoration: InputDecoration(
+                  hintText: context.l10n.searchCourses,
+                  prefixIcon: const Icon(Icons.search),
+                ),
               ),
               if (shown.isEmpty)
                 Padding(
@@ -85,7 +86,7 @@ class _CourseBlock extends StatelessWidget {
     ].join('・');
     return ToneBlock(
       tone: tone,
-      padding: const EdgeInsets.all(14),
+      padding: cardPadding,
       onTap: () => context.push('/courses/${course.id}'),
       child: Row(
         children: [

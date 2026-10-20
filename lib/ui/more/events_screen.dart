@@ -253,7 +253,6 @@ class _EventsScreenState extends State<EventsScreen> {
 
   PreferredSizeWidget _bar(BuildContext context) {
     final l10n = context.l10n;
-    final scheme = Theme.of(context).colorScheme;
     final now = DateTime.now();
     final events = _results ?? _data?.events ?? const <SchoolEvent>[];
     String timeLabel(_Time t) => switch (t) {
@@ -271,7 +270,7 @@ class _EventsScreenState extends State<EventsScreen> {
     return PreferredSize(
       preferredSize: const Size.fromHeight(108),
       child: Padding(
-        padding: const EdgeInsets.only(bottom: 12),
+        padding: const EdgeInsets.only(bottom: Space.m),
         child: Column(
           children: [
             Padding(
@@ -291,13 +290,6 @@ class _EventsScreenState extends State<EventsScreen> {
                           icon: const Icon(Icons.close),
                           onPressed: _clearSearch,
                         ),
-                  filled: true,
-                  fillColor: scheme.surfaceContainerHigh,
-                  border: const OutlineInputBorder(
-                    borderRadius: BorderRadius.all(Radius.circular(999)),
-                    borderSide: BorderSide.none,
-                  ),
-                  contentPadding: EdgeInsets.zero,
                 ),
               ),
             ),
@@ -633,7 +625,7 @@ class EventRow extends StatelessWidget {
     return InkWell(
       onTap: onTap,
       child: Padding(
-        padding: const EdgeInsets.fromLTRB(10, 10, 12, 10),
+        padding: const EdgeInsets.fromLTRB(Space.m, Space.m, Space.m, Space.m),
         child: Row(
           children: [
             EventThumb(event: event),
@@ -706,7 +698,7 @@ class _NextCard extends StatelessWidget {
     return ToneBlock(
       tone: tone,
       radius: Corners.card,
-      padding: const EdgeInsets.fromLTRB(8, 8, 8, 16),
+      padding: const EdgeInsets.fromLTRB(Space.s, Space.s, Space.s, Space.l),
       onTap: onTap,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -733,8 +725,8 @@ class _NextCard extends StatelessWidget {
                         ),
                         child: Padding(
                           padding: const EdgeInsets.symmetric(
-                            horizontal: 12,
-                            vertical: 6,
+                            horizontal: Space.m,
+                            vertical: Space.s,
                           ),
                           child: Text(
                             days <= 0 ? l10n.today : l10n.inDays(days),
@@ -752,7 +744,7 @@ class _NextCard extends StatelessWidget {
             ),
           ),
           Padding(
-            padding: const EdgeInsets.fromLTRB(10, 12, 10, 0),
+            padding: const EdgeInsets.fromLTRB(Space.m, Space.m, Space.m, 0),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -790,8 +782,8 @@ class _NextCard extends StatelessWidget {
                         ),
                         child: Padding(
                           padding: const EdgeInsets.symmetric(
-                            horizontal: 12,
-                            vertical: 7,
+                            horizontal: Space.m,
+                            vertical: Space.s,
                           ),
                           child: Text(
                             s,
@@ -831,7 +823,7 @@ class _MyEventsChip extends StatelessWidget {
         onTap: onTap,
         child: Container(
           height: 40,
-          padding: const EdgeInsets.only(left: 14, right: 8),
+          padding: const EdgeInsets.only(left: Space.l, right: Space.s),
           child: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
@@ -983,7 +975,7 @@ class MyEventsScreen extends StatelessWidget {
                     child: ToneBlock(
                       tone: tone,
                       radius: Corners.row,
-                      padding: const EdgeInsets.all(14),
+                      padding: cardPadding,
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [

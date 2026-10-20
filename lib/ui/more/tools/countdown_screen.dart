@@ -52,7 +52,7 @@ class CountdownScreen extends StatelessWidget {
                     child: term == null
                         ? null
                         : Padding(
-                            padding: const EdgeInsets.only(top: 14),
+                            padding: const EdgeInsets.only(top: Space.l),
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [

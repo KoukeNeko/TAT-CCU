@@ -505,5 +505,17 @@
   "deleteComment": "Delete this comment?",
   "delete": "Delete",
   "markUnread": "Mark as unread",
-  "compose": "Compose"
+  "compose": "Compose",
+  "navMessages": "Messages",
+  "earlier": "Earlier",
+  "msgForum": "Discussions",
+  "msgAssignment": "Assignments",
+  "recipients": "To",
+  "searchPeople": "Find someone else",
+  "sendTo": "To",
+  "addRecipient": "Add recipient",
+  "done": "Done",
+  "mailSent": "Sent",
+  "staff": "Teachers and TAs",
+  "others": "Others"
 }

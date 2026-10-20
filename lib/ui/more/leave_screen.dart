@@ -157,7 +157,7 @@ class _Body extends StatelessWidget {
                 child: ToneBlock(
                   tone: tone,
                   radius: Corners.row,
-                  padding: const EdgeInsets.all(12),
+                  padding: const EdgeInsets.all(Space.m),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
@@ -197,7 +197,7 @@ class _Body extends StatelessWidget {
           ),
         for (final r in requests)
           Padding(
-            padding: const EdgeInsets.only(bottom: 8),
+            padding: const EdgeInsets.only(bottom: Space.s),
             child: _RequestRow(request: r, neutral: neutral),
           ),
         SectionLabel(l10n.onSchoolWebsite),
@@ -253,7 +253,10 @@ class _RequestRow extends StatelessWidget {
         borderRadius: BorderRadius.circular(Corners.row),
       ),
       child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+        padding: const EdgeInsets.symmetric(
+          horizontal: Space.l,
+          vertical: Space.m,
+        ),
         child: Row(
           children: [
             Expanded(
@@ -286,7 +289,10 @@ class _RequestRow extends StatelessWidget {
                 shape: const StadiumBorder(),
               ),
               child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 4),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: Space.s,
+                  vertical: Space.xs,
+                ),
                 child: Text(
                   label,
                   style: TextStyle(

@@ -9,6 +9,7 @@ import '../../l10n/l10n.dart';
 import '../core/campus_session.dart';
 import '../core/campus_web_screen.dart';
 import '../core/theme.dart';
+import '../core/glass_sheet.dart';
 import '../core/widgets.dart';
 
 const _host = 'ccu.primo.exlibrisgroup.com';
@@ -365,15 +366,18 @@ class _Hero extends StatelessWidget {
     return ToneBlock(
       tone: tone,
       radius: Corners.card,
-      padding: const EdgeInsets.all(18),
+      padding: const EdgeInsets.all(Space.xl),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           ...head,
           if (holds.isNotEmpty)
             Container(
-              margin: const EdgeInsets.only(top: 14),
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+              margin: const EdgeInsets.only(top: Space.l),
+              padding: const EdgeInsets.symmetric(
+                horizontal: Space.m,
+                vertical: Space.m,
+              ),
               decoration: BoxDecoration(
                 color: Colors.white.withValues(
                   alpha: Theme.of(context).brightness == Brightness.dark
@@ -440,7 +444,10 @@ class _LoanRow extends StatelessWidget {
       child: InkWell(
         onTap: onTap,
         child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+          padding: const EdgeInsets.symmetric(
+            horizontal: Space.l,
+            vertical: Space.m,
+          ),
           child: Row(
             children: [
               Expanded(
@@ -507,7 +514,10 @@ class _HoldRow extends StatelessWidget {
       child: InkWell(
         onTap: onTap,
         child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+          padding: const EdgeInsets.symmetric(
+            horizontal: Space.l,
+            vertical: Space.m,
+          ),
           child: Row(
             children: [
               Expanded(
@@ -564,11 +574,10 @@ void _showRenew(
 ) {
   final l10n = context.l10n;
   final scheme = Theme.of(context).colorScheme;
-  showModalBottomSheet<void>(
-    context: context,
-    showDragHandle: true,
+  showGlassSheet<void>(
+    context,
     builder: (sheet) => Padding(
-      padding: const EdgeInsets.fromLTRB(20, 0, 20, 28),
+      padding: const EdgeInsets.fromLTRB(Space.xl, 0, Space.xl, 28),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.stretch,

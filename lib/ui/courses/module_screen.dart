@@ -234,8 +234,8 @@ class _CommentsState extends State<_Comments> {
                 borderRadius: BorderRadius.circular(Corners.small),
                 child: Padding(
                   padding: const EdgeInsets.symmetric(
-                    horizontal: 4,
-                    vertical: 10,
+                    horizontal: Space.xs,
+                    vertical: Space.m,
                   ),
                   child: Row(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -295,7 +295,7 @@ class _CommentsState extends State<_Comments> {
               ),
             if (data.canPost)
               Padding(
-                padding: const EdgeInsets.only(top: 8),
+                padding: const EdgeInsets.only(top: Space.s),
                 child: ComposeBar(
                   hint: context.l10n.commentHint,
                   onTap: _add,
@@ -420,7 +420,7 @@ class _Progress extends StatelessWidget {
     return Card(
       color: scheme.surfaceContainerLow,
       child: Padding(
-        padding: const EdgeInsets.fromLTRB(8, 16, 8, 14),
+        padding: const EdgeInsets.fromLTRB(Space.s, Space.l, Space.s, Space.l),
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -535,13 +535,16 @@ class _Details extends StatelessWidget {
     return Card(
       color: scheme.surfaceContainerLow,
       child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+        padding: const EdgeInsets.symmetric(
+          horizontal: Space.l,
+          vertical: Space.s,
+        ),
         child: Column(
           children: [
             for (final (i, (label, value)) in rows.indexed) ...[
               if (i > 0) Divider(height: 1, color: scheme.outlineVariant),
               Padding(
-                padding: const EdgeInsets.symmetric(vertical: 11),
+                padding: const EdgeInsets.symmetric(vertical: Space.m),
                 child: Row(
                   children: [
                     Text(
@@ -583,7 +586,7 @@ class _Fact extends StatelessWidget {
           scheme.onSurfaceVariant,
         ),
         radius: Corners.row,
-        padding: const EdgeInsets.all(12),
+        padding: const EdgeInsets.all(Space.m),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -617,7 +620,7 @@ class _Text extends StatelessWidget {
     return Card(
       color: Theme.of(context).colorScheme.surfaceContainerLow,
       child: Padding(
-        padding: const EdgeInsets.all(14),
+        padding: cardPadding,
         child: SelectableText(
           text,
           style: const TextStyle(height: 1.6, fontWeight: FontWeight.w600),

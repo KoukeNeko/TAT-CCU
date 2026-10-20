@@ -121,6 +121,7 @@ class _AppShellState extends State<AppShell> {
     );
     final List<_Tab> tabs = [
       (Icons.today_outlined, context.l10n.navToday, t.lilac, spikyStar),
+      (Icons.forum_outlined, context.l10n.navMessages, t.sun, scallop),
       (
         Icons.calendar_view_week_outlined,
         context.l10n.navTimetable,
@@ -149,10 +150,10 @@ class _AppShellState extends State<AppShell> {
           // Sit inside the home-indicator zone like the iOS floating tab bar
           // instead of stacking a full safe-area inset under it.
           padding: EdgeInsets.fromLTRB(
-            12,
+            Space.m,
             0,
-            12,
-            math.max(8, MediaQuery.viewPaddingOf(context).bottom - 18),
+            Space.m,
+            math.max(Space.s, MediaQuery.viewPaddingOf(context).bottom - 18),
           ),
           child: AnimatedScale(
             // Press: the bar lifts slightly; release springs back.
@@ -248,7 +249,7 @@ class _GlassBar extends StatelessWidget {
           child: Container(
             height: _barHeight,
             // Even inset on every side: (72 - 52) / 2.
-            padding: const EdgeInsets.all(10),
+            padding: const EdgeInsets.all(Space.m),
             decoration: ShapeDecoration(
               gradient: LinearGradient(
                 begin: Alignment.topCenter,
@@ -301,7 +302,7 @@ class _TabSlot extends StatelessWidget {
         height: 52,
         // The capsule fills its slot so its inset matches the bar's, and the
         // icon sits as far from the capsule edge as from its top: (52-38)/2.
-        padding: EdgeInsets.only(left: selected ? 7 : 0),
+        padding: EdgeInsets.only(left: selected ? Space.s : 0),
         alignment: selected ? Alignment.centerLeft : Alignment.center,
         decoration: ShapeDecoration(
           // Pressing deepens the capsule so the finger has something to hold.
@@ -342,7 +343,7 @@ class _TabSlot extends StatelessWidget {
                       curve: _settle,
                       child: selected
                           ? Padding(
-                              padding: const EdgeInsets.only(left: 8),
+                              padding: const EdgeInsets.only(left: Space.s),
                               child: Text(
                                 label,
                                 maxLines: 1,

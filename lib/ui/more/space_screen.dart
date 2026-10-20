@@ -357,7 +357,10 @@ class _Pass extends StatelessWidget {
         children: [
           Container(
             color: tone.strong,
-            padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 14),
+            padding: const EdgeInsets.symmetric(
+              horizontal: Space.xl,
+              vertical: Space.l,
+            ),
             child: Row(
               children: [
                 Text(
@@ -375,7 +378,12 @@ class _Pass extends StatelessWidget {
             ),
           ),
           Padding(
-            padding: const EdgeInsets.fromLTRB(18, 12, 18, 14),
+            padding: const EdgeInsets.fromLTRB(
+              Space.xl,
+              Space.m,
+              Space.xl,
+              Space.l,
+            ),
             child: Row(
               children: [
                 if (open.isNotEmpty)
@@ -391,13 +399,13 @@ class _Pass extends StatelessWidget {
           ),
           const _Perforation(),
           Padding(
-            padding: const EdgeInsets.all(18),
+            padding: const EdgeInsets.all(Space.xl),
             child: Column(
               children: [
                 Container(
                   width: 220,
                   height: 220,
-                  padding: const EdgeInsets.all(12),
+                  padding: const EdgeInsets.all(Space.m),
                   decoration: BoxDecoration(
                     // Scanners need dark modules on white, in dark mode too.
                     color: Colors.white,
@@ -472,7 +480,7 @@ class _Perforation extends StatelessWidget {
         alignment: Alignment.center,
         children: [
           Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 18),
+            padding: const EdgeInsets.symmetric(horizontal: Space.xl),
             child: CustomPaint(
               size: const Size(double.infinity, 2),
               painter: _Dashes(scheme.outlineVariant),
@@ -547,7 +555,7 @@ class _Places extends StatelessWidget {
                     s.name,
                   ),
                   child: Padding(
-                    padding: const EdgeInsets.all(12),
+                    padding: const EdgeInsets.all(Space.m),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [

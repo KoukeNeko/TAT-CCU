@@ -2,6 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../l10n/l10n.dart';
+import '../core/compose_screen.dart';
+import '../core/glass.dart';
+import '../core/glass_sheet.dart';
+import '../core/floating_dock.dart';
 import '../core/campus_session.dart';
 import '../core/maintenance_capsule.dart';
 import '../core/status_capsule.dart';
@@ -64,7 +68,7 @@ class DesignLanguageScreen extends StatelessWidget {
           child: InkWell(
             onTap: () => open(part),
             child: Padding(
-              padding: const EdgeInsets.all(14),
+              padding: cardPadding,
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -172,7 +176,7 @@ class DesignLanguageScreen extends StatelessWidget {
                         pageTop,
                       ])
                         Padding(
-                          padding: const EdgeInsets.only(right: 6),
+                          padding: const EdgeInsets.only(right: Space.s),
                           child: Container(
                             width: 14,
                             height: v * 2.6,
@@ -240,7 +244,7 @@ class DesignLanguageScreen extends StatelessWidget {
                   children: [
                     for (final shape in [spikyStar, clover, scallop])
                       Padding(
-                        padding: const EdgeInsets.only(right: 10),
+                        padding: const EdgeInsets.only(right: Space.m),
                         child: Container(
                           width: 44,
                           height: 44,
@@ -337,7 +341,7 @@ class DesignPartScreen extends StatelessWidget {
     Widget swatch(String name, Color bg, Color fg) => Expanded(
       child: Container(
         color: bg,
-        padding: const EdgeInsets.fromLTRB(10, 10, 10, 12),
+        padding: const EdgeInsets.fromLTRB(Space.m, Space.m, Space.m, Space.m),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -383,7 +387,12 @@ class DesignPartScreen extends StatelessWidget {
                         SizedBox(
                           width: 88,
                           child: Padding(
-                            padding: const EdgeInsets.fromLTRB(10, 10, 10, 12),
+                            padding: const EdgeInsets.fromLTRB(
+                              Space.m,
+                              Space.m,
+                              Space.m,
+                              Space.m,
+                            ),
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
@@ -437,7 +446,7 @@ class DesignPartScreen extends StatelessWidget {
                 borderRadius: BorderRadius.circular(Corners.small),
               ),
               alignment: Alignment.bottomLeft,
-              padding: const EdgeInsets.all(6),
+              padding: const EdgeInsets.all(Space.s),
               child: Container(
                 width: 10,
                 height: 10,
@@ -460,7 +469,7 @@ class DesignPartScreen extends StatelessWidget {
           padding: const EdgeInsets.only(bottom: rowGap),
           child: Container(
             height: 76,
-            padding: const EdgeInsets.all(14),
+            padding: cardPadding,
             decoration: BoxDecoration(
               color: tone.fill,
               borderRadius: BorderRadius.circular(r),
@@ -498,7 +507,7 @@ class DesignPartScreen extends StatelessWidget {
               borderRadius: BorderRadius.circular(Corners.row),
             ),
             child: Padding(
-              padding: const EdgeInsets.all(14),
+              padding: cardPadding,
               child: Row(
                 children: [
                   Container(
@@ -543,7 +552,7 @@ class DesignPartScreen extends StatelessWidget {
     return [
       for (final (size, weight) in _typeScale)
         Padding(
-          padding: const EdgeInsets.symmetric(vertical: 8),
+          padding: const EdgeInsets.symmetric(vertical: Space.s),
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.baseline,
             textBaseline: TextBaseline.alphabetic,
@@ -608,6 +617,102 @@ class DesignPartScreen extends StatelessWidget {
           TextButton(onPressed: () {}, child: Text(l10n.viewAll)),
         ],
       ),
+      SectionLabel(
+        'FloatingDock',
+        action: TextButton(
+          onPressed: () => Navigator.of(context)
+              .push(MaterialPageRoute(builder: (_) => const _DockGallery())),
+          child: Text(l10n.viewAll),
+        ),
+      ),
+      _Sample(
+        child: DockButton(
+          onPressed: () {},
+          tone: tones.lilac,
+          child: Text(l10n.signUp),
+        ),
+      ),
+      const SectionLabel('GlassSurface'),
+      _Sample(
+        child: Padding(
+          padding: const EdgeInsets.all(Space.l),
+          child: GlassSurface(
+            radius: BorderRadius.circular(Corners.card),
+            child: const SizedBox(height: 64),
+          ),
+        ),
+      ),
+      const SectionLabel('showGlassSheet・showGlassMenu'),
+      Builder(
+        builder: (context) => Wrap(
+          spacing: 8,
+          children: [
+            FilledButton.tonal(
+              onPressed: () => showGlassSheet<void>(
+                context,
+                title: l10n.addRecipient,
+                builder: (_) => Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    for (final t in [l10n.kindCatalog, l10n.kindJournal])
+                      ListTile(title: Text(t)),
+                  ],
+                ),
+              ),
+              child: const Text('Sheet'),
+            ),
+            Builder(
+              builder: (anchor) => FilledButton.tonal(
+                onPressed: () {
+                  final box = anchor.findRenderObject()! as RenderBox;
+                  showGlassMenu<int>(
+                    anchor,
+                    anchor: box.localToGlobal(Offset.zero) & box.size,
+                    selected: 0,
+                    items: [
+                      for (final (i, t) in [
+                        l10n.kindCatalog,
+                        l10n.kindJournal,
+                      ].indexed)
+                        (
+                          value: i,
+                          title: t,
+                          detail: null,
+                          icon: null,
+                          tone: null,
+                        ),
+                    ],
+                  );
+                },
+                child: const Text('Menu'),
+              ),
+            ),
+          ],
+        ),
+      ),
+      const SectionLabel('ComposeBar'),
+      ComposeBar(hint: l10n.commentHint, onTap: () {}, inline: true),
+      const SectionLabel('TextField'),
+      TextField(decoration: InputDecoration(hintText: l10n.searchPeople)),
+      const SizedBox(height: rowGap),
+      TextField(
+        decoration: InputDecoration(
+          labelText: l10n.signUpEmail,
+          errorText: l10n.sendFailed,
+        ),
+      ),
+      const SectionLabel('RoundBackButton・PressFeedback'),
+      Row(
+        children: [
+          const RoundBackButton(),
+          const SizedBox(width: Space.m),
+          PressFeedback(
+            child: FilledButton(onPressed: () {}, child: Text(l10n.renew)),
+          ),
+        ],
+      ),
+      const SectionLabel('EmptyState'),
+      SizedBox(height: 260, child: EmptyState(l10n.noMail)),
       const SectionLabel('ToneBlock'),
       Row(
         children: [
@@ -617,7 +722,7 @@ class DesignPartScreen extends StatelessWidget {
               child: ToneBlock(
                 tone: t,
                 radius: Corners.row,
-                padding: const EdgeInsets.all(12),
+                padding: const EdgeInsets.all(Space.m),
                 child: const SizedBox(height: 40),
               ),
             ),
@@ -781,7 +886,7 @@ class _ModePanel extends StatelessWidget {
           ),
           clipBehavior: Clip.antiAlias,
           child: Padding(
-            padding: const EdgeInsets.all(14),
+            padding: cardPadding,
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
@@ -798,6 +903,140 @@ class _ModePanel extends StatelessWidget {
               ],
             ),
           ),
+        ),
+      ),
+    );
+  }
+}
+
+/// [child] on the page's own background, padded the way a page holds it.
+class _Sample extends StatelessWidget {
+  const _Sample({required this.child});
+
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) => Padding(
+    padding: const EdgeInsets.only(top: Space.l),
+    // The dock pads itself by the nav bar's inset; none here.
+    child: MediaQuery.removePadding(
+      context: context,
+      removeBottom: true,
+      child: child,
+    ),
+  );
+}
+
+/// Every FloatingDock the app shows.
+class _DockGallery extends StatelessWidget {
+  const _DockGallery();
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = context.l10n;
+    final tones = context.tones;
+    return Scaffold(
+      extendBodyBehindAppBar: true,
+      appBar: subBar(context, 'FloatingDock'),
+      body: Builder(
+        builder: (context) => ListView(
+          padding: scrollPadding(context, top: 0),
+          children: [
+            for (final (title, dock) in [
+              (
+                l10n.replyToThread,
+                ComposeBar(hint: l10n.replyToThread, onTap: () {}),
+              ),
+              (
+                l10n.signUp,
+                DockButton(
+                  onPressed: () {},
+                  tone: tones.lilac,
+                  child: Text(l10n.signUp),
+                ),
+              ),
+              (
+                l10n.signUpWaitlist,
+                DockButton(
+                  onPressed: () {},
+                  tone: tones.sun,
+                  child: Text(l10n.signUpWaitlist),
+                ),
+              ),
+              (
+                l10n.cancelSignUp,
+                DockButton(
+                  onPressed: () {},
+                  tone: tones.peach,
+                  child: Text(l10n.cancelSignUp),
+                ),
+              ),
+              (
+                l10n.goSignUp,
+                DockButton(
+                  onPressed: () {},
+                  tone: tones.peach,
+                  child: Text('${l10n.goSignUp} ↗'),
+                ),
+              ),
+              (
+                l10n.eventFull,
+                DockButton(onPressed: null, child: Text(l10n.eventFull)),
+              ),
+              (
+                l10n.signUpClosed,
+                DockButton(onPressed: null, child: Text(l10n.signUpClosed)),
+              ),
+              (
+                l10n.absenceNew,
+                DockButton(
+                  onPressed: () {},
+                  tone: tones.lilac,
+                  child: Text(l10n.absenceNew),
+                ),
+              ),
+              (
+                l10n.submit,
+                DockButton(
+                  onPressed: () {},
+                  tone: tones.lilac,
+                  child: Text(l10n.submit),
+                ),
+              ),
+              (
+                l10n.drRequest,
+                DockButton(
+                  onPressed: () {},
+                  tone: tones.lilac,
+                  child: Text(l10n.drRequest),
+                ),
+              ),
+              (
+                l10n.ptAdd,
+                DockButton(
+                  onPressed: () {},
+                  tone: tones.lilac,
+                  child: Text(l10n.ptAdd),
+                ),
+              ),
+              (
+                l10n.ptSaveCount(2),
+                DockButton(
+                  onPressed: () {},
+                  tone: tones.lilac,
+                  child: Text(l10n.ptSaveCount(2)),
+                ),
+              ),
+              (
+                l10n.ptDeleteCount(2),
+                DockButton(
+                  onPressed: () {},
+                  tone: tones.peach,
+                  child: Text(l10n.ptDeleteCount(2)),
+                ),
+              ),
+            ]) ...[SectionLabel(title), _Sample(child: dock)],
+          ],
         ),
       ),
     );

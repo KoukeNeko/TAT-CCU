@@ -6,6 +6,7 @@ import 'package:provider/provider.dart';
 import '../../data/repositories/ecourse_auth_repository.dart';
 import '../../data/services/demo_data.dart';
 import '../../l10n/l10n.dart';
+import '../core/floating_dock.dart';
 import '../core/campus_session.dart';
 import '../core/theme.dart';
 import '../core/widgets.dart';
@@ -155,20 +156,18 @@ class _AbsenceScreenState extends State<AbsenceScreen> with CampusPageState {
           ),
         ),
         Positioned(
-          left: pageMargin,
-          right: pageMargin,
-          bottom: MediaQuery.paddingOf(context).bottom + 12,
-          child: SizedBox(
-            height: 54,
-            child: FilledButton(
-              onPressed: _sending ? null : _new,
-              child: _sending
-                  ? const SizedBox.square(
-                      dimension: 22,
-                      child: CircularProgressIndicator(strokeWidth: 2.5),
-                    )
-                  : Text(l10n.absenceNew),
-            ),
+          left: 0,
+          right: 0,
+          bottom: 0,
+          child: DockButton(
+            onPressed: _sending ? null : _new,
+            tone: context.tones.lilac,
+            child: _sending
+                ? const SizedBox.square(
+                    dimension: 22,
+                    child: CircularProgressIndicator(strokeWidth: 2.5),
+                  )
+                : Text(l10n.absenceNew),
           ),
         ),
       ],
@@ -260,7 +259,7 @@ class _AbsenceFormScreenState extends State<AbsenceFormScreen> {
       color: scheme.onSurfaceVariant,
     );
     Widget row(String label, Widget child) => Padding(
-      padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
+      padding: const EdgeInsets.fromLTRB(Space.l, Space.m, Space.l, Space.m),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
@@ -277,7 +276,11 @@ class _AbsenceFormScreenState extends State<AbsenceFormScreen> {
       body: Builder(
         builder: (context) => PinnedActionList(
           padding: scrollPadding(context),
-          action: FilledButton(onPressed: _submit, child: Text(l10n.submit)),
+          action: DockButton(
+            onPressed: _submit,
+            tone: tones.lilac,
+            child: Text(l10n.submit),
+          ),
           children: [
             Card(
               color: scheme.surfaceContainerLow,
@@ -359,7 +362,7 @@ class _AbsenceFormScreenState extends State<AbsenceFormScreen> {
                       decoration: const InputDecoration(
                         border: InputBorder.none,
                         isDense: true,
-                        contentPadding: EdgeInsets.symmetric(vertical: 6),
+                        contentPadding: EdgeInsets.symmetric(vertical: Space.s),
                       ),
                     ),
                   ),
@@ -369,7 +372,7 @@ class _AbsenceFormScreenState extends State<AbsenceFormScreen> {
             const SizedBox(height: rowGap),
             ToneBlock(
               tone: tones.sun,
-              padding: const EdgeInsets.all(14),
+              padding: cardPadding,
               child: Row(
                 children: [
                   Icon(Icons.info_outline, size: 18, color: tones.sun.ink),

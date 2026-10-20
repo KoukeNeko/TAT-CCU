@@ -263,7 +263,7 @@ class _PaymentScreenState extends State<PaymentScreen> with CampusPageState {
         SectionLabel(l10n.payMonth(month)),
         if (shown.isEmpty)
           Padding(
-            padding: const EdgeInsets.symmetric(vertical: 24),
+            padding: const EdgeInsets.symmetric(vertical: Space.xxl),
             child: Text(
               l10n.payNone,
               textAlign: TextAlign.center,
@@ -294,7 +294,7 @@ class _PaymentScreenState extends State<PaymentScreen> with CampusPageState {
         SectionLabel(l10n.incomeTitle),
         if (income.values.every((list) => list.isEmpty))
           Padding(
-            padding: const EdgeInsets.symmetric(vertical: 24),
+            padding: const EdgeInsets.symmetric(vertical: Space.xxl),
             child: Text(
               l10n.incomeNone,
               textAlign: TextAlign.center,
@@ -340,7 +340,7 @@ class _ChartCard extends StatelessWidget {
     return ToneBlock(
       tone: tone,
       radius: Corners.card,
-      padding: const EdgeInsets.all(16),
+      padding: cardPadding,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -449,7 +449,10 @@ class _PaymentRow extends StatelessWidget {
     return InkWell(
       onTap: onTap,
       child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+        padding: const EdgeInsets.symmetric(
+          horizontal: Space.l,
+          vertical: Space.m,
+        ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -501,7 +504,7 @@ class _PaymentRow extends StatelessWidget {
               alignment: Alignment.topCenter,
               child: open
                   ? Padding(
-                      padding: const EdgeInsets.only(top: 10),
+                      padding: const EdgeInsets.only(top: Space.m),
                       child: Text(
                         [
                           '${l10n.payCase} ${p.id}',
@@ -549,7 +552,10 @@ class _IncomeCard extends StatelessWidget {
     );
     Widget figure(String label, int value) => Expanded(
       child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+        padding: const EdgeInsets.symmetric(
+          horizontal: Space.m,
+          vertical: Space.s,
+        ),
         decoration: BoxDecoration(
           color: scheme.surfaceContainerHigh,
           borderRadius: BorderRadius.circular(Corners.small),
@@ -578,7 +584,7 @@ class _IncomeCard extends StatelessWidget {
     return Card(
       color: scheme.surfaceContainerLow,
       child: Padding(
-        padding: const EdgeInsets.all(14),
+        padding: cardPadding,
         child: Column(
           children: [
             Row(

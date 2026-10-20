@@ -163,3 +163,60 @@ Attendance attendanceOf(Map<String, dynamic> json) {
     rate: first(RegExp(r'%$')),
   );
 }
+
+/// Sends eCourse2 mail through its own pages (local_mail 1.x has no web
+/// service to send): create.php makes a draft in [courseId] addressed to
+/// [to], or view.php's reply makes one answering [replyTo]; then the
+/// compose form it lands on is posted with `send`. An empty [subject] keeps
+/// the one eCourse2 filled in (`RE: …` for a reply). Answers `sent`.
+String sendMail({
+  int? courseId,
+  List<int> to = const [],
+  int? replyTo,
+  required String subject,
+  required String html,
+}) {
+  final start = replyTo != null
+      ? {
+          'url': '/local/mail/view.php',
+          'body': {'t': 'inbox', 'm': '$replyTo', 'reply': '1'},
+        }
+      : {
+          'url': '/local/mail/create.php',
+          'body': {
+            'c': '$courseId',
+            'rs': to.join(','),
+            // 0 puts everyone on the To line.
+            'local_mail_role': '0',
+          },
+        };
+  return ecourseScript('''
+  const sesskey = M.cfg.sesskey;
+  const start = ${jsonEncode(start)};
+  const draft = await fetch(start.url, { method: 'POST', credentials: 'same-origin',
+    body: new URLSearchParams({ ...start.body, sesskey }) });
+  if (!new URL(draft.url).pathname.endsWith('/local/mail/compose.php')) {
+    throw new Error('eCourse2 did not open a draft');
+  }
+  const page = new DOMParser().parseFromString(await draft.text(), 'text/html');
+  const form = page.querySelector('form[action*="compose.php"]');
+  if (!form) throw new Error('compose form not found');
+  const body = new URLSearchParams();
+  for (const input of form.querySelectorAll('input[type=hidden], input[name=subject]')) {
+    body.set(input.name, input.value);
+  }
+  const subject = ${jsonEncode(subject)};
+  if (subject) body.set('subject', subject);
+  body.set('content[text]', ${jsonEncode(html)});
+  body.set('send', '1');
+  const sent = await fetch(form.getAttribute('action'),
+    { method: 'POST', body, credentials: 'same-origin' });
+  // Sending redirects to the course's mail; staying on compose.php means
+  // the form came back with an error.
+  const done = new DOMParser().parseFromString(await sent.text(), 'text/html');
+  const ok = sent.ok && !new URL(sent.url).pathname.endsWith('/compose.php');
+  const error = ok ? null : ([...done.querySelectorAll('.error, .invalid-feedback, .alert-danger')]
+    .map(e => e.textContent.trim()).find(Boolean) || 'HTTP ' + sent.status);
+  post({ kind: 'sent', ok, error });
+''');
+}

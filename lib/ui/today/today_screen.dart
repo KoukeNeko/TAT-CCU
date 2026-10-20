@@ -141,10 +141,10 @@ class _TodayScreenState extends State<TodayScreen> {
           return ListView(
             padding: scrollPadding(context),
             children: [
-              // Header design A (design/round-09): date above; the headline
-              // and the bell share one line, centered on each other.
+              // Header design A (design/round-09): date above the headline;
+              // notifications moved to the 訊息 tab.
               Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 4),
+                padding: const EdgeInsets.symmetric(horizontal: Space.xs),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
@@ -157,24 +157,13 @@ class _TodayScreenState extends State<TodayScreen> {
                       ),
                     ),
                     const SizedBox(height: 4),
-                    Row(
-                      children: [
-                        Expanded(
-                          child: Text(
-                            headline,
-                            style: const TextStyle(
-                              fontSize: 34,
-                              fontWeight: FontWeight.w900,
-                              height: 1.15,
-                            ),
-                          ),
-                        ),
-                        const SizedBox(width: 12),
-                        _BellButton(
-                          unread: d.notices + d.mail,
-                          onTap: () => context.push('/today/notifications'),
-                        ),
-                      ],
+                    Text(
+                      headline,
+                      style: const TextStyle(
+                        fontSize: 34,
+                        fontWeight: FontWeight.w900,
+                        height: 1.15,
+                      ),
                     ),
                   ],
                 ),
@@ -250,7 +239,7 @@ class _TodayScreenState extends State<TodayScreen> {
                   title: l10n.unread,
                   count: d.notices + d.mail,
                   color: tones.sun.strong,
-                  onAll: () => context.push('/today/notifications'),
+                  onAll: () => context.go('/messages'),
                 ),
                 for (final (i, n) in d.latest.indexed) ...[
                   if (i > 0) const Divider(height: 1),
@@ -375,14 +364,19 @@ class _Hero extends StatelessWidget {
                 ),
               ),
               Padding(
-                padding: const EdgeInsets.fromLTRB(20, 20, 120, 20),
+                padding: const EdgeInsets.fromLTRB(
+                  Space.xl,
+                  Space.xl,
+                  120,
+                  Space.xl,
+                ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Container(
                       padding: const EdgeInsets.symmetric(
-                        horizontal: 10,
-                        vertical: 4,
+                        horizontal: Space.m,
+                        vertical: Space.xs,
                       ),
                       decoration: ShapeDecoration(
                         color: tone.strong,
@@ -427,7 +421,12 @@ class _Hero extends StatelessWidget {
                         child: InkWell(
                           onTap: onTap,
                           child: Padding(
-                            padding: const EdgeInsets.fromLTRB(14, 9, 18, 9),
+                            padding: const EdgeInsets.fromLTRB(
+                              Space.l,
+                              Space.s,
+                              Space.xl,
+                              Space.s,
+                            ),
                             child: Row(
                               mainAxisSize: MainAxisSize.min,
                               children: [
@@ -478,7 +477,12 @@ class _AfterCard extends StatelessWidget {
       child: InkWell(
         onTap: () => context.push('/courses/${slot.course.id}'),
         child: Padding(
-          padding: const EdgeInsets.fromLTRB(18, 14, 18, 14),
+          padding: const EdgeInsets.fromLTRB(
+            Space.xl,
+            Space.l,
+            Space.xl,
+            Space.l,
+          ),
           child: Row(
             children: [
               Expanded(
@@ -549,7 +553,7 @@ class _GroupHeader extends StatelessWidget {
   Widget build(BuildContext context) {
     const style = TextStyle(fontSize: 20, fontWeight: FontWeight.w900);
     return Padding(
-      padding: const EdgeInsets.fromLTRB(4, 20, 0, 2),
+      padding: const EdgeInsets.fromLTRB(Space.xs, Space.xl, 0, 2),
       child: Row(
         children: [
           Text(title, style: style),
@@ -585,12 +589,15 @@ class _ListRow extends StatelessWidget {
     return InkWell(
       onTap: onTap,
       child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 13),
+        padding: const EdgeInsets.symmetric(
+          horizontal: Space.xs,
+          vertical: Space.m,
+        ),
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Padding(
-              padding: const EdgeInsets.fromLTRB(4, 7, 14, 0),
+              padding: const EdgeInsets.fromLTRB(Space.xs, Space.s, Space.l, 0),
               child: Container(
                 width: 10,
                 height: 10,
@@ -626,7 +633,7 @@ class _ListRow extends StatelessWidget {
             ),
             if (trailing case final t?)
               Padding(
-                padding: const EdgeInsets.only(left: 12, top: 2),
+                padding: const EdgeInsets.only(left: Space.m, top: 2),
                 child: Text(
                   t,
                   style: const TextStyle(
@@ -636,69 +643,6 @@ class _ListRow extends StatelessWidget {
                 ),
               ),
           ],
-        ),
-      ),
-    );
-  }
-}
-
-/// Notifications live behind this bell instead of a nav tab; the badge is
-/// the same unread count as the 未讀 list.
-class _BellButton extends StatelessWidget {
-  const _BellButton({required this.unread, required this.onTap});
-
-  final int unread;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
-    final sun = context.tones.sun;
-    return Semantics(
-      button: true,
-      label: unread > 0
-          ? context.l10n.notificationsUnread(unread)
-          : context.l10n.notifications,
-      child: Material(
-        color: scheme.surfaceContainer,
-        shape: const CircleBorder(),
-        child: InkWell(
-          customBorder: const CircleBorder(),
-          onTap: onTap,
-          child: SizedBox(
-            width: 48,
-            height: 48,
-            child: Stack(
-              clipBehavior: Clip.none,
-              alignment: Alignment.center,
-              children: [
-                Icon(Icons.notifications_none, color: scheme.onSurface),
-                if (unread > 0)
-                  Positioned(
-                    top: -2,
-                    right: -4,
-                    child: Container(
-                      constraints: const BoxConstraints(minWidth: 20),
-                      height: 20,
-                      padding: const EdgeInsets.symmetric(horizontal: 5),
-                      alignment: Alignment.center,
-                      decoration: ShapeDecoration(
-                        color: sun.strong,
-                        shape: const StadiumBorder(),
-                      ),
-                      child: Text(
-                        unread > 99 ? '99+' : '$unread',
-                        style: TextStyle(
-                          color: sun.fill,
-                          fontSize: 11,
-                          fontWeight: FontWeight.w900,
-                        ),
-                      ),
-                    ),
-                  ),
-              ],
-            ),
-          ),
         ),
       ),
     );

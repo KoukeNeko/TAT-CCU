@@ -109,7 +109,7 @@ class _TimetableScreenState extends State<TimetableScreen> {
                 const SizedBox(width: 8),
                 if (semesters.isNotEmpty)
                   Padding(
-                    padding: const EdgeInsets.only(right: 16),
+                    padding: const EdgeInsets.only(right: Space.l),
                     child: _SemesterMenu(
                       semesters: semesters,
                       selected: semester,
@@ -125,7 +125,12 @@ class _TimetableScreenState extends State<TimetableScreen> {
               bottom: PreferredSize(
                 preferredSize: const Size.fromHeight(64),
                 child: Padding(
-                  padding: const EdgeInsets.fromLTRB(13, 0, 13, 10),
+                  padding: const EdgeInsets.fromLTRB(
+                    Space.m,
+                    0,
+                    Space.m,
+                    Space.m,
+                  ),
                   child: Row(
                     children: [
                       for (final (i, d) in weekdays.indexed)
@@ -262,7 +267,7 @@ class _DayView extends StatelessWidget {
             )
           else
             Padding(
-              padding: const EdgeInsets.only(bottom: 8),
+              padding: const EdgeInsets.only(bottom: Space.s),
               child: Opacity(
                 opacity: today && s.session.end <= minute ? 0.45 : 1,
                 child: _ClassLine(slot: s),
@@ -270,7 +275,7 @@ class _DayView extends StatelessWidget {
             ),
         if (slots.isNotEmpty)
           Padding(
-            padding: const EdgeInsets.only(top: 4),
+            padding: const EdgeInsets.only(top: Space.xs),
             child: Text(
               l10n.classesEndAt(
                 clock(
@@ -293,7 +298,7 @@ class _DayView extends StatelessWidget {
             InkWell(
               onTap: () => context.push('/courses/${c.id}'),
               child: Padding(
-                padding: const EdgeInsets.symmetric(vertical: 8),
+                padding: const EdgeInsets.symmetric(vertical: Space.s),
                 child: Text(
                   context.courseName(c),
                   style: theme.textTheme.bodyMedium,
@@ -407,7 +412,10 @@ class _FocusCard extends StatelessWidget {
       fontWeight: FontWeight.w900,
     );
     Widget fact(String title, String value) => Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+      padding: const EdgeInsets.symmetric(
+        horizontal: Space.m,
+        vertical: Space.m,
+      ),
       decoration: BoxDecoration(
         color: Colors.black.withValues(alpha: 0.16),
         borderRadius: BorderRadius.circular(Corners.small),
@@ -428,7 +436,7 @@ class _FocusCard extends StatelessWidget {
     );
     return ToneBlock(
       tone: tone,
-      padding: const EdgeInsets.all(18),
+      padding: const EdgeInsets.all(Space.xl),
       onTap: () => context.push('/courses/${c.id}'),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -442,10 +450,10 @@ class _FocusCard extends StatelessWidget {
                   children: [
                     if (label != null)
                       Container(
-                        margin: const EdgeInsets.only(bottom: 10),
+                        margin: const EdgeInsets.only(bottom: Space.m),
                         padding: const EdgeInsets.symmetric(
-                          horizontal: 10,
-                          vertical: 4,
+                          horizontal: Space.m,
+                          vertical: Space.xs,
                         ),
                         decoration: ShapeDecoration(
                           color: tone.strong,
@@ -595,7 +603,10 @@ class _PeriodBar extends StatelessWidget {
         children: [
           for (final p in periods)
             Container(
-              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+              padding: const EdgeInsets.symmetric(
+                horizontal: Space.m,
+                vertical: Space.xs,
+              ),
               decoration: BoxDecoration(
                 color: Colors.black.withValues(alpha: 0.16),
                 borderRadius: BorderRadius.circular(999),
@@ -659,7 +670,7 @@ class _NextCard extends StatelessWidget {
     final tone = context.tones.forCourse(c.id);
     return ToneBlock(
       tone: tone,
-      padding: const EdgeInsets.fromLTRB(16, 14, 16, 14),
+      padding: const EdgeInsets.fromLTRB(Space.l, Space.l, Space.l, Space.l),
       onTap: () => context.push('/courses/${c.id}'),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -718,10 +729,10 @@ class _NextCard extends StatelessWidget {
               final due = facts?.due;
               if (due == null) return const SizedBox();
               return Container(
-                margin: const EdgeInsets.only(top: 10),
+                margin: const EdgeInsets.only(top: Space.m),
                 padding: const EdgeInsets.symmetric(
-                  horizontal: 10,
-                  vertical: 8,
+                  horizontal: Space.m,
+                  vertical: Space.s,
                 ),
                 decoration: BoxDecoration(
                   color: Colors.black.withValues(alpha: 0.16),
@@ -774,7 +785,10 @@ class _ClassLine extends StatelessWidget {
     final tone = context.tones.forCourse(c.id);
     return ToneBlock(
       tone: tone,
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      padding: const EdgeInsets.symmetric(
+        horizontal: Space.l,
+        vertical: Space.m,
+      ),
       onTap: () => context.push('/courses/${c.id}'),
       child: Row(
         children: [
@@ -845,7 +859,7 @@ class _DayPill extends StatelessWidget {
         customBorder: const StadiumBorder(),
         onTap: onTap,
         child: Padding(
-          padding: const EdgeInsets.symmetric(vertical: 10),
+          padding: const EdgeInsets.symmetric(vertical: Space.m),
           child: Column(
             children: [
               Text(
@@ -924,7 +938,7 @@ class _SemesterMenu extends StatelessWidget {
           onTap: () => _open(context),
           child: Container(
             height: 40,
-            padding: const EdgeInsets.only(left: 14, right: 8),
+            padding: const EdgeInsets.only(left: Space.l, right: Space.s),
             child: Row(
               mainAxisSize: MainAxisSize.min,
               children: [

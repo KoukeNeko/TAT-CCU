@@ -136,7 +136,12 @@ class _ThemeCard extends StatelessWidget {
           onTap();
         },
         child: Padding(
-          padding: const EdgeInsets.fromLTRB(8, 8, 8, 10),
+          padding: const EdgeInsets.fromLTRB(
+            Space.s,
+            Space.s,
+            Space.s,
+            Space.m,
+          ),
           child: Column(
             children: [
               ClipRRect(
@@ -181,7 +186,7 @@ class _Mini extends StatelessWidget {
     );
     return Container(
       color: scheme.surface,
-      padding: const EdgeInsets.all(8),
+      padding: const EdgeInsets.all(Space.s),
       child: LayoutBuilder(
         builder: (context, c) => Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -222,7 +227,7 @@ class _Segments extends StatelessWidget {
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
     return Container(
-      padding: const EdgeInsets.all(4),
+      padding: const EdgeInsets.all(Space.xs),
       decoration: ShapeDecoration(
         color: scheme.surfaceContainerHighest,
         shape: const StadiumBorder(),
@@ -243,7 +248,7 @@ class _Segments extends StatelessWidget {
                   child: AnimatedContainer(
                     duration: const Duration(milliseconds: 240),
                     curve: Curves.easeOutQuart,
-                    padding: const EdgeInsets.symmetric(vertical: 10),
+                    padding: const EdgeInsets.symmetric(vertical: Space.m),
                     decoration: ShapeDecoration(
                       color: value == selected
                           ? scheme.surface

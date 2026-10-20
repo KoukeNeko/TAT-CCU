@@ -1836,4 +1836,40 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get compose => 'Compose';
+
+  @override
+  String get navMessages => 'Messages';
+
+  @override
+  String get earlier => 'Earlier';
+
+  @override
+  String get msgForum => 'Discussions';
+
+  @override
+  String get msgAssignment => 'Assignments';
+
+  @override
+  String get recipients => 'To';
+
+  @override
+  String get searchPeople => 'Find someone else';
+
+  @override
+  String get sendTo => 'To';
+
+  @override
+  String get addRecipient => 'Add recipient';
+
+  @override
+  String get done => 'Done';
+
+  @override
+  String get mailSent => 'Sent';
+
+  @override
+  String get staff => 'Teachers and TAs';
+
+  @override
+  String get others => 'Others';
 }

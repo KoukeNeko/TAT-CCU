@@ -69,7 +69,7 @@ class _GradesScreenState extends State<GradesScreen> {
                     final tone = tones.forCourse(c.id);
                     return ToneBlock(
                       tone: tone,
-                      padding: const EdgeInsets.all(14),
+                      padding: cardPadding,
                       onTap: () => context.push('/courses/${c.id}'),
                       child: Row(
                         children: [

@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../l10n/l10n.dart';
-import 'loader.dart';
+import 'floating_dock.dart';
 import 'theme.dart';
 import 'widgets.dart';
 
@@ -82,14 +82,6 @@ class _ComposeScreenState extends State<ComposeScreen> {
   Widget build(BuildContext context) {
     final l10n = context.l10n;
     final scheme = Theme.of(context).colorScheme;
-    final field = InputDecoration(
-      filled: true,
-      fillColor: scheme.surfaceContainerLow,
-      border: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(Corners.row),
-        borderSide: BorderSide.none,
-      ),
-    );
     return Scaffold(
       appBar: AppBar(
         automaticallyImplyLeading: false,
@@ -102,7 +94,7 @@ class _ComposeScreenState extends State<ComposeScreen> {
         title: Text(widget.title),
         actions: [
           Padding(
-            padding: const EdgeInsets.only(right: 12),
+            padding: const EdgeInsets.only(right: Space.m),
             child: FilledButton(
               onPressed: _ready ? _send : null,
               child: _sending
@@ -116,11 +108,16 @@ class _ComposeScreenState extends State<ComposeScreen> {
         ],
       ),
       body: ListView(
-        padding: const EdgeInsets.fromLTRB(pageMargin, 8, pageMargin, 24),
+        padding: const EdgeInsets.fromLTRB(
+          pageMargin,
+          Space.s,
+          pageMargin,
+          Space.xxl,
+        ),
         children: [
           if (widget.replyingTo case final name?)
             Padding(
-              padding: const EdgeInsets.only(left: 4, bottom: 10),
+              padding: const EdgeInsets.only(left: Space.xs, bottom: Space.m),
               child: Text(
                 l10n.replyingTo(name),
                 style: TextStyle(
@@ -136,7 +133,7 @@ class _ComposeScreenState extends State<ComposeScreen> {
               enabled: !_sending,
               onChanged: (_) => setState(() {}),
               textInputAction: TextInputAction.next,
-              decoration: field.copyWith(hintText: l10n.subject),
+              decoration: InputDecoration(hintText: l10n.subject),
               style: const TextStyle(fontWeight: FontWeight.w800),
             ),
             const SizedBox(height: 8),
@@ -149,7 +146,7 @@ class _ComposeScreenState extends State<ComposeScreen> {
             minLines: 8,
             maxLines: null,
             keyboardType: TextInputType.multiline,
-            decoration: field.copyWith(hintText: widget.hint),
+            decoration: InputDecoration(hintText: widget.hint),
             style: const TextStyle(height: 1.5),
           ),
         ],
@@ -158,8 +155,8 @@ class _ComposeScreenState extends State<ComposeScreen> {
   }
 }
 
-/// A field-looking bar that opens [ComposeScreen]: pinned above the nav bar,
-/// or [inline] inside a list.
+/// A field-looking bar that opens [ComposeScreen]: in a [FloatingDock] over
+/// the page, or [inline] inside a list.
 class ComposeBar extends StatelessWidget {
   const ComposeBar({
     super.key,
@@ -175,40 +172,38 @@ class ComposeBar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
-    return Padding(
-      padding: inline
-          ? EdgeInsets.zero
-          : EdgeInsets.fromLTRB(
-              pageMargin,
-              8,
-              pageMargin,
-              MediaQuery.paddingOf(context).bottom + 8,
-            ),
-      child: Material(
-        color: scheme.surfaceContainerHigh,
-        shape: const StadiumBorder(),
-        clipBehavior: Clip.antiAlias,
-        child: InkWell(
-          onTap: onTap,
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 14),
-            child: Row(
-              children: [
-                Expanded(
-                  child: Text(
-                    hint,
-                    style: TextStyle(
-                      color: scheme.onSurfaceVariant,
-                      fontWeight: FontWeight.w700,
-                    ),
-                  ),
+    final row = InkWell(
+      onTap: onTap,
+      customBorder: const StadiumBorder(),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(
+          horizontal: Space.l,
+          vertical: Space.m,
+        ),
+        child: Row(
+          children: [
+            Expanded(
+              child: Text(
+                hint,
+                style: TextStyle(
+                  color: scheme.onSurfaceVariant,
+                  fontWeight: FontWeight.w700,
                 ),
-                Icon(Icons.edit_outlined, color: scheme.onSurfaceVariant),
-              ],
+              ),
             ),
-          ),
+            Icon(Icons.edit_outlined, color: scheme.onSurfaceVariant),
+          ],
         ),
       ),
+    );
+    if (!inline) {
+      return FloatingDock(child: row);
+    }
+    return Material(
+      color: scheme.surfaceContainerHigh,
+      shape: const StadiumBorder(),
+      clipBehavior: Clip.antiAlias,
+      child: row,
     );
   }
 }

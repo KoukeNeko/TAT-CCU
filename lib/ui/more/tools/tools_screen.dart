@@ -92,7 +92,7 @@ class ToolHero extends StatelessWidget {
     );
     return ToneBlock(
       tone: tone,
-      padding: const EdgeInsets.all(18),
+      padding: const EdgeInsets.all(Space.xl),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [

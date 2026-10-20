@@ -50,7 +50,12 @@ class StatusCapsule extends StatelessWidget {
             child: InkWell(
               onTap: onTap,
               child: Padding(
-                padding: const EdgeInsets.fromLTRB(8, 8, 16, 8),
+                padding: const EdgeInsets.fromLTRB(
+                  Space.s,
+                  Space.s,
+                  Space.l,
+                  Space.s,
+                ),
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [

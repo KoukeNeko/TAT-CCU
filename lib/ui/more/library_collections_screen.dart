@@ -31,7 +31,7 @@ class LibraryCollectionsScreen extends StatelessWidget {
                 ToneBlock(
                   tone: tones.cycle[i % tones.cycle.length],
                   radius: Corners.row,
-                  padding: const EdgeInsets.all(14),
+                  padding: cardPadding,
                   onTap: () => context.push(
                     '/more/library/collection/${c.id}',
                     extra: c.name,

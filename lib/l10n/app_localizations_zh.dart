@@ -1733,4 +1733,40 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get compose => '寫信';
+
+  @override
+  String get navMessages => '訊息';
+
+  @override
+  String get earlier => '較早';
+
+  @override
+  String get msgForum => '討論';
+
+  @override
+  String get msgAssignment => '作業';
+
+  @override
+  String get recipients => '收件者';
+
+  @override
+  String get searchPeople => '搜尋其他人';
+
+  @override
+  String get sendTo => '寄到';
+
+  @override
+  String get addRecipient => '加入收件者';
+
+  @override
+  String get done => '完成';
+
+  @override
+  String get mailSent => '已寄出';
+
+  @override
+  String get staff => '老師與助教';
+
+  @override
+  String get others => '其他人';
 }

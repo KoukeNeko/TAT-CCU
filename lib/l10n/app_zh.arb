@@ -919,5 +919,17 @@
   "deleteComment": "刪除這則留言？",
   "delete": "刪除",
   "markUnread": "標為未讀",
-  "compose": "寫信"
+  "compose": "寫信",
+  "navMessages": "訊息",
+  "earlier": "較早",
+  "msgForum": "討論",
+  "msgAssignment": "作業",
+  "recipients": "收件者",
+  "searchPeople": "搜尋其他人",
+  "sendTo": "寄到",
+  "addRecipient": "加入收件者",
+  "done": "完成",
+  "mailSent": "已寄出",
+  "staff": "老師與助教",
+  "others": "其他人"
 }

@@ -186,7 +186,12 @@ class _CalendarScreenState extends State<CalendarScreen> {
                   Card(
                     color: scheme.surfaceContainerLow,
                     child: Padding(
-                      padding: const EdgeInsets.fromLTRB(8, 10, 8, 8),
+                      padding: const EdgeInsets.fromLTRB(
+                        Space.s,
+                        Space.m,
+                        Space.s,
+                        Space.s,
+                      ),
                       child: Column(
                         children: [
                           Row(
@@ -262,7 +267,7 @@ class _RoundAction extends StatelessWidget {
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
     return Padding(
-      padding: const EdgeInsets.only(left: 6),
+      padding: const EdgeInsets.only(left: Space.s),
       child: Material(
         color: scheme.surfaceContainer,
         shape: const CircleBorder(),
@@ -511,11 +516,11 @@ class _DayEvents extends StatelessWidget {
             ),
             for (final d in school)
               Padding(
-                padding: const EdgeInsets.only(bottom: 8),
+                padding: const EdgeInsets.only(bottom: Space.s),
                 child: ToneBlock(
                   tone: _Kind.school.tone(tones),
                   radius: Corners.row,
-                  padding: const EdgeInsets.all(14),
+                  padding: cardPadding,
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
@@ -548,7 +553,7 @@ class _DayEvents extends StatelessWidget {
               const Center(child: CircularProgressIndicator())
             else if (count == 0)
               Padding(
-                padding: const EdgeInsets.only(top: 24),
+                padding: const EdgeInsets.only(top: Space.xxl),
                 child: Text(
                   context.l10n.noEventsThisDay,
                   textAlign: TextAlign.center,
@@ -557,11 +562,11 @@ class _DayEvents extends StatelessWidget {
               ),
             for (final e in events)
               Padding(
-                padding: const EdgeInsets.only(bottom: 8),
+                padding: const EdgeInsets.only(bottom: Space.s),
                 child: ToneBlock(
                   tone: _kindOf(e).tone(tones),
                   radius: Corners.row,
-                  padding: const EdgeInsets.all(14),
+                  padding: cardPadding,
                   onTap: e.cmid != null && e.courseId != 0
                       ? () => context.push(
                           '/courses/${e.courseId}/modules/${e.cmid}',
@@ -633,7 +638,7 @@ class _Legend extends StatelessWidget {
     };
     if (kinds.isEmpty) return const SizedBox.shrink();
     return Padding(
-      padding: const EdgeInsets.fromLTRB(8, 12, 8, 0),
+      padding: const EdgeInsets.fromLTRB(Space.s, Space.m, Space.s, 0),
       child: Wrap(
         spacing: 14,
         runSpacing: 6,
