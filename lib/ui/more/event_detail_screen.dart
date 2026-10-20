@@ -127,9 +127,7 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
         builder: (context) => Stack(
           children: [
             Positioned.fill(
-              child: RefreshIndicator(
-                // Below the glass app bar, which the body extends under.
-                edgeOffset: MediaQuery.paddingOf(context).top,
+              child: PullRefresh(
                 onRefresh: () async => _session.currentState?.refresh(),
                 child: _body(context),
               ),

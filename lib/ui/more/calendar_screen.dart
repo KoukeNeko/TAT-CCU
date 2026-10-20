@@ -177,8 +177,7 @@ class _CalendarScreenState extends State<CalendarScreen> {
       body: Builder(
         builder: (context) => Stack(
           children: [
-            RefreshIndicator(
-              edgeOffset: MediaQuery.paddingOf(context).top,
+            PullRefresh(
               // The capsule shows the progress, as on the other pages.
               onRefresh: () async => _load(_page, again: true),
               child: ListView(

@@ -305,11 +305,7 @@ class _BrowseState extends State<_Browse> {
               steps: 2,
             );
     }
-    return RefreshIndicator(
-      edgeOffset: MediaQuery.paddingOf(context).top,
-      onRefresh: _load,
-      child: _list(context, shelves),
-    );
+    return PullRefresh(onRefresh: _load, child: _list(context, shelves));
   }
 
   Widget _list(BuildContext context, _Shelves shelves) {

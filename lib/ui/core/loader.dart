@@ -6,6 +6,7 @@ import '../../data/services/ecourse_maintenance.dart';
 import '../../data/services/moodle_client.dart';
 
 import 'maintenance_capsule.dart';
+import 'pull_refresh.dart';
 import 'shapes.dart';
 import 'status_capsule.dart';
 import 'theme.dart';
@@ -207,10 +208,7 @@ class _LoaderState<T> extends State<Loader<T>> {
       capsule: shown,
       child: Stack(
         children: [
-          RefreshIndicator(
-            // Bodies extend under the glass app bar; start the spinner below
-            // it.
-            edgeOffset: MediaQuery.paddingOf(context).top,
+          PullRefresh(
             // The capsule shows the progress, as on the campus pages.
             onRefresh: () async => unawaited(_start()),
             child: widget.builder(context, _data as T),

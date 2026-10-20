@@ -396,12 +396,8 @@ class _EventsScreenState extends State<EventsScreen> {
           ? const LoadingView()
           : Builder(
               // Reads insets from inside the session's Scaffold.
-              builder: (context) => RefreshIndicator(
-                // Below the glass app bar, which the body extends under.
-                edgeOffset: MediaQuery.paddingOf(context).top,
-                onRefresh: _refresh,
-                child: _body(context, data),
-              ),
+              builder: (context) =>
+                  PullRefresh(onRefresh: _refresh, child: _body(context, data)),
             ),
     );
   }

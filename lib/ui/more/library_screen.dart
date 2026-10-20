@@ -188,9 +188,7 @@ class _LibraryScreenState extends State<LibraryScreen> with CampusPageState {
           ? null
           : Builder(
               // Reads insets from inside the session's Scaffold.
-              builder: (context) => RefreshIndicator(
-                // Below the glass app bar, which the body extends under.
-                edgeOffset: MediaQuery.paddingOf(context).top,
+              builder: (context) => PullRefresh(
                 onRefresh: () async => session.currentState?.refresh(),
                 child: _Body(
                   loans: loansOf(account),

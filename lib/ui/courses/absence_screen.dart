@@ -102,8 +102,7 @@ class _AbsenceScreenState extends State<AbsenceScreen> with CampusPageState {
     return Stack(
       children: [
         Positioned.fill(
-          child: RefreshIndicator(
-            edgeOffset: MediaQuery.paddingOf(context).top,
+          child: PullRefresh(
             onRefresh: () async => session.currentState?.refresh(),
             child: ListView(
               padding: scrollPadding(context)

@@ -206,9 +206,7 @@ class _Hub extends StatelessWidget {
       (sum, c) => sum + (num.tryParse(_text(c['Credit'])) ?? 0),
     );
     final apps = s.applications;
-    return RefreshIndicator(
-      // Below the glass app bar, which the body extends under.
-      edgeOffset: MediaQuery.paddingOf(context).top,
+    return PullRefresh(
       onRefresh: onRefresh,
       child: ListView(
         padding: scrollPadding(context),

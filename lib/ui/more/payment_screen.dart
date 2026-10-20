@@ -222,8 +222,7 @@ class _PaymentScreenState extends State<PaymentScreen> with CampusPageState {
           : saved == null
           ? null
           : Builder(
-              builder: (context) => RefreshIndicator(
-                edgeOffset: MediaQuery.paddingOf(context).top,
+              builder: (context) => PullRefresh(
                 onRefresh: () async => session.currentState?.refresh(),
                 child: _body(context, saved),
               ),

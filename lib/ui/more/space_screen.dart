@@ -279,8 +279,7 @@ class _SpaceScreenState extends State<SpaceScreen> {
           : qr == null
           ? null
           : Builder(
-              builder: (context) => RefreshIndicator(
-                edgeOffset: MediaQuery.paddingOf(context).top,
+              builder: (context) => PullRefresh(
                 onRefresh: () async {
                   await _renewQr();
                   await _renewPlaces();
