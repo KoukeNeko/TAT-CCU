@@ -103,6 +103,7 @@ class CampusSession extends StatefulWidget {
     required this.child,
     this.loadOnStart = true,
     this.via = const [],
+    this.casLinks = const [],
     this.bottom,
     this.action,
     this.demo,
@@ -124,6 +125,10 @@ class CampusSession extends StatefulWidget {
   /// SAML form that posts itself); they are not sign-in pages.
   final List<String> via;
 
+  /// `host/path` prefixes of pages that wait for a tap on a link to CAS
+  /// (e.g. 「單一登入」); the session follows the link itself.
+  final List<String> casLinks;
+
   /// False for pages that show cached data first and load on [reload].
   final bool loadOnStart;
   final String Function() script;
@@ -141,6 +146,7 @@ class CampusSessionState extends State<CampusSession> {
   late final CasAutofill _cas;
   var _signingIn = false;
   String? _ranOn;
+  String? _followedOn;
   Completer<void>? _pending;
   var _step = _Step.connecting;
   var _where = '';
@@ -175,6 +181,7 @@ class CampusSessionState extends State<CampusSession> {
       });
     }
     _ranOn = null;
+    _followedOn = null;
     _go(_Step.connecting, Uri.parse(widget.entry).host);
     final pending = _pending ??= Completer<void>();
     _web.loadRequest(Uri.parse(widget.entry));
@@ -230,7 +237,17 @@ class CampusSessionState extends State<CampusSession> {
     final uri = Uri.parse(url);
     final signsInItself = await _cas.pageFinished(url);
     if (!mounted) return;
-    if (widget.via.any('${uri.host}${uri.path}'.startsWith)) {
+    final page = '${uri.host}${uri.path}';
+    if (widget.casLinks.any(page.startsWith)) {
+      // Once per page: a sign-in that comes back here stops for the user.
+      if (_followedOn == url) return _showPage();
+      _followedOn = url;
+      _go(_Step.connecting, uri.host);
+      _web.runJavaScript(
+        "const a = document.querySelector('a[href^=\"https://$_casHost/login\"]');"
+        'if (a) location.href = a.href;',
+      );
+    } else if (widget.via.any(page.startsWith)) {
       _go(_Step.connecting, uri.host);
     } else if (uri.host == widget.host) {
       setState(() => _signingIn = false);

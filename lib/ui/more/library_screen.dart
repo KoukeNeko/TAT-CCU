@@ -174,7 +174,9 @@ class _LibraryScreenState extends State<LibraryScreen> with CampusPageState {
       title: context.l10n.library,
       entry: _accountUrl,
       host: _host,
-      // The library's IdP posts itself on to Primo.
+      // The library's IdP posts itself on to Primo, except its sign-in
+      // page, which waits for 「單一登入」.
+      casLinks: const ['idm.lib.ccu.edu.tw/sso/idm/saml2/login'],
       via: const ['idm.lib.ccu.edu.tw'],
       loadOnStart: false,
       script: () => _readAccount(_action),
