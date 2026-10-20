@@ -1587,4 +1587,13 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get itemsUnit => '項';
+
+  @override
+  String get ecourseInMaintenance => 'eCourse2 維護中';
+
+  @override
+  String get maintenanceChecking => '檢查中';
+
+  @override
+  String get ecourseBack => 'eCourse2 已恢復';
 }

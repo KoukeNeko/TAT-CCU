@@ -1576,4 +1576,13 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get itemsUnit => '件';
+
+  @override
+  String get ecourseInMaintenance => 'eCourse2 メンテナンス中';
+
+  @override
+  String get maintenanceChecking => '確認中';
+
+  @override
+  String get ecourseBack => 'eCourse2 が復旧しました';
 }

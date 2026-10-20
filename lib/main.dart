@@ -11,9 +11,10 @@ import 'data/repositories/ecourse_auth_repository.dart';
 import 'data/repositories/ecourse_repository.dart';
 import 'data/repositories/more_tiles_prefs.dart';
 import 'data/services/campus_cookies.dart';
+import 'data/services/ecourse_maintenance.dart';
 import 'data/services/reminders.dart';
-import 'l10n/l10n.dart';
 import 'data/services/school_calendar.dart';
+import 'l10n/l10n.dart';
 import 'routing/router.dart';
 import 'ui/home_widgets/home_widgets.dart';
 import 'ui/core/theme.dart';
@@ -49,8 +50,8 @@ Future<void> main() async {
     auth.load(),
     CampusCookies.restore(),
     Reminders.init(),
-  ).wait;
     loadSchoolCalendar(),
+  ).wait;
   // iOS may end a backgrounded app without notice, so save on the way out.
   AppLifecycleListener(
     onHide: CampusCookies.save,
@@ -58,6 +59,7 @@ Future<void> main() async {
       _remind(auth, settings);
       _prefetch(auth);
       _updateWidgets(auth, settings);
+      EcourseMaintenance.instance.check();
     },
   );
   showDemo();

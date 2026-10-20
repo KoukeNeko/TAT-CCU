@@ -459,5 +459,8 @@
   "nothingDueThisWeek": "今週の期限なし",
   "termWeekShort": "第 {week} 週・全 {weeks} 週",
   "classesUnit": "コマ",
-  "itemsUnit": "件"
+  "itemsUnit": "件",
+  "ecourseInMaintenance": "eCourse2 メンテナンス中",
+  "maintenanceChecking": "確認中",
+  "ecourseBack": "eCourse2 が復旧しました"
 }

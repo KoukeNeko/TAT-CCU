@@ -40,7 +40,8 @@ class _LoginScreenState extends State<LoginScreen> {
     try {
       final auth = context.read<EcourseAuthRepository>();
       // During maintenance launch.php only shows the maintenance page.
-      if (await EcourseAuthRepository.siteInMaintenance()) {
+      // Unreadable settings never block signing in.
+      if (await EcourseAuthRepository.siteInMaintenance() == true) {
         if (mounted) setState(() => _maintenance = true);
         return;
       }

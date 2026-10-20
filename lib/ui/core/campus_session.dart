@@ -1,6 +1,5 @@
 import 'dart:async';
 import 'dart:convert';
-import 'dart:ui' show ImageFilter;
 
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -10,6 +9,7 @@ import '../../data/repositories/campus_cache.dart';
 import '../../data/repositories/ecourse_auth_repository.dart';
 import '../../data/services/campus_cookies.dart';
 import 'cas_autofill.dart';
+import 'status_capsule.dart';
 import 'theme.dart';
 import 'widgets.dart';
 import '../../l10n/l10n.dart';
@@ -339,31 +339,19 @@ class CampusSessionState extends State<CampusSession> {
               ),
             // Refreshing a page that already shows its content.
             if (!_signingIn && widget.child != null)
-              Positioned(
-                top: MediaQuery.paddingOf(context).top + 10,
-                left: 16,
-                right: 16,
-                child: Center(
-                  child: AnimatedSwitcher(
-                    duration: const Duration(milliseconds: 250),
-                    transitionBuilder: (child, animation) => FadeTransition(
-                      opacity: animation,
-                      child: SlideTransition(
-                        position: Tween(
-                          begin: const Offset(0, -0.4),
-                          end: Offset.zero,
-                        ).animate(animation),
-                        child: child,
+              CapsuleSlot(
+                capsule: _pending == null
+                    ? null
+                    : StatusCapsule(
+                        leading: MorphingCookie(
+                          size: 26,
+                          color: context.tones.lilac.strong,
+                        ),
+                        text:
+                            '${_stepTitle(context.l10n, _step)}'
+                            '${_slow ? '・${context.l10n.showPage}' : ''}',
+                        onTap: _slow ? _showPage : null,
                       ),
-                    ),
-                    child: _pending == null
-                        ? const SizedBox.shrink()
-                        : _Capsule(
-                            step: _step,
-                            onShowPage: _slow ? _showPage : null,
-                          ),
-                  ),
-                ),
               ),
           ],
         ),
@@ -380,69 +368,6 @@ String _stepTitle(AppLocalizations l10n, _Step step) => switch (step) {
   _Step.verifying => l10n.campusVerifying,
   _Step.reading => l10n.campusReading,
 };
-
-/// Design S3's status capsule (design/round-11): a frosted pill under the
-/// app bar while a page with content refreshes.
-class _Capsule extends StatelessWidget {
-  const _Capsule({required this.step, required this.onShowPage});
-
-  final _Step step;
-  final VoidCallback? onShowPage;
-
-  @override
-  Widget build(BuildContext context) {
-    final l10n = context.l10n;
-    final scheme = Theme.of(context).colorScheme;
-    const shape = StadiumBorder();
-    return DecoratedBox(
-      decoration: const ShapeDecoration(
-        shape: shape,
-        shadows: [
-          BoxShadow(
-            color: Color(0x24000000),
-            blurRadius: 24,
-            offset: Offset(0, 8),
-          ),
-        ],
-      ),
-      child: ClipPath(
-        clipper: const ShapeBorderClipper(shape: shape),
-        child: BackdropFilter(
-          filter: ImageFilter.blur(sigmaX: 20, sigmaY: 20),
-          child: Material(
-            color: scheme.surface.withValues(alpha: 0.72),
-            shape: StadiumBorder(
-              side: BorderSide(
-                color: scheme.outlineVariant.withValues(alpha: 0.6),
-              ),
-            ),
-            child: InkWell(
-              onTap: onShowPage,
-              child: Padding(
-                padding: const EdgeInsets.fromLTRB(8, 8, 16, 8),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    MorphingCookie(size: 26, color: context.tones.lilac.strong),
-                    const SizedBox(width: 10),
-                    Text(
-                      '${_stepTitle(l10n, step)}'
-                      '${onShowPage == null ? '' : '・${l10n.showPage}'}',
-                      style: const TextStyle(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w900,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-}
 
 enum _Step { connecting, signingIn, verifying, reading }
 

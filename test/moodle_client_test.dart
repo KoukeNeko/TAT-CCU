@@ -154,7 +154,7 @@ void main() {
   });
 
   test('reads maintenance mode from the public settings', () async {
-    Future<bool> check(Object answer, [int status = 200]) =>
+    Future<bool?> check(Object answer, [int status = 200]) =>
         EcourseAuthRepository.siteInMaintenance(
           httpClient: MockClient(
             (_) async => http.Response(jsonEncode(answer), status),
@@ -178,7 +178,6 @@ void main() {
       ]),
       isFalse,
     );
-    // Unreadable settings never block signing in.
-    expect(await check('oops', 500), isFalse);
+    expect(await check('oops', 500), isNull);
   });
 }

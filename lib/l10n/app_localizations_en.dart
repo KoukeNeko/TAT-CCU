@@ -1689,4 +1689,13 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get itemsUnit => 'items';
+
+  @override
+  String get ecourseInMaintenance => 'eCourse2 maintenance';
+
+  @override
+  String get maintenanceChecking => 'Checking';
+
+  @override
+  String get ecourseBack => 'eCourse2 is back';
 }

@@ -135,8 +135,8 @@ class EcourseAuthRepository extends ChangeNotifier {
   /// Whether eCourse2 is in maintenance mode, from its public mobile
   /// settings (no account needed). Signing in cannot work then: Moodle
   /// refuses students, and launch.php only shows the maintenance page.
-  /// False when the settings cannot be read, so sign-in is tried as usual.
-  static Future<bool> siteInMaintenance({http.Client? httpClient}) async {
+  /// Null when the settings cannot be read.
+  static Future<bool?> siteInMaintenance({http.Client? httpClient}) async {
     final client = httpClient ?? http.Client();
     try {
       final response = await client
@@ -155,12 +155,13 @@ class EcourseAuthRepository extends ChangeNotifier {
           )
           .timeout(const Duration(seconds: 10));
       final json = jsonDecode(utf8.decode(response.bodyBytes));
-      return json is List &&
-          json.first is Map &&
-          json.first['data']?['maintenanceenabled'] == 1;
+      final data = json is List && json.isNotEmpty && json.first is Map
+          ? json.first['data']
+          : null;
+      return data is Map ? data['maintenanceenabled'] == 1 : null;
     } on Exception catch (e) {
       debugPrint('eCourse2 maintenance check: $e');
-      return false;
+      return null;
     } finally {
       if (httpClient == null) client.close();
     }

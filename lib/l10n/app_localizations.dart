@@ -2853,6 +2853,24 @@ abstract class AppLocalizations {
   /// In zh, this message translates to:
   /// **'項'**
   String get itemsUnit;
+
+  /// No description provided for @ecourseInMaintenance.
+  ///
+  /// In zh, this message translates to:
+  /// **'eCourse2 維護中'**
+  String get ecourseInMaintenance;
+
+  /// No description provided for @maintenanceChecking.
+  ///
+  /// In zh, this message translates to:
+  /// **'檢查中'**
+  String get maintenanceChecking;
+
+  /// No description provided for @ecourseBack.
+  ///
+  /// In zh, this message translates to:
+  /// **'eCourse2 已恢復'**
+  String get ecourseBack;
 }
 
 class _AppLocalizationsDelegate

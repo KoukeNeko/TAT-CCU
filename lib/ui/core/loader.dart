@@ -2,9 +2,12 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 
+import '../../data/services/ecourse_maintenance.dart';
 import '../../data/services/moodle_client.dart';
 
+import 'maintenance_capsule.dart';
 import 'shapes.dart';
+import 'status_capsule.dart';
 import 'theme.dart';
 import '../../l10n/l10n.dart';
 
@@ -48,16 +51,46 @@ class _LoaderState<T> extends State<Loader<T>> {
   var _hasData = false;
   Object? _error;
 
+  /// Refreshing failed for eCourse2 maintenance; the saved data stays.
+  var _maintenance = false;
+
+  /// eCourse2 just came back and the page is loading afresh.
+  var _back = false;
+  Timer? _backTimer;
+
+  bool get _capsule => _maintenance || _back;
+
   @override
   void initState() {
     super.initState();
+    EcourseMaintenance.instance.addListener(_maintenanceChanged);
     _start();
   }
 
   @override
   void dispose() {
+    EcourseMaintenance.instance.removeListener(_maintenanceChanged);
+    _backTimer?.cancel();
     _sub?.cancel();
     super.dispose();
+  }
+
+  /// Loads again once eCourse2's maintenance is over.
+  void _maintenanceChanged() {
+    final error = _error;
+    final waiting =
+        _maintenance || error is MoodleException && error.isMaintenance;
+    if (!mounted || !waiting || EcourseMaintenance.instance.active) return;
+    if (!_hasData) return _retry();
+    setState(() {
+      _maintenance = false;
+      _back = true;
+    });
+    _backTimer?.cancel();
+    _backTimer = Timer(const Duration(milliseconds: 1200), () {
+      if (mounted) setState(() => _back = false);
+    });
+    _start();
   }
 
   Future<void> _start() {
@@ -75,7 +108,12 @@ class _LoaderState<T> extends State<Loader<T>> {
       }),
       onError: (Object e) {
         if (!mounted) return;
-        if (_hasData) {
+        final maintenance = e is MoodleException && e.isMaintenance;
+        if (maintenance) EcourseMaintenance.instance.report();
+        if (_hasData && maintenance) {
+          // The capsule says so and stays until it is over.
+          setState(() => _maintenance = true);
+        } else if (_hasData) {
           // The saved data stays on screen; only the reason is new.
           ScaffoldMessenger.maybeOf(context)?.showSnackBar(
             SnackBar(content: Text(_reason(e) ?? context.l10n.loadFailed)),
@@ -144,11 +182,20 @@ class _LoaderState<T> extends State<Loader<T>> {
               body: body,
             );
     }
-    return RefreshIndicator(
-      // Bodies extend under the glass app bar; start the spinner below it.
-      edgeOffset: MediaQuery.paddingOf(context).top,
-      onRefresh: _start,
-      child: widget.builder(context, _data as T),
+    // A Loader inside another shows no capsule of its own over the outer
+    // one's.
+    final outer = context.findAncestorStateOfType<_LoaderState>();
+    final capsule = _capsule && !(outer?._capsule ?? false);
+    return Stack(
+      children: [
+        RefreshIndicator(
+          // Bodies extend under the glass app bar; start the spinner below it.
+          edgeOffset: MediaQuery.paddingOf(context).top,
+          onRefresh: _start,
+          child: widget.builder(context, _data as T),
+        ),
+        CapsuleSlot(capsule: capsule ? MaintenanceCapsule(back: _back) : null),
+      ],
     );
   }
 }
