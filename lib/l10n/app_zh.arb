@@ -727,8 +727,8 @@
   "ptHoliday": "例假日",
   "ptEntries": "{count} 筆",
   "@ptEntries": {"placeholders": {"count": {"type": "int"}}},
-  "demoMode": "Demo 模式",
-  "demoModeDetail": "ALPHA 功能顯示模擬資料",
+  "demoMode": "示範帳號",
+  "demoModeDetail": "所有資料都是示範用，和自己的帳號分開",
   "drTitle": "宿舍維修",
   "drRequest": "申請維修",
   "drHistory": "歷次申請",
@@ -828,5 +828,7 @@
         "type": "String"
       }
     }
-  }
+  },
+  "demoUnavailable": "示範帳號無法使用這項功能",
+  "demoEnter": "以示範帳號體驗"
 }

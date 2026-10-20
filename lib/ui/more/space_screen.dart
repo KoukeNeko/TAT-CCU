@@ -4,8 +4,11 @@ import 'dart:typed_data';
 import 'dart:ui' show ImageFilter;
 
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'package:http/http.dart' as http;
 
+import '../../data/repositories/ecourse_auth_repository.dart';
+import '../../data/services/demo_data.dart';
 import '../../l10n/l10n.dart';
 import '../core/campus_systems.dart';
 import '../core/campus_session.dart';
@@ -122,6 +125,9 @@ class _SpaceScreenState extends State<SpaceScreen> {
   }
 
   Future<dynamic> _get(String path) async {
+    if (context.read<EcourseAuthRepository>().isDemo) {
+      return DemoCampus.spaceApi(path);
+    }
     final uri = Uri.parse(
       '$_api/$path',
     ).replace(queryParameters: {..._auth!, 'lang': 'zh-tw', 'restype': 'json'});
@@ -266,6 +272,7 @@ class _SpaceScreenState extends State<SpaceScreen> {
       entry: _entry,
       host: _host,
       script: () => _read,
+      demo: DemoCampus.space,
       onMessage: _received,
       child: _error != null
           ? CampusError(message: _error!, onRetry: _retry)

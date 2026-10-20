@@ -2,6 +2,7 @@ import 'dart:convert';
 
 import 'package:flutter/material.dart';
 
+import '../../data/services/demo_data.dart';
 import '../../data/repositories/campus_cache.dart';
 import '../../data/services/library_data.dart';
 import '../../l10n/l10n.dart';
@@ -177,6 +178,7 @@ class _LibraryScreenState extends State<LibraryScreen> with CampusPageState {
       via: const ['idm.lib.ccu.edu.tw'],
       loadOnStart: false,
       script: () => _readAccount(_action),
+      demo: DemoCampus.library,
       onMessage: received,
       child: error != null
           ? CampusError(message: error!, onRetry: retry)

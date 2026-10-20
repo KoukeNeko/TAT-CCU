@@ -3,9 +3,11 @@ import 'dart:convert';
 import 'dart:ui' show ImageFilter;
 
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'package:webview_flutter/webview_flutter.dart';
 
 import '../../data/repositories/campus_cache.dart';
+import '../../data/repositories/ecourse_auth_repository.dart';
 import '../../data/services/campus_cookies.dart';
 import 'cas_autofill.dart';
 import 'theme.dart';
@@ -103,6 +105,7 @@ class CampusSession extends StatefulWidget {
     this.via = const [],
     this.bottom,
     this.action,
+    this.demo,
   });
 
   final String title, entry, host;
@@ -112,6 +115,10 @@ class CampusSession extends StatefulWidget {
 
   /// At the title's end once signed in, such as a capsule to another page.
   final Widget? action;
+
+  /// What the page answers for the demo account, which never loads the
+  /// school's site; null says the page has nothing to show there.
+  final Map<String, dynamic> Function()? demo;
 
   /// `host/path` prefixes the hand-off passes through on its own (e.g. a
   /// SAML form that posts itself); they are not sign-in pages.
@@ -158,6 +165,15 @@ class CampusSessionState extends State<CampusSession> {
   /// Goes through the hand-off again and reruns [CampusSession.script].
   /// Completes when the script answers or the user is asked to sign in.
   Future<void> reload() {
+    if (_demo) {
+      // Answered after this frame: on opening, the screen is still building.
+      return Future(() {
+        if (!mounted) return;
+        widget.onMessage(
+          widget.demo?.call() ?? {'error': context.l10n.demoUnavailable},
+        );
+      });
+    }
     _ranOn = null;
     _go(_Step.connecting, Uri.parse(widget.entry).host);
     final pending = _pending ??= Completer<void>();
@@ -198,7 +214,17 @@ class CampusSessionState extends State<CampusSession> {
   }
 
   /// Runs another script in the signed-in page; it answers like the first.
-  Future<void> run(String script) => _web.runJavaScript(script);
+  /// For the demo account, which has no page to run it in, says so.
+  Future<void> run(String script) async {
+    if (_demo) {
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text(context.l10n.demoUnavailable)));
+      return;
+    }
+    await _web.runJavaScript(script);
+  }
+
+  bool get _demo => context.read<EcourseAuthRepository>().isDemo;
 
   Future<void> _arrived(String url) async {
     final uri = Uri.parse(url);

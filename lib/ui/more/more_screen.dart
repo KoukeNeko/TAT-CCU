@@ -196,7 +196,8 @@ class _MoreScreenState extends State<MoreScreen> {
     final prefs = context.watch<MoreTilesPrefs>();
     final pages = _pages(context);
     final scheme = Theme.of(context).colorScheme;
-    final signedIn = context.watch<EcourseAuthRepository>().isSignedIn;
+    final auth = context.watch<EcourseAuthRepository>();
+    final signedIn = auth.isSignedIn;
     final searching = _query.isNotEmpty;
     return Scaffold(
       extendBodyBehindAppBar: true,
@@ -237,8 +238,14 @@ class _MoreScreenState extends State<MoreScreen> {
                       icon: Icons.person_outline,
                       title: context.l10n.account,
                       trailing: StatusPill(
-                        tone: signedIn ? t.mint : t.peach,
-                        label: signedIn
+                        tone: auth.isDemo
+                            ? t.lilac
+                            : signedIn
+                            ? t.mint
+                            : t.peach,
+                        label: auth.isDemo
+                            ? context.l10n.demoMode
+                            : signedIn
                             ? context.l10n.ecourseSignedIn
                             : context.l10n.ecourseSignedOut,
                       ),

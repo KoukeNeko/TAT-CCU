@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:http/http.dart' as http;
 
+import '../../data/services/demo_data.dart';
 import '../../data/repositories/campus_cache.dart';
 import '../../l10n/l10n.dart';
 import '../core/campus_session.dart';
@@ -387,6 +388,7 @@ class _EventsScreenState extends State<EventsScreen> {
               ),
             ),
       script: () => readMine,
+      demo: DemoCampus.myEvents,
       onMessage: _received,
       child: _error != null
           ? CampusError(message: _error!, onRetry: _reload)

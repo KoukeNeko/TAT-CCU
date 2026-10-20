@@ -1,9 +1,12 @@
 import 'dart:convert';
 
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'package:pdfrx/pdfrx.dart';
 import 'package:share_plus/share_plus.dart';
 
+import '../../data/repositories/ecourse_auth_repository.dart';
+import '../../data/services/demo_data.dart';
 import '../../data/repositories/certificate_store.dart';
 import '../../data/repositories/campus_cache.dart';
 import '../core/campus_session.dart';
@@ -97,11 +100,18 @@ class _AcademicScreenState extends State<AcademicScreen> {
   }
 
   Future<void> _refreshList() async {
-    final list = await _store.list();
+    // Saved certificates are the real student's; the demo has none.
+    final list = context.read<EcourseAuthRepository>().isDemo
+        ? const <Certificate>[]
+        : await _store.list();
     if (mounted) setState(() => _certificates = list);
   }
 
   void _print() {
+    if (context.read<EcourseAuthRepository>().isDemo) {
+      _session.currentState?.run('');
+      return;
+    }
     setState(() {
       _printing = true;
       _error = null;
@@ -187,6 +197,7 @@ class _AcademicScreenState extends State<AcademicScreen> {
       entry: _entry,
       host: _host,
       script: () => _readDetail,
+      demo: DemoCampus.academic,
       loadOnStart: false,
       onMessage: _received,
       // Always shown, so saved certificates open offline.

@@ -3,11 +3,14 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'package:flutter/services.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:pdfrx/pdfrx.dart';
 import 'package:share_plus/share_plus.dart';
 
+import '../../data/repositories/ecourse_auth_repository.dart';
+import '../../data/services/demo_data.dart';
 import '../../data/repositories/certificate_store.dart';
 import '../../data/services/payment_data.dart';
 import '../../l10n/l10n.dart';
@@ -66,6 +69,10 @@ class _PaymentScreenState extends State<PaymentScreen> with CampusPageState {
   bool keepsSaved(Map<String, dynamic> saved) => saved['year'] == _year;
 
   void _openPdf(String url, String title, String file) {
+    if (context.read<EcourseAuthRepository>().isDemo) {
+      session.currentState?.run('');
+      return;
+    }
     if (_pdf != null) return;
     _pdf = (title: title, file: file);
     session.currentState?.run(fetchPdfScript(url));
@@ -208,6 +215,7 @@ class _PaymentScreenState extends State<PaymentScreen> with CampusPageState {
         ],
       ),
       script: () => readPayments(_year),
+      demo: () => DemoCampus.payments(_year),
       onMessage: received,
       child: error != null
           ? CampusError(message: error!, onRetry: retry)

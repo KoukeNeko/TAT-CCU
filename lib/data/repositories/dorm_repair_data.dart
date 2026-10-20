@@ -45,6 +45,8 @@ class DormRepairStore extends ChangeNotifier {
 
   List<RepairRequest> get requests => _demo ? _demoRequests : _requests;
 
+  bool get demo => _demo;
+
   set demo(bool on) {
     if (on == _demo) return;
     _demo = on;
@@ -64,7 +66,9 @@ class RepairContact {
   static const _roomKey = 'dorm_repair_room';
   static const _emailKey = 'dorm_repair_email';
 
+  /// The demo account neither sees nor changes the real student's.
   static Future<({String room, String email})?> read() async {
+    if (DormRepairStore.instance.demo) return null;
     final prefs = await SharedPreferences.getInstance();
     final room = prefs.getString(_roomKey);
     final email = prefs.getString(_emailKey);
@@ -73,6 +77,7 @@ class RepairContact {
 
   /// Null forgets them.
   static Future<void> write(({String room, String email})? contact) async {
+    if (DormRepairStore.instance.demo) return;
     final prefs = await SharedPreferences.getInstance();
     if (contact == null) {
       await (prefs.remove(_roomKey), prefs.remove(_emailKey)).wait;

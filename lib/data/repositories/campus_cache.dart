@@ -13,8 +13,12 @@ typedef CachedPage = ({Map<String, dynamic> json, DateTime savedAt});
 class CampusCache {
   const CampusCache._();
 
-  static Future<Directory> _dir() async =>
-      Directory('${(await getApplicationSupportDirectory()).path}/campus');
+  /// The demo account's pages, kept in a folder of their own.
+  static var demo = false;
+
+  static Future<Directory> _dir() async => Directory(
+    '${(await getApplicationSupportDirectory()).path}/${demo ? 'campus-demo' : 'campus'}',
+  );
 
   static Future<File> _file(String key) async {
     final dir = await _dir();

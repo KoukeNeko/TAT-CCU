@@ -361,8 +361,8 @@
   "ptOtherDeduct": "Other deductions",
   "ptHoliday": "Holiday",
   "ptEntries": "{count} entries",
-  "demoMode": "Demo mode",
-  "demoModeDetail": "Alpha features show sample data",
+  "demoMode": "Demo account",
+  "demoModeDetail": "Every screen shows sample data, kept apart from your account",
   "drTitle": "Dorm repairs",
   "drRequest": "Request a repair",
   "drHistory": "Past requests",
@@ -436,5 +436,7 @@
   "newMailFrom": "New mail from {sender}",
   "latestDue": "Next deadline",
   "latestPost": "Latest notice",
-  "classesEndAt": "Classes end at {time}"
+  "classesEndAt": "Classes end at {time}",
+  "demoUnavailable": "Not available with the demo account",
+  "demoEnter": "Try the demo account"
 }

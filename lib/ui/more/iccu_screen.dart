@@ -2,6 +2,7 @@ import 'dart:convert';
 
 import 'package:flutter/material.dart';
 
+import '../../data/services/demo_data.dart';
 import '../../data/services/html_text.dart';
 import '../core/campus_session.dart';
 import '../core/campus_web_screen.dart';
@@ -150,6 +151,7 @@ class _IccuScreenState extends State<IccuScreen> with CampusPageState {
       entry: _entry,
       host: Uri.parse(_iccu).host,
       loadOnStart: false,
+      demo: DemoCampus.iccu,
       script: () => _script(
         [_courses, _changes, _programs, ..._applications.keys],
         [..._seasonal.keys],

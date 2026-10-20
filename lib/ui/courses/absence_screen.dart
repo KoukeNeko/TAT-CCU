@@ -1,7 +1,10 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 
+import '../../data/repositories/ecourse_auth_repository.dart';
+import '../../data/services/demo_data.dart';
 import '../../l10n/l10n.dart';
 import '../core/campus_session.dart';
 import '../core/theme.dart';
@@ -47,6 +50,10 @@ class _AbsenceScreenState extends State<AbsenceScreen> with CampusPageState {
   }
 
   Future<void> _new() async {
+    if (context.read<EcourseAuthRepository>().isDemo) {
+      session.currentState?.run('');
+      return;
+    }
     final request = await Navigator.of(context).push<AbsenceRequest>(
       MaterialPageRoute(
         builder: (_) => AbsenceFormScreen(course: '${json?['course'] ?? ''}'),
@@ -74,6 +81,7 @@ class _AbsenceScreenState extends State<AbsenceScreen> with CampusPageState {
       host: ecourseHost,
       loadOnStart: false,
       script: () => readAbsences(widget.cmid),
+      demo: DemoCampus.absences,
       onMessage: received,
       child: error != null
           ? CampusError(message: error!, onRetry: retry)

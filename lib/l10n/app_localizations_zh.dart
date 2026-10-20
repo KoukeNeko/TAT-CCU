@@ -1268,10 +1268,10 @@ class AppLocalizationsZh extends AppLocalizations {
   }
 
   @override
-  String get demoMode => 'Demo 模式';
+  String get demoMode => '示範帳號';
 
   @override
-  String get demoModeDetail => 'ALPHA 功能顯示模擬資料';
+  String get demoModeDetail => '所有資料都是示範用，和自己的帳號分開';
 
   @override
   String get drTitle => '宿舍維修';
@@ -1510,4 +1510,10 @@ class AppLocalizationsZh extends AppLocalizations {
   String classesEndAt(String time) {
     return '課到 $time 結束';
   }
+
+  @override
+  String get demoUnavailable => '示範帳號無法使用這項功能';
+
+  @override
+  String get demoEnter => '以示範帳號體驗';
 }

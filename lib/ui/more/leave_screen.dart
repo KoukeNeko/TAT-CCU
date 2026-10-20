@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../data/services/demo_data.dart';
 import '../../l10n/l10n.dart';
 import '../core/campus_systems.dart';
 import '../core/campus_session.dart';
@@ -107,6 +108,7 @@ class _LeaveScreenState extends State<LeaveScreen> with CampusPageState {
       host: _host,
       loadOnStart: false,
       script: () => _readRequests,
+      demo: DemoCampus.leave,
       onMessage: received,
       child: error != null
           ? CampusError(message: error!, onRetry: retry)

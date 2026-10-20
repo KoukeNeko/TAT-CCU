@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../data/repositories/ecourse_auth_repository.dart';
 import '../../l10n/l10n.dart';
 import '../core/campus_session.dart';
 import '../core/theme.dart';
@@ -117,6 +119,8 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
       entry: eventsEntry('/event/detail/list/${_event.id}/'),
       host: eventsHost,
       script: () => readEvent(_event.id, _action),
+      // The demo account keeps the public details from the list.
+      loadOnStart: !context.read<EcourseAuthRepository>().isDemo,
       onMessage: _received,
       child: Builder(
         // Reads insets from inside the session's Scaffold.

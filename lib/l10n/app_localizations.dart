@@ -2263,13 +2263,13 @@ abstract class AppLocalizations {
   /// No description provided for @demoMode.
   ///
   /// In zh, this message translates to:
-  /// **'Demo 模式'**
+  /// **'示範帳號'**
   String get demoMode;
 
   /// No description provided for @demoModeDetail.
   ///
   /// In zh, this message translates to:
-  /// **'ALPHA 功能顯示模擬資料'**
+  /// **'所有資料都是示範用，和自己的帳號分開'**
   String get demoModeDetail;
 
   /// No description provided for @drTitle.
@@ -2715,6 +2715,18 @@ abstract class AppLocalizations {
   /// In zh, this message translates to:
   /// **'課到 {time} 結束'**
   String classesEndAt(String time);
+
+  /// No description provided for @demoUnavailable.
+  ///
+  /// In zh, this message translates to:
+  /// **'示範帳號無法使用這項功能'**
+  String get demoUnavailable;
+
+  /// No description provided for @demoEnter.
+  ///
+  /// In zh, this message translates to:
+  /// **'以示範帳號體驗'**
+  String get demoEnter;
 }
 
 class _AppLocalizationsDelegate

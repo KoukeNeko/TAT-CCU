@@ -112,6 +112,13 @@ class _LoginScreenState extends State<LoginScreen> {
                 onPressed: _busy ? null : _signIn,
                 child: Text(context.l10n.signInWithPortal),
               ),
+              const SizedBox(height: 8),
+              TextButton(
+                onPressed: _busy
+                    ? null
+                    : () => context.read<EcourseAuthRepository>().setDemo(true),
+                child: Text(context.l10n.demoEnter),
+              ),
             ],
           ),
         ),

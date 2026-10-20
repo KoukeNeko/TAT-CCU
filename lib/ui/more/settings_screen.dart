@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 
+import '../../data/repositories/ecourse_auth_repository.dart';
 import '../../data/repositories/app_settings.dart';
 import '../../data/repositories/ecourse_repository.dart';
 import '../../data/services/reminders.dart';
@@ -74,8 +75,8 @@ class SettingsScreen extends StatelessWidget {
                   style: const TextStyle(fontWeight: FontWeight.w800),
                 ),
                 subtitle: Text(l10n.demoModeDetail),
-                value: settings.demoMode,
-                onChanged: settings.setDemoMode,
+                value: context.watch<EcourseAuthRepository>().isDemo,
+                onChanged: context.read<EcourseAuthRepository>().setDemo,
               ),
             ),
           ],
@@ -278,6 +279,7 @@ class _Notifications extends StatelessWidget {
   }) async {
     final settings = context.read<AppSettings>();
     final repo = context.read<EcourseRepository>();
+    final demo = context.read<EcourseAuthRepository>().isDemo;
     final messenger = ScaffoldMessenger.of(context);
     final denied = context.l10n.notifyDenied;
     if ((due ?? classes ?? news)! && !await Reminders.requestPermission()) {
@@ -285,6 +287,9 @@ class _Notifications extends StatelessWidget {
       return;
     }
     await settings.setNotify(due: due, classes: classes, news: news);
+    // The demo account's made-up deadlines never become reminders; they
+    // are scheduled for the real account when it is back.
+    if (demo) return;
     await Reminders.updateBackground(settings);
     if (due != null || classes != null) {
       try {

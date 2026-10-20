@@ -1363,10 +1363,11 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get demoMode => 'Demo mode';
+  String get demoMode => 'Demo account';
 
   @override
-  String get demoModeDetail => 'Alpha features show sample data';
+  String get demoModeDetail =>
+      'Every screen shows sample data, kept apart from your account';
 
   @override
   String get drTitle => 'Dorm repairs';
@@ -1610,4 +1611,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String classesEndAt(String time) {
     return 'Classes end at $time';
   }
+
+  @override
+  String get demoUnavailable => 'Not available with the demo account';
+
+  @override
+  String get demoEnter => 'Try the demo account';
 }

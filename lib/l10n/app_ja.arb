@@ -361,8 +361,8 @@
   "ptOtherDeduct": "その他の控除",
   "ptHoliday": "休日",
   "ptEntries": "{count} 件",
-  "demoMode": "デモモード",
-  "demoModeDetail": "ALPHA 機能でサンプルデータを表示",
+  "demoMode": "デモアカウント",
+  "demoModeDetail": "すべてサンプルデータで、自分のアカウントとは別です",
   "drTitle": "寮の修理",
   "drRequest": "修理を申請",
   "drHistory": "申請履歴",
@@ -436,5 +436,7 @@
   "newMailFrom": "{sender} から新しいメール",
   "latestDue": "次の締切",
   "latestPost": "最新のお知らせ",
-  "classesEndAt": "授業は {time} まで"
+  "classesEndAt": "授業は {time} まで",
+  "demoUnavailable": "デモアカウントでは使えません",
+  "demoEnter": "デモアカウントで試す"
 }

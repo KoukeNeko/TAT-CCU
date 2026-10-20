@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'package:webview_flutter/webview_flutter.dart';
 
+import '../../data/repositories/ecourse_auth_repository.dart';
+import '../../l10n/l10n.dart';
 import 'cas_autofill.dart';
 import 'widgets.dart';
 
@@ -9,12 +12,24 @@ import 'widgets.dart';
 /// CAS sign-in made in any of them carries to the rest, and to the iCCU
 /// loader, while the app runs. It covers the nav bar: the school's pages
 /// bring their own navigation and need the whole height.
-Future<void> openCampusPage(BuildContext context, String url, String title) =>
-    Navigator.of(context, rootNavigator: true).push(
-      MaterialPageRoute(
-        builder: (_) => CampusWebScreen(url: url, title: title),
-      ),
-    );
+///
+/// The demo account has no school sign-in, so it gets a note instead.
+Future<void> openCampusPage(
+  BuildContext context,
+  String url,
+  String title,
+) async {
+  if (context.read<EcourseAuthRepository>().isDemo) {
+    ScaffoldMessenger.of(context)
+        .showSnackBar(SnackBar(content: Text(context.l10n.demoUnavailable)));
+    return;
+  }
+  await Navigator.of(context, rootNavigator: true).push(
+    MaterialPageRoute(
+      builder: (_) => CampusWebScreen(url: url, title: title),
+    ),
+  );
+}
 
 class CampusWebScreen extends StatefulWidget {
   const CampusWebScreen({

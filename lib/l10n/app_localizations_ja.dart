@@ -1256,10 +1256,10 @@ class AppLocalizationsJa extends AppLocalizations {
   }
 
   @override
-  String get demoMode => 'デモモード';
+  String get demoMode => 'デモアカウント';
 
   @override
-  String get demoModeDetail => 'ALPHA 機能でサンプルデータを表示';
+  String get demoModeDetail => 'すべてサンプルデータで、自分のアカウントとは別です';
 
   @override
   String get drTitle => '寮の修理';
@@ -1499,4 +1499,10 @@ class AppLocalizationsJa extends AppLocalizations {
   String classesEndAt(String time) {
     return '授業は $time まで';
   }
+
+  @override
+  String get demoUnavailable => 'デモアカウントでは使えません';
+
+  @override
+  String get demoEnter => 'デモアカウントで試す';
 }

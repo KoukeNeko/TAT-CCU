@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import 'package:workmanager/workmanager.dart';
 
@@ -32,11 +33,13 @@ Future<void> main() async {
   );
   final auth = EcourseAuthRepository();
   final settings = AppSettings();
-  // Alpha features read demo mode from here.
-  settings.addListener(() {
-    HoursStore.instance.demo = settings.demoMode;
-    DormRepairStore.instance.demo = settings.demoMode;
-  });
+  // Alpha features show their sample data to the demo account.
+  void showDemo() {
+    HoursStore.instance.demo = auth.isDemo;
+    DormRepairStore.instance.demo = auth.isDemo;
+  }
+
+  auth.addListener(showDemo);
   await (
     settings.load(),
     auth.load(),
@@ -51,6 +54,7 @@ Future<void> main() async {
       _prefetch(auth);
     },
   );
+  showDemo();
   await Workmanager().initialize(reminderTask);
   unawaited(_remind(auth, settings));
   unawaited(_prefetch(auth));
@@ -64,20 +68,45 @@ Future<void> main() async {
           update: (_, auth, _) => EcourseRepository(auth.client()),
         ),
       ],
-      child: TatCcuApp(router: buildRouter(auth)),
+      child: const TatCcuApp(),
     ),
   );
 }
 
-class TatCcuApp extends StatelessWidget {
-  const TatCcuApp({super.key, required this.router});
+class TatCcuApp extends StatefulWidget {
+  const TatCcuApp({super.key});
 
-  final RouterConfig<Object> router;
+  @override
+  State<TatCcuApp> createState() => _TatCcuAppState();
+}
+
+/// One router per account: tabs stay alive while the app runs, so
+/// switching between the real and the demo account starts them afresh
+/// instead of leaving them on the other account's data.
+class _TatCcuAppState extends State<TatCcuApp> {
+  late final _auth = context.read<EcourseAuthRepository>();
+  late bool _demo = _auth.isDemo;
+  late GoRouter _router = buildRouter(_auth);
+
+  @override
+  void dispose() {
+    _router.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
     final settings = context.watch<AppSettings>();
+    final demo = context.select<EcourseAuthRepository, bool>((a) => a.isDemo);
+    if (demo != _demo) {
+      final old = _router;
+      _demo = demo;
+      _router = buildRouter(_auth);
+      // Still mounted this frame; let it go after.
+      WidgetsBinding.instance.addPostFrameCallback((_) => old.dispose());
+    }
     return MaterialApp.router(
+      key: ValueKey(demo),
       title: 'TAT CCU',
       theme: buildTheme(Brightness.light),
       darkTheme: buildTheme(Brightness.dark),
@@ -96,7 +125,7 @@ class TatCcuApp extends StatelessWidget {
               child: child!,
             )
           : child!,
-      routerConfig: router,
+      routerConfig: _router,
     );
   }
 }
@@ -104,7 +133,7 @@ class TatCcuApp extends StatelessWidget {
 /// Reschedules reminders from the latest deadlines and timetable, so a
 /// changed due date is not announced at the old time.
 Future<void> _remind(EcourseAuthRepository auth, AppSettings settings) async {
-  if (!auth.isSignedIn) return;
+  if (!auth.isSignedIn || auth.isDemo) return;
   try {
     await Reminders.updateBackground(settings);
     if (settings.notifyDue || settings.notifyClass) {
@@ -123,6 +152,7 @@ DateTime? _prefetchedAt;
 Future<void> _prefetch(EcourseAuthRepository auth) async {
   final last = _prefetchedAt;
   if (!auth.isSignedIn ||
+      auth.isDemo ||
       last != null && DateTime.now().difference(last).inMinutes < 30) {
     return;
   }

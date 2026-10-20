@@ -172,7 +172,7 @@ void reminderTask() {
     final settings = AppSettings();
     final auth = EcourseAuthRepository();
     await (settings.load(), auth.load(), Reminders.init()).wait;
-    if (!auth.isSignedIn) return true;
+    if (!auth.isSignedIn || auth.isDemo) return true;
     final repo = EcourseRepository(auth.client());
     if (settings.notifyDue || settings.notifyClass) {
       await Reminders.sync(repo, settings);

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../data/services/demo_data.dart';
 import '../../l10n/l10n.dart';
 import '../core/campus_session.dart';
 import '../core/theme.dart';
@@ -35,6 +36,7 @@ class _AttendanceScreenState extends State<AttendanceScreen>
       host: ecourseHost,
       loadOnStart: false,
       script: () => readAttendance(widget.cmid),
+      demo: DemoCampus.attendance,
       onMessage: received,
       child: error != null
           ? CampusError(message: error!, onRetry: retry)
