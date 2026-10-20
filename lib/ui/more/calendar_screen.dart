@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
@@ -69,25 +71,51 @@ class _CalendarScreenState extends State<CalendarScreen> {
   late DateTime _selected = _today;
   late int _page = _pageOf(_today);
   late final _pages = PageController(initialPage: _page);
-  final _cache = <int, Future<List<CalendarEvent>>>{};
+
+  /// Each month's events: the saved answer at once, then eCourse2's.
+  final _months = <int, List<CalendarEvent>>{};
+  final _errors = <int, Object>{};
+  final _loads = <int, StreamSubscription<List<CalendarEvent>>>{};
+
+  @override
+  void initState() {
+    super.initState();
+    _load(_page);
+  }
 
   @override
   void dispose() {
+    for (final s in _loads.values) {
+      s.cancel();
+    }
     _pages.dispose();
     super.dispose();
   }
 
-  /// One request per month; a failed month is dropped so retry refetches.
-  Future<List<CalendarEvent>> _events(int page) => _cache.putIfAbsent(page, () {
-    final future = context.read<EcourseRepository>().monthEvents(
-      _monthOf(page),
-    );
-    future.catchError((Object _) {
-      _cache.remove(page);
-      return <CalendarEvent>[];
-    });
-    return future;
-  });
+  /// Loads [page] and the months beside it, once each; a failed month is
+  /// dropped so coming back to it tries again.
+  void _load(int page) {
+    final repo = context.read<EcourseRepository>();
+    for (final p in [page, page - 1, page + 1]) {
+      if (_loads.containsKey(p)) continue;
+      _loads[p] = repo
+          .watch((r) => r.monthEvents(_monthOf(p)))
+          .listen(
+            (events) {
+              if (!mounted) return;
+              setState(() {
+                _months[p] = events;
+                _errors.remove(p);
+              });
+            },
+            onError: (Object e) {
+              if (!mounted) return;
+              setState(() => _errors[p] = e);
+              _loads.remove(p);
+            },
+          );
+    }
+  }
 
   void _select(DateTime day) {
     setState(() => _selected = day);
@@ -165,33 +193,29 @@ class _CalendarScreenState extends State<CalendarScreen> {
                       height: _rowHeight * 6,
                       child: PageView.builder(
                         controller: _pages,
-                        onPageChanged: (p) => setState(() => _page = p),
-                        itemBuilder: (context, page) =>
-                            FutureBuilder<List<CalendarEvent>>(
-                              future: _events(page),
-                              builder: (context, snap) => _MonthGrid(
-                                month: _monthOf(page),
-                                today: _today,
-                                selected: _selected,
-                                events: snap.data ?? const [],
-                                onTap: _select,
-                              ),
-                            ),
+                        onPageChanged: (p) {
+                          setState(() => _page = p);
+                          _load(p);
+                        },
+                        itemBuilder: (context, page) => _MonthGrid(
+                          month: _monthOf(page),
+                          today: _today,
+                          selected: _selected,
+                          events: _months[page] ?? const [],
+                          onTap: _select,
+                        ),
                       ),
                     ),
                   ],
                 ),
               ),
             ),
-            FutureBuilder<List<CalendarEvent>>(
-              future: _events(_page),
-              builder: (context, snap) =>
-                  _Legend(month: month, events: snap.data ?? const []),
-            ),
+            _Legend(month: month, events: _months[_page] ?? const []),
             _DayEvents(
               key: ValueKey(_selected),
               day: _selected,
-              load: () => _events(_pageOf(_selected)),
+              events: _months[_pageOf(_selected)],
+              error: _errors[_pageOf(_selected)],
             ),
           ],
         ),
@@ -428,20 +452,27 @@ class _DayCellState extends State<_DayCell> {
 }
 
 class _DayEvents extends StatelessWidget {
-  const _DayEvents({super.key, required this.day, required this.load});
+  const _DayEvents({
+    super.key,
+    required this.day,
+    required this.events,
+    required this.error,
+  });
 
   final DateTime day;
-  final Future<List<CalendarEvent>> Function() load;
+
+  /// Null while the month is loading.
+  final List<CalendarEvent>? events;
+  final Object? error;
 
   @override
   Widget build(BuildContext context) {
     final tones = context.tones;
     final theme = Theme.of(context);
-    return FutureBuilder<List<CalendarEvent>>(
-      future: load(),
-      builder: (context, snap) {
+    return Builder(
+      builder: (context) {
         final events = [
-          for (final e in snap.data ?? const <CalendarEvent>[])
+          for (final e in this.events ?? const <CalendarEvent>[])
             if (DateUtils.dateOnly(e.time) == day) e,
         ]..sort((a, b) => a.time.compareTo(b.time));
         final school = _schoolOn(day);
@@ -486,9 +517,9 @@ class _DayEvents extends StatelessWidget {
                   ),
                 ),
               ),
-            if (snap.hasError)
-              Text('${snap.error}', textAlign: TextAlign.center)
-            else if (snap.connectionState != ConnectionState.done)
+            if (error != null && this.events == null)
+              Text('$error', textAlign: TextAlign.center)
+            else if (this.events == null)
               const Center(child: CircularProgressIndicator())
             else if (count == 0)
               Padding(
