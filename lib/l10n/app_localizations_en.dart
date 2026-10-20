@@ -1780,4 +1780,16 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get flashlight => 'Flashlight';
+
+  @override
+  String get about => 'About';
+
+  @override
+  String get contributors => 'Contributors';
+
+  @override
+  String get project => 'Project';
+
+  @override
+  String get openSourceLicenses => 'Open source licenses';
 }

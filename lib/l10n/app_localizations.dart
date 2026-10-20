@@ -3021,6 +3021,30 @@ abstract class AppLocalizations {
   /// In zh, this message translates to:
   /// **'手電筒'**
   String get flashlight;
+
+  /// No description provided for @about.
+  ///
+  /// In zh, this message translates to:
+  /// **'關於'**
+  String get about;
+
+  /// No description provided for @contributors.
+  ///
+  /// In zh, this message translates to:
+  /// **'貢獻者'**
+  String get contributors;
+
+  /// No description provided for @project.
+  ///
+  /// In zh, this message translates to:
+  /// **'專案'**
+  String get project;
+
+  /// No description provided for @openSourceLicenses.
+  ///
+  /// In zh, this message translates to:
+  /// **'開放原始碼授權'**
+  String get openSourceLicenses;
 }
 
 class _AppLocalizationsDelegate

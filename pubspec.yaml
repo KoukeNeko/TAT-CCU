@@ -20,6 +20,7 @@ dependencies:
   http: ^1.6.0
   intl: ^0.20.3
   mobile_scanner: ^7.4.2
+  package_info_plus: ^10.2.2
   path_provider: ^2.1.6
   pdfrx: ^2.6.5
   provider: ^6.1.5+1
@@ -40,6 +41,7 @@ flutter:
   assets:
     - assets/school_calendar.txt
     - assets/bus_timetable.txt
+    - assets/logo.png
 
   # LINE Seed (SIL OFL 1.1; licenses in assets/fonts). Thin is left out to
   # keep the app smaller; w900 falls back to ExtraBold.

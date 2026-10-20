@@ -1677,4 +1677,16 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get flashlight => '手電筒';
+
+  @override
+  String get about => '關於';
+
+  @override
+  String get contributors => '貢獻者';
+
+  @override
+  String get project => '專案';
+
+  @override
+  String get openSourceLicenses => '開放原始碼授權';
 }

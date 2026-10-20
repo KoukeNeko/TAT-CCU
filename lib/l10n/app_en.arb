@@ -487,5 +487,9 @@
   "takeAttendance": "Attendance",
   "notAttendanceCode": "Not an attendance QR code",
   "cameraUnavailable": "Camera unavailable. Allow camera access in Settings.",
-  "flashlight": "Flashlight"
+  "flashlight": "Flashlight",
+  "about": "About",
+  "contributors": "Contributors",
+  "project": "Project",
+  "openSourceLicenses": "Open source licenses"
 }

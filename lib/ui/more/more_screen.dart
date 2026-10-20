@@ -233,13 +233,13 @@ class _MoreScreenState extends State<MoreScreen> {
                 clipBehavior: Clip.antiAlias,
                 child: Column(
                   children: [
-                    _Row(
+                    MenuRow(
                       tone: t.peach,
                       icon: Icons.handyman_outlined,
                       title: context.l10n.tools,
                       onTap: () => context.push('/more/tools'),
                     ),
-                    _Row(
+                    MenuRow(
                       tone: t.lilac,
                       icon: Icons.person_outline,
                       title: context.l10n.account,
@@ -257,17 +257,23 @@ class _MoreScreenState extends State<MoreScreen> {
                       ),
                       onTap: () => context.push('/more/account'),
                     ),
-                    _Row(
+                    MenuRow(
                       tone: t.mint,
                       icon: Icons.tune,
                       title: context.l10n.settings,
                       onTap: () => context.push('/more/settings'),
                     ),
-                    _Row(
+                    MenuRow(
                       tone: t.sun,
                       icon: Icons.palette_outlined,
                       title: context.l10n.designLanguage,
                       onTap: () => context.push('/more/design'),
+                    ),
+                    MenuRow(
+                      tone: t.peach,
+                      icon: Icons.info_outline,
+                      title: context.l10n.about,
+                      onTap: () => context.push('/more/about'),
                     ),
                   ],
                 ),
@@ -341,8 +347,10 @@ class _StatusTile extends StatelessWidget {
   );
 }
 
-class _Row extends StatelessWidget {
-  const _Row({
+/// A More-style row: a toned icon square, a title and a chevron.
+class MenuRow extends StatelessWidget {
+  const MenuRow({
+    super.key,
     required this.tone,
     required this.icon,
     required this.title,

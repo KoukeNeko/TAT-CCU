@@ -1666,4 +1666,16 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get flashlight => 'ライト';
+
+  @override
+  String get about => 'このアプリについて';
+
+  @override
+  String get contributors => 'コントリビューター';
+
+  @override
+  String get project => 'プロジェクト';
+
+  @override
+  String get openSourceLicenses => 'オープンソースライセンス';
 }

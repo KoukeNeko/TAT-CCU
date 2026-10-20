@@ -900,5 +900,9 @@
   "takeAttendance": "點名",
   "notAttendanceCode": "不是點名的 QR Code",
   "cameraUnavailable": "無法使用相機，請到設定開啟相機權限",
-  "flashlight": "手電筒"
+  "flashlight": "手電筒",
+  "about": "關於",
+  "contributors": "貢獻者",
+  "project": "專案",
+  "openSourceLicenses": "開放原始碼授權"
 }

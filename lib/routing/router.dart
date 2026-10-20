@@ -11,6 +11,7 @@ import '../ui/courses/courses_screen.dart';
 import '../ui/courses/forum_screen.dart';
 import '../ui/courses/module_screen.dart';
 import '../ui/login/login_screen.dart';
+import '../ui/more/about_screen.dart';
 import '../ui/more/academic_screen.dart';
 import '../ui/more/calendar_screen.dart';
 import '../ui/more/grades_screen.dart';
@@ -240,6 +241,7 @@ GoRouter buildRouter(EcourseAuthRepository auth) => GoRouter(
                     ),
                   ],
                 ),
+                GoRoute(path: 'about', builder: (_, _) => const AboutScreen()),
                 GoRoute(
                   path: 'design',
                   builder: (_, _) => const DesignLanguageScreen(),

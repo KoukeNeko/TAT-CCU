@@ -487,5 +487,9 @@
   "takeAttendance": "出席登録",
   "notAttendanceCode": "出席用の QR コードではありません",
   "cameraUnavailable": "カメラを使用できません。設定でカメラへのアクセスを許可してください。",
-  "flashlight": "ライト"
+  "flashlight": "ライト",
+  "about": "このアプリについて",
+  "contributors": "コントリビューター",
+  "project": "プロジェクト",
+  "openSourceLicenses": "オープンソースライセンス"
 }
