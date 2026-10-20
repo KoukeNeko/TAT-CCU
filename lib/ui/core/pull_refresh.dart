@@ -20,6 +20,10 @@ class PullRefresh extends StatefulWidget {
   State<PullRefresh> createState() => _PullRefreshState();
 }
 
+/// Pulls already taken by a PullRefresh nested inside another, so the
+/// outer one neither shows its cookie nor refreshes too.
+final _claimed = Expando<bool>();
+
 class _PullRefreshState extends State<PullRefresh> {
   /// How far the list is pulled, as a share of the distance that arms it.
   var _pull = 0.0;
@@ -27,6 +31,8 @@ class _PullRefreshState extends State<PullRefresh> {
 
   bool _track(ScrollNotification n) {
     if (n.depth != 0 || n.metrics.axis != Axis.vertical) return false;
+    if (_claimed[n] ?? false) return false;
+    _claimed[n] = true;
     // RefreshIndicator arms at a quarter of the viewport.
     final arm = n.metrics.viewportDimension * 0.25;
     final over = switch (n) {
@@ -65,6 +71,9 @@ class _PullRefreshState extends State<PullRefresh> {
         NotificationListener<ScrollNotification>(
           onNotification: _track,
           child: RefreshIndicator.noSpinner(
+            notificationPredicate: (n) =>
+                !(_claimed[n] ?? false) &&
+                defaultScrollNotificationPredicate(n),
             onRefresh: widget.onRefresh,
             onStatusChange: _changed,
             child: widget.child,
