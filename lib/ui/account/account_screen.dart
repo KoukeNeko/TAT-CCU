@@ -84,6 +84,12 @@ class _AccountScreenState extends State<AccountScreen> {
                   status: ecourseStatus,
                   detail: _ecourseError,
                   actions: [
+                    if (!ecourse.isSignedIn)
+                      FilledButton.tonal(
+                        // Back to the sign-in screen.
+                        onPressed: () => ecourse.setCampusOnly(false),
+                        child: Text(context.l10n.signIn),
+                      ),
                     if (ecourse.isSignedIn) ...[
                       FilledButton.tonal(
                         onPressed: _checking ? null : _verifyEcourse,

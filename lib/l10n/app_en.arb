@@ -451,5 +451,8 @@
   "termWeek": "Week {week} of {weeks}",
   "countdownUpcoming": "Coming up",
   "countdownToday": "Today",
-  "countdownEnded": "This year's calendar has ended"
+  "countdownEnded": "This year's calendar has ended",
+  "ecourseMaintenance": "eCourse2 is under maintenance; try again later",
+  "useCampusSystems": "Use campus systems",
+  "signIn": "Sign in"
 }

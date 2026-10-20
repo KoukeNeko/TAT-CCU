@@ -69,4 +69,22 @@ void main() {
       (false, 'real', false),
     );
   });
+
+  test('campus systems open without eCourse2 until signing out', () async {
+    FlutterSecureStorage.setMockInitialValues({});
+    final auth = EcourseAuthRepository(storage: const FlutterSecureStorage());
+    await auth.load();
+    expect(auth.canEnter, isFalse);
+
+    await auth.setCampusOnly(true);
+    expect((auth.canEnter, auth.isSignedIn), (true, false));
+
+    // Kept for the next launch.
+    final next = EcourseAuthRepository(storage: const FlutterSecureStorage());
+    await next.load();
+    expect(next.canEnter, isTrue);
+
+    await next.setCampusOnly(false);
+    expect(next.canEnter, isFalse);
+  });
 }

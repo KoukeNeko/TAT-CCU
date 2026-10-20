@@ -451,5 +451,8 @@
   "termWeek": "第 {week} 週・全 {weeks} 週",
   "countdownUpcoming": "この先",
   "countdownToday": "今日",
-  "countdownEnded": "今年度の行事予定は終了しました"
+  "countdownEnded": "今年度の行事予定は終了しました",
+  "ecourseMaintenance": "eCourse2 はメンテナンス中です。後でもう一度お試しください",
+  "useCampusSystems": "校務システムを使う",
+  "signIn": "ログイン"
 }

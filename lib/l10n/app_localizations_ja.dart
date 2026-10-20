@@ -1548,4 +1548,13 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get countdownEnded => '今年度の行事予定は終了しました';
+
+  @override
+  String get ecourseMaintenance => 'eCourse2 はメンテナンス中です。後でもう一度お試しください';
+
+  @override
+  String get useCampusSystems => '校務システムを使う';
+
+  @override
+  String get signIn => 'ログイン';
 }

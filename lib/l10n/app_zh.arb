@@ -860,5 +860,8 @@
   },
   "countdownUpcoming": "接下來",
   "countdownToday": "今天",
-  "countdownEnded": "這學年的行事曆已經結束"
+  "countdownEnded": "這學年的行事曆已經結束",
+  "ecourseMaintenance": "eCourse2 維護中，請稍後再試",
+  "useCampusSystems": "使用校務系統",
+  "signIn": "登入"
 }

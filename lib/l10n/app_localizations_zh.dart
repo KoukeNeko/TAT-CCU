@@ -1559,4 +1559,13 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get countdownEnded => '這學年的行事曆已經結束';
+
+  @override
+  String get ecourseMaintenance => 'eCourse2 維護中，請稍後再試';
+
+  @override
+  String get useCampusSystems => '使用校務系統';
+
+  @override
+  String get signIn => '登入';
 }

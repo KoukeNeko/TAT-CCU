@@ -1660,4 +1660,14 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get countdownEnded => 'This year\'s calendar has ended';
+
+  @override
+  String get ecourseMaintenance =>
+      'eCourse2 is under maintenance; try again later';
+
+  @override
+  String get useCampusSystems => 'Use campus systems';
+
+  @override
+  String get signIn => 'Sign in';
 }

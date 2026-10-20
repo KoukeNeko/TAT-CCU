@@ -4,6 +4,7 @@ import 'dart:math';
 import 'package:crypto/crypto.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'package:http/http.dart' as http;
 
 import '../services/campus_cookies.dart';
 import '../services/demo_data.dart';
@@ -35,12 +36,14 @@ class EcourseAuthRepository extends ChangeNotifier {
   static const _tokenKey = 'ecourse2_token';
   static const _signedOutKey = 'signed_out_by_user';
   static const _demoKey = 'demo_account';
+  static const _campusOnlyKey = 'campus_only';
 
   final FlutterSecureStorage _storage;
   final bool _migrate;
   String? _token;
   var _signedOutByUser = false;
   var _demo = false;
+  var _campusOnly = false;
 
   String? get token => _token;
 
@@ -51,6 +54,22 @@ class EcourseAuthRepository extends ChangeNotifier {
   /// from or sent to the school, and its saved pages are kept apart. The
   /// real sign-in stays as it was, to switch back to.
   bool get isDemo => _demo;
+
+  /// The app opens: signed in to eCourse2, using the demo, or using only
+  /// the campus systems, which sign in through the portal on their own
+  /// (for when eCourse2 is down for maintenance).
+  bool get canEnter => isSignedIn || _campusOnly;
+
+  /// Opens the app without eCourse2, or goes back to signing in to it.
+  Future<void> setCampusOnly(bool on) async {
+    if (on) {
+      await _storage.write(key: _campusOnlyKey, value: '1');
+    } else {
+      await _storage.delete(key: _campusOnlyKey);
+    }
+    _campusOnly = on;
+    notifyListeners();
+  }
 
   /// The user pressed 登出: no signing in by itself with a saved password
   /// until the user signs in again.
@@ -78,6 +97,7 @@ class EcourseAuthRepository extends ChangeNotifier {
     _token = await _storage.read(key: _tokenKey);
     _signedOutByUser = await _storage.read(key: _signedOutKey) != null;
     _demo = await _storage.read(key: _demoKey) != null;
+    _campusOnly = await _storage.read(key: _campusOnlyKey) != null;
     CampusCache.demo = _demo;
     notifyListeners();
   }
@@ -95,6 +115,40 @@ class EcourseAuthRepository extends ChangeNotifier {
     _demo = on;
     CampusCache.demo = on;
     notifyListeners();
+  }
+
+  /// Whether eCourse2 is in maintenance mode, from its public mobile
+  /// settings (no account needed). Signing in cannot work then: Moodle
+  /// refuses students, and launch.php only shows the maintenance page.
+  /// False when the settings cannot be read, so sign-in is tried as usual.
+  static Future<bool> siteInMaintenance({http.Client? httpClient}) async {
+    final client = httpClient ?? http.Client();
+    try {
+      final response = await client
+          .post(
+            Uri.parse(
+              '$eCourse2Url/lib/ajax/service-nologin.php'
+              '?info=tool_mobile_get_public_config',
+            ),
+            body: jsonEncode([
+              {
+                'index': 0,
+                'methodname': 'tool_mobile_get_public_config',
+                'args': {},
+              },
+            ]),
+          )
+          .timeout(const Duration(seconds: 10));
+      final json = jsonDecode(utf8.decode(response.bodyBytes));
+      return json is List &&
+          json.first is Map &&
+          json.first['data']?['maintenanceenabled'] == 1;
+    } on Exception catch (e) {
+      debugPrint('eCourse2 maintenance check: $e');
+      return false;
+    } finally {
+      if (httpClient == null) client.close();
+    }
   }
 
   /// A new `admin/tool/mobile/launch.php` sign-in: the page signs in to
@@ -122,6 +176,8 @@ class EcourseAuthRepository extends ChangeNotifier {
     final token = parseLaunchCallback(callback, passport);
     await _storage.write(key: _tokenKey, value: token);
     await _storage.delete(key: _signedOutKey);
+    await _storage.delete(key: _campusOnlyKey);
+    _campusOnly = false;
     _token = token;
     _signedOutByUser = false;
     notifyListeners();
@@ -149,6 +205,8 @@ class EcourseAuthRepository extends ChangeNotifier {
     await ResponseCache.clear();
     if (byUser) {
       await _storage.write(key: _signedOutKey, value: '1');
+      await _storage.delete(key: _campusOnlyKey);
+      _campusOnly = false;
       await (CampusCookies.clear(), CampusCache.clear()).wait;
       _signedOutByUser = true;
     }

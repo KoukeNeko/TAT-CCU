@@ -2805,6 +2805,24 @@ abstract class AppLocalizations {
   /// In zh, this message translates to:
   /// **'這學年的行事曆已經結束'**
   String get countdownEnded;
+
+  /// No description provided for @ecourseMaintenance.
+  ///
+  /// In zh, this message translates to:
+  /// **'eCourse2 維護中，請稍後再試'**
+  String get ecourseMaintenance;
+
+  /// No description provided for @useCampusSystems.
+  ///
+  /// In zh, this message translates to:
+  /// **'使用校務系統'**
+  String get useCampusSystems;
+
+  /// No description provided for @signIn.
+  ///
+  /// In zh, this message translates to:
+  /// **'登入'**
+  String get signIn;
 }
 
 class _AppLocalizationsDelegate

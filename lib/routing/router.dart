@@ -45,7 +45,7 @@ GoRouter buildRouter(EcourseAuthRepository auth) => GoRouter(
   refreshListenable: auth,
   redirect: (context, state) {
     final atLogin = state.matchedLocation == '/login';
-    if (!auth.isSignedIn) return atLogin ? null : '/login';
+    if (!auth.canEnter) return atLogin ? null : '/login';
     return atLogin ? '/today' : null;
   },
   routes: [

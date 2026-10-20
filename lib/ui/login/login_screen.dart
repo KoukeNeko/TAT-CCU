@@ -20,6 +20,9 @@ class LoginScreen extends StatefulWidget {
 class _LoginScreenState extends State<LoginScreen> {
   var _busy = false;
 
+  /// eCourse2 said it is in maintenance at the last attempt.
+  var _maintenance = false;
+
   @override
   void initState() {
     super.initState();
@@ -36,6 +39,12 @@ class _LoginScreenState extends State<LoginScreen> {
     setState(() => _busy = true);
     try {
       final auth = context.read<EcourseAuthRepository>();
+      // During maintenance launch.php only shows the maintenance page.
+      if (await EcourseAuthRepository.siteInMaintenance()) {
+        if (mounted) setState(() => _maintenance = true);
+        return;
+      }
+      if (!mounted) return;
       final launch = auth.newLaunch();
       final callback = await Navigator.of(context).push<String>(
         MaterialPageRoute(
@@ -108,7 +117,23 @@ class _LoginScreenState extends State<LoginScreen> {
               // One CAS sign-in covers both: the eCourse2 launch flow signs
               // in to CAS in the shared campus WebView, which then hands the
               // token back, and campus systems reuse that CAS session.
-              FilledButton(
+              if (_maintenance) ...[
+                Text(
+                  context.l10n.ecourseMaintenance,
+                  textAlign: TextAlign.center,
+                  style: Theme.of(context).textTheme.titleMedium,
+                ),
+                const SizedBox(height: 12),
+                // The campus systems sign in through the portal, which is
+                // not down with eCourse2.
+                FilledButton(
+                  onPressed: () =>
+                      context.read<EcourseAuthRepository>().setCampusOnly(true),
+                  child: Text(context.l10n.useCampusSystems),
+                ),
+                const SizedBox(height: 8),
+              ],
+              (_maintenance ? FilledButton.tonal : FilledButton.new)(
                 onPressed: _busy ? null : _signIn,
                 child: Text(context.l10n.signInWithPortal),
               ),

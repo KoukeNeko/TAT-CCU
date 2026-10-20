@@ -2,6 +2,8 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 
+import '../../data/services/moodle_client.dart';
+
 import 'shapes.dart';
 import 'theme.dart';
 import '../../l10n/l10n.dart';
@@ -74,8 +76,10 @@ class _LoaderState<T> extends State<Loader<T>> {
       onError: (Object e) {
         if (!mounted) return;
         if (_hasData) {
-          ScaffoldMessenger.maybeOf(context)
-              ?.showSnackBar(SnackBar(content: Text(context.l10n.loadFailed)));
+          // The saved data stays on screen; only the reason is new.
+          ScaffoldMessenger.maybeOf(context)?.showSnackBar(
+            SnackBar(content: Text(_reason(e) ?? context.l10n.loadFailed)),
+          );
         } else {
           setState(() => _error = e);
         }
@@ -86,6 +90,13 @@ class _LoaderState<T> extends State<Loader<T>> {
     );
     return done.future;
   }
+
+  /// A known cause in the user's words; null shows the raw error.
+  String? _reason(Object e) => switch (e) {
+    MoodleException(isMaintenance: true) => context.l10n.ecourseMaintenance,
+    MoodleException(needsSignIn: true) => context.l10n.ecourseSignedOut,
+    _ => null,
+  };
 
   void _retry() {
     setState(() => _error = null);
@@ -109,11 +120,13 @@ class _LoaderState<T> extends State<Loader<T>> {
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     Text(
-                      context.l10n.loadFailed,
+                      _reason(error) ?? context.l10n.loadFailed,
                       style: Theme.of(context).textTheme.titleMedium,
                     ),
-                    const SizedBox(height: 4),
-                    Text('$error', textAlign: TextAlign.center),
+                    if (_reason(error) == null) ...[
+                      const SizedBox(height: 4),
+                      Text('$error', textAlign: TextAlign.center),
+                    ],
                     const SizedBox(height: 16),
                     FilledButton.tonal(
                       onPressed: _retry,

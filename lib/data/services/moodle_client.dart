@@ -15,6 +15,10 @@ class MoodleException implements Exception {
   /// The token expired or was revoked; the user has to sign in again.
   bool get needsSignIn => errorCode == 'invalidtoken';
 
+  /// eCourse2 is in Moodle's maintenance mode, which refuses every student
+  /// sign-in and call until it ends.
+  bool get isMaintenance => errorCode == 'sitemaintenance';
+
   @override
   String toString() => 'MoodleException($errorCode): $message';
 }
