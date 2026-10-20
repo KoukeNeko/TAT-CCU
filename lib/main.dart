@@ -120,9 +120,11 @@ class _TatCcuAppState extends State<TatCcuApp> {
       theme: buildTheme(Brightness.light),
       darkTheme: buildTheme(Brightness.dark),
       themeMode: settings.themeMode,
-      locale: settings.locale,
+      locale: _traditional(settings.locale),
       localizationsDelegates: AppLocalizations.localizationsDelegates,
-      supportedLocales: AppLocalizations.supportedLocales,
+      supportedLocales: [
+        for (final l in AppLocalizations.supportedLocales) _traditional(l)!,
+      ],
       // Japanese gets LINE Seed JP so kanji take Japanese shapes.
       builder: (context, child) =>
           Localizations.localeOf(context).languageCode == 'ja'
@@ -212,3 +214,13 @@ void backgroundTask() {
     return true;
   });
 }
+
+/// Plain `zh` would give Flutter's own pages (licenses, date pickers)
+/// Simplified Chinese; the app's Chinese is Taiwan's Traditional.
+Locale? _traditional(Locale? l) => l?.languageCode == 'zh'
+    ? const Locale.fromSubtags(
+        languageCode: 'zh',
+        scriptCode: 'Hant',
+        countryCode: 'TW',
+      )
+    : l;
