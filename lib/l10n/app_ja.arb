@@ -477,5 +477,6 @@
   "signedIn": "ログイン中",
   "signInExpired": "ログイン期限切れ",
   "maintenance": "メンテナンス中",
-  "schoolCalendar": "学年暦"
+  "schoolCalendar": "学年暦",
+  "dlShapes": "形と動き"
 }

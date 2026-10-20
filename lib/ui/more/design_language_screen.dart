@@ -2,11 +2,14 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../l10n/l10n.dart';
+import '../core/campus_session.dart';
+import '../core/maintenance_capsule.dart';
+import '../core/status_capsule.dart';
 import '../core/theme.dart';
 import '../core/widgets.dart';
 
 /// Parts of the design language, each with its own detail page.
-enum DesignPart { colors, corners, spacing, type, components }
+enum DesignPart { colors, corners, spacing, type, components, shapes }
 
 String _partTitle(BuildContext context, DesignPart part) {
   final l10n = context.l10n;
@@ -16,6 +19,7 @@ String _partTitle(BuildContext context, DesignPart part) {
     DesignPart.spacing => l10n.dlSpacing,
     DesignPart.type => l10n.dlType,
     DesignPart.components => l10n.dlComponents,
+    DesignPart.shapes => l10n.dlShapes,
   };
 }
 
@@ -100,13 +104,21 @@ class DesignLanguageScreen extends StatelessWidget {
                 DesignPart.colors,
                 ClipRRect(
                   borderRadius: BorderRadius.circular(Corners.small),
-                  child: Row(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                  // Light above dark.
+                  child: Column(
                     children: [
-                      for (final t in tones.cycle) ...[
-                        Expanded(child: ColoredBox(color: t.fill)),
-                        Expanded(child: ColoredBox(color: t.strong)),
-                      ],
+                      for (final b in Brightness.values.reversed)
+                        Expanded(
+                          child: Row(
+                            crossAxisAlignment: CrossAxisAlignment.stretch,
+                            children: [
+                              for (final t in Tones.of(b).cycle) ...[
+                                Expanded(child: ColoredBox(color: t.fill)),
+                                Expanded(child: ColoredBox(color: t.strong)),
+                              ],
+                            ],
+                          ),
+                        ),
                     ],
                   ),
                 ),
@@ -212,20 +224,37 @@ class DesignLanguageScreen extends StatelessWidget {
                           tone: tones.mint,
                           label: context.l10n.onShelf,
                         ),
-                        Container(
-                          width: 30,
-                          height: 30,
-                          decoration: ShapeDecoration(
-                            color: tones.lilac.strong,
-                            shape: scallop,
-                          ),
-                        ),
                       ],
                     ),
                   ),
-                  'BarChip・StatusPill・CookieBorder',
+                  'BarChip・StatusPill・StatusTile…',
                 ),
               ],
+            ),
+            const SizedBox(height: rowGap),
+            SizedBox(
+              height: 150,
+              child: tile(
+                DesignPart.shapes,
+                Row(
+                  children: [
+                    for (final shape in [spikyStar, clover, scallop])
+                      Padding(
+                        padding: const EdgeInsets.only(right: 10),
+                        child: Container(
+                          width: 44,
+                          height: 44,
+                          decoration: ShapeDecoration(
+                            color: tones.lilac.strong,
+                            shape: shape,
+                          ),
+                        ),
+                      ),
+                    MorphingCookie(size: 44, color: tones.sun.strong),
+                  ],
+                ),
+                'CookieBorder・MorphingCookie・CourseMark',
+              ),
             ),
           ],
         ),
@@ -249,21 +278,56 @@ class DesignPartScreen extends StatelessWidget {
         builder: (context) => ListView(
           padding: scrollPadding(context),
           children: switch (part) {
-            DesignPart.colors => _colors(context),
+            DesignPart.colors => _bothModes(context, _colors),
             DesignPart.corners => _cornerList(context),
             DesignPart.spacing => _spacing(context),
             DesignPart.type => _type(context),
-            DesignPart.components => _components(context),
+            DesignPart.components => _bothModes(context, _components),
+            DesignPart.shapes => _bothModes(context, _shapes),
           },
         ),
       ),
     );
   }
 
-  List<Widget> _colors(BuildContext context) {
+  /// [sections] built for each theme: every section label once, then its
+  /// content in light above dark.
+  List<Widget> _bothModes(
+    BuildContext context,
+    List<Widget> Function(BuildContext, ThemeData) sections,
+  ) {
+    final font = Localizations.localeOf(context).languageCode == 'ja'
+        ? fontJp
+        : fontTw;
+    final light = buildTheme(Brightness.light, fontFamily: font);
+    final dark = buildTheme(Brightness.dark, fontFamily: font);
+    final inLight = sections(context, light);
+    final inDark = sections(context, dark);
+    return [
+      for (final (i, w) in inLight.indexed)
+        w is SectionLabel
+            ? w
+            : Column(
+                children: [
+                  _ModePanel(
+                    theme: light,
+                    label: context.l10n.themeLight,
+                    child: w,
+                  ),
+                  _ModePanel(
+                    theme: dark,
+                    label: context.l10n.themeDark,
+                    child: inDark[i],
+                  ),
+                ],
+              ),
+    ];
+  }
+
+  List<Widget> _colors(BuildContext context, ThemeData theme) {
     final l10n = context.l10n;
-    final tones = context.tones;
-    final scheme = Theme.of(context).colorScheme;
+    final tones = theme.extension<Tones>()!;
+    final scheme = theme.colorScheme;
     final roles = [
       ('lilac', l10n.dlRoleNow, tones.lilac),
       ('mint', l10n.dlRoleNext, tones.mint),
@@ -301,57 +365,61 @@ class DesignPartScreen extends StatelessWidget {
     );
     return [
       SectionLabel(l10n.dlFunctional, detail: 'fill・ink・strong'),
-      for (final (name, role, t) in roles)
-        Padding(
-          padding: const EdgeInsets.only(bottom: rowGap),
-          child: ClipRRect(
-            borderRadius: BorderRadius.circular(Corners.row),
-            child: ColoredBox(
-              color: scheme.surfaceContainerLow,
-              child: IntrinsicHeight(
-                child: Row(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    // Laid out like the swatches: name on top, role on the
-                    // line of their color codes.
-                    SizedBox(
-                      width: 88,
-                      child: Padding(
-                        padding: const EdgeInsets.fromLTRB(10, 10, 10, 12),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              name,
-                              style: const TextStyle(
-                                fontSize: 12,
-                                fontWeight: FontWeight.w900,
-                              ),
+      Column(
+        children: [
+          for (final (name, role, t) in roles)
+            Padding(
+              padding: const EdgeInsets.only(bottom: rowGap),
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(Corners.row),
+                child: ColoredBox(
+                  color: scheme.surfaceContainerLow,
+                  child: IntrinsicHeight(
+                    child: Row(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        // Laid out like the swatches: name on top, role on the
+                        // line of their color codes.
+                        SizedBox(
+                          width: 88,
+                          child: Padding(
+                            padding: const EdgeInsets.fromLTRB(10, 10, 10, 12),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  name,
+                                  style: const TextStyle(
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.w900,
+                                  ),
+                                ),
+                                const SizedBox(height: 14),
+                                Text(
+                                  role,
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: TextStyle(
+                                    fontSize: 10,
+                                    fontWeight: FontWeight.w800,
+                                    color: scheme.onSurfaceVariant,
+                                  ),
+                                ),
+                              ],
                             ),
-                            const SizedBox(height: 14),
-                            Text(
-                              role,
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                              style: TextStyle(
-                                fontSize: 10,
-                                fontWeight: FontWeight.w800,
-                                color: scheme.onSurfaceVariant,
-                              ),
-                            ),
-                          ],
+                          ),
                         ),
-                      ),
+                        swatch('fill', t.fill, t.ink),
+                        swatch('ink', t.ink, t.fill),
+                        swatch('strong', t.strong, t.fill),
+                      ],
                     ),
-                    swatch('fill', t.fill, t.ink),
-                    swatch('ink', t.ink, t.fill),
-                    swatch('strong', t.strong, t.fill),
-                  ],
+                  ),
                 ),
               ),
             ),
-          ),
-        ),
+        ],
+      ),
       SectionLabel(l10n.dlIdentity),
       GridView.count(
         crossAxisCount: 5,
@@ -503,9 +571,9 @@ class DesignPartScreen extends StatelessWidget {
     ];
   }
 
-  List<Widget> _components(BuildContext context) {
+  List<Widget> _components(BuildContext context, ThemeData theme) {
     final l10n = context.l10n;
-    final tones = context.tones;
+    final tones = theme.extension<Tones>()!;
     return [
       const SectionLabel('BarChip'),
       ChipRow(
@@ -556,15 +624,90 @@ class DesignPartScreen extends StatelessWidget {
           ],
         ],
       ),
-      const SectionLabel('CookieBorder'),
+      SectionLabel('SectionLabel', detail: l10n.itemCount(3)),
+      const SectionLabel('StatusTile'),
       Row(
         children: [
-          for (final shape in [spikyStar, clover, scallop])
-            Padding(
-              padding: const EdgeInsets.only(right: 12),
-              child: Container(
-                width: 56,
-                height: 56,
+          Expanded(
+            child: StatusTile(
+              tone: tones.peach,
+              icon: Icons.assignment_outlined,
+              title: l10n.dueThisWeek,
+              status: '3',
+              onTap: () {},
+            ),
+          ),
+          const SizedBox(width: rowGap),
+          Expanded(
+            child: StatusTile(
+              tone: tones.sun,
+              icon: Icons.notifications_none,
+              title: l10n.unread,
+              status: '2',
+              onTap: () {},
+            ),
+          ),
+        ],
+      ),
+      const SectionLabel('StatusCapsule'),
+      Wrap(
+        spacing: 8,
+        runSpacing: 8,
+        children: [
+          StatusCapsule(
+            leading: MorphingCookie(size: 26, color: tones.lilac.strong),
+            text: l10n.campusReading,
+          ),
+          const MaintenanceCapsule(back: false),
+          const MaintenanceCapsule(back: true),
+        ],
+      ),
+      const SectionLabel('LoadingView'),
+      ClipRRect(
+        borderRadius: BorderRadius.circular(Corners.card),
+        child: const SizedBox(height: 280, child: LoadingView()),
+      ),
+      const SectionLabel('UpdatedAt'),
+      UpdatedAt(DateTime.now()),
+    ];
+  }
+
+  List<Widget> _shapes(BuildContext context, ThemeData theme) {
+    final l10n = context.l10n;
+    final tones = theme.extension<Tones>()!;
+    final scheme = theme.colorScheme;
+    Widget named(String name, Widget art) => Column(
+      children: [
+        art,
+        const SizedBox(height: 6),
+        Text(
+          name,
+          style: TextStyle(
+            fontSize: 11,
+            fontWeight: FontWeight.w800,
+            fontFamily: 'monospace',
+            color: scheme.onSurfaceVariant,
+          ),
+        ),
+      ],
+    );
+    return [
+      const SectionLabel('CookieBorder'),
+      Wrap(
+        spacing: 16,
+        runSpacing: 12,
+        children: [
+          for (final (name, shape) in [
+            ('spikyStar', spikyStar),
+            ('clover', clover),
+            ('scallop', scallop),
+            ('CookieBorder()', const CookieBorder()),
+          ])
+            named(
+              name,
+              Container(
+                width: 64,
+                height: 64,
                 decoration: ShapeDecoration(
                   color: tones.lilac.strong,
                   shape: shape,
@@ -573,6 +716,93 @@ class DesignPartScreen extends StatelessWidget {
             ),
         ],
       ),
+      const SectionLabel('MorphingCookie'),
+      Row(
+        crossAxisAlignment: CrossAxisAlignment.end,
+        children: [
+          MorphingCookie(size: 96, color: tones.lilac.fill),
+          const SizedBox(width: 16),
+          MorphingCookie(size: 44, color: tones.sun.strong),
+          const SizedBox(width: 16),
+          MorphingCookie(size: 26, color: tones.mint.strong),
+        ],
+      ),
+      const SectionLabel('CourseMark'),
+      Wrap(
+        spacing: 10,
+        runSpacing: 10,
+        children: [for (var id = 0; id < 6; id++) CourseMark(courseId: id)],
+      ),
+      const SectionLabel('CookieBadge'),
+      Row(
+        children: [
+          CookieBadge(
+            value: '88',
+            unit: l10n.unitMinutes,
+            color: tones.lilac.strong,
+            ink: tones.lilac.fill,
+            shape: spikyStar,
+          ),
+          const SizedBox(width: 16),
+          CookieBadge(
+            value: '3',
+            unit: l10n.unitDays,
+            color: tones.peach.strong,
+            ink: tones.peach.fill,
+            size: 72,
+            shape: scallop,
+          ),
+        ],
+      ),
     ];
+  }
+}
+
+/// [child] on [theme]'s own surface, under the theme's name.
+class _ModePanel extends StatelessWidget {
+  const _ModePanel({
+    required this.theme,
+    required this.label,
+    required this.child,
+  });
+
+  final ThemeData theme;
+  final String label;
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: rowGap),
+      child: Theme(
+        data: theme,
+        child: Material(
+          color: theme.colorScheme.surface,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(Corners.card),
+            side: BorderSide(color: theme.colorScheme.outlineVariant),
+          ),
+          clipBehavior: Clip.antiAlias,
+          child: Padding(
+            padding: const EdgeInsets.all(14),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Text(
+                  label,
+                  style: TextStyle(
+                    fontSize: 11,
+                    fontWeight: FontWeight.w800,
+                    color: theme.colorScheme.onSurfaceVariant,
+                  ),
+                ),
+                const SizedBox(height: 10),
+                child,
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
   }
 }

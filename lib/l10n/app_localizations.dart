@@ -2961,6 +2961,12 @@ abstract class AppLocalizations {
   /// In zh, this message translates to:
   /// **'校務行事曆'**
   String get schoolCalendar;
+
+  /// No description provided for @dlShapes.
+  ///
+  /// In zh, this message translates to:
+  /// **'形狀與動態'**
+  String get dlShapes;
 }
 
 class _AppLocalizationsDelegate

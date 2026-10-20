@@ -1745,4 +1745,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get schoolCalendar => 'School calendar';
+
+  @override
+  String get dlShapes => 'Shapes and motion';
 }

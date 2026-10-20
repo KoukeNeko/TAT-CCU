@@ -1643,4 +1643,7 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get schoolCalendar => '校務行事曆';
+
+  @override
+  String get dlShapes => '形狀與動態';
 }

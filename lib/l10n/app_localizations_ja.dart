@@ -1632,4 +1632,7 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get schoolCalendar => '学年暦';
+
+  @override
+  String get dlShapes => '形と動き';
 }
