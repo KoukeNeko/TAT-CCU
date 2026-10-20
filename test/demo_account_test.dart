@@ -7,6 +7,7 @@ import 'package:tat_ccu/data/repositories/ecourse_auth_repository.dart';
 import 'package:tat_ccu/data/repositories/ecourse_repository.dart';
 import 'package:tat_ccu/data/services/demo_data.dart';
 import 'package:tat_ccu/data/services/library_data.dart';
+import 'package:tat_ccu/data/services/moodle_client.dart';
 import 'package:tat_ccu/data/services/payment_data.dart';
 
 void main() {
@@ -86,5 +87,33 @@ void main() {
 
     await next.setCampusOnly(false);
     expect(next.canEnter, isFalse);
+  });
+
+  test('an expired sign-in keeps the saved answers readable', () async {
+    final dir = await Directory.systemTemp.createTemp('support');
+    addTearDown(() => dir.delete(recursive: true));
+    TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+        .setMockMethodCallHandler(
+          const MethodChannel('plugins.flutter.io/path_provider'),
+          (_) async => dir.path,
+        );
+    FlutterSecureStorage.setMockInitialValues({'ecourse2_token': 'real'});
+    final auth = EcourseAuthRepository(storage: const FlutterSecureStorage());
+    await auth.load();
+    final saved = Directory('${dir.path}/ecourse')..createSync();
+
+    await auth.signOut();
+    expect(auth.isSignedIn, isFalse);
+    expect(saved.existsSync(), isTrue);
+    expect(auth.client().offline().cache, isNotNull);
+    expect(
+      () => auth.client().call('core_webservice_get_site_info'),
+      throwsA(isA<MoodleException>()),
+    );
+
+    // Kept for the next launch.
+    final next = EcourseAuthRepository(storage: const FlutterSecureStorage());
+    await next.load();
+    expect(next.client().cache, isNotNull);
   });
 }

@@ -99,4 +99,40 @@ void main() {
     expect(await saved.announcements(3), isEmpty);
     expect(await saved.gradeOverview(), isEmpty);
   });
+
+  test('signed out, the saved answer shows and refreshing says why', () async {
+    final dir = await Directory.systemTemp.createTemp('cache');
+    addTearDown(() => dir.delete(recursive: true));
+    final cache = ResponseCache('old', dir: dir);
+    await EcourseRepository(
+      MoodleClient(
+        siteUrl: Uri.parse('https://example.test/'),
+        token: 'old',
+        cache: cache,
+        newHttpClient: () =>
+            MockClient((_) async => http.Response(jsonEncode(4), 200)),
+      ),
+    ).unreadMail();
+
+    final repo = EcourseRepository(
+      MoodleClient.savedOnly(
+        siteUrl: Uri.parse('https://example.test/'),
+        cache: cache,
+      ),
+    );
+    final seen = <Object>[];
+    await repo
+        .watch((r) => r.unreadMail())
+        .handleError((Object e) => seen.add(e))
+        .forEach(seen.add);
+    expect(seen.first, 4);
+    expect(
+      seen.last,
+      isA<MoodleException>().having(
+        (e) => e.needsSignIn,
+        'needsSignIn',
+        isTrue,
+      ),
+    );
+  });
 }

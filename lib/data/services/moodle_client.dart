@@ -65,6 +65,14 @@ class MoodleClient {
   /// before the network answers.
   MoodleClient offline() => _OfflineMoodleClient(this);
 
+  /// After the sign-in expired: [offline] still reads [cache], while every
+  /// request fails as signed out, so screens show what was saved and say
+  /// why it does not refresh.
+  factory MoodleClient.savedOnly({
+    required Uri siteUrl,
+    required ResponseCache cache,
+  }) = _SavedOnlyMoodleClient;
+
   Future<http.Response> _post(Uri url, Map<String, String> body) async {
     var resent = false;
     for (var attempt = 0; ; attempt++) {
@@ -168,6 +176,17 @@ class _OfflineMoodleClient extends MoodleClient {
     if (saved == null) throw const CacheMiss();
     return saved;
   }
+}
+
+class _SavedOnlyMoodleClient extends MoodleClient {
+  _SavedOnlyMoodleClient({required super.siteUrl, required ResponseCache cache})
+    : super(token: '', cache: cache, newHttpClient: () => _NoHttp());
+
+  @override
+  Future<dynamic> call(
+    String function, [
+    Map<String, Object?> params = const {},
+  ]) async => throw MoodleException('invalidtoken', function);
 }
 
 /// Moodle REST expects nested values as `key[0][field]=value` form fields.

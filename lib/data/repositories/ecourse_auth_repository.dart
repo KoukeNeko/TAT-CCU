@@ -38,9 +38,14 @@ class EcourseAuthRepository extends ChangeNotifier {
   static const _demoKey = 'demo_account';
   static const _campusOnlyKey = 'campus_only';
 
+  /// The token from before the sign-in expired: no longer accepted, but it
+  /// names the account whose saved answers stay readable.
+  static const _expiredTokenKey = 'ecourse2_expired_token';
+
   final FlutterSecureStorage _storage;
   final bool _migrate;
   String? _token;
+  String? _expiredToken;
   var _signedOutByUser = false;
   var _demo = false;
   var _campusOnly = false;
@@ -75,13 +80,22 @@ class EcourseAuthRepository extends ChangeNotifier {
   /// until the user signs in again.
   bool get signedOutByUser => _signedOutByUser;
 
-  MoodleClient client() => _demo
-      ? DemoMoodleClient()
-      : MoodleClient(
-          siteUrl: Uri.parse('$eCourse2Url/'),
-          token: _token ?? '',
-          cache: _token == null ? null : ResponseCache(_token!),
-        );
+  MoodleClient client() {
+    if (_demo) return DemoMoodleClient();
+    final siteUrl = Uri.parse('$eCourse2Url/');
+    final expired = _expiredToken;
+    if (_token == null && expired != null) {
+      return MoodleClient.savedOnly(
+        siteUrl: siteUrl,
+        cache: ResponseCache(expired),
+      );
+    }
+    return MoodleClient(
+      siteUrl: siteUrl,
+      token: _token ?? '',
+      cache: _token == null ? null : ResponseCache(_token!),
+    );
+  }
 
   Future<void> load() async {
     if (_migrate) {
@@ -95,6 +109,7 @@ class EcourseAuthRepository extends ChangeNotifier {
       }
     }
     _token = await _storage.read(key: _tokenKey);
+    _expiredToken = await _storage.read(key: _expiredTokenKey);
     _signedOutByUser = await _storage.read(key: _signedOutKey) != null;
     _demo = await _storage.read(key: _demoKey) != null;
     _campusOnly = await _storage.read(key: _campusOnlyKey) != null;
@@ -174,6 +189,12 @@ class EcourseAuthRepository extends ChangeNotifier {
   /// Completes the launch flow with the `<scheme>://token=...` callback.
   Future<void> signInWithCallback(String callback, String passport) async {
     final token = parseLaunchCallback(callback, passport);
+    if (_expiredToken != null) {
+      // Fresh answers come now; the old ones may be another account's.
+      await ResponseCache.clear();
+      await _storage.delete(key: _expiredTokenKey);
+      _expiredToken = null;
+    }
     await _storage.write(key: _tokenKey, value: token);
     await _storage.delete(key: _signedOutKey);
     await _storage.delete(key: _campusOnlyKey);
@@ -196,14 +217,22 @@ class EcourseAuthRepository extends ChangeNotifier {
     }
   }
 
-  /// [byUser] also ends the CAS and campus sessions, which otherwise sign
-  /// the next sign-in straight back in, and drops their cached pages.
+  /// An expired sign-in keeps the saved eCourse2 answers to show while
+  /// signed out. [byUser] drops them, ends the CAS and campus sessions,
+  /// which otherwise sign the next sign-in straight back in, and drops
+  /// their cached pages.
   Future<void> signOut({bool byUser = false}) async {
     // Signing out of the demo leaves the real account as it was.
     if (_demo) return setDemo(false);
     await _storage.delete(key: _tokenKey);
-    await ResponseCache.clear();
+    if (!byUser && _token != null) {
+      await _storage.write(key: _expiredTokenKey, value: _token);
+      _expiredToken = _token;
+    }
     if (byUser) {
+      await ResponseCache.clear();
+      await _storage.delete(key: _expiredTokenKey);
+      _expiredToken = null;
       await _storage.write(key: _signedOutKey, value: '1');
       await _storage.delete(key: _campusOnlyKey);
       _campusOnly = false;
