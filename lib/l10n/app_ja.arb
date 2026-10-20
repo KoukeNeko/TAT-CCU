@@ -438,5 +438,18 @@
   "latestPost": "最新のお知らせ",
   "classesEndAt": "授業は {time} まで",
   "demoUnavailable": "デモアカウントでは使えません",
-  "demoEnter": "デモアカウントで試す"
+  "demoEnter": "デモアカウントで試す",
+  "tools": "ツール",
+  "toolBus": "バス",
+  "toolCountdown": "学期カウントダウン",
+  "busStop": "活動センター前のバス停",
+  "busMinxiong": "民雄駅 ⇄ 中正大学",
+  "busChiayi": "嘉義駅 ⇄ 中正大学",
+  "busMinutes": "約 {minutes} 分",
+  "busLive": "運行状況",
+  "daysUnit": "日",
+  "termWeek": "第 {week} 週・全 {weeks} 週",
+  "countdownUpcoming": "この先",
+  "countdownToday": "今日",
+  "countdownEnded": "今年度の行事予定は終了しました"
 }

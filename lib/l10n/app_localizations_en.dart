@@ -1617,4 +1617,47 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get demoEnter => 'Try the demo account';
+
+  @override
+  String get tools => 'Tools';
+
+  @override
+  String get toolBus => 'Buses';
+
+  @override
+  String get toolCountdown => 'Semester dates';
+
+  @override
+  String get busStop => 'Stop in front of the Activity Center';
+
+  @override
+  String get busMinxiong => 'Minxiong Station ⇄ CCU';
+
+  @override
+  String get busChiayi => 'Chiayi Station ⇄ CCU';
+
+  @override
+  String busMinutes(int minutes) {
+    return 'About $minutes min';
+  }
+
+  @override
+  String get busLive => 'Live times';
+
+  @override
+  String get daysUnit => 'days';
+
+  @override
+  String termWeek(int week, int weeks) {
+    return 'Week $week of $weeks';
+  }
+
+  @override
+  String get countdownUpcoming => 'Coming up';
+
+  @override
+  String get countdownToday => 'Today';
+
+  @override
+  String get countdownEnded => 'This year\'s calendar has ended';
 }

@@ -234,6 +234,12 @@ class _MoreScreenState extends State<MoreScreen> {
                 child: Column(
                   children: [
                     _Row(
+                      tone: t.peach,
+                      icon: Icons.handyman_outlined,
+                      title: context.l10n.tools,
+                      onTap: () => context.push('/more/tools'),
+                    ),
+                    _Row(
                       tone: t.lilac,
                       icon: Icons.person_outline,
                       title: context.l10n.account,

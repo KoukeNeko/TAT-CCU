@@ -1516,4 +1516,47 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get demoEnter => '以示範帳號體驗';
+
+  @override
+  String get tools => '小工具';
+
+  @override
+  String get toolBus => '公車';
+
+  @override
+  String get toolCountdown => '學期倒數';
+
+  @override
+  String get busStop => '活動中心前候車亭';
+
+  @override
+  String get busMinxiong => '民雄火車站 ⇄ 中正大學';
+
+  @override
+  String get busChiayi => '嘉義火車站 ⇄ 中正大學';
+
+  @override
+  String busMinutes(int minutes) {
+    return '約 $minutes 分鐘';
+  }
+
+  @override
+  String get busLive => '即時動態';
+
+  @override
+  String get daysUnit => '天';
+
+  @override
+  String termWeek(int week, int weeks) {
+    return '學期進行到第 $week 週・共 $weeks 週';
+  }
+
+  @override
+  String get countdownUpcoming => '接下來';
+
+  @override
+  String get countdownToday => '今天';
+
+  @override
+  String get countdownEnded => '這學年的行事曆已經結束';
 }

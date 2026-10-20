@@ -438,5 +438,18 @@
   "latestPost": "Latest notice",
   "classesEndAt": "Classes end at {time}",
   "demoUnavailable": "Not available with the demo account",
-  "demoEnter": "Try the demo account"
+  "demoEnter": "Try the demo account",
+  "tools": "Tools",
+  "toolBus": "Buses",
+  "toolCountdown": "Semester dates",
+  "busStop": "Stop in front of the Activity Center",
+  "busMinxiong": "Minxiong Station ⇄ CCU",
+  "busChiayi": "Chiayi Station ⇄ CCU",
+  "busMinutes": "About {minutes} min",
+  "busLive": "Live times",
+  "daysUnit": "days",
+  "termWeek": "Week {week} of {weeks}",
+  "countdownUpcoming": "Coming up",
+  "countdownToday": "Today",
+  "countdownEnded": "This year's calendar has ended"
 }

@@ -1505,4 +1505,47 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get demoEnter => 'デモアカウントで試す';
+
+  @override
+  String get tools => 'ツール';
+
+  @override
+  String get toolBus => 'バス';
+
+  @override
+  String get toolCountdown => '学期カウントダウン';
+
+  @override
+  String get busStop => '活動センター前のバス停';
+
+  @override
+  String get busMinxiong => '民雄駅 ⇄ 中正大学';
+
+  @override
+  String get busChiayi => '嘉義駅 ⇄ 中正大学';
+
+  @override
+  String busMinutes(int minutes) {
+    return '約 $minutes 分';
+  }
+
+  @override
+  String get busLive => '運行状況';
+
+  @override
+  String get daysUnit => '日';
+
+  @override
+  String termWeek(int week, int weeks) {
+    return '第 $week 週・全 $weeks 週';
+  }
+
+  @override
+  String get countdownUpcoming => 'この先';
+
+  @override
+  String get countdownToday => '今日';
+
+  @override
+  String get countdownEnded => '今年度の行事予定は終了しました';
 }

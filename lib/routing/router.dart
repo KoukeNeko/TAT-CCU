@@ -31,6 +31,9 @@ import '../ui/more/settings_screen.dart';
 import '../ui/more/space_screen.dart';
 import '../ui/more/design_language_screen.dart';
 import '../ui/more/more_screen.dart';
+import '../ui/more/tools/bus_screen.dart';
+import '../ui/more/tools/countdown_screen.dart';
+import '../ui/more/tools/tools_screen.dart';
 import '../ui/notifications/notifications_screen.dart';
 import '../ui/timetable/timetable_screen.dart';
 import '../ui/today/due_screen.dart';
@@ -147,6 +150,17 @@ GoRouter buildRouter(EcourseAuthRepository auth) => GoRouter(
                 GoRoute(
                   path: 'grades',
                   builder: (_, _) => const GradesScreen(),
+                ),
+                GoRoute(
+                  path: 'tools',
+                  builder: (_, _) => const ToolsScreen(),
+                  routes: [
+                    GoRoute(path: 'bus', builder: (_, _) => const BusScreen()),
+                    GoRoute(
+                      path: 'countdown',
+                      builder: (_, _) => const CountdownScreen(),
+                    ),
+                  ],
                 ),
                 GoRoute(path: 'iccu', builder: (_, _) => const IccuScreen()),
                 GoRoute(path: 'leave', builder: (_, _) => const LeaveScreen()),

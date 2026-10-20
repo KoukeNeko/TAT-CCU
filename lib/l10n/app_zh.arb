@@ -830,5 +830,35 @@
     }
   },
   "demoUnavailable": "示範帳號無法使用這項功能",
-  "demoEnter": "以示範帳號體驗"
+  "demoEnter": "以示範帳號體驗",
+  "tools": "小工具",
+  "toolBus": "公車",
+  "toolCountdown": "學期倒數",
+  "busStop": "活動中心前候車亭",
+  "busMinxiong": "民雄火車站 ⇄ 中正大學",
+  "busChiayi": "嘉義火車站 ⇄ 中正大學",
+  "busMinutes": "約 {minutes} 分鐘",
+  "@busMinutes": {
+    "placeholders": {
+      "minutes": {
+        "type": "int"
+      }
+    }
+  },
+  "busLive": "即時動態",
+  "daysUnit": "天",
+  "termWeek": "學期進行到第 {week} 週・共 {weeks} 週",
+  "@termWeek": {
+    "placeholders": {
+      "week": {
+        "type": "int"
+      },
+      "weeks": {
+        "type": "int"
+      }
+    }
+  },
+  "countdownUpcoming": "接下來",
+  "countdownToday": "今天",
+  "countdownEnded": "這學年的行事曆已經結束"
 }

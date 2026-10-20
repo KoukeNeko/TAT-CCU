@@ -2727,6 +2727,84 @@ abstract class AppLocalizations {
   /// In zh, this message translates to:
   /// **'以示範帳號體驗'**
   String get demoEnter;
+
+  /// No description provided for @tools.
+  ///
+  /// In zh, this message translates to:
+  /// **'小工具'**
+  String get tools;
+
+  /// No description provided for @toolBus.
+  ///
+  /// In zh, this message translates to:
+  /// **'公車'**
+  String get toolBus;
+
+  /// No description provided for @toolCountdown.
+  ///
+  /// In zh, this message translates to:
+  /// **'學期倒數'**
+  String get toolCountdown;
+
+  /// No description provided for @busStop.
+  ///
+  /// In zh, this message translates to:
+  /// **'活動中心前候車亭'**
+  String get busStop;
+
+  /// No description provided for @busMinxiong.
+  ///
+  /// In zh, this message translates to:
+  /// **'民雄火車站 ⇄ 中正大學'**
+  String get busMinxiong;
+
+  /// No description provided for @busChiayi.
+  ///
+  /// In zh, this message translates to:
+  /// **'嘉義火車站 ⇄ 中正大學'**
+  String get busChiayi;
+
+  /// No description provided for @busMinutes.
+  ///
+  /// In zh, this message translates to:
+  /// **'約 {minutes} 分鐘'**
+  String busMinutes(int minutes);
+
+  /// No description provided for @busLive.
+  ///
+  /// In zh, this message translates to:
+  /// **'即時動態'**
+  String get busLive;
+
+  /// No description provided for @daysUnit.
+  ///
+  /// In zh, this message translates to:
+  /// **'天'**
+  String get daysUnit;
+
+  /// No description provided for @termWeek.
+  ///
+  /// In zh, this message translates to:
+  /// **'學期進行到第 {week} 週・共 {weeks} 週'**
+  String termWeek(int week, int weeks);
+
+  /// No description provided for @countdownUpcoming.
+  ///
+  /// In zh, this message translates to:
+  /// **'接下來'**
+  String get countdownUpcoming;
+
+  /// No description provided for @countdownToday.
+  ///
+  /// In zh, this message translates to:
+  /// **'今天'**
+  String get countdownToday;
+
+  /// No description provided for @countdownEnded.
+  ///
+  /// In zh, this message translates to:
+  /// **'這學年的行事曆已經結束'**
+  String get countdownEnded;
 }
 
 class _AppLocalizationsDelegate
