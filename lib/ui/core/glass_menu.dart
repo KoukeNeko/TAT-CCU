@@ -3,6 +3,7 @@ import 'dart:math';
 import 'dart:ui' show ImageFilter;
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 import 'theme.dart';
 import '../../l10n/l10n.dart';
@@ -89,6 +90,34 @@ class _MenuLayout extends SingleChildLayoutDelegate {
   bool shouldRelayout(_MenuLayout old) => old.anchor != anchor;
 }
 
+/// The menu's panel on its own and open, for the design language page;
+/// it ignores taps, which would otherwise close the page.
+class GlassMenuPanel<T> extends StatelessWidget {
+  const GlassMenuPanel({
+    super.key,
+    required this.items,
+    this.selected,
+    this.title,
+  });
+
+  final List<GlassMenuItem<T>> items;
+  final T? selected;
+  final String? title;
+
+  @override
+  Widget build(BuildContext context) => IgnorePointer(
+    child: SizedBox(
+      width: 260,
+      child: _GlassPanel<T>(
+        reveal: kAlwaysCompleteAnimation,
+        title: title,
+        items: items,
+        selected: selected,
+      ),
+    ),
+  );
+}
+
 class _GlassPanel<T> extends StatelessWidget {
   const _GlassPanel({
     required this.reveal,
@@ -165,8 +194,7 @@ class _GlassPanel<T> extends StatelessWidget {
                           ),
                         ),
                       ),
-                    for (final item in items)
-                      _row(context, item, item.value == selected, scheme),
+                    _Rows<T>(items: items, selected: selected),
                   ],
                 ),
               ),
@@ -176,72 +204,177 @@ class _GlassPanel<T> extends StatelessWidget {
       ),
     );
   }
+}
+
+/// The menu's rows, picked the way the nav bar picks a tab: press, slide,
+/// and the highlight follows the finger with a tick per row; letting go on
+/// a row picks it, off the rows cancels.
+class _Rows<T> extends StatefulWidget {
+  const _Rows({required this.items, required this.selected});
+
+  final List<GlassMenuItem<T>> items;
+  final T? selected;
+
+  @override
+  State<_Rows<T>> createState() => _RowsState<T>();
+}
+
+class _RowsState<T> extends State<_Rows<T>> {
+  late final _keys = [for (final _ in widget.items) GlobalKey()];
+
+  /// The row under the finger while pressed.
+  int? _hover;
+  var _pressed = false;
+
+  /// The row let go on: it stays lit while the menu closes, rather than
+  /// the highlight jumping back to the old choice first.
+  int? _picked;
+
+  int? _rowAt(Offset global) {
+    for (final (i, key) in _keys.indexed) {
+      final box = key.currentContext?.findRenderObject() as RenderBox?;
+      if (box == null) continue;
+      if ((box.localToGlobal(Offset.zero) & box.size).contains(global)) {
+        return i;
+      }
+    }
+    return null;
+  }
+
+  // Haptics as the nav bar's: a selection click per new row, none on
+  // touch-down.
+  void _down(PointerDownEvent e) {
+    setState(() {
+      _pressed = true;
+      _hover = _rowAt(e.position);
+    });
+  }
+
+  void _move(PointerMoveEvent e) {
+    final i = _rowAt(e.position);
+    if (i == _hover) return;
+    if (i != null) HapticFeedback.selectionClick();
+    setState(() => _hover = i);
+  }
+
+  void _up(PointerUpEvent e) {
+    final i = _rowAt(e.position);
+    if (i == null) return _cancel(null);
+    final value = widget.items[i].value;
+    if (value != widget.selected) HapticFeedback.selectionClick();
+    setState(() => _picked = i);
+    Navigator.of(context).pop(value);
+  }
+
+  void _cancel(PointerCancelEvent? _) => setState(() {
+    _pressed = false;
+    _hover = null;
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    final chosen = widget.items.indexWhere((i) => i.value == widget.selected);
+    final lit = _picked ?? (_pressed ? _hover : chosen);
+    return Listener(
+      behavior: HitTestBehavior.opaque,
+      onPointerDown: _down,
+      onPointerMove: _move,
+      onPointerUp: _up,
+      onPointerCancel: _cancel,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          for (final (i, item) in widget.items.indexed)
+            Semantics(
+              button: true,
+              selected: i == chosen,
+              onTap: () => Navigator.of(context).pop(item.value),
+              child: _row(
+                context,
+                key: _keys[i],
+                item: item,
+                lit: i == lit,
+                checked: i == chosen,
+                pressed: _pressed && _picked == null && i == _hover,
+                scheme: scheme,
+              ),
+            ),
+        ],
+      ),
+    );
+  }
 
   Widget _row(
-    BuildContext context,
-    GlassMenuItem<T> item,
-    bool chosen,
-    ColorScheme scheme,
-  ) {
+    BuildContext context, {
+    required Key key,
+    required GlassMenuItem<T> item,
+    required bool lit,
+    required bool checked,
+    required bool pressed,
+    required ColorScheme scheme,
+  }) {
     final tone = context.tones.lilac;
-    final ink = chosen ? tone.ink : scheme.onSurface;
-    return Material(
-      color: chosen ? tone.fill : Colors.transparent,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.all(Radius.circular(Corners.row)),
-      ),
-      clipBehavior: Clip.antiAlias,
-      child: InkWell(
-        onTap: () => Navigator.of(context).pop(item.value),
-        child: Padding(
-          padding: EdgeInsets.symmetric(
-            horizontal: item.icon == null ? Space.l : Space.m,
-            vertical: item.icon == null ? Space.m : Space.s,
-          ),
-          child: Row(
-            children: [
-              if (item.icon case final icon?) ...[
-                Container(
-                  width: 36,
-                  height: 36,
-                  decoration: BoxDecoration(
-                    color: (item.tone ?? tone).fill,
-                    borderRadius: BorderRadius.circular(Corners.small),
-                  ),
-                  child: Icon(icon, size: 20, color: (item.tone ?? tone).ink),
+    final ink = lit ? tone.ink : scheme.onSurface;
+    return AnimatedScale(
+      key: key,
+      scale: pressed ? 0.97 : 1,
+      duration: const Duration(milliseconds: 160),
+      curve: Curves.easeOutQuart,
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 140),
+        curve: Curves.easeOutQuart,
+        padding: EdgeInsets.symmetric(
+          horizontal: item.icon == null ? Space.l : Space.m,
+          vertical: item.icon == null ? Space.m : Space.s,
+        ),
+        decoration: BoxDecoration(
+          color: lit ? tone.fill : tone.fill.withValues(alpha: 0),
+          borderRadius: const BorderRadius.all(Radius.circular(Corners.row)),
+        ),
+        child: Row(
+          children: [
+            if (item.icon case final icon?) ...[
+              Container(
+                width: 36,
+                height: 36,
+                decoration: BoxDecoration(
+                  color: (item.tone ?? tone).fill,
+                  borderRadius: BorderRadius.circular(Corners.small),
                 ),
-                const SizedBox(width: 12),
-              ],
-              Expanded(
-                child: Text(
-                  item.title,
-                  style: TextStyle(
-                    color: ink,
-                    fontSize: 15,
-                    fontWeight: chosen ? FontWeight.w900 : FontWeight.w700,
-                  ),
+                child: Icon(icon, size: 20, color: (item.tone ?? tone).ink),
+              ),
+              const SizedBox(width: 12),
+            ],
+            Expanded(
+              child: Text(
+                item.title,
+                style: TextStyle(
+                  color: ink,
+                  fontSize: 15,
+                  fontWeight: lit ? FontWeight.w900 : FontWeight.w700,
                 ),
               ),
-              if (item.detail case final detail?)
-                Text(
-                  detail,
-                  style: TextStyle(
-                    color: chosen
-                        ? tone.ink.withValues(alpha: 0.7)
-                        : scheme.onSurfaceVariant,
-                    fontSize: 12,
-                    fontWeight: FontWeight.w800,
-                  ),
+            ),
+            if (item.detail case final detail?)
+              Text(
+                detail,
+                style: TextStyle(
+                  color: lit
+                      ? tone.ink.withValues(alpha: 0.7)
+                      : scheme.onSurfaceVariant,
+                  fontSize: 12,
+                  fontWeight: FontWeight.w800,
                 ),
-              if (selected != null)
-                SizedBox(
-                  width: 26,
-                  child: chosen
-                      ? Icon(Icons.check, size: 18, color: tone.strong)
-                      : null,
-                ),
-            ],
-          ),
+              ),
+            if (widget.selected != null)
+              SizedBox(
+                width: 26,
+                child: checked
+                    ? Icon(Icons.check, size: 18, color: tone.strong)
+                    : null,
+              ),
+          ],
         ),
       ),
     );

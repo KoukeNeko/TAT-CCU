@@ -99,6 +99,7 @@ class PressFeedback extends StatefulWidget {
     required this.child,
     this.scale = 0.88,
     this.enabled = true,
+    this.haptic = HapticFeedback.lightImpact,
   });
 
   final Widget child;
@@ -109,6 +110,9 @@ class PressFeedback extends StatefulWidget {
   /// A disabled control neither sinks nor ticks.
   final bool enabled;
 
+  /// The tick on touch-down; chips use the nav bar's lighter selection click.
+  final Future<void> Function() haptic;
+
   @override
   State<PressFeedback> createState() => _PressFeedbackState();
 }
@@ -118,7 +122,7 @@ class _PressFeedbackState extends State<PressFeedback> {
 
   void _press(bool down) {
     if (!widget.enabled) return;
-    if (down) HapticFeedback.lightImpact();
+    if (down) widget.haptic();
     setState(() => _pressed = down);
   }
 
@@ -343,38 +347,44 @@ class BarChip extends StatelessWidget {
     final scheme = Theme.of(context).colorScheme;
     final tone = this.tone ?? context.tones.lilac;
     final ink = selected ? tone.fill : scheme.onSurfaceVariant;
-    return Material(
-      color: selected ? tone.strong : scheme.surfaceContainerHigh,
-      shape: const StadiumBorder(),
-      child: InkWell(
-        customBorder: const StadiumBorder(),
-        onTap: onTap,
-        child: ConstrainedBox(
-          constraints: const BoxConstraints(maxWidth: 200),
-          child: Padding(
-            padding: EdgeInsets.fromLTRB(
-              Space.l,
-              Space.s,
-              dropdown ? Space.s : Space.l,
-              Space.s,
-            ),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Flexible(
-                  child: Text(
-                    label,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: TextStyle(
-                      fontSize: 13,
-                      fontWeight: FontWeight.w900,
-                      color: ink,
+    // Sinks and ticks like the app bar's buttons.
+    return PressFeedback(
+      scale: 0.92,
+      enabled: onTap != null,
+      haptic: HapticFeedback.selectionClick,
+      child: Material(
+        color: selected ? tone.strong : scheme.surfaceContainerHigh,
+        shape: const StadiumBorder(),
+        child: InkWell(
+          customBorder: const StadiumBorder(),
+          onTap: onTap,
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 200),
+            child: Padding(
+              padding: EdgeInsets.fromLTRB(
+                Space.l,
+                Space.s,
+                dropdown ? Space.s : Space.l,
+                Space.s,
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Flexible(
+                    child: Text(
+                      label,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w900,
+                        color: ink,
+                      ),
                     ),
                   ),
-                ),
-                if (dropdown) Icon(Icons.expand_more, size: 18, color: ink),
-              ],
+                  if (dropdown) Icon(Icons.expand_more, size: 18, color: ink),
+                ],
+              ),
             ),
           ),
         ),

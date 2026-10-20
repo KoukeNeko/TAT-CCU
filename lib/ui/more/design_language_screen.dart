@@ -642,52 +642,78 @@ class DesignPartScreen extends StatelessWidget {
           ),
         ),
       ),
-      const SectionLabel('showGlassSheet・showGlassMenu'),
+      const SectionLabel('showGlassMenu'),
       Builder(
-        builder: (context) => Wrap(
-          spacing: 8,
-          children: [
-            FilledButton.tonal(
-              onPressed: () => showGlassSheet<void>(
-                context,
-                title: l10n.addRecipient,
-                builder: (_) => Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    for (final t in [l10n.kindCatalog, l10n.kindJournal])
-                      ListTile(title: Text(t)),
-                  ],
+        builder: (context) {
+          final items = <GlassMenuItem<int>>[
+            (
+              value: 0,
+              title: semesterName(context, '115_1'),
+              detail: l10n.courseCount(8),
+              icon: null,
+              tone: null,
+            ),
+            (
+              value: 1,
+              title: semesterName(context, '114_2'),
+              detail: l10n.courseCount(9),
+              icon: null,
+              tone: null,
+            ),
+            (
+              value: 2,
+              title: l10n.kindCatalog,
+              detail: null,
+              icon: Icons.menu_book_outlined,
+              tone: tones.mint,
+            ),
+          ];
+          return Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              GlassMenuPanel<int>(
+                title: l10n.courseSection,
+                items: items,
+                selected: 0,
+              ),
+              const SizedBox(height: Space.m),
+              Builder(
+                builder: (anchor) => FilledButton.tonal(
+                  onPressed: () {
+                    final box = anchor.findRenderObject()! as RenderBox;
+                    showGlassMenu<int>(
+                      anchor,
+                      anchor: box.localToGlobal(Offset.zero) & box.size,
+                      title: l10n.courseSection,
+                      selected: 0,
+                      items: items,
+                    );
+                  },
+                  child: Text(l10n.viewAll),
                 ),
               ),
-              child: const Text('Sheet'),
-            ),
-            Builder(
-              builder: (anchor) => FilledButton.tonal(
-                onPressed: () {
-                  final box = anchor.findRenderObject()! as RenderBox;
-                  showGlassMenu<int>(
-                    anchor,
-                    anchor: box.localToGlobal(Offset.zero) & box.size,
-                    selected: 0,
-                    items: [
-                      for (final (i, t) in [
-                        l10n.kindCatalog,
-                        l10n.kindJournal,
-                      ].indexed)
-                        (
-                          value: i,
-                          title: t,
-                          detail: null,
-                          icon: null,
-                          tone: null,
-                        ),
-                    ],
-                  );
-                },
-                child: const Text('Menu'),
+            ],
+          );
+        },
+      ),
+      const SectionLabel('showGlassSheet'),
+      Builder(
+        builder: (context) => Align(
+          alignment: Alignment.centerLeft,
+          child: FilledButton.tonal(
+            onPressed: () => showGlassSheet<void>(
+              context,
+              title: l10n.addRecipient,
+              builder: (_) => Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  for (final t in [l10n.kindCatalog, l10n.kindJournal])
+                    ListTile(title: Text(t)),
+                ],
               ),
             ),
-          ],
+            child: Text(l10n.viewAll),
+          ),
         ),
       ),
       const SectionLabel('ComposeBar'),

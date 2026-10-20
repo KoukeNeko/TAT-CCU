@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 
@@ -159,7 +160,11 @@ class _TimetableScreenState extends State<TimetableScreen> {
                 stream: _shared,
                 builder: (context, shared) => PageView(
                   controller: pages,
-                  onPageChanged: (i) => setState(() => _day = weekdays[i]),
+                  // A day pill lighting up ticks, however it was reached.
+                  onPageChanged: (i) {
+                    HapticFeedback.selectionClick();
+                    setState(() => _day = weekdays[i]);
+                  },
                   children: [
                     for (final d in weekdays)
                       _DayView(
@@ -852,36 +857,41 @@ class _DayPill extends StatelessWidget {
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
     final tone = context.tones.lilac;
-    return Material(
-      color: selected ? tone.strong : scheme.surfaceContainerHigh,
-      shape: const StadiumBorder(),
-      child: InkWell(
-        customBorder: const StadiumBorder(),
-        onTap: onTap,
-        child: Padding(
-          padding: const EdgeInsets.symmetric(vertical: Space.m),
-          child: Column(
-            children: [
-              Text(
-                label,
-                style: TextStyle(
-                  fontWeight: FontWeight.w900,
-                  fontSize: 16,
-                  color: selected ? tone.fill : scheme.onSurface,
+    // Sinks with the nav bar's selection click, like the app bar chips.
+    return PressFeedback(
+      scale: 0.92,
+      haptic: HapticFeedback.selectionClick,
+      child: Material(
+        color: selected ? tone.strong : scheme.surfaceContainerHigh,
+        shape: const StadiumBorder(),
+        child: InkWell(
+          customBorder: const StadiumBorder(),
+          onTap: onTap,
+          child: Padding(
+            padding: const EdgeInsets.symmetric(vertical: Space.m),
+            child: Column(
+              children: [
+                Text(
+                  label,
+                  style: TextStyle(
+                    fontWeight: FontWeight.w900,
+                    fontSize: 16,
+                    color: selected ? tone.fill : scheme.onSurface,
+                  ),
                 ),
-              ),
-              const SizedBox(height: 4),
-              Container(
-                width: 6,
-                height: 6,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: busy
-                      ? (selected ? tone.fill : tone.strong)
-                      : Colors.transparent,
+                const SizedBox(height: 4),
+                Container(
+                  width: 6,
+                  height: 6,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: busy
+                        ? (selected ? tone.fill : tone.strong)
+                        : Colors.transparent,
+                  ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
         ),
       ),

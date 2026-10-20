@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 
@@ -66,6 +67,21 @@ class _MessagesScreenState extends State<MessagesScreen> {
   var _version = 0;
   var _filter = _Filter.all;
 
+  /// One page per filter, swiped like the timetable's days.
+  final _pages = PageController();
+
+  @override
+  void dispose() {
+    _pages.dispose();
+    super.dispose();
+  }
+
+  void _pick(_Filter f) => _pages.animateToPage(
+    f.index,
+    duration: const Duration(milliseconds: 320),
+    curve: Curves.easeOutQuart,
+  );
+
   Future<void> _openMail(int id) async {
     await Navigator.of(context)
         .push(MaterialPageRoute(builder: (_) => MailScreen(id: id)));
@@ -80,7 +96,7 @@ class _MessagesScreenState extends State<MessagesScreen> {
     _ => _Kind.notice,
   };
 
-  bool _shows(_Item i) => switch (_filter) {
+  static bool _shows(_Filter filter, _Item i) => switch (filter) {
     _Filter.all => true,
     _Filter.unread => i.unread,
     _Filter.mail => i.kind == _Kind.mail,
@@ -109,7 +125,7 @@ class _MessagesScreenState extends State<MessagesScreen> {
                 label: label,
                 selected: _filter == f,
                 tone: context.tones.sun,
-                onTap: () => setState(() => _filter = f),
+                onTap: () => _pick(f),
               ),
           ],
         ),
@@ -158,42 +174,62 @@ class _MessagesScreenState extends State<MessagesScreen> {
                     : () => openEcourseLink(context, n.url!, title: n.subject),
               ),
           ]..sort((a, b) => b.time.compareTo(a.time));
-          final shown = all.where(_shows).toList();
-          final unread = shown.where((i) => i.unread).toList();
-          final earlier = shown.where((i) => !i.unread).toList();
-          return ListView(
-            // Room for the 寫信 button over the last message.
-            // The list opens with a section label, which brings its own gap.
-            padding: scrollPadding(
-              context,
-              top: 0,
-            ).copyWith(bottom: scrollPadding(context).bottom + 72),
+          return PageView(
+            // Keeps the page when the list reloads after reading mail.
+            key: const PageStorageKey('messages'),
+            controller: _pages,
+            // A chip lighting up ticks, however it was reached.
+            onPageChanged: (i) {
+              HapticFeedback.selectionClick();
+              setState(() => _filter = _Filter.values[i]);
+            },
             children: [
-              if (shown.isEmpty)
-                Padding(
-                  padding: const EdgeInsets.only(top: 80),
-                  child: Center(
-                    child: Text(
-                      l10n.noNotifications,
-                      style: Theme.of(context).textTheme.titleMedium,
-                    ),
-                  ),
-                ),
-              for (final (label, items) in [
-                (l10n.unread, unread),
-                (l10n.earlier, earlier),
-              ])
-                if (items.isNotEmpty) ...[
-                  SectionLabel(label),
-                  for (final (i, item) in items.indexed) ...[
-                    if (i > 0) const Divider(height: 1),
-                    _MessageRow(item: item),
-                  ],
-                ],
+              for (final f in _Filter.values)
+                _list(context, [
+                  for (final i in all)
+                    if (_shows(f, i)) i,
+                ]),
             ],
           );
         },
       ),
+    );
+  }
+
+  Widget _list(BuildContext context, List<_Item> shown) {
+    final l10n = context.l10n;
+    final unread = shown.where((i) => i.unread).toList();
+    final earlier = shown.where((i) => !i.unread).toList();
+    return ListView(
+      // Room for the 寫信 button over the last message.
+      // The list opens with a section label, which brings its own gap.
+      padding: scrollPadding(
+        context,
+        top: 0,
+      ).copyWith(bottom: scrollPadding(context).bottom + 72),
+      children: [
+        if (shown.isEmpty)
+          Padding(
+            padding: const EdgeInsets.only(top: 80),
+            child: Center(
+              child: Text(
+                l10n.noNotifications,
+                style: Theme.of(context).textTheme.titleMedium,
+              ),
+            ),
+          ),
+        for (final (label, items) in [
+          (l10n.unread, unread),
+          (l10n.earlier, earlier),
+        ])
+          if (items.isNotEmpty) ...[
+            SectionLabel(label),
+            for (final (i, item) in items.indexed) ...[
+              if (i > 0) const Divider(height: 1),
+              _MessageRow(item: item),
+            ],
+          ],
+      ],
     );
   }
 }
