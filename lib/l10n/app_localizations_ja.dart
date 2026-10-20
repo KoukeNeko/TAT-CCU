@@ -1758,4 +1758,9 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get others => 'その他';
+
+  @override
+  String commitCount(int count) {
+    return '$count 件のコミット';
+  }
 }

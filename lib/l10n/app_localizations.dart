@@ -3201,6 +3201,12 @@ abstract class AppLocalizations {
   /// In zh, this message translates to:
   /// **'其他人'**
   String get others;
+
+  /// No description provided for @commitCount.
+  ///
+  /// In zh, this message translates to:
+  /// **'{count} 次提交'**
+  String commitCount(int count);
 }
 
 class _AppLocalizationsDelegate

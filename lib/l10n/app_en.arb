@@ -517,5 +517,6 @@
   "done": "Done",
   "mailSent": "Sent",
   "staff": "Teachers and TAs",
-  "others": "Others"
+  "others": "Others",
+  "commitCount": "{count} commits"
 }

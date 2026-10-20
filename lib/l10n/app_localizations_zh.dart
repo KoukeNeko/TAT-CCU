@@ -1769,4 +1769,9 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get others => '其他人';
+
+  @override
+  String commitCount(int count) {
+    return '$count 次提交';
+  }
 }

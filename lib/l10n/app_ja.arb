@@ -517,5 +517,6 @@
   "done": "完了",
   "mailSent": "送信しました",
   "staff": "教員と TA",
-  "others": "その他"
+  "others": "その他",
+  "commitCount": "{count} 件のコミット"
 }

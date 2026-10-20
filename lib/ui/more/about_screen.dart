@@ -1,6 +1,10 @@
+import 'dart:convert';
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
+import 'package:http/http.dart' as http;
 import 'package:package_info_plus/package_info_plus.dart';
 
 import '../../l10n/l10n.dart';
@@ -8,9 +12,7 @@ import '../core/theme.dart';
 import '../core/widgets.dart';
 import 'more_screen.dart';
 
-// shortcut: the repo is not on GitHub yet; change this once it is created.
 const _repo = 'KoukeNeko/TAT-CCU';
-const _contributors = ['KoukeNeko'];
 
 // The logo's paper and shapes (design/round-11/logo-bauhaus.svg).
 const _paper = Color(0xFFF1E9D8);
@@ -124,45 +126,7 @@ class AboutScreen extends StatelessWidget {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
-                      SectionLabel(
-                        l10n.contributors,
-                        detail: '${_contributors.length}',
-                      ),
-                      Card(
-                        color: Theme.of(context)
-                            .colorScheme
-                            .surfaceContainerLow,
-                        clipBehavior: Clip.antiAlias,
-                        child: Column(
-                          children: [
-                            for (final login in _contributors)
-                              ListTile(
-                                leading: CircleAvatar(
-                                  backgroundColor: _blue,
-                                  foregroundColor: _paper,
-                                  foregroundImage: NetworkImage(
-                                    'https://github.com/$login.png?size=96',
-                                  ),
-                                  child: Text(
-                                    login[0],
-                                    style: const TextStyle(
-                                      fontWeight: FontWeight.w900,
-                                    ),
-                                  ),
-                                ),
-                                title: Text(
-                                  login,
-                                  style: const TextStyle(
-                                    fontWeight: FontWeight.w800,
-                                  ),
-                                ),
-                                trailing: const Icon(Icons.chevron_right),
-                                onTap: () =>
-                                    openExternal('https://github.com/$login'),
-                              ),
-                          ],
-                        ),
-                      ),
+                      const _Contributors(),
                       SectionLabel(l10n.project),
                       Card(
                         color: Theme.of(context)
@@ -213,6 +177,103 @@ class AboutScreen extends StatelessWidget {
           ],
         ),
       ),
+    );
+  }
+}
+
+typedef _Contributor = ({String login, String avatar, int commits});
+
+/// Who has committed to the repo, from GitHub's public contributors list
+/// (no token; 60 requests an hour per address, plenty for this page).
+Future<List<_Contributor>> _fetchContributors() async {
+  final r = await http.get(
+    Uri.parse('https://api.github.com/repos/$_repo/contributors'),
+    headers: {'accept': 'application/vnd.github+json'},
+  );
+  if (r.statusCode != 200) throw HttpException('HTTP ${r.statusCode}');
+  return [
+    for (final c in jsonDecode(r.body) as List)
+      if (c is Map && c['type'] == 'User' && c['login'] is String)
+        (
+          login: c['login'] as String,
+          avatar: '${c['avatar_url'] ?? ''}',
+          commits: (c['contributions'] as num?)?.toInt() ?? 0,
+        ),
+  ];
+}
+
+class _Contributors extends StatefulWidget {
+  const _Contributors();
+
+  @override
+  State<_Contributors> createState() => _ContributorsState();
+}
+
+class _ContributorsState extends State<_Contributors> {
+  var _load = _fetchContributors();
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = context.l10n;
+    final scheme = Theme.of(context).colorScheme;
+    return FutureBuilder(
+      future: _load,
+      builder: (context, snap) {
+        final people = snap.data;
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            SectionLabel(
+              l10n.contributors,
+              detail: people == null ? null : '${people.length}',
+            ),
+            Card(
+              color: scheme.surfaceContainerLow,
+              clipBehavior: Clip.antiAlias,
+              child: switch (snap) {
+                AsyncSnapshot(hasError: true) => ListTile(
+                  title: Text(l10n.loadFailed),
+                  trailing: TextButton(
+                    onPressed: () =>
+                        setState(() => _load = _fetchContributors()),
+                    child: Text(l10n.retry),
+                  ),
+                ),
+                _ when people == null => const Padding(
+                  padding: cardPadding,
+                  child: Center(child: CircularProgressIndicator()),
+                ),
+                _ => Column(
+                  children: [
+                    for (final p in people)
+                      ListTile(
+                        leading: CircleAvatar(
+                          backgroundColor: _blue,
+                          foregroundColor: _paper,
+                          foregroundImage: p.avatar.isEmpty
+                              ? null
+                              : NetworkImage(p.avatar),
+                          child: Text(
+                            p.login[0],
+                            style: const TextStyle(fontWeight: FontWeight.w900),
+                          ),
+                        ),
+                        title: Text(
+                          p.login,
+                          style: const TextStyle(fontWeight: FontWeight.w800),
+                        ),
+                        subtitle: Text(l10n.commitCount(p.commits)),
+                        trailing: const Icon(Icons.chevron_right),
+                        onTap: () =>
+                            openExternal('https://github.com/${p.login}'),
+                      ),
+                  ],
+                ),
+              },
+            ),
+          ],
+        );
+      },
     );
   }
 }

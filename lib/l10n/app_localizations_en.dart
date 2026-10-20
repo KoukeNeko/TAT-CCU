@@ -1872,4 +1872,9 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get others => 'Others';
+
+  @override
+  String commitCount(int count) {
+    return '$count commits';
+  }
 }

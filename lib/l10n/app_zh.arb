@@ -931,5 +931,7 @@
   "done": "完成",
   "mailSent": "已寄出",
   "staff": "老師與助教",
-  "others": "其他人"
+  "others": "其他人",
+  "commitCount": "{count} 次提交",
+  "@commitCount": {"placeholders": {"count": {"type": "int"}}}
 }
