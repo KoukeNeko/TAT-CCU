@@ -18,7 +18,9 @@ AppBar topBar(
   PreferredSizeWidget? bottom,
   List<Widget>? actions,
 }) => AppBar(
-  actions: actions,
+  actions: [
+    for (final a in actions ?? const <Widget>[]) PressFeedback(child: a),
+  ],
   automaticallyImplyLeading: false,
   backgroundColor: Colors.transparent,
   scrolledUnderElevation: 0,
@@ -81,10 +83,46 @@ AppBar subBar(
       RoundBackButton(),
       const SizedBox(width: 10),
       Expanded(child: Text(title)),
-      ?action,
+      if (action != null) PressFeedback(child: action),
     ],
   ),
 );
+
+/// The back button's feel for any app bar button: it sinks while pressed
+/// and ticks. Listens to pointers only, so the button inside still gets
+/// the tap.
+class PressFeedback extends StatefulWidget {
+  const PressFeedback({super.key, required this.child});
+
+  final Widget child;
+
+  @override
+  State<PressFeedback> createState() => _PressFeedbackState();
+}
+
+class _PressFeedbackState extends State<PressFeedback> {
+  var _pressed = false;
+
+  void _press(bool down) {
+    if (down) HapticFeedback.lightImpact();
+    setState(() => _pressed = down);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Listener(
+      onPointerDown: (_) => _press(true),
+      onPointerUp: (_) => _press(false),
+      onPointerCancel: (_) => _press(false),
+      child: AnimatedScale(
+        scale: _pressed ? 0.88 : 1,
+        duration: const Duration(milliseconds: 240),
+        curve: Curves.easeOutQuart,
+        child: widget.child,
+      ),
+    );
+  }
+}
 
 /// Round back button: sinks and darkens while pressed and ticks when it
 /// goes back, matching the nav bar's feel.
