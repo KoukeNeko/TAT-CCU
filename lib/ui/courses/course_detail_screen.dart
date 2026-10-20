@@ -399,13 +399,14 @@ class _Contents extends StatelessWidget {
   Widget build(BuildContext context) {
     final repo = context.read<EcourseRepository>();
     return Loader<List<Section>>.watch(
+      capsuleInBody: true,
       bar: (context) =>
           subBar(context, CoursePart.contents.title(context.l10n)),
       watch: () => repo.watch((repo) => repo.contents(courseId)),
       builder: (context, sections) => sections.isEmpty
           ? Scaffold(
               appBar: subBar(context, CoursePart.contents.title(context.l10n)),
-              body: EmptyState(context.l10n.noContents),
+              body: CapsuleArea(child: EmptyState(context.l10n.noContents)),
             )
           : _SectionList(courseId: courseId, sections: sections),
     );
@@ -519,54 +520,57 @@ class _SectionListState extends State<_SectionList> {
           ],
         ),
       ),
-      body: Builder(
-        builder: (context) => SingleChildScrollView(
-          controller: _scroll,
-          padding: scrollPadding(context),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              for (final (i, s) in sections.indexed) ...[
-                Padding(
-                  key: _headers[i],
-                  padding: const EdgeInsets.fromLTRB(4, 20, 4, 10),
-                  child: Text.rich(
-                    TextSpan(
+      body: CapsuleArea(
+        child: Builder(
+          builder: (context) => SingleChildScrollView(
+            controller: _scroll,
+            padding: scrollPadding(context),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                for (final (i, s) in sections.indexed) ...[
+                  Padding(
+                    key: _headers[i],
+                    padding: const EdgeInsets.fromLTRB(4, 20, 4, 10),
+                    child: Text.rich(
+                      TextSpan(
+                        children: [
+                          TextSpan(
+                            text: _sectionName(context, s),
+                            style: const TextStyle(
+                              fontSize: 17,
+                              fontWeight: FontWeight.w900,
+                            ),
+                          ),
+                          TextSpan(
+                            text:
+                                '  ${context.l10n.itemCount(s.modules.length)}',
+                            style: TextStyle(
+                              fontSize: 12,
+                              fontWeight: FontWeight.w800,
+                              color: scheme.onSurfaceVariant,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                  Card(
+                    color: scheme.surfaceContainerLow,
+                    clipBehavior: Clip.antiAlias,
+                    child: Column(
                       children: [
-                        TextSpan(
-                          text: _sectionName(context, s),
-                          style: const TextStyle(
-                            fontSize: 17,
-                            fontWeight: FontWeight.w900,
-                          ),
-                        ),
-                        TextSpan(
-                          text: '  ${context.l10n.itemCount(s.modules.length)}',
-                          style: TextStyle(
-                            fontSize: 12,
-                            fontWeight: FontWeight.w800,
-                            color: scheme.onSurfaceVariant,
-                          ),
-                        ),
+                        for (final (j, m) in s.modules.indexed) ...[
+                          if (j > 0)
+                            Divider(height: 1, color: scheme.outlineVariant),
+                          _ModuleRow(courseId: widget.courseId, module: m),
+                        ],
                       ],
                     ),
                   ),
-                ),
-                Card(
-                  color: scheme.surfaceContainerLow,
-                  clipBehavior: Clip.antiAlias,
-                  child: Column(
-                    children: [
-                      for (final (j, m) in s.modules.indexed) ...[
-                        if (j > 0)
-                          Divider(height: 1, color: scheme.outlineVariant),
-                        _ModuleRow(courseId: widget.courseId, module: m),
-                      ],
-                    ],
-                  ),
-                ),
+                ],
               ],
-            ],
+            ),
           ),
         ),
       ),

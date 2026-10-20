@@ -10,7 +10,6 @@ import '../../data/repositories/ecourse_auth_repository.dart';
 import '../../data/services/campus_cookies.dart';
 import 'cas_autofill.dart';
 import 'status_capsule.dart';
-import 'theme.dart';
 import 'widgets.dart';
 import '../../l10n/l10n.dart';
 
@@ -342,11 +341,7 @@ class CampusSessionState extends State<CampusSession> {
               CapsuleSlot(
                 capsule: _pending == null
                     ? null
-                    : StatusCapsule(
-                        leading: MorphingCookie(
-                          size: 26,
-                          color: context.tones.lilac.strong,
-                        ),
+                    : ReadingCapsule(
                         text:
                             '${_stepTitle(context.l10n, _step)}'
                             '${_slow ? '・${context.l10n.showPage}' : ''}',

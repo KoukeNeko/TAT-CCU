@@ -39,6 +39,7 @@ class ModuleScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final repo = context.read<EcourseRepository>();
     return Loader<Module?>.watch(
+      capsuleInBody: true,
       bar: (context) => subBar(context, title ?? ''),
       watch: () => repo.watch(
         (repo) async =>
@@ -49,22 +50,24 @@ class ModuleScreen extends StatelessWidget {
       builder: (context, module) => Scaffold(
         extendBodyBehindAppBar: true,
         appBar: subBar(context, module?.name ?? ''),
-        body: switch (module?.type) {
-          null => EmptyState(context.l10n.itemNotFound),
-          'assign' => Loader<Assignment>.watch(
-            watch: () => repo.watch(
-              (repo) => repo.assignment(courseId, module!.instance),
+        body: CapsuleArea(
+          child: switch (module?.type) {
+            null => EmptyState(context.l10n.itemNotFound),
+            'assign' => Loader<Assignment>.watch(
+              watch: () => repo.watch(
+                (repo) => repo.assignment(courseId, module!.instance),
+              ),
+              builder: (context, a) => _AssignmentBody(assignment: a),
             ),
-            builder: (context, a) => _AssignmentBody(assignment: a),
-          ),
-          'forum' => ForumBody(courseId: courseId, forumId: module!.instance),
-          'quiz' => Loader<Quiz>.watch(
-            watch: () =>
-                repo.watch((repo) => repo.quiz(courseId, module!.instance)),
-            builder: (context, q) => _QuizBody(quiz: q),
-          ),
-          _ => _FilesBody(files: module!.files),
-        },
+            'forum' => ForumBody(courseId: courseId, forumId: module!.instance),
+            'quiz' => Loader<Quiz>.watch(
+              watch: () =>
+                  repo.watch((repo) => repo.quiz(courseId, module!.instance)),
+              builder: (context, q) => _QuizBody(quiz: q),
+            ),
+            _ => _FilesBody(files: module!.files),
+          },
+        ),
       ),
     );
   }

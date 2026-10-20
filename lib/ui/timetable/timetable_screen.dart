@@ -70,6 +70,7 @@ class _TimetableScreenState extends State<TimetableScreen> {
     final repo = context.read<EcourseRepository>();
     return Scaffold(
       body: Loader<List<Course>>.watch(
+        capsuleInBody: true,
         watch: () => repo.watch((repo) => repo.courses()),
         builder: (context, all) {
           // Courses come newest first; a set keeps that order.
@@ -137,20 +138,22 @@ class _TimetableScreenState extends State<TimetableScreen> {
                 ),
               ),
             ),
-            body: StreamBuilder<_Shared>(
-              stream: _shared,
-              builder: (context, shared) => PageView(
-                controller: pages,
-                onPageChanged: (i) => setState(() => _day = weekdays[i]),
-                children: [
-                  for (final d in weekdays)
-                    _DayView(
-                      courses: courses,
-                      day: d,
-                      now: DateTime.now(),
-                      shared: shared.data,
-                    ),
-                ],
+            body: CapsuleArea(
+              child: StreamBuilder<_Shared>(
+                stream: _shared,
+                builder: (context, shared) => PageView(
+                  controller: pages,
+                  onPageChanged: (i) => setState(() => _day = weekdays[i]),
+                  children: [
+                    for (final d in weekdays)
+                      _DayView(
+                        courses: courses,
+                        day: d,
+                        now: DateTime.now(),
+                        shared: shared.data,
+                      ),
+                  ],
+                ),
               ),
             ),
           );

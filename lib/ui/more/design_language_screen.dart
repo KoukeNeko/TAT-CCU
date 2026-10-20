@@ -654,10 +654,7 @@ class DesignPartScreen extends StatelessWidget {
         spacing: 8,
         runSpacing: 8,
         children: [
-          StatusCapsule(
-            leading: MorphingCookie(size: 26, color: tones.lilac.strong),
-            text: l10n.campusReading,
-          ),
+          const ReadingCapsule(),
           const MaintenanceCapsule(back: false),
           const MaintenanceCapsule(back: true),
         ],

@@ -2,6 +2,10 @@ import 'dart:ui' show ImageFilter;
 
 import 'package:flutter/material.dart';
 
+import '../../l10n/l10n.dart';
+import 'shapes.dart';
+import 'theme.dart';
+
 /// Design S3's status capsule (design/round-11): a frosted pill under the
 /// app bar saying what a page that already shows content is doing.
 class StatusCapsule extends StatelessWidget {
@@ -101,4 +105,20 @@ class CapsuleSlot extends StatelessWidget {
       ),
     );
   }
+}
+
+/// The capsule while a page with content reads afresh: the morphing shape
+/// and 讀取資料, or [text] for a step of signing in.
+class ReadingCapsule extends StatelessWidget {
+  const ReadingCapsule({super.key, this.text, this.onTap});
+
+  final String? text;
+  final VoidCallback? onTap;
+
+  @override
+  Widget build(BuildContext context) => StatusCapsule(
+    leading: MorphingCookie(size: 26, color: context.tones.lilac.strong),
+    text: text ?? context.l10n.campusReading,
+    onTap: onTap,
+  );
 }

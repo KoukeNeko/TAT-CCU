@@ -25,6 +25,7 @@ class Loader<T> extends StatefulWidget {
     required Future<T> Function() load,
     required this.builder,
     this.bar,
+    this.capsuleInBody = false,
   }) : watch = (() => Stream.fromFuture(load()));
 
   const Loader.watch({
@@ -32,10 +33,16 @@ class Loader<T> extends StatefulWidget {
     required this.watch,
     required this.builder,
     this.bar,
+    this.capsuleInBody = false,
   });
 
   final Stream<T> Function() watch;
   final Widget Function(BuildContext context, T data) builder;
+
+  /// The builder makes its own Scaffold with an app bar: the capsule goes
+  /// under that bar, where the builder puts a [CapsuleArea], instead of
+  /// over it.
+  final bool capsuleInBody;
 
   /// For a route that is a bare Loader: the app bar to show while loading,
   /// so the back button and title arrive with the route, not after it.
@@ -191,29 +198,26 @@ class _LoaderState<T> extends State<Loader<T>> {
     // one's.
     final outer = context.findAncestorStateOfType<_LoaderState>();
     final capsule = _capsule && !(outer?._capsule ?? false);
-    return Stack(
-      children: [
-        RefreshIndicator(
-          // Bodies extend under the glass app bar; start the spinner below it.
-          edgeOffset: MediaQuery.paddingOf(context).top,
-          // The capsule shows the progress, as on the campus pages.
-          onRefresh: () async => unawaited(_start()),
-          child: widget.builder(context, _data as T),
-        ),
-        CapsuleSlot(
-          capsule: !capsule
-              ? null
-              : _maintenance || _back
-              ? MaintenanceCapsule(back: _back)
-              : StatusCapsule(
-                  leading: MorphingCookie(
-                    size: 26,
-                    color: context.tones.lilac.strong,
-                  ),
-                  text: context.l10n.campusReading,
-                ),
-        ),
-      ],
+    final shown = !capsule
+        ? null
+        : _maintenance || _back
+        ? MaintenanceCapsule(back: _back)
+        : const ReadingCapsule();
+    return _CapsuleScope(
+      capsule: shown,
+      child: Stack(
+        children: [
+          RefreshIndicator(
+            // Bodies extend under the glass app bar; start the spinner below
+            // it.
+            edgeOffset: MediaQuery.paddingOf(context).top,
+            // The capsule shows the progress, as on the campus pages.
+            onRefresh: () async => unawaited(_start()),
+            child: widget.builder(context, _data as T),
+          ),
+          if (!widget.capsuleInBody) CapsuleSlot(capsule: shown),
+        ],
+      ),
     );
   }
 }
@@ -360,6 +364,34 @@ class EmptyState extends StatelessWidget {
         Center(
           child: Text(text, style: Theme.of(context).textTheme.titleMedium),
         ),
+      ],
+    );
+  }
+}
+
+class _CapsuleScope extends InheritedWidget {
+  const _CapsuleScope({required this.capsule, required super.child});
+
+  final Widget? capsule;
+
+  @override
+  bool updateShouldNotify(_CapsuleScope old) => old.capsule != capsule;
+}
+
+/// Where a [Loader] with `capsuleInBody` shows its capsule: as the body of
+/// the Scaffold its builder makes, so the capsule sits under that app bar.
+class CapsuleArea extends StatelessWidget {
+  const CapsuleArea({super.key, required this.child});
+
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
+    final scope = context.dependOnInheritedWidgetOfExactType<_CapsuleScope>();
+    return Stack(
+      children: [
+        Positioned.fill(child: child),
+        CapsuleSlot(capsule: scope?.capsule),
       ],
     );
   }

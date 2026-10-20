@@ -240,13 +240,7 @@ class _CalendarScreenState extends State<CalendarScreen> {
             ),
             CapsuleSlot(
               capsule: _pending.contains(_page) && _months.containsKey(_page)
-                  ? StatusCapsule(
-                      leading: MorphingCookie(
-                        size: 26,
-                        color: context.tones.lilac.strong,
-                      ),
-                      text: context.l10n.campusReading,
-                    )
+                  ? const ReadingCapsule()
                   : null,
             ),
           ],
