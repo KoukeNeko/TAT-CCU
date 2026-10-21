@@ -46,17 +46,48 @@ Future<void> main() async {
   auth.addListener(showDemo);
   // Signing in or out, or into the demo, changes what the widgets show.
   auth.addListener(() => _updateWidgets(auth, settings));
-  await (
-    settings.load(),
-    auth.load(),
-    CampusCookies.restore(),
-    Reminders.init(),
-    loadSchoolCalendar(),
-  ).wait;
+  // A step that fails must not keep the launch screen up: the app starts
+  // without it, and the sign-in is read again once the app comes back.
+  var authLoaded = true;
+  try {
+    await (
+      settings.load(),
+      auth.load(),
+      CampusCookies.restore(),
+      Reminders.init(),
+      loadSchoolCalendar(),
+    ).wait;
+  } on ParallelWaitError<
+    (void, void, void, void, void),
+    (AsyncError?, AsyncError?, AsyncError?, AsyncError?, AsyncError?)
+  > catch (e) {
+    authLoaded = e.errors.$2 == null;
+    for (final error in [
+      e.errors.$1,
+      e.errors.$2,
+      e.errors.$3,
+      e.errors.$4,
+      e.errors.$5,
+    ]) {
+      if (error == null) continue;
+      FlutterError.reportError(
+        FlutterErrorDetails(
+          exception: error.error,
+          stack: error.stackTrace,
+          library: 'startup',
+        ),
+      );
+    }
+  }
   // iOS may end a backgrounded app without notice, so save on the way out.
   AppLifecycleListener(
     onHide: CampusCookies.save,
     onResume: () {
+      if (!authLoaded) {
+        authLoaded = true;
+        // Still unreadable: tried again on the next return.
+        unawaited(auth.load().catchError((Object _) => authLoaded = false));
+      }
       _remind(auth, settings);
       _prefetch(auth);
       _updateWidgets(auth, settings);

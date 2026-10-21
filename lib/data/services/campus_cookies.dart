@@ -15,7 +15,13 @@ class CampusCookies {
 
   static const _channel = MethodChannel('tatccu/campus_cookies');
   static const _key = 'campus_cookies';
-  static const _storage = FlutterSecureStorage();
+  // Readable after the first unlock, like the eCourse2 token: iOS may start
+  // the app in the background (its refresh) while the phone is locked.
+  static const _storage = FlutterSecureStorage(
+    iOptions: IOSOptions(
+      accessibility: KeychainAccessibility.first_unlock_this_device,
+    ),
+  );
 
   static Future<void> save() async {
     try {
