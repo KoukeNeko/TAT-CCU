@@ -1,6 +1,6 @@
 import 'dart:io';
-import 'dart:typed_data';
 
+import 'package:flutter/services.dart';
 import 'package:path_provider/path_provider.dart';
 
 /// The school answered with something other than a PDF.
@@ -28,6 +28,17 @@ String semesterOf(DateTime d) {
 /// The certificate only proves enrolment for the semester it was printed in.
 bool isCurrent(Certificate c, DateTime now) =>
     semesterOf(c.printedAt) == semesterOf(now);
+
+/// The demo account's certificate: a sample PDF (assets/demo) for 示範同學,
+/// printed today, copied where the viewer can open it as a file.
+Future<Certificate> demoCertificate() async {
+  final bytes = await rootBundle.load('assets/demo/certificate.pdf');
+  final file = File(
+    '${(await getTemporaryDirectory()).path}/demo-certificate.pdf',
+  );
+  await file.writeAsBytes(bytes.buffer.asUint8List(), flush: true);
+  return (file: file, printedAt: DateTime.now(), size: bytes.lengthInBytes);
+}
 
 /// Certificates kept in the app's documents folder so they open offline.
 /// File names carry only the print time, not the student number.

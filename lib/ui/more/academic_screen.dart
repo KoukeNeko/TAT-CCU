@@ -100,9 +100,9 @@ class _AcademicScreenState extends State<AcademicScreen> {
   }
 
   Future<void> _refreshList() async {
-    // Saved certificates are the real student's; the demo has none.
+    // Saved certificates are the real student's; the demo shows its sample.
     final list = context.read<EcourseAuthRepository>().isDemo
-        ? const <Certificate>[]
+        ? [await demoCertificate()]
         : await _store.list();
     if (mounted) setState(() => _certificates = list);
   }
