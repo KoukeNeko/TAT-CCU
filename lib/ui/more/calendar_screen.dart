@@ -544,14 +544,18 @@ class _DayCellState extends State<_DayCell> {
                     AnimatedDefaultTextStyle(
                       duration: _move,
                       curve: _settle,
-                      style: TextStyle(
-                        fontSize: 15,
-                        fontWeight: FontWeight.w800,
-                        color: selected
-                            ? tones.sun.fill
-                            : widget.inMonth
-                            ? scheme.onSurface
-                            : scheme.onSurfaceVariant.withValues(alpha: 0.45),
+                      // On the app's type, not the platform's default font,
+                      // which a bare style would fall back to.
+                      style: DefaultTextStyle.of(context).style.merge(
+                        TextStyle(
+                          fontSize: 15,
+                          fontWeight: FontWeight.w800,
+                          color: selected
+                              ? tones.sun.fill
+                              : widget.inMonth
+                              ? scheme.onSurface
+                              : scheme.onSurfaceVariant.withValues(alpha: 0.45),
+                        ),
                       ),
                       child: Text('${widget.day.day}'),
                     ),
