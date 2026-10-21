@@ -48,6 +48,10 @@ Future<void> main() async {
   auth.addListener(showDemo);
   // Signing in or out, or into the demo, changes what the widgets show.
   auth.addListener(() => _updateWidgets(auth, settings));
+  // Signing out cancels that account's reminders at once.
+  auth.addListener(() {
+    if (!auth.isSignedIn) unawaited(_remind(auth, settings));
+  });
   // A step that fails must not keep the launch screen up: the app starts
   // without it, and the sign-in is read again once the app comes back.
   var authLoaded = true;
@@ -212,15 +216,15 @@ const _macTitleBar = 52.0;
 /// Reschedules reminders from the latest deadlines and timetable, so a
 /// changed due date is not announced at the old time.
 Future<void> _remind(EcourseAuthRepository auth, AppSettings settings) async {
-  if (!auth.isSignedIn || auth.isDemo) return;
+  if (auth.isDemo) return;
   try {
+    // A signed-out account's classes and deadlines are not announced.
+    if (!auth.isSignedIn) return await Reminders.cancelScheduled();
     await Reminders.updateBackground(
       settings,
       widgets: await HomeWidgets.installed(),
     );
-    if (settings.notifyDue || settings.notifyClass) {
-      await Reminders.sync(EcourseRepository(auth.client()), settings);
-    }
+    await Reminders.sync(EcourseRepository(auth.client()), settings);
   } catch (e) {
     // Offline or signed out: the reminders already scheduled stay.
     debugPrint('reminders: $e');

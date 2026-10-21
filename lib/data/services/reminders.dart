@@ -69,15 +69,20 @@ class Reminders {
         false;
   }
 
+  /// Cancels the scheduled reminders, leaving new-message alerts shown.
+  static Future<void> cancelScheduled() async {
+    for (final p in await _plugin.pendingNotificationRequests()) {
+      if (p.id < _newsIds) await _plugin.cancel(id: p.id);
+    }
+  }
+
   /// Replaces the scheduled reminders with ones for [courses] and [due].
   static Future<void> schedule({
     required List<Course> courses,
     required List<DueItem> due,
     required AppSettings settings,
   }) async {
-    for (final p in await _plugin.pendingNotificationRequests()) {
-      if (p.id < _newsIds) await _plugin.cancel(id: p.id);
-    }
+    await cancelScheduled();
     final l10n = l10nFor(settings.locale);
     for (final r in remindersFor(
       courses: courses,
@@ -100,6 +105,8 @@ class Reminders {
 
   /// Fetches what [schedule] needs; for settings changes and the background.
   static Future<void> sync(EcourseRepository repo, AppSettings settings) async {
+    // Turning both off needs nothing from eCourse2, so it works offline.
+    if (!settings.notifyDue && !settings.notifyClass) return cancelScheduled();
     final (courses, due) = await (
       repo.currentCourses(),
       repo.dueSoon(days: 7),
@@ -169,9 +176,12 @@ class Reminders {
 typedef Reminder = ({int id, DateTime at, String title, String body});
 
 /// Ten minutes before [session] on the day [day] days from [now], if the
-/// session falls on that weekday and the time is still ahead.
+/// session falls on that weekday and the time is still ahead. Class times
+/// are Taiwan wall-clock times, so the day is counted in [tz.local]
+/// (Asia/Taipei, set in [Reminders.init]) whatever the device's zone.
 DateTime? _classReminder(DateTime now, int day, ClassSession session) {
-  final date = DateTime(now.year, now.month, now.day + day);
+  final here = tz.TZDateTime.from(now, tz.local);
+  final date = tz.TZDateTime(tz.local, here.year, here.month, here.day + day);
   if (date.weekday != session.weekday) return null;
   final at = date.add(Duration(minutes: session.start - 10));
   return at.isAfter(now) ? at : null;
