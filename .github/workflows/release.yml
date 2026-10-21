@@ -128,7 +128,8 @@ jobs:
         run: rm -f "$RUNNER_TEMP/AuthKey.p8"
 
   # Developer ID signed from the certificate in a temporary keychain; the profile the keychain
-  # entitlement needs is made through the API key, which also notarizes.
+  # entitlement needs is fetched through the API key (scripts/developer-id-profile.py), which also
+  # notarizes.
   macos:
     needs: check
     runs-on: xcode-27
@@ -187,6 +188,16 @@ jobs:
           } >> "$GITHUB_ENV"
       - name: Configure the Flutter build
         run: flutter build macos --release --config-only --build-number="$GITHUB_RUN_NUMBER"
+      # Xcode would make this profile only through cloud-managed certificates.
+      - name: Fetch the Developer ID profile
+        run: |
+          set -euo pipefail
+          serial="$(security find-certificate -c "Developer ID Application" -p "$RUNNER_TEMP/build.keychain-db" \
+            | openssl x509 -noout -serial | cut -d= -f2)"
+          python3 -m venv "$RUNNER_TEMP/venv"
+          "$RUNNER_TEMP/venv/bin/pip" install --quiet pyjwt cryptography
+          profile="$("$RUNNER_TEMP/venv/bin/python" scripts/developer-id-profile.py "$serial")"
+          echo "PROFILE_NAME=$profile" >> "$GITHUB_ENV"
       - name: Archive and export with Developer ID
         run: |
           xcodebuild archive \
@@ -201,7 +212,12 @@ jobs:
           <dict>
             <key>method</key><string>developer-id</string>
             <key>teamID</key><string>$TEAM_ID</string>
-            <key>signingStyle</key><string>automatic</string>
+            <key>signingStyle</key><string>manual</string>
+            <key>signingCertificate</key><string>Developer ID Application</string>
+            <key>provisioningProfiles</key>
+            <dict>
+              <key>io.github.koukeneko.tatCcu</key><string>$PROFILE_NAME</string>
+            </dict>
           </dict>
           </plist>
           PLIST
