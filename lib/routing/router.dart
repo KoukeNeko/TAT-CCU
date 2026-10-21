@@ -100,7 +100,10 @@ GoRouter buildRouter(EcourseAuthRepository auth) => GoRouter(
                     if (id == 0) return child;
                     return _listBeside(
                       context,
+                      // Keyed: its data loads once, so another course
+                      // needs a page of its own.
                       list: CourseDetailScreen(
+                        key: ValueKey(id),
                         courseId: id,
                         open: state.uri.path,
                       ),
@@ -150,7 +153,9 @@ GoRouter buildRouter(EcourseAuthRepository auth) => GoRouter(
                         for (final part in CoursePart.values)
                           GoRoute(
                             path: part.name,
+                            // Keyed like the course page beside it.
                             builder: (_, state) => CoursePartScreen(
+                              key: ValueKey(state.uri.path),
                               courseId: int.parse(state.pathParameters['id']!),
                               part: part,
                             ),
