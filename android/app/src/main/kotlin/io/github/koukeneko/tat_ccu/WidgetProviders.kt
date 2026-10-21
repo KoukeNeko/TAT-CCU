@@ -113,7 +113,15 @@ abstract class TatWidget : HomeWidgetProvider() {
     for (id in appWidgetIds) {
       val wide =
           appWidgetManager.getAppWidgetOptions(id).getInt(AppWidgetManager.OPTION_APPWIDGET_MIN_WIDTH) >= 200
-      val views = render(context, data, frame, wide)
+      // Data saved by another app version can lack a key this one reads; the
+      // widget then shows its empty state until the app writes it again.
+      val views =
+          try {
+            render(context, data, frame, wide)
+          } catch (e: JSONException) {
+            Log.e("TatWidgets", "widget render", e)
+            render(context, null, null, wide)
+          }
       views.setOnClickPendingIntent(
           R.id.root, HomeWidgetLaunchIntent.getActivity(context, MainActivity::class.java))
       appWidgetManager.updateAppWidget(id, views)
