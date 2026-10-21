@@ -92,7 +92,7 @@ class _MessagesScreenState extends State<MessagesScreen> {
   /// The list keeps what it shows instead of loading again from scratch.
   final _unread = <int, bool>{};
 
-  bool get _wide => MediaQuery.sizeOf(context).width >= splitLayout;
+  bool get _wide => listBeside(context);
 
   void _show(Object key, Widget page) => setState(() {
     _open = key;

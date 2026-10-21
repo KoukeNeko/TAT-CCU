@@ -61,4 +61,19 @@ void main() {
     ]);
     expect(fold, isNull);
   });
+
+  testWidgets('an iPhone Duo open flat in landscape splits across', (
+    tester,
+  ) async {
+    isPhoneDevice = true;
+    addTearDown(() => isPhoneDevice = false);
+    final fold = await foldWith(tester, const [
+      DisplayFeature(
+        bounds: Rect.fromLTWH(0, 334.5, 951, 0),
+        type: DisplayFeatureType.fold,
+        state: DisplayFeatureState.postureFlat,
+      ),
+    ]);
+    expect(fold, (posture: FoldPosture.across, at: 334.5));
+  });
 }

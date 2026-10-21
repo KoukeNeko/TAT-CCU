@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:math' as math;
-import 'dart:ui' show DisplayFeatureState, DisplayFeatureType, ImageFilter;
+import 'dart:ui'
+    show DisplayFeature, DisplayFeatureState, DisplayFeatureType, ImageFilter;
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -589,6 +590,14 @@ Future<void> openExternal(String url) =>
 /// body under the bar, so the bar's height arrives as bottom media padding.
 /// [top] is the gap below the app bar; one value so every page starts at
 /// the same height.
+/// Room the upright nav bar takes at the right (iPhone Duo), for content
+/// that reaches the right edge; a phone on its side has the same inset both
+/// ways and stays centered.
+double endInset(BuildContext context) {
+  final inset = MediaQuery.paddingOf(context);
+  return math.max(0, inset.right - inset.left);
+}
+
 EdgeInsets scrollPadding(
   BuildContext context, {
   double top = pageTop,
@@ -605,19 +614,21 @@ EdgeInsets scrollPadding(
   return EdgeInsets.fromLTRB(
     side,
     top + inset.top,
-    side,
+    side + endInset(context),
     Space.xxl + inset.bottom,
   );
 }
 
 /// How a foldable phone's fold divides the screen (design/round-11
-/// fold-variants B): open like a book, pages put one half on each side of
-/// it; half-open on a table, content goes above it and the list below.
-enum FoldPosture { book, tabletop }
+/// fold-variants B, duo-variants B): open like a book, pages put one half
+/// on each side of it; half-open on a table, content goes above it and the
+/// list below; an iPhone Duo open flat in landscape ([across]) puts
+/// Today's class above it and stands the bar on the right.
+enum FoldPosture { book, tabletop, across }
 
 /// The fold across the screen and where it runs: its x for a book, its y
-/// on a table. Null on a flat screen, or a flat fold across a landscape
-/// screen, which reads as one screen.
+/// otherwise. Null on a flat screen, or another foldable's flat fold across
+/// a landscape screen, which reads as one screen with a sidebar.
 ({FoldPosture posture, double at})? foldOf(BuildContext context) {
   for (final f in MediaQuery.displayFeaturesOf(context)) {
     if (f.type == DisplayFeatureType.cutout) continue;
@@ -628,9 +639,48 @@ enum FoldPosture { book, tabletop }
     if (f.state == DisplayFeatureState.postureHalfOpened) {
       return (posture: FoldPosture.tabletop, at: b.center.dy);
     }
+    if (isPhoneDevice) return (posture: FoldPosture.across, at: b.center.dy);
   }
   return null;
 }
+
+/// Whether the device is an iPhone, read once at launch; null elsewhere.
+bool isPhoneDevice = false;
+
+/// The fold of an iPhone Duo's inner display, which iOS does not report to
+/// Flutter: it runs down the middle in portrait and across in landscape.
+/// The inner display is the only iPhone screen 600 points or more on its
+/// short side. Whether it is half open is not known, so it reads as flat.
+// shortcut: assumes the fold is at the centre and the device open flat;
+// read the iOS 27.1 fold geometry once the app builds with that SDK.
+List<DisplayFeature> duoFold(MediaQueryData media) {
+  if (!isPhoneDevice || media.size.shortestSide < 600) return const [];
+  final size = media.size;
+  return [
+    DisplayFeature(
+      bounds: size.width < size.height
+          ? Rect.fromLTWH(size.width / 2, 0, 0, size.height)
+          : Rect.fromLTWH(0, size.height / 2, size.width, 0),
+      type: DisplayFeatureType.fold,
+      state: DisplayFeatureState.postureFlat,
+    ),
+  ];
+}
+
+/// The system keeps its bars on the right edge (an iPhone Duo's outer
+/// display, where the status bar and Dynamic Island move there), so the
+/// app's own bar stands there too.
+bool barsOnRight(BuildContext context) {
+  final inset = MediaQuery.viewPaddingOf(context);
+  return inset.right > inset.top && inset.right > inset.left;
+}
+
+/// Whether a list has its detail beside it: on a wide screen, or open as a
+/// book, one on each side of the fold (an iPhone Duo's inner display is
+/// narrower than [splitLayout]).
+bool listBeside(BuildContext context) =>
+    MediaQuery.sizeOf(context).width >= splitLayout ||
+    foldOf(context)?.posture == FoldPosture.book;
 
 /// Width of the list beside its detail: up to the fold on a foldable,
 /// otherwise the shared pane width.

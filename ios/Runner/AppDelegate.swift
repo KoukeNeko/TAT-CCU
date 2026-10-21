@@ -25,6 +25,13 @@ import workmanager_apple
 
   func didInitializeImplicitFlutterEngine(_ engineBridge: FlutterImplicitEngineBridge) {
     GeneratedPluginRegistrant.register(with: engineBridge.pluginRegistry)
+    if let registrar = engineBridge.pluginRegistry.registrar(forPlugin: "DeviceKind") {
+      FlutterMethodChannel(name: "tatccu/device", binaryMessenger: registrar.messenger())
+        .setMethodCallHandler { call, result in
+          guard call.method == "isPhone" else { return result(FlutterMethodNotImplemented) }
+          result(UIDevice.current.userInterfaceIdiom == .phone)
+        }
+    }
     if let registrar = engineBridge.pluginRegistry.registrar(forPlugin: "CampusCookies") {
       CampusCookies.register(with: registrar.messenger())
     }

@@ -20,6 +20,7 @@ import 'l10n/l10n.dart';
 import 'routing/router.dart';
 import 'ui/home_widgets/home_widgets.dart';
 import 'ui/core/theme.dart';
+import 'ui/core/widgets.dart';
 import 'data/repositories/dorm_repair_data.dart';
 import 'data/repositories/parttime_data.dart';
 
@@ -96,6 +97,12 @@ Future<void> main() async {
     },
   );
   showDemo();
+  if (Platform.isIOS) {
+    isPhoneDevice =
+        await const MethodChannel('tatccu/device')
+            .invokeMethod<bool>('isPhone') ??
+        false;
+  }
   if (Platform.isIOS || Platform.isAndroid) {
     await Workmanager().initialize(backgroundTask);
   }
@@ -172,6 +179,16 @@ class _TatCcuAppState extends State<TatCcuApp> {
             ),
             child: child!,
           );
+        }
+        if (Platform.isIOS) {
+          final media = MediaQuery.of(context);
+          final fold = duoFold(media);
+          if (fold.isNotEmpty) {
+            child = MediaQuery(
+              data: media.copyWith(displayFeatures: fold),
+              child: child!,
+            );
+          }
         }
         // Japanese gets LINE Seed JP so kanji take Japanese shapes.
         return Localizations.localeOf(context).languageCode == 'ja'

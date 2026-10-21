@@ -139,7 +139,7 @@ class _TodayScreenState extends State<TodayScreen> {
                         case [final first, ...])
                       (slot: first, days: day),
                 ].firstOrNull;
-          final lead = <Widget>[
+          final classCards = <Widget>[
             // Header design A (design/round-09): date above the headline;
             // notifications moved to the 訊息 tab.
             Padding(
@@ -203,6 +203,9 @@ class _TodayScreenState extends State<TodayScreen> {
                 later: true,
                 tone: tones.mint,
               ),
+          ];
+          final lead = [
+            ...classCards,
             if (after != null) ...[
               const SizedBox(height: rowGap),
               _AfterCard(slot: after),
@@ -280,10 +283,26 @@ class _TodayScreenState extends State<TodayScreen> {
           final lists = dueList.isEmpty || unreadList.isEmpty
               ? [...dueList, ...unreadList]
               : [sideBySide()];
-          // Half-open on a table: the class above the fold, the lists
-          // below it.
-          if (fold case (posture: FoldPosture.tabletop, :final at)) {
+          // Half-open on a table, or open flat in landscape: the class
+          // above the fold, the lists below it.
+          if (fold case (:final posture, :final at)
+              when posture != FoldPosture.book) {
             final padding = scrollPadding(context, maxWidth: double.infinity);
+            // Open flat in landscape the half is too short for the class
+            // and the one after it stacked, so they sit side by side
+            // (design/round-12 duo-variants B).
+            final top = posture == FoldPosture.across && after != null
+                ? [
+                    Row(
+                      crossAxisAlignment: CrossAxisAlignment.end,
+                      children: [
+                        Expanded(child: column(classCards)),
+                        const SizedBox(width: Space.l),
+                        SizedBox(width: 280, child: _AfterCard(slot: after)),
+                      ],
+                    ),
+                  ]
+                : lead;
             return Column(
               children: [
                 SizedBox(
@@ -292,7 +311,7 @@ class _TodayScreenState extends State<TodayScreen> {
                   child: ListView(
                     reverse: true,
                     padding: padding.copyWith(bottom: Space.l),
-                    children: lead.reversed.toList(),
+                    children: top.reversed.toList(),
                   ),
                 ),
                 Expanded(

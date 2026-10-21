@@ -17,6 +17,13 @@ typedef _Tab = (IconData icon, String label, Tone tone, ShapeBorder shape);
 
 const _barHeight = 72.0;
 
+/// The bar stood upright on the right (iPhone Duo, design/round-12
+/// duo-variants B): its width, inset and icon slots.
+const _uprightWidth = 62.0;
+const _uprightInset = 7.0;
+const _uprightSlot = 48.0;
+const _uprightGap = 4.0;
+
 const _sidebarWidth = 232.0;
 const _railWidth = 72.0;
 
@@ -29,6 +36,7 @@ const _capsuleChrome = 7.0 + 38 + 8 + 16;
 
 /// Narrowest an unselected slot gets, so long labels never squeeze icons.
 const _minSlot = 44.0;
+
 // Tuned toward SwiftUI's default spring: unhurried, settles without a
 // visible bounce.
 const _move = Duration(milliseconds: 480);
@@ -58,8 +66,9 @@ class AppShell extends StatefulWidget {
 }
 
 class _AppShellState extends State<AppShell> {
-  /// Where the finger went down; null when nothing is touching.
-  double? _downX;
+  /// Where the finger went down along the bar; null when nothing is
+  /// touching.
+  double? _down;
 
   /// Tab the capsule follows while dragging; null for a plain press.
   int? _hover;
@@ -93,13 +102,14 @@ class _AppShellState extends State<AppShell> {
     return slots.length - 1;
   }
 
-  void _press(double x) => setState(() => _downX = x);
+  void _press(double at) => setState(() => _down = at);
 
-  void _slide(double x, double width) {
-    final down = _downX;
+  /// [indexAt] finds the tab under a point along the bar.
+  void _slide(double at, int Function(double) indexAt) {
+    final down = _down;
     if (down == null) return;
-    if (_hover == null && (x - down).abs() < _dragSlop) return;
-    final i = _indexAt(x.clamp(0, width - 1), width);
+    if (_hover == null && (at - down).abs() < _dragSlop) return;
+    final i = indexAt(at);
     if (i == _hover) return;
     if (_hover != null || i != widget.shell.currentIndex) {
       HapticFeedback.selectionClick();
@@ -107,11 +117,11 @@ class _AppShellState extends State<AppShell> {
     setState(() => _hover = i);
   }
 
-  void _release(double width, {required bool commit}) {
-    final down = _downX;
-    final target = _hover ?? (down == null ? null : _indexAt(down, width));
+  void _release(int Function(double) indexAt, {required bool commit}) {
+    final down = _down;
+    final target = _hover ?? (down == null ? null : indexAt(down));
     setState(() {
-      _downX = null;
+      _down = null;
       _hover = null;
     });
     if (!commit || target == null) return;
@@ -142,7 +152,7 @@ class _AppShellState extends State<AppShell> {
       (Icons.apps, context.l10n.navMore, gray, clover),
     ];
     final light = theme.brightness == Brightness.light;
-    final pressed = _downX != null;
+    final pressed = _down != null;
     // Wide windows (desktop, iPad in landscape) trade the floating bar for
     // a sidebar; an iPad in portrait for a rail that opens the sidebar.
     final width = MediaQuery.sizeOf(context).width;
@@ -212,6 +222,71 @@ class _AppShellState extends State<AppShell> {
         ),
       );
     }
+    // An iPhone Duo stands the bar upright on the right: on its outer
+    // display, where the system keeps its own bars, and on the inner one
+    // open in landscape (design/round-12 duo-variants B).
+    final upright =
+        barsOnRight(context) || foldOf(context)?.posture == FoldPosture.across;
+    if (upright) {
+      // Against the system's strip; the page's own margin keeps it off
+      // the content.
+      final media = MediaQuery.of(context);
+      final edge = math.max(media.viewPadding.right, Space.s);
+      final room = edge + _uprightWidth;
+      int at(double y) => ((y - _uprightInset) / (_uprightSlot + _uprightGap))
+          .floor()
+          .clamp(0, tabs.length - 1);
+      return Scaffold(
+        backgroundColor: scheme.surface,
+        body: Stack(
+          children: [
+            // The bar's room arrives as the right inset, like the bottom
+            // bar's: app bars span the screen and keep their titles clear
+            // of it, and pages pad their content by it (scrollPadding).
+            MediaQuery(
+              data: media.copyWith(
+                padding: media.padding.copyWith(right: room),
+                viewPadding: media.viewPadding.copyWith(right: room),
+              ),
+              child: widget.shell,
+            ),
+            Positioned(
+              right: edge,
+              top: 0,
+              bottom: 0,
+              child: Center(
+                child: AnimatedScale(
+                  scale: pressed ? 1.02 : 1,
+                  duration: _move,
+                  curve: _settle,
+                  child: _GlassBar(
+                    pressed: pressed,
+                    light: light,
+                    outline: scheme.outlineVariant,
+                    upright: true,
+                    child: Listener(
+                      behavior: HitTestBehavior.opaque,
+                      onPointerDown: (e) => _press(e.localPosition.dy),
+                      onPointerMove: (e) => _slide(e.localPosition.dy, at),
+                      onPointerUp: (_) => _release(at, commit: true),
+                      onPointerCancel: (_) => _release(at, commit: false),
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        spacing: _uprightGap,
+                        children: [
+                          for (final (i, tab) in tabs.indexed)
+                            _UprightSlot(tab: tab, selected: i == _shown),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
+      );
+    }
     // Pages without an app bar (Today) still need status bar icons that
     // contrast with the edge-to-edge background.
     return AnnotatedRegion<SystemUiOverlayStyle>(
@@ -270,12 +345,13 @@ class _AppShellState extends State<AppShell> {
                               _capsuleChrome,
                       ];
                       final slots = _slots(w, _shown);
+                      int at(double x) => _indexAt(x.clamp(0, w - 1), w);
                       return Listener(
                         behavior: HitTestBehavior.opaque,
                         onPointerDown: (e) => _press(e.localPosition.dx),
-                        onPointerMove: (e) => _slide(e.localPosition.dx, w),
-                        onPointerUp: (_) => _release(w, commit: true),
-                        onPointerCancel: (_) => _release(w, commit: false),
+                        onPointerMove: (e) => _slide(e.localPosition.dx, at),
+                        onPointerUp: (_) => _release(at, commit: true),
+                        onPointerCancel: (_) => _release(at, commit: false),
                         child: Row(
                           children: [
                             for (final (i, tab) in tabs.indexed)
@@ -693,9 +769,10 @@ class _GlassBar extends StatelessWidget {
     required this.light,
     required this.outline,
     required this.child,
+    this.upright = false,
   });
 
-  final bool pressed, light;
+  final bool pressed, light, upright;
   final Color outline;
   final Widget child;
 
@@ -718,9 +795,10 @@ class _GlassBar extends StatelessWidget {
         child: BackdropFilter(
           filter: ImageFilter.blur(sigmaX: 22, sigmaY: 22),
           child: Container(
-            height: _barHeight,
+            height: upright ? null : _barHeight,
+            width: upright ? _uprightWidth : null,
             // Even inset on every side: (72 - 52) / 2.
-            padding: const EdgeInsets.all(Space.m),
+            padding: EdgeInsets.all(upright ? _uprightInset : Space.m),
             decoration: ShapeDecoration(
               gradient: LinearGradient(
                 begin: Alignment.topCenter,
@@ -739,6 +817,40 @@ class _GlassBar extends StatelessWidget {
             ),
             child: child,
           ),
+        ),
+      ),
+    );
+  }
+}
+
+/// A tab of the upright bar: its icon only, on its tone when selected.
+class _UprightSlot extends StatelessWidget {
+  const _UprightSlot({required this.tab, required this.selected});
+
+  final _Tab tab;
+  final bool selected;
+
+  @override
+  Widget build(BuildContext context) {
+    final (icon, label, tone, _) = tab;
+    return Semantics(
+      button: true,
+      selected: selected,
+      label: label,
+      child: AnimatedContainer(
+        duration: _move,
+        curve: _settle,
+        width: _uprightSlot,
+        height: _uprightSlot,
+        decoration: BoxDecoration(
+          color: selected ? tone.fill : Colors.transparent,
+          borderRadius: BorderRadius.circular(16),
+        ),
+        child: Icon(
+          icon,
+          color: selected
+              ? tone.ink
+              : Theme.of(context).colorScheme.onSurfaceVariant,
         ),
       ),
     );

@@ -4,7 +4,6 @@ import 'package:go_router/go_router.dart';
 import '../data/repositories/ecourse_auth_repository.dart';
 import '../ui/account/account_screen.dart';
 import '../ui/core/app_shell.dart';
-import '../ui/core/theme.dart';
 import '../ui/core/widgets.dart';
 import '../ui/courses/absence_screen.dart';
 import '../ui/courses/attendance_screen.dart';
@@ -384,7 +383,7 @@ Widget _listBeside(
   required bool atRoot,
   required Widget child,
 }) {
-  if (MediaQuery.sizeOf(context).width < splitLayout) return child;
+  if (!listBeside(context)) return child;
   return Row(
     crossAxisAlignment: CrossAxisAlignment.stretch,
     children: [

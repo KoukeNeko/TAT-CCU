@@ -290,7 +290,9 @@ class _TimetableScreenState extends State<TimetableScreen> with AutoRefresh {
           // The week fills the window's height beside the panel.
           child: LayoutBuilder(
             builder: (context, box) {
-              final padding = scrollPadding(context, maxWidth: double.infinity);
+              final page = scrollPadding(context, maxWidth: double.infinity);
+              // The panel takes the right edge.
+              final padding = page.copyWith(right: page.left);
               return ListView(
                 padding: padding,
                 children: [
@@ -308,7 +310,7 @@ class _TimetableScreenState extends State<TimetableScreen> with AutoRefresh {
             // The panel's own inset; the page's would center a readable
             // column across the whole page.
             padding: scrollPadding(context)
-                .copyWith(left: 0, right: pageMargin),
+                .copyWith(left: 0, right: pageMargin + endInset(context)),
             children: [?card],
           ),
         ),

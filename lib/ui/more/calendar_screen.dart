@@ -281,10 +281,12 @@ class _CalendarScreenState extends State<CalendarScreen> with AutoRefresh {
                   }
                   // Desktop direction A: the month, and the picked day
                   // beside it.
-                  final padding = scrollPadding(
+                  final page = scrollPadding(
                     context,
                     maxWidth: double.infinity,
                   );
+                  // The day panel takes the right edge.
+                  final padding = page.copyWith(right: page.left);
                   // Beside the day the month fills the window's height; on
                   // a foldable it keeps the phone's rows.
                   final monthList = LayoutBuilder(
@@ -306,9 +308,10 @@ class _CalendarScreenState extends State<CalendarScreen> with AutoRefresh {
                   final dayList = ListView(
                     // The panel's own inset; the page's would center a
                     // readable column across the whole page.
-                    padding: scrollPadding(
-                      context,
-                    ).copyWith(left: book ? pageMargin : 0, right: pageMargin),
+                    padding: scrollPadding(context).copyWith(
+                      left: book ? pageMargin : 0,
+                      right: pageMargin + endInset(context),
+                    ),
                     children: [day],
                   );
                   return Row(
