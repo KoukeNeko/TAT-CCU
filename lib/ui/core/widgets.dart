@@ -1,6 +1,6 @@
 import 'dart:async';
 import 'dart:math' as math;
-import 'dart:ui' show ImageFilter;
+import 'dart:ui' show DisplayFeatureState, DisplayFeatureType, ImageFilter;
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -607,6 +607,35 @@ EdgeInsets scrollPadding(
     Space.xxl + inset.bottom,
   );
 }
+
+/// How a foldable phone's fold divides the screen (design/round-11
+/// fold-variants B): open like a book, pages put one half on each side of
+/// it; half-open on a table, content goes above it and the list below.
+enum FoldPosture { book, tabletop }
+
+/// The fold across the screen and where it runs: its x for a book, its y
+/// on a table. Null on a flat screen, or a flat fold across a landscape
+/// screen, which reads as one screen.
+({FoldPosture posture, double at})? foldOf(BuildContext context) {
+  for (final f in MediaQuery.displayFeaturesOf(context)) {
+    if (f.type == DisplayFeatureType.cutout) continue;
+    final b = f.bounds;
+    if (b.height > b.width) {
+      return (posture: FoldPosture.book, at: b.center.dx);
+    }
+    if (f.state == DisplayFeatureState.postureHalfOpened) {
+      return (posture: FoldPosture.tabletop, at: b.center.dy);
+    }
+  }
+  return null;
+}
+
+/// Width of the list beside its detail: up to the fold on a foldable,
+/// otherwise the shared pane width.
+double listWidthOf(BuildContext context) => switch (foldOf(context)) {
+  (posture: FoldPosture.book, :final at) => at,
+  _ => paneWidth,
+};
 
 /// Reports the area it is given as the media size, so a page laid out
 /// beside the sidebar or a list measures its own column, not the window.

@@ -185,7 +185,12 @@ class _CalendarScreenState extends State<CalendarScreen> {
               onRefresh: () async => _load(_page, again: true),
               child: Builder(
                 builder: (context) {
-                  final wide = MediaQuery.sizeOf(context).width >= wideLayout;
+                  final width = MediaQuery.sizeOf(context).width;
+                  // An open foldable: the phone's month on the left of the
+                  // fold, the picked day on the right.
+                  final fold = foldOf(context);
+                  final book = fold?.posture == FoldPosture.book;
+                  final wide = !book && width >= splitLayout;
                   final monthView = <Widget>[
                     Card(
                       // Desktop days are cards of their own.
@@ -249,37 +254,42 @@ class _CalendarScreenState extends State<CalendarScreen> {
                     events: _months[_pageOf(_selected)],
                     error: _errors[_pageOf(_selected)],
                   );
-                  if (!wide) {
+                  // The phone, and an iPad in portrait with the day under
+                  // the month.
+                  if (!book && width < wideLayout) {
                     return ListView(
-                      padding: scrollPadding(context),
+                      padding: scrollPadding(
+                        context,
+                        maxWidth: wide ? double.infinity : readableWidth,
+                      ),
                       children: [...monthView, day],
                     );
                   }
                   // Desktop direction A: the month, and the picked day
                   // beside it.
+                  final monthList = ListView(
+                    padding: scrollPadding(context, maxWidth: double.infinity),
+                    children: monthView,
+                  );
+                  final dayList = ListView(
+                    // The panel's own inset; the page's would center a
+                    // readable column across the whole page.
+                    padding: scrollPadding(
+                      context,
+                    ).copyWith(left: book ? pageMargin : 0, right: pageMargin),
+                    children: [day],
+                  );
                   return Row(
                     crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Expanded(
-                        child: ListView(
-                          padding: scrollPadding(
-                            context,
-                            maxWidth: double.infinity,
-                          ),
-                          children: monthView,
-                        ),
-                      ),
-                      SizedBox(
-                        width: paneWidth,
-                        child: ListView(
-                          // The panel's own inset; the page's would center a readable
-                          // column across the whole page.
-                          padding: scrollPadding(context)
-                              .copyWith(left: 0, right: pageMargin),
-                          children: [day],
-                        ),
-                      ),
-                    ],
+                    children: book
+                        ? [
+                            SizedBox(width: fold!.at, child: monthList),
+                            Expanded(child: dayList),
+                          ]
+                        : [
+                            Expanded(child: monthList),
+                            SizedBox(width: paneWidth, child: dayList),
+                          ],
                   );
                 },
               ),

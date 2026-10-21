@@ -207,7 +207,7 @@ class _TodayScreenState extends State<TodayScreen> {
               _AfterCard(slot: after),
             ],
           ];
-          final lists = <Widget>[
+          final dueList = <Widget>[
             if (d.due.isNotEmpty) ...[
               _GroupHeader(
                 title: l10n.dueThisWeek,
@@ -234,6 +234,8 @@ class _TodayScreenState extends State<TodayScreen> {
                 ),
               ],
             ],
+          ];
+          final unreadList = <Widget>[
             if (d.notices + d.mail > 0) ...[
               _GroupHeader(
                 title: l10n.unread,
@@ -255,13 +257,64 @@ class _TodayScreenState extends State<TodayScreen> {
               ],
             ],
           ];
-          final wide = MediaQuery.sizeOf(context).width >= wideLayout;
+          final width = MediaQuery.sizeOf(context).width;
+          final fold = foldOf(context);
+          // An open foldable: the class on the half left of the fold,
+          // what is due and unread on the right half.
+          final book = fold?.posture == FoldPosture.book;
+          final wide = width >= wideLayout || book;
+          final split = width >= splitLayout || book;
+          Widget column(List<Widget> children) => Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: children,
+          );
+          Widget sideBySide() => Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Expanded(child: column(dueList)),
+              const SizedBox(width: Space.l),
+              Expanded(child: column(unreadList)),
+            ],
+          );
+          final lists = dueList.isEmpty || unreadList.isEmpty
+              ? [...dueList, ...unreadList]
+              : [sideBySide()];
+          // Half-open on a table: the class above the fold, the lists
+          // below it.
+          if (fold case (posture: FoldPosture.tabletop, :final at)) {
+            final padding = scrollPadding(context, maxWidth: double.infinity);
+            return Column(
+              children: [
+                SizedBox(
+                  height: at,
+                  // Reversed, so the class sits just above the fold.
+                  child: ListView(
+                    reverse: true,
+                    padding: padding.copyWith(bottom: Space.l),
+                    children: lead.reversed.toList(),
+                  ),
+                ),
+                Expanded(
+                  child: ListView(
+                    padding: padding.copyWith(top: 0),
+                    children: width >= railLayout
+                        ? lists
+                        : [...dueList, ...unreadList],
+                  ),
+                ),
+              ],
+            );
+          }
           return ListView(
             padding: scrollPadding(
               context,
-              maxWidth: wide ? double.infinity : readableWidth,
+              maxWidth: split ? double.infinity : readableWidth,
             ),
-            children: !wide
+            children: !split
+                ? [...lead, ...dueList, ...unreadList]
+                // iPad in portrait: the class across, what is due and
+                // unread side by side under it (stacked when one is empty).
+                : !wide
                 ? [...lead, ...lists]
                 // Desktop direction A: the class on the left, what is due
                 // and unread on the right.
@@ -275,13 +328,14 @@ class _TodayScreenState extends State<TodayScreen> {
                             children: lead,
                           ),
                         ),
-                        const SizedBox(width: Space.xxl),
+                        SizedBox(width: book ? Space.l * 2 : Space.xxl),
                         SizedBox(
-                          width: paneWidth,
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.stretch,
-                            children: lists,
-                          ),
+                          // Up to the fold, less the page margin and half
+                          // the gap.
+                          width: book
+                              ? width - fold!.at - pageMargin - Space.l
+                              : paneWidth,
+                          child: column([...dueList, ...unreadList]),
                         ),
                       ],
                     ),

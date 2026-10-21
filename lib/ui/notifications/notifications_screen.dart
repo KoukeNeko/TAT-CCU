@@ -92,7 +92,7 @@ class _MessagesScreenState extends State<MessagesScreen> {
   Widget? _page;
   final _read = <int>{};
 
-  bool get _wide => MediaQuery.sizeOf(context).width >= wideLayout;
+  bool get _wide => MediaQuery.sizeOf(context).width >= splitLayout;
 
   void _show(Object key, Widget page) => setState(() {
     _open = key;
@@ -167,36 +167,55 @@ class _MessagesScreenState extends State<MessagesScreen> {
   @override
   Widget build(BuildContext context) {
     if (!_wide) return _feed(context);
-    // Desktop direction A: the list, and the open mail beside it.
     final page = _page;
+    final outline = Theme.of(context).colorScheme.outlineVariant;
+    final detail = _open == null || page == null
+        ? const SizedBox.shrink()
+        // Its own navigator, so replying opens in this pane.
+        : PaneSize(
+            child: Navigator(
+              key: ValueKey(_open),
+              onGenerateInitialRoutes: (_, _) => [
+                if (_open == _composeKey)
+                  MaterialPageRoute(builder: (_) => const SizedBox.shrink()),
+                MaterialPageRoute(builder: (_) => page),
+              ],
+            ),
+          );
+    // Half-open on a table: the mail above the fold, the list below it
+    // (design/round-11 fold-variants B).
+    if (foldOf(context) case (posture: FoldPosture.tabletop, :final at)) {
+      return Column(
+        children: [
+          SizedBox(
+            height: at,
+            child: MediaQuery.removePadding(
+              context: context,
+              removeBottom: true,
+              child: detail,
+            ),
+          ),
+          Divider(height: 1, color: outline),
+          Expanded(
+            child: MediaQuery.removePadding(
+              context: context,
+              removeTop: true,
+              child: PaneSize(child: _feed(context)),
+            ),
+          ),
+        ],
+      );
+    }
+    // Desktop direction A: the list, and the open mail beside it.
     return Row(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         SizedBox(
-          width: paneWidth,
+          width: listWidthOf(context),
           child: PaneSize(child: _feed(context)),
         ),
-        VerticalDivider(
-          width: 1,
-          color: Theme.of(context).colorScheme.outlineVariant,
-        ),
-        Expanded(
-          child: _open == null || page == null
-              ? const SizedBox.shrink()
-              // Its own navigator, so replying opens in this pane.
-              : PaneSize(
-                  child: Navigator(
-                    key: ValueKey(_open),
-                    onGenerateInitialRoutes: (_, _) => [
-                      if (_open == _composeKey)
-                        MaterialPageRoute(
-                          builder: (_) => const SizedBox.shrink(),
-                        ),
-                      MaterialPageRoute(builder: (_) => page),
-                    ],
-                  ),
-                ),
-        ),
+        VerticalDivider(width: 1, color: outline),
+        Expanded(child: detail),
       ],
     );
   }

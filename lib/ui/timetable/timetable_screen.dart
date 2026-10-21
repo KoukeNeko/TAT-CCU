@@ -95,7 +95,12 @@ class _TimetableScreenState extends State<TimetableScreen> {
               ? weekdays.indexOf(_day)
               : weekdays.length - 1;
           final pages = _pages ??= PageController(initialPage: page);
-          final wide = MediaQuery.sizeOf(context).width >= wideLayout;
+          final width = MediaQuery.sizeOf(context).width;
+          // An open foldable: the day on the left of the fold, its cards
+          // on the right (design/round-11 fold-variants B).
+          final fold = foldOf(context);
+          final book = fold?.posture == FoldPosture.book;
+          final wide = !book && width >= splitLayout;
           return Scaffold(
             extendBodyBehindAppBar: true,
             appBar: topBar(
@@ -132,10 +137,10 @@ class _TimetableScreenState extends State<TimetableScreen> {
                   : PreferredSize(
                       preferredSize: const Size.fromHeight(64),
                       child: Padding(
-                        padding: const EdgeInsets.fromLTRB(
+                        padding: EdgeInsets.fromLTRB(
                           Space.m,
                           0,
-                          Space.m,
+                          book ? width - fold!.at + Space.m : Space.m,
                           Space.m,
                         ),
                         child: Row(
@@ -168,25 +173,49 @@ class _TimetableScreenState extends State<TimetableScreen> {
             body: CapsuleArea(
               child: StreamBuilder<_Shared>(
                 stream: _shared,
-                builder: (context, shared) => wide
-                    ? _week(context, courses, weekdays, shared.data)
-                    : PageView(
-                        controller: pages,
-                        // A day pill lighting up ticks, however it was reached.
-                        onPageChanged: (i) {
-                          HapticFeedback.selectionClick();
-                          setState(() => _day = weekdays[i]);
-                        },
-                        children: [
-                          for (final d in weekdays)
-                            _DayView(
-                              courses: courses,
-                              day: d,
-                              now: DateTime.now(),
-                              shared: shared.data,
-                            ),
-                        ],
+                builder: (context, shared) {
+                  final days = PageView(
+                    controller: pages,
+                    // A day pill lighting up ticks, however it was reached.
+                    onPageChanged: (i) {
+                      HapticFeedback.selectionClick();
+                      setState(() => _day = weekdays[i]);
+                    },
+                    children: [
+                      for (final d in weekdays)
+                        _DayView(
+                          courses: courses,
+                          day: d,
+                          now: DateTime.now(),
+                          shared: shared.data,
+                          cardsBeside: book,
+                        ),
+                    ],
+                  );
+                  if (wide) {
+                    return _week(context, courses, weekdays, shared.data);
+                  }
+                  if (!book) return days;
+                  return Row(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      SizedBox(
+                        width: fold!.at,
+                        child: PaneSize(child: days),
                       ),
+                      Expanded(
+                        child: PaneSize(
+                          child: _DayCards(
+                            courses: courses,
+                            day: weekdays[page],
+                            now: DateTime.now(),
+                            shared: shared.data,
+                          ),
+                        ),
+                      ),
+                    ],
+                  );
+                },
               ),
             ),
           );
@@ -195,8 +224,9 @@ class _TimetableScreenState extends State<TimetableScreen> {
     );
   }
 
-  /// Desktop direction A: the whole week, and the picked class beside it;
-  /// before a pick, today's class in focus.
+  /// Desktop direction A: the whole week, and the picked class beside it
+  /// (under it on an iPad in portrait); before a pick, today's class in
+  /// focus.
   Widget _week(
     BuildContext context,
     List<Course> courses,
@@ -220,21 +250,37 @@ class _TimetableScreenState extends State<TimetableScreen> {
         _picked ??
         dayFocus(today, today: true, minute: minute).focus ??
         week.firstOrNull;
+    final grid = _WeekGrid(
+      courses: courses,
+      weekdays: weekdays,
+      today: now.weekday,
+      picked: picked,
+      onPick: (s) => setState(() => _picked = s),
+    );
+    final card = picked == null
+        ? null
+        : _FocusCard(
+            slot: picked,
+            minute: picked.session.weekday == now.weekday ? minute : null,
+            shared: shared,
+          );
+    // iPad in portrait: the picked class under the week.
+    if (MediaQuery.sizeOf(context).width < wideLayout) {
+      return ListView(
+        padding: scrollPadding(context, maxWidth: double.infinity),
+        children: [
+          grid,
+          if (card != null) ...[const SizedBox(height: Space.xl), card],
+        ],
+      );
+    }
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Expanded(
           child: ListView(
             padding: scrollPadding(context, maxWidth: double.infinity),
-            children: [
-              _WeekGrid(
-                courses: courses,
-                weekdays: weekdays,
-                today: now.weekday,
-                picked: picked,
-                onPick: (s) => setState(() => _picked = s),
-              ),
-            ],
+            children: [grid],
           ),
         ),
         SizedBox(
@@ -244,14 +290,7 @@ class _TimetableScreenState extends State<TimetableScreen> {
             // column across the whole page.
             padding: scrollPadding(context)
                 .copyWith(left: 0, right: pageMargin),
-            children: [
-              if (picked != null)
-                _FocusCard(
-                  slot: picked,
-                  minute: picked.session.weekday == now.weekday ? minute : null,
-                  shared: shared,
-                ),
-            ],
+            children: [?card],
           ),
         ),
       ],
@@ -472,8 +511,31 @@ typedef _Shared = ({List<DueItem> due, Map<int, String> grades});
 /// Design round-11 timetable 2C: one class in focus with its period
 /// progress, deadline, notice and grade; on today the class after it gets
 /// its own card; the rest are one line each, those already over dimmed.
-class _DayView extends StatelessWidget {
-  const _DayView({
+/// [day]'s classes in order, and which lead: see [dayFocus].
+({List<DaySlot> slots, bool today, int minute, DaySlot? focus, DaySlot? after})
+_dayPlan(List<Course> courses, int day, DateTime now) {
+  final slots = <DaySlot>[
+    for (final c in courses)
+      for (final s in c.sessions)
+        if (s.weekday == day) (course: c, session: s),
+  ]..sort((a, b) => a.session.start.compareTo(b.session.start));
+  final minute = now.hour * 60 + now.minute;
+  // Once today's classes are over it reads like any other day.
+  final today = day == now.weekday && slots.any((s) => s.session.end > minute);
+  final (:focus, :after) = dayFocus(slots, today: today, minute: minute);
+  return (
+    slots: slots,
+    today: today,
+    minute: minute,
+    focus: focus,
+    after: after,
+  );
+}
+
+/// The cards [_DayView] leaves out on an open foldable, on the other half
+/// of the fold (design/round-11 fold-variants B).
+class _DayCards extends StatelessWidget {
+  const _DayCards({
     required this.courses,
     required this.day,
     required this.now,
@@ -487,18 +549,58 @@ class _DayView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final (slots: _, :today, :minute, :focus, :after) = _dayPlan(
+      courses,
+      day,
+      now,
+    );
+    return ListView(
+      padding: scrollPadding(context),
+      children: [
+        if (focus != null)
+          _FocusCard(
+            slot: focus,
+            minute: today ? minute : null,
+            shared: shared,
+          ),
+        if (after != null) ...[
+          const SizedBox(height: rowGap),
+          _NextCard(slot: after, minute: minute, shared: shared),
+        ],
+      ],
+    );
+  }
+}
+
+class _DayView extends StatelessWidget {
+  const _DayView({
+    required this.courses,
+    required this.day,
+    required this.now,
+    required this.shared,
+    this.cardsBeside = false,
+  });
+
+  final List<Course> courses;
+  final int day;
+  final DateTime now;
+  final _Shared? shared;
+
+  /// The focus and next cards show beside the day ([_DayCards]), so every
+  /// class here is one line.
+  final bool cardsBeside;
+
+  @override
+  Widget build(BuildContext context) {
     final l10n = context.l10n;
     final theme = Theme.of(context);
-    final slots = <DaySlot>[
-      for (final c in courses)
-        for (final s in c.sessions)
-          if (s.weekday == day) (course: c, session: s),
-    ]..sort((a, b) => a.session.start.compareTo(b.session.start));
-    final minute = now.hour * 60 + now.minute;
-    // Once today's classes are over it reads like any other day.
-    final today =
-        day == now.weekday && slots.any((s) => s.session.end > minute);
-    final (:focus, :after) = dayFocus(slots, today: today, minute: minute);
+    final (:slots, :today, :minute, focus: lead, after: next) = _dayPlan(
+      courses,
+      day,
+      now,
+    );
+    final focus = cardsBeside ? null : lead;
+    final after = cardsBeside ? null : next;
     return ListView(
       padding: scrollPadding(context),
       children: [

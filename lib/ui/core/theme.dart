@@ -138,6 +138,14 @@ const pageMargin = Space.l;
 /// measure the area they get, which [PaneSize] reports.
 const wideLayout = 840.0;
 
+/// Width from which the window trades the nav bar for an icon rail (iPad
+/// in portrait); the full sidebar opens over the page from it.
+const railLayout = 600.0;
+
+/// Width from which a page puts its list beside its detail (訊息, 更多, a
+/// course) and lays the week and the month out in full.
+const splitLayout = 680.0;
+
 /// Every desktop column beside the main one: the 訊息 and 更多 lists, and
 /// the panels beside the week, the month and today's class.
 const paneWidth = 360.0;

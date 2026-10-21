@@ -379,12 +379,12 @@ Widget _listBeside(
   required bool atRoot,
   required Widget child,
 }) {
-  if (MediaQuery.sizeOf(context).width < wideLayout) return child;
+  if (MediaQuery.sizeOf(context).width < splitLayout) return child;
   return Row(
     crossAxisAlignment: CrossAxisAlignment.stretch,
     children: [
       SizedBox(
-        width: paneWidth,
+        width: listWidthOf(context),
         child: PaneSize(child: list),
       ),
       VerticalDivider(

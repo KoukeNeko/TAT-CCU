@@ -17,6 +17,7 @@ typedef _Tab = (IconData icon, String label, Tone tone, ShapeBorder shape);
 const _barHeight = 72.0;
 
 const _sidebarWidth = 232.0;
+const _railWidth = 72.0;
 
 /// Selected label style; the capsule is sized from it.
 const _labelStyle = TextStyle(fontSize: 15, fontWeight: FontWeight.w900);
@@ -63,6 +64,9 @@ class _AppShellState extends State<AppShell> {
   int? _hover;
 
   int get _shown => _hover ?? widget.shell.currentIndex;
+
+  /// The full sidebar is open over the page from the rail.
+  var _expanded = false;
 
   /// Width of each tab's capsule when selected, from its label in the
   /// current language and text size; set on every layout.
@@ -141,23 +145,71 @@ class _AppShellState extends State<AppShell> {
     ];
     final light = theme.brightness == Brightness.light;
     final pressed = _downX != null;
-    // Wide windows (desktop) trade the floating bar for a sidebar.
-    if (MediaQuery.sizeOf(context).width >= wideLayout) {
+    // Wide windows (desktop, iPad in landscape) trade the floating bar for
+    // a sidebar; an iPad in portrait for a rail that opens the sidebar.
+    final width = MediaQuery.sizeOf(context).width;
+    // A foldable keeps the phone's bar: it is still held like a phone,
+    // and its pages split at the fold instead.
+    if (width >= railLayout && foldOf(context) == null) {
+      final rail = width < wideLayout;
+      void close() => setState(() => _expanded = false);
+      _Sidebar side({required bool rail}) => _Sidebar(
+        shell: widget.shell,
+        tabs: [for (final t in tabs) (t.$1, t.$2)],
+        course: int.tryParse(
+          RegExp(r'^/courses/(\d+)').firstMatch(widget.location)?[1] ?? '',
+        ),
+        rail: rail,
+        // Content width for the course pages: the window less the bar.
+        content: width - (rail ? _railWidth : _sidebarWidth) - 1,
+        onExpand: () => setState(() => _expanded = true),
+        onPicked: close,
+      );
+      final open = rail && _expanded;
       return Scaffold(
         backgroundColor: scheme.surface,
-        body: Row(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
+        body: Stack(
           children: [
-            _Sidebar(
-              shell: widget.shell,
-              labels: [for (final t in tabs) t.$2],
-              course: int.tryParse(
-                RegExp(r'^/courses/(\d+)').firstMatch(widget.location)?[1] ??
-                    '',
-              ),
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                side(rail: rail),
+                VerticalDivider(width: 1, color: scheme.outlineVariant),
+                Expanded(child: PaneSize(child: widget.shell)),
+              ],
             ),
-            VerticalDivider(width: 1, color: scheme.outlineVariant),
-            Expanded(child: PaneSize(child: widget.shell)),
+            if (rail) ...[
+              IgnorePointer(
+                ignoring: !open,
+                child: GestureDetector(
+                  onTap: close,
+                  child: AnimatedOpacity(
+                    opacity: open ? 1 : 0,
+                    duration: _move,
+                    curve: _settle,
+                    child: const ColoredBox(
+                      color: Colors.black38,
+                      child: SizedBox.expand(),
+                    ),
+                  ),
+                ),
+              ),
+              AnimatedPositioned(
+                duration: _move,
+                curve: _settle,
+                top: 0,
+                bottom: 0,
+                left: open ? 0 : -_sidebarWidth - 32,
+                child: DecoratedBox(
+                  decoration: const BoxDecoration(
+                    boxShadow: [
+                      BoxShadow(color: Colors.black38, blurRadius: 32),
+                    ],
+                  ),
+                  child: side(rail: false),
+                ),
+              ),
+            ],
           ],
         ),
       );
@@ -184,55 +236,63 @@ class _AppShellState extends State<AppShell> {
             Space.m,
             math.max(Space.s, MediaQuery.viewPaddingOf(context).bottom - 18),
           ),
-          child: AnimatedScale(
-            // Press: the bar lifts slightly; release springs back.
-            scale: pressed ? 1.02 : 1,
-            duration: _move,
-            curve: _settle,
-            child: _GlassBar(
-              pressed: pressed,
-              light: light,
-              outline: scheme.outlineVariant,
-              child: LayoutBuilder(
-                builder: (context, box) {
-                  final w = box.maxWidth;
-                  final n = tabs.length;
-                  final style = DefaultTextStyle.of(context).style
-                      .merge(_labelStyle);
-                  final scaler = MediaQuery.textScalerOf(context);
-                  _capsules = [
-                    for (final (_, label, _, _) in tabs)
-                      (TextPainter(
-                            text: TextSpan(text: label, style: style),
-                            textDirection: Directionality.of(context),
-                            textScaler: scaler,
-                            maxLines: 1,
-                          )..layout()).width.ceilToDouble().clamp(
-                            0,
-                            w - (n - 1) * _minSlot - _capsuleChrome,
-                          ) +
-                          _capsuleChrome,
-                  ];
-                  final slots = _slots(w, _shown);
-                  return Listener(
-                    behavior: HitTestBehavior.opaque,
-                    onPointerDown: (e) => _press(e.localPosition.dx),
-                    onPointerMove: (e) => _slide(e.localPosition.dx, w),
-                    onPointerUp: (_) => _release(w, commit: true),
-                    onPointerCancel: (_) => _release(w, commit: false),
-                    child: Row(
-                      children: [
-                        for (final (i, tab) in tabs.indexed)
-                          _TabSlot(
-                            tab: tab,
-                            width: slots[i],
-                            selected: i == _shown,
-                            pressed: pressed && i == _shown,
-                          ),
-                      ],
-                    ),
-                  );
-                },
+          // A wide screen held like a phone (an open foldable) keeps the
+          // bar at a phone's width.
+          child: Center(
+            heightFactor: 1,
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 440),
+              child: AnimatedScale(
+                // Press: the bar lifts slightly; release springs back.
+                scale: pressed ? 1.02 : 1,
+                duration: _move,
+                curve: _settle,
+                child: _GlassBar(
+                  pressed: pressed,
+                  light: light,
+                  outline: scheme.outlineVariant,
+                  child: LayoutBuilder(
+                    builder: (context, box) {
+                      final w = box.maxWidth;
+                      final n = tabs.length;
+                      final style = DefaultTextStyle.of(context).style
+                          .merge(_labelStyle);
+                      final scaler = MediaQuery.textScalerOf(context);
+                      _capsules = [
+                        for (final (_, label, _, _) in tabs)
+                          (TextPainter(
+                                text: TextSpan(text: label, style: style),
+                                textDirection: Directionality.of(context),
+                                textScaler: scaler,
+                                maxLines: 1,
+                              )..layout()).width.ceilToDouble().clamp(
+                                0,
+                                w - (n - 1) * _minSlot - _capsuleChrome,
+                              ) +
+                              _capsuleChrome,
+                      ];
+                      final slots = _slots(w, _shown);
+                      return Listener(
+                        behavior: HitTestBehavior.opaque,
+                        onPointerDown: (e) => _press(e.localPosition.dx),
+                        onPointerMove: (e) => _slide(e.localPosition.dx, w),
+                        onPointerUp: (_) => _release(w, commit: true),
+                        onPointerCancel: (_) => _release(w, commit: false),
+                        child: Row(
+                          children: [
+                            for (final (i, tab) in tabs.indexed)
+                              _TabSlot(
+                                tab: tab,
+                                width: slots[i],
+                                selected: i == _shown,
+                                pressed: pressed && i == _shown,
+                              ),
+                          ],
+                        ),
+                      );
+                    },
+                  ),
+                ),
               ),
             ),
           ),
@@ -245,10 +305,31 @@ class _AppShellState extends State<AppShell> {
 /// Desktop sidebar, design/round-11 desktop direction A: the five tabs, then
 /// this semester's courses.
 class _Sidebar extends StatefulWidget {
-  const _Sidebar({required this.shell, required this.labels, this.course});
+  const _Sidebar({
+    required this.shell,
+    required this.tabs,
+    required this.rail,
+    required this.content,
+    required this.onExpand,
+    required this.onPicked,
+    this.course,
+  });
 
   final StatefulNavigationShell shell;
-  final List<String> labels;
+  final List<(IconData, String)> tabs;
+
+  /// Icons only (iPad in portrait, design/round-11 ipad-variants A); its
+  /// top button opens the full sidebar over the page.
+  final bool rail;
+
+  /// Width the pages get beside this bar.
+  final double content;
+
+  final VoidCallback onExpand;
+
+  /// After a tab or course is chosen, so the sidebar opened from the rail
+  /// gets out of the way.
+  final VoidCallback onPicked;
 
   /// The course whose pages are shown; it is lit along with its tab.
   final int? course;
@@ -280,8 +361,8 @@ class _SidebarState extends State<_Sidebar> {
   /// its sections beside it, in place of whatever course was open; a
   /// narrower one pushes the course page.
   void _openCourse(int id) {
-    final content = MediaQuery.sizeOf(context).width - _sidebarWidth - 1;
-    if (content >= wideLayout) {
+    widget.onPicked();
+    if (widget.content >= splitLayout) {
       context.go('/courses/$id/contents');
     } else if (widget.course == null) {
       context.push('/courses/$id');
@@ -290,8 +371,14 @@ class _SidebarState extends State<_Sidebar> {
     }
   }
 
+  void _goTab(int i) {
+    widget.onPicked();
+    widget.shell.goBranch(i, initialLocation: i == widget.shell.currentIndex);
+  }
+
   @override
   Widget build(BuildContext context) {
+    if (widget.rail) return _buildRail(context);
     final scheme = Theme.of(context).colorScheme;
     final t = context.tones;
     return Container(
@@ -310,17 +397,13 @@ class _SidebarState extends State<_Sidebar> {
           return ListView(
             padding: EdgeInsets.zero,
             children: [
-              for (final (i, label) in widget.labels.indexed)
+              for (final (i, (icon, label)) in widget.tabs.indexed)
                 _SideItem(
+                  icon: icon,
                   label: label,
                   selected: i == widget.shell.currentIndex,
                   badge: i == 1 && unread > 0 ? '$unread' : null,
-                  onTap: () {
-                    widget.shell.goBranch(
-                      i,
-                      initialLocation: i == widget.shell.currentIndex,
-                    );
-                  },
+                  onTap: () => _goTab(i),
                 ),
               if (courses.isNotEmpty)
                 Padding(
@@ -389,14 +472,121 @@ class _SidebarState extends State<_Sidebar> {
   }
 }
 
+extension on _SidebarState {
+  Widget _buildRail(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    final t = context.tones;
+    Widget cell({
+      required Widget child,
+      required bool selected,
+      required VoidCallback onTap,
+      required String label,
+      double height = 48,
+    }) => Semantics(
+      button: true,
+      selected: selected,
+      label: label,
+      child: PressFeedback(
+        scale: 0.94,
+        haptic: HapticFeedback.selectionClick,
+        child: GestureDetector(
+          behavior: HitTestBehavior.opaque,
+          onTap: onTap,
+          child: Container(
+            width: 48,
+            height: height,
+            margin: const EdgeInsets.only(bottom: Space.s),
+            alignment: Alignment.center,
+            decoration: BoxDecoration(
+              color: selected ? scheme.surfaceContainerHigh : null,
+              borderRadius: BorderRadius.circular(14),
+            ),
+            child: child,
+          ),
+        ),
+      ),
+    );
+    return Container(
+      width: _railWidth,
+      color: scheme.surfaceContainer,
+      padding: EdgeInsets.only(
+        top: MediaQuery.paddingOf(context).top + Space.l,
+      ),
+      child: StreamBuilder(
+        stream: _data,
+        builder: (context, snap) {
+          final (courses, unread) = snap.data ?? (const <Course>[], 0);
+          return ListView(
+            padding: const EdgeInsets.symmetric(horizontal: Space.m),
+            children: [
+              cell(
+                label: MaterialLocalizations.of(context).openAppDrawerTooltip,
+                selected: false,
+                onTap: widget.onExpand,
+                child: Icon(
+                  Icons.view_sidebar_outlined,
+                  color: scheme.onSurfaceVariant,
+                ),
+              ),
+              for (final (i, (icon, label)) in widget.tabs.indexed)
+                cell(
+                  label: label,
+                  selected: i == widget.shell.currentIndex,
+                  onTap: () => _goTab(i),
+                  child: Badge(
+                    isLabelVisible: i == 1 && unread > 0,
+                    smallSize: 8,
+                    backgroundColor: t.sun.strong,
+                    child: Icon(
+                      icon,
+                      color: i == widget.shell.currentIndex
+                          ? scheme.onSurface
+                          : scheme.onSurfaceVariant,
+                    ),
+                  ),
+                ),
+              if (courses.isNotEmpty)
+                Center(
+                  child: Container(
+                    width: 28,
+                    height: 1,
+                    margin: const EdgeInsets.symmetric(vertical: Space.s),
+                    color: scheme.outlineVariant,
+                  ),
+                ),
+              for (final c in courses)
+                cell(
+                  label: context.courseName(c),
+                  height: 36,
+                  selected: c.id == widget.course,
+                  onTap: () => _openCourse(c.id),
+                  child: Container(
+                    width: 14,
+                    height: 14,
+                    decoration: BoxDecoration(
+                      color: t.forCourse(c.id).strong,
+                      borderRadius: BorderRadius.circular(5),
+                    ),
+                  ),
+                ),
+            ],
+          );
+        },
+      ),
+    );
+  }
+}
+
 class _SideItem extends StatelessWidget {
   const _SideItem({
+    required this.icon,
     required this.label,
     required this.selected,
     required this.onTap,
     this.badge,
   });
 
+  final IconData icon;
   final String label;
   final bool selected;
   final String? badge;
@@ -425,6 +615,12 @@ class _SideItem extends StatelessWidget {
             ),
             child: Row(
               children: [
+                Icon(
+                  icon,
+                  size: 20,
+                  color: selected ? scheme.onSurface : scheme.onSurfaceVariant,
+                ),
+                const SizedBox(width: 10),
                 Text(
                   label,
                   style: TextStyle(
