@@ -4,6 +4,7 @@ import 'dart:ui' show DisplayFeatureState, DisplayFeatureType, ImageFilter;
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:go_router/go_router.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import 'floating_dock.dart';
@@ -175,7 +176,7 @@ class _RoundBackButtonState extends State<RoundBackButton> {
         onTapUp: (_) => _press(false),
         onTap: () {
           HapticFeedback.lightImpact();
-          Navigator.of(context).maybePop();
+          popPage(context);
         },
         child: AnimatedScale(
           scale: _pressed ? 0.86 : 1,
@@ -664,11 +665,24 @@ class ListPaneScope extends InheritedWidget {
   bool updateShouldNotify(ListPaneScope old) => old.root != root;
 }
 
+/// Goes back a page. The first page of a nested navigator (a course, inside
+/// the shell that sets it beside its lists on a desktop) cannot pop its own
+/// navigator, so it leaves that shell through the router instead.
+void popPage(BuildContext context) {
+  final navigator = Navigator.of(context);
+  if (navigator.canPop()) {
+    navigator.maybePop();
+  } else if (GoRouter.maybeOf(context) case final router?
+      when router.canPop()) {
+    router.pop();
+  }
+}
+
 /// A page shows a back button when there is a page behind it to return
 /// to, which is not so for the first page in a [ListPaneScope].
 bool _canGoBack(BuildContext context) {
   final navigator = Navigator.of(context);
-  if (!navigator.canPop()) return false;
+  if (!navigator.canPop()) return GoRouter.maybeOf(context)?.canPop() ?? false;
   final scope = context.getInheritedWidgetOfExactType<ListPaneScope>();
   if (scope == null) return true;
   final pages = navigator.widget.pages;

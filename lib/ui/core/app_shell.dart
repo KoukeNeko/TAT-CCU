@@ -302,12 +302,14 @@ class _AppShellState extends State<AppShell> {
 
 /// Switches to tab [i]; the tab already shown returns to its first page.
 /// Pages pushed with [Navigator.push] (a mail, the compose screen) are not
-/// go_router's, so they are popped here before go_router resets the tab.
+/// go_router's, so they are popped here before go_router resets the tab;
+/// its own pages are left for it, since popping them here would leave its
+/// state behind what is on screen.
 void _openTab(StatefulNavigationShell shell, int i) {
   final again = i == shell.currentIndex;
   if (again) {
     shell.route.branches[i].navigatorKey.currentState?.popUntil(
-      (r) => r.isFirst,
+      (r) => r.settings is Page,
     );
   }
   shell.goBranch(i, initialLocation: again);
