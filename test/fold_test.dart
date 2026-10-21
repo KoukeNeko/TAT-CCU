@@ -46,9 +46,7 @@ void main() {
     expect(fold, (posture: FoldPosture.tabletop, at: 353.0));
   });
 
-  testWidgets('a flat fold across and a cutout are one screen', (
-    tester,
-  ) async {
+  testWidgets('a flat fold across and a cutout are one screen', (tester) async {
     final fold = await foldWith(tester, const [
       DisplayFeature(
         bounds: Rect.fromLTWH(0, 353, 823, 0),

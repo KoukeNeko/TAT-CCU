@@ -1,0 +1,329 @@
+name: Release
+
+# Pushing a tag vX.Y.Z, where X.Y.Z is the version in pubspec.yaml, uploads the iOS app to App Store
+# Connect (TestFlight), builds, signs and notarizes the macOS app, publishes the GitHub release, and then
+# updates the Homebrew cask (packages.yml). Run by hand it does everything up to publishing: the iOS
+# build is exported but not uploaded, and the macOS zip is kept as an artifact.
+#
+# Windows (and with it the Scoop manifest) waits for the repository variable WINDOWS_RELEASE=true: the
+# app has no Windows platform folder yet, and webview_flutter, which signs in to the school's sites, has
+# no Windows implementation.
+on:
+  push:
+    tags: ['v*']
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+# A release in progress is not abandoned for a newer one: its files are half made and its tag exists.
+concurrency:
+  group: release
+  cancel-in-progress: false
+
+env:
+  FLUTTER_VERSION: 3.47.7
+  TEAM_ID: 33832Z66QU
+
+jobs:
+  # The tag must name the pubspec version; the tests run before anything is signed or uploaded.
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    outputs:
+      version: ${{ steps.version.outputs.version }}
+    steps:
+      - uses: actions/checkout@v7
+      - name: Check the version
+        id: version
+        run: |
+          version="$(sed -n 's/^version: *\([0-9.]*\).*/\1/p' pubspec.yaml)"
+          if [ "$GITHUB_REF_TYPE" = tag ] && [ "$GITHUB_REF_NAME" != "v$version" ]; then
+            echo "::error::the tag $GITHUB_REF_NAME does not match the pubspec version $version" >&2
+            exit 1
+          fi
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: ${{ env.FLUTTER_VERSION }}
+          channel: stable
+          cache: true
+      - run: flutter pub get
+      - run: flutter analyze
+      - run: flutter test
+
+  # Signed by Xcode through the App Store Connect API key (cloud-managed certificates and automatically
+  # made profiles for the app and its widget extension); the key needs the Admin role for that.
+  ios:
+    needs: check
+    runs-on: xcode-27
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v7
+      # The Xcode the app is released with, not whichever one the image happens to default to.
+      - name: Select Xcode 27.0
+        run: |
+          xcode_app=""
+          for app in /Applications/Xcode_27.0*.app; do
+            [ -d "$app" ] && xcode_app="$app"
+          done
+          [ -n "$xcode_app" ] || { echo "::error::Xcode 27.0 is not installed on this image" >&2; exit 1; }
+          sudo xcode-select --switch "$xcode_app/Contents/Developer"
+          xcodebuild -version
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: ${{ env.FLUTTER_VERSION }}
+          channel: stable
+          cache: true
+      - name: Install the App Store Connect key
+        env:
+          ASC_KEY_P8_BASE64: ${{ secrets.ASC_KEY_P8_BASE64 }}
+          APPLE_API_KEY_ID: ${{ secrets.APPLE_API_KEY_ID }}
+          APPLE_API_ISSUER_ID: ${{ secrets.APPLE_API_ISSUER_ID }}
+        run: |
+          set -euo pipefail
+          for name in ASC_KEY_P8_BASE64 APPLE_API_KEY_ID APPLE_API_ISSUER_ID; do
+            [ -n "${!name}" ] || { echo "::error::the secret $name is not set" >&2; exit 1; }
+          done
+          echo "$ASC_KEY_P8_BASE64" | base64 --decode > "$RUNNER_TEMP/AuthKey.p8"
+          {
+            echo "ASC_KEY=$RUNNER_TEMP/AuthKey.p8"
+            echo "ASC_KEY_ID=$APPLE_API_KEY_ID"
+            echo "ASC_ISSUER=$APPLE_API_ISSUER_ID"
+          } >> "$GITHUB_ENV"
+      # The build number is the run number, so every upload is newer than the one before it.
+      - name: Configure the Flutter build
+        run: flutter build ios --release --config-only --build-number="$GITHUB_RUN_NUMBER"
+      - name: Archive
+        run: |
+          xcodebuild archive \
+            -workspace ios/Runner.xcworkspace -scheme Runner -configuration Release \
+            -destination generic/platform=iOS -archivePath "$RUNNER_TEMP/Runner.xcarchive" \
+            -allowProvisioningUpdates -authenticationKeyPath "$ASC_KEY" \
+            -authenticationKeyID "$ASC_KEY_ID" -authenticationKeyIssuerID "$ASC_ISSUER"
+      # A tag uploads to App Store Connect, where the build reaches TestFlight; a manual run only exports.
+      - name: Export and upload
+        run: |
+          destination=export
+          [ "$GITHUB_REF_TYPE" = tag ] && destination=upload
+          cat > "$RUNNER_TEMP/ExportOptions.plist" <<PLIST
+          <?xml version="1.0" encoding="UTF-8"?>
+          <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+          <plist version="1.0">
+          <dict>
+            <key>method</key><string>app-store-connect</string>
+            <key>destination</key><string>$destination</string>
+            <key>teamID</key><string>$TEAM_ID</string>
+            <key>signingStyle</key><string>automatic</string>
+          </dict>
+          </plist>
+          PLIST
+          xcodebuild -exportArchive \
+            -archivePath "$RUNNER_TEMP/Runner.xcarchive" \
+            -exportOptionsPlist "$RUNNER_TEMP/ExportOptions.plist" -exportPath "$RUNNER_TEMP/ipa" \
+            -allowProvisioningUpdates -authenticationKeyPath "$ASC_KEY" \
+            -authenticationKeyID "$ASC_KEY_ID" -authenticationKeyIssuerID "$ASC_ISSUER"
+      - name: Remove the key
+        if: always()
+        run: rm -f "$RUNNER_TEMP/AuthKey.p8"
+
+  # Developer ID signed from the certificate in a temporary keychain; the profile the keychain
+  # entitlement needs is made through the API key, which also notarizes.
+  macos:
+    needs: check
+    runs-on: xcode-27
+    timeout-minutes: 60
+    env:
+      VERSION: ${{ needs.check.outputs.version }}
+    steps:
+      - uses: actions/checkout@v7
+      - name: Select Xcode 27.0
+        run: |
+          xcode_app=""
+          for app in /Applications/Xcode_27.0*.app; do
+            [ -d "$app" ] && xcode_app="$app"
+          done
+          [ -n "$xcode_app" ] || { echo "::error::Xcode 27.0 is not installed on this image" >&2; exit 1; }
+          sudo xcode-select --switch "$xcode_app/Contents/Developer"
+          xcodebuild -version
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: ${{ env.FLUTTER_VERSION }}
+          channel: stable
+          cache: true
+      - name: Install the signing certificate and the API key
+        env:
+          MACOS_CERTIFICATE_P12_BASE64: ${{ secrets.MACOS_CERTIFICATE_P12_BASE64 }}
+          MACOS_CERT_PASSWORD: ${{ secrets.MACOS_CERT_PASSWORD }}
+          ASC_KEY_P8_BASE64: ${{ secrets.ASC_KEY_P8_BASE64 }}
+          APPLE_API_KEY_ID: ${{ secrets.APPLE_API_KEY_ID }}
+          APPLE_API_ISSUER_ID: ${{ secrets.APPLE_API_ISSUER_ID }}
+        run: |
+          set -euo pipefail
+          for name in MACOS_CERTIFICATE_P12_BASE64 MACOS_CERT_PASSWORD ASC_KEY_P8_BASE64 APPLE_API_KEY_ID APPLE_API_ISSUER_ID; do
+            [ -n "${!name}" ] || { echo "::error::the secret $name is not set" >&2; exit 1; }
+          done
+          keychain="$RUNNER_TEMP/build.keychain-db"
+          keychain_password="$(uuidgen)"
+          echo "$MACOS_CERTIFICATE_P12_BASE64" | base64 --decode > "$RUNNER_TEMP/cert.p12"
+          echo "$ASC_KEY_P8_BASE64" | base64 --decode > "$RUNNER_TEMP/AuthKey.p8"
+
+          security create-keychain -p "$keychain_password" "$keychain"
+          security set-keychain-settings -lut 21600 "$keychain"
+          security unlock-keychain -p "$keychain_password" "$keychain"
+          security import "$RUNNER_TEMP/cert.p12" -k "$keychain" -P "$MACOS_CERT_PASSWORD" -T /usr/bin/codesign
+          security set-key-partition-list -S apple-tool:,apple: -s -k "$keychain_password" "$keychain"
+          # Keep the existing keychains searchable; the list is split on purpose.
+          # shellcheck disable=SC2046
+          security list-keychains -d user -s "$keychain" $(security list-keychains -d user | tr -d '"')
+          if ! security find-identity -v -p codesigning "$keychain" | grep -q "Developer ID Application"; then
+            echo "::error::MACOS_CERTIFICATE_P12_BASE64 contains no Developer ID Application certificate" >&2
+            exit 1
+          fi
+          {
+            echo "ASC_KEY=$RUNNER_TEMP/AuthKey.p8"
+            echo "ASC_KEY_ID=$APPLE_API_KEY_ID"
+            echo "ASC_ISSUER=$APPLE_API_ISSUER_ID"
+          } >> "$GITHUB_ENV"
+      - name: Configure the Flutter build
+        run: flutter build macos --release --config-only --build-number="$GITHUB_RUN_NUMBER"
+      - name: Archive and export with Developer ID
+        run: |
+          xcodebuild archive \
+            -workspace macos/Runner.xcworkspace -scheme Runner -configuration Release \
+            -destination generic/platform=macOS -archivePath "$RUNNER_TEMP/Runner.xcarchive" \
+            -allowProvisioningUpdates -authenticationKeyPath "$ASC_KEY" \
+            -authenticationKeyID "$ASC_KEY_ID" -authenticationKeyIssuerID "$ASC_ISSUER"
+          cat > "$RUNNER_TEMP/ExportOptions.plist" <<PLIST
+          <?xml version="1.0" encoding="UTF-8"?>
+          <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+          <plist version="1.0">
+          <dict>
+            <key>method</key><string>developer-id</string>
+            <key>teamID</key><string>$TEAM_ID</string>
+            <key>signingStyle</key><string>automatic</string>
+          </dict>
+          </plist>
+          PLIST
+          xcodebuild -exportArchive \
+            -archivePath "$RUNNER_TEMP/Runner.xcarchive" \
+            -exportOptionsPlist "$RUNNER_TEMP/ExportOptions.plist" -exportPath "$RUNNER_TEMP/export" \
+            -allowProvisioningUpdates -authenticationKeyPath "$ASC_KEY" \
+            -authenticationKeyID "$ASC_KEY_ID" -authenticationKeyIssuerID "$ASC_ISSUER"
+      - name: Notarize and staple
+        run: |
+          set -euo pipefail
+          app="$RUNNER_TEMP/export/TAT CCU.app"
+          mkdir -p dist
+          ditto -c -k --keepParent "$app" "$RUNNER_TEMP/notarize.zip"
+          xcrun notarytool submit "$RUNNER_TEMP/notarize.zip" --wait \
+            --key "$ASC_KEY" --key-id "$ASC_KEY_ID" --issuer "$ASC_ISSUER"
+          xcrun stapler staple "$app"
+          spctl --assess --type execute --verbose "$app"
+          # The zip Homebrew installs from carries the stapled ticket.
+          ditto -c -k --keepParent "$app" "dist/TAT-CCU-$VERSION.zip"
+      - name: Remove the signing material
+        if: always()
+        run: |
+          security delete-keychain "$RUNNER_TEMP/build.keychain-db" || true
+          rm -f "$RUNNER_TEMP/cert.p12" "$RUNNER_TEMP/AuthKey.p8"
+      - uses: actions/upload-artifact@v7
+        with:
+          name: macos
+          path: dist/TAT-CCU-${{ env.VERSION }}.zip
+          if-no-files-found: error
+
+  # Unsigned until there is a code signing certificate for Windows.
+  windows:
+    if: vars.WINDOWS_RELEASE == 'true'
+    needs: check
+    runs-on: windows-latest
+    timeout-minutes: 45
+    env:
+      VERSION: ${{ needs.check.outputs.version }}
+    steps:
+      - uses: actions/checkout@v7
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: ${{ env.FLUTTER_VERSION }}
+          channel: stable
+          cache: true
+      - run: flutter build windows --release --build-number="$env:GITHUB_RUN_NUMBER"
+      - name: Zip the app folder
+        run: |
+          New-Item -ItemType Directory -Force dist | Out-Null
+          Compress-Archive -Path build\windows\x64\runner\Release\* -DestinationPath "dist\TAT-CCU-$env:VERSION-windows-x64.zip"
+      - uses: actions/upload-artifact@v7
+        with:
+          name: windows
+          path: dist/TAT-CCU-${{ env.VERSION }}-windows-x64.zip
+          if-no-files-found: error
+
+  # The iOS upload is not waited for: a problem on App Store Connect never holds back the macOS release.
+  publish:
+    if: github.ref_type == 'tag'
+    needs: [check, macos]
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@v8
+        with:
+          name: macos
+          path: dist
+      # The Homebrew cask reads its hash from here.
+      - name: Checksums
+        working-directory: dist
+        run: sha256sum -- * > SHA256SUMS
+      - name: Create the release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          VERSION: ${{ needs.check.outputs.version }}
+        run: |
+          gh release create "$GITHUB_REF_NAME" dist/* --repo "$GITHUB_REPOSITORY" --verify-tag \
+            --title "TAT CCU $VERSION" --generate-notes
+
+  # Attached to the release that publish made, so a failed Windows job leaves the macOS release and the
+  # Homebrew cask as they are.
+  publish-windows:
+    if: github.ref_type == 'tag'
+    needs: [publish, windows]
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@v8
+        with:
+          name: windows
+          path: dist
+      - name: Checksums
+        working-directory: dist
+        run: sha256sum -- * > SHA256SUMS-windows
+      - name: Attach to the release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh release upload "$GITHUB_REF_NAME" dist/* --repo "$GITHUB_REPOSITORY" --clobber
+
+  packages:
+    needs: publish
+    permissions:
+      contents: read
+    uses: ./.github/workflows/packages.yml
+    with:
+      version: ${{ github.ref_name }}
+      package: homebrew
+    secrets:
+      HOMEBREW_TAP_TOKEN: ${{ secrets.HOMEBREW_TAP_TOKEN }}
+
+  packages-scoop:
+    needs: publish-windows
+    permissions:
+      contents: read
+    uses: ./.github/workflows/packages.yml
+    with:
+      version: ${{ github.ref_name }}
+      package: scoop
+    secrets:
+      SCOOP_BUCKET_TOKEN: ${{ secrets.SCOOP_BUCKET_TOKEN }}
