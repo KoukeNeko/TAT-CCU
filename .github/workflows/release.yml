@@ -52,8 +52,10 @@ jobs:
       - run: flutter analyze
       - run: flutter test
 
-  # Signed by Xcode through the App Store Connect API key (cloud-managed certificates and automatically
-  # made profiles for the app and its widget extension); the key needs the Admin role for that.
+  # Archived unsigned, so the build never makes a development certificate on the team (each runner is
+  # new, and Xcode would add one per run until the team's limit). The archive is then signed ad hoc with
+  # each target's entitlements, which the export keeps, and the export signs it through the App Store
+  # Connect API key with the cloud-managed Apple Distribution certificate.
   ios:
     needs: check
     runs-on: xcode-27
@@ -94,13 +96,19 @@ jobs:
       # The build number is the run number, so every upload is newer than the one before it.
       - name: Configure the Flutter build
         run: flutter build ios --release --config-only --build-number="$GITHUB_RUN_NUMBER"
-      - name: Archive
+      - name: Archive unsigned
         run: |
           xcodebuild archive \
             -workspace ios/Runner.xcworkspace -scheme Runner -configuration Release \
             -destination generic/platform=iOS -archivePath "$RUNNER_TEMP/Runner.xcarchive" \
-            -allowProvisioningUpdates -authenticationKeyPath "$ASC_KEY" \
-            -authenticationKeyID "$ASC_KEY_ID" -authenticationKeyIssuerID "$ASC_ISSUER"
+            CODE_SIGNING_ALLOWED=NO
+      - name: Sign the archive ad hoc with its entitlements
+        run: |
+          set -euo pipefail
+          app="$RUNNER_TEMP/Runner.xcarchive/Products/Applications/Runner.app"
+          codesign -f -s - --entitlements ios/TatWidgets/TatWidgets.entitlements "$app/PlugIns/TatWidgets.appex"
+          for framework in "$app"/Frameworks/*; do codesign -f -s - "$framework"; done
+          codesign -f -s - --entitlements ios/Runner/Runner.entitlements "$app"
       # A tag uploads to App Store Connect, where the build reaches TestFlight; a manual run only exports.
       - name: Export and upload
         run: |
@@ -127,9 +135,9 @@ jobs:
         if: always()
         run: rm -f "$RUNNER_TEMP/AuthKey.p8"
 
-  # Developer ID signed from the certificate in a temporary keychain; the profile the keychain
-  # entitlement needs is fetched through the API key (scripts/developer-id-profile.py), which also
-  # notarizes.
+  # Archived unsigned and signed ad hoc with the app's entitlements, as the iOS job does, then exported
+  # with the Developer ID certificate in a temporary keychain and the profile its keychain entitlement
+  # needs, fetched through the API key (scripts/developer-id-profile.py), which also notarizes.
   macos:
     needs: check
     runs-on: xcode-27
@@ -196,13 +204,17 @@ jobs:
             | openssl x509 -noout -serial | cut -d= -f2)"
           profile="$(python3 scripts/developer-id-profile.py "$serial")"
           echo "PROFILE_NAME=$profile" >> "$GITHUB_ENV"
-      - name: Archive and export with Developer ID
+      - name: Archive unsigned, then export with Developer ID
         run: |
           xcodebuild archive \
             -workspace macos/Runner.xcworkspace -scheme Runner -configuration Release \
             -destination generic/platform=macOS -archivePath "$RUNNER_TEMP/Runner.xcarchive" \
-            -allowProvisioningUpdates -authenticationKeyPath "$ASC_KEY" \
-            -authenticationKeyID "$ASC_KEY_ID" -authenticationKeyIssuerID "$ASC_ISSUER"
+            CODE_SIGNING_ALLOWED=NO
+          app="$RUNNER_TEMP/Runner.xcarchive/Products/Applications/TAT CCU.app"
+          # The entitlements as Xcode would expand them; the hardened runtime is kept by the export.
+          sed "s/\$(AppIdentifierPrefix)/$TEAM_ID./" macos/Runner/Release.entitlements > "$RUNNER_TEMP/app.entitlements"
+          find "$app/Contents/Frameworks" -maxdepth 1 -name '*.framework' -exec codesign -f -s - --options runtime {} \;
+          codesign -f -s - --options runtime --entitlements "$RUNNER_TEMP/app.entitlements" "$app"
           cat > "$RUNNER_TEMP/ExportOptions.plist" <<PLIST
           <?xml version="1.0" encoding="UTF-8"?>
           <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
@@ -221,9 +233,7 @@ jobs:
           PLIST
           xcodebuild -exportArchive \
             -archivePath "$RUNNER_TEMP/Runner.xcarchive" \
-            -exportOptionsPlist "$RUNNER_TEMP/ExportOptions.plist" -exportPath "$RUNNER_TEMP/export" \
-            -allowProvisioningUpdates -authenticationKeyPath "$ASC_KEY" \
-            -authenticationKeyID "$ASC_KEY_ID" -authenticationKeyIssuerID "$ASC_ISSUER"
+            -exportOptionsPlist "$RUNNER_TEMP/ExportOptions.plist" -exportPath "$RUNNER_TEMP/export"
       - name: Notarize and staple
         run: |
           set -euo pipefail
