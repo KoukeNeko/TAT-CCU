@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:timezone/data/latest.dart' as tz;
@@ -33,6 +35,11 @@ class Reminders {
   );
 
   static Future<void> init() async {
+    const darwin = DarwinInitializationSettings(
+      requestAlertPermission: false,
+      requestBadgePermission: false,
+      requestSoundPermission: false,
+    );
     tz.initializeTimeZones();
     // Class times are Taiwan wall-clock times.
     tz.setLocalLocation(tz.getLocation('Asia/Taipei'));
@@ -40,11 +47,8 @@ class Reminders {
       settings: const InitializationSettings(
         android: AndroidInitializationSettings('@mipmap/ic_launcher'),
         // Asked for when the student turns a notification on, not at launch.
-        iOS: DarwinInitializationSettings(
-          requestAlertPermission: false,
-          requestBadgePermission: false,
-          requestSoundPermission: false,
-        ),
+        iOS: darwin,
+        macOS: darwin,
       ),
     );
   }
@@ -146,6 +150,8 @@ class Reminders {
         settings.notifyDue ||
         settings.notifyClass ||
         settings.notifyNews;
+    // Background refresh is a phone feature; desktop refreshes when opened.
+    if (!(Platform.isIOS || Platform.isAndroid)) return;
     if (on) {
       await Workmanager().registerPeriodicTask(
         backgroundTask,

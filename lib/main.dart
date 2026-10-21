@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -63,7 +64,9 @@ Future<void> main() async {
     },
   );
   showDemo();
-  await Workmanager().initialize(backgroundTask);
+  if (Platform.isIOS || Platform.isAndroid) {
+    await Workmanager().initialize(backgroundTask);
+  }
   unawaited(_remind(auth, settings));
   unawaited(_prefetch(auth));
   unawaited(_updateWidgets(auth, settings));
@@ -125,21 +128,36 @@ class _TatCcuAppState extends State<TatCcuApp> {
       supportedLocales: [
         for (final l in AppLocalizations.supportedLocales) _traditional(l)!,
       ],
-      // Japanese gets LINE Seed JP so kanji take Japanese shapes.
-      builder: (context, child) =>
-          Localizations.localeOf(context).languageCode == 'ja'
-          ? Theme(
-              data: buildTheme(
-                Theme.of(context).brightness,
-                fontFamily: fontJp,
-              ),
-              child: child!,
-            )
-          : child!,
+      builder: (context, child) {
+        // macOS draws the content under its transparent title bar, which
+        // takes the clicks there; pages treat it like a status bar.
+        if (Platform.isMacOS) {
+          final media = MediaQuery.of(context);
+          child = MediaQuery(
+            data: media.copyWith(
+              padding: media.padding.copyWith(top: _macTitleBar),
+              viewPadding: media.viewPadding.copyWith(top: _macTitleBar),
+            ),
+            child: child!,
+          );
+        }
+        // Japanese gets LINE Seed JP so kanji take Japanese shapes.
+        return Localizations.localeOf(context).languageCode == 'ja'
+            ? Theme(
+                data: buildTheme(
+                  Theme.of(context).brightness,
+                  fontFamily: fontJp,
+                ),
+                child: child!,
+              )
+            : child!;
+      },
       routerConfig: _router,
     );
   }
 }
+
+const _macTitleBar = 28.0;
 
 /// Reschedules reminders from the latest deadlines and timetable, so a
 /// changed due date is not announced at the old time.

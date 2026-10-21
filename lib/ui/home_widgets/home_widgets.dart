@@ -43,14 +43,18 @@ abstract final class HomeWidgets {
     'CountdownWidget',
   ];
 
+  /// Home-screen widgets exist only on the phone platforms.
+  static bool get _supported => Platform.isIOS || Platform.isAndroid;
+
   static Future<bool> installed() async =>
-      (await HomeWidget.getInstalledWidgets()).isNotEmpty;
+      _supported && (await HomeWidget.getInstalledWidgets()).isNotEmpty;
 
   /// Rewrites the frames from the cached or fresh timetable and deadlines.
   static Future<void> sync(
     EcourseAuthRepository auth,
     AppSettings settings,
   ) async {
+    if (!_supported) return;
     var courses = <Course>[];
     var due = <DueItem>[];
     if (auth.isSignedIn) {
