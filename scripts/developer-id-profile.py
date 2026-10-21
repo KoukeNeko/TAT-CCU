@@ -87,7 +87,10 @@ def main():
         sys.exit(f"the bundle ID {BUNDLE_ID} is not registered")
 
     certificates = call(
-        "GET", "/certificates", {"filter[certificateType]": "DEVELOPER_ID_APPLICATION", "limit": 200}
+        "GET",
+        "/certificates",
+        # Certificates made since 2021 are of the G2 type.
+        {"filter[certificateType]": "DEVELOPER_ID_APPLICATION,DEVELOPER_ID_APPLICATION_G2", "limit": 200},
     )["data"]
     certificate = next(
         (c for c in certificates if c["attributes"]["serialNumber"].upper().lstrip("0") == serial), None
