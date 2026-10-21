@@ -157,7 +157,8 @@ class _TatCcuAppState extends State<TatCcuApp> {
   }
 }
 
-const _macTitleBar = 28.0;
+/// Height of the macOS unified toolbar title bar (MainFlutterWindow).
+const _macTitleBar = 52.0;
 
 /// Reschedules reminders from the latest deadlines and timetable, so a
 /// changed due date is not announced at the old time.

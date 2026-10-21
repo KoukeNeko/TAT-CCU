@@ -396,7 +396,7 @@ class _SidebarState extends State<_Sidebar> {
       color: scheme.surfaceContainer,
       padding: EdgeInsets.fromLTRB(
         Space.m,
-        MediaQuery.paddingOf(context).top + Space.xxl,
+        MediaQuery.paddingOf(context).top + Space.m,
         Space.m,
         Space.l,
       ),
@@ -520,7 +520,7 @@ extension on _SidebarState {
       width: _railWidth,
       color: scheme.surfaceContainer,
       padding: EdgeInsets.only(
-        top: MediaQuery.paddingOf(context).top + Space.l,
+        top: MediaQuery.paddingOf(context).top + Space.m,
       ),
       child: StreamBuilder(
         stream: _data,
