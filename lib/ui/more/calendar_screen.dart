@@ -27,6 +27,9 @@ DateTime _monthOf(int page) => DateTime(2000 + page ~/ 12, page % 12 + 1);
 
 const _rowHeight = 46.0;
 
+/// Desktop rows hold the day's events by name.
+const _wideRowHeight = 82.0;
+
 /// What an event is; each kind has its own color in the grid and the list.
 enum _Kind { school, assign, quiz, course, personal, site }
 
@@ -180,66 +183,104 @@ class _CalendarScreenState extends State<CalendarScreen> {
             PullRefresh(
               // The capsule shows the progress, as on the other pages.
               onRefresh: () async => _load(_page, again: true),
-              child: ListView(
-                padding: scrollPadding(context),
-                children: [
-                  Card(
-                    color: scheme.surfaceContainerLow,
-                    child: Padding(
-                      padding: const EdgeInsets.fromLTRB(
-                        Space.s,
-                        Space.m,
-                        Space.s,
-                        Space.s,
-                      ),
-                      child: Column(
-                        children: [
-                          Row(
-                            children: [
-                              for (var d = 1; d <= 7; d++)
-                                Expanded(
-                                  child: Text(
-                                    weekdayShort(context, d),
-                                    textAlign: TextAlign.center,
-                                    style: TextStyle(
-                                      fontSize: 11,
-                                      fontWeight: FontWeight.w800,
-                                      color: scheme.onSurfaceVariant,
+              child: Builder(
+                builder: (context) {
+                  final wide = MediaQuery.sizeOf(context).width >= wideLayout;
+                  final monthView = <Widget>[
+                    Card(
+                      // Desktop days are cards of their own.
+                      color: wide
+                          ? Colors.transparent
+                          : scheme.surfaceContainerLow,
+                      margin: wide ? EdgeInsets.zero : null,
+                      child: Padding(
+                        padding: const EdgeInsets.fromLTRB(
+                          Space.s,
+                          Space.m,
+                          Space.s,
+                          Space.s,
+                        ),
+                        child: Column(
+                          children: [
+                            Row(
+                              children: [
+                                for (var d = 1; d <= 7; d++)
+                                  Expanded(
+                                    child: Text(
+                                      weekdayShort(context, d),
+                                      textAlign: TextAlign.center,
+                                      style: TextStyle(
+                                        fontSize: 11,
+                                        fontWeight: FontWeight.w800,
+                                        color: scheme.onSurfaceVariant,
+                                      ),
                                     ),
                                   ),
+                              ],
+                            ),
+                            const SizedBox(height: 4),
+                            SizedBox(
+                              height: (wide ? _wideRowHeight : _rowHeight) * 6,
+                              child: PageView.builder(
+                                controller: _pages,
+                                onPageChanged: (p) {
+                                  setState(() => _page = p);
+                                  _load(p);
+                                },
+                                itemBuilder: (context, page) => _MonthGrid(
+                                  wide: wide,
+                                  month: _monthOf(page),
+                                  today: _today,
+                                  selected: _selected,
+                                  events: _months[page] ?? const [],
+                                  onTap: _select,
                                 ),
-                            ],
-                          ),
-                          const SizedBox(height: 4),
-                          SizedBox(
-                            height: _rowHeight * 6,
-                            child: PageView.builder(
-                              controller: _pages,
-                              onPageChanged: (p) {
-                                setState(() => _page = p);
-                                _load(p);
-                              },
-                              itemBuilder: (context, page) => _MonthGrid(
-                                month: _monthOf(page),
-                                today: _today,
-                                selected: _selected,
-                                events: _months[page] ?? const [],
-                                onTap: _select,
                               ),
                             ),
-                          ),
-                        ],
+                          ],
+                        ),
                       ),
                     ),
-                  ),
-                  _Legend(month: month, events: _months[_page] ?? const []),
-                  _DayEvents(
+                    _Legend(month: month, events: _months[_page] ?? const []),
+                  ];
+                  final day = _DayEvents(
                     key: ValueKey(_selected),
                     day: _selected,
                     events: _months[_pageOf(_selected)],
                     error: _errors[_pageOf(_selected)],
-                  ),
-                ],
+                  );
+                  if (!wide) {
+                    return ListView(
+                      padding: scrollPadding(context),
+                      children: [...monthView, day],
+                    );
+                  }
+                  // Desktop direction A: the month, and the picked day
+                  // beside it.
+                  return Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Expanded(
+                        child: ListView(
+                          padding: scrollPadding(
+                            context,
+                            maxWidth: double.infinity,
+                          ),
+                          children: monthView,
+                        ),
+                      ),
+                      SizedBox(
+                        width: paneWidth,
+                        child: PaneSize(
+                          child: ListView(
+                            padding: scrollPadding(context).copyWith(left: 0),
+                            children: [day],
+                          ),
+                        ),
+                      ),
+                    ],
+                  );
+                },
               ),
             ),
             CapsuleSlot(
@@ -293,8 +334,10 @@ class _MonthGrid extends StatelessWidget {
     required this.selected,
     required this.events,
     required this.onTap,
+    required this.wide,
   });
 
+  final bool wide;
   final DateTime month, today, selected;
   final List<CalendarEvent> events;
   final ValueChanged<DateTime> onTap;
@@ -311,8 +354,9 @@ class _MonthGrid extends StatelessWidget {
       children: [
         for (var w = 0; w < 6; w++)
           SizedBox(
-            height: _rowHeight,
+            height: wide ? _wideRowHeight : _rowHeight,
             child: Row(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 for (var d = 0; d < 7; d++)
                   Expanded(
@@ -327,6 +371,22 @@ class _MonthGrid extends StatelessWidget {
                         );
                         final inMonth = day.month == month.month;
                         final isSelected = day == selected;
+                        if (wide) {
+                          return _WideDayCell(
+                            day: day,
+                            inMonth: inMonth,
+                            isToday: day == today,
+                            isSelected: isSelected,
+                            labels: [
+                              for (final s in _schoolOn(day))
+                                (s.title, _Kind.school.tone(tones)),
+                              for (final e
+                                  in byDay[day] ?? const <CalendarEvent>[])
+                                (e.name, _kindOf(e).tone(tones)),
+                            ],
+                            onTap: () => onTap(day),
+                          );
+                        }
                         final kinds = {
                           if (_schoolOn(day).isNotEmpty) _Kind.school,
                           for (final e in byDay[day] ?? const <CalendarEvent>[])
@@ -667,6 +727,97 @@ class _Legend extends StatelessWidget {
                 ],
               ),
         ],
+      ),
+    );
+  }
+}
+
+/// A desktop day (design/round-11 desktop A): a card with the date and
+/// the day's events by name, as many as fit.
+class _WideDayCell extends StatelessWidget {
+  const _WideDayCell({
+    required this.day,
+    required this.inMonth,
+    required this.isToday,
+    required this.isSelected,
+    required this.labels,
+    required this.onTap,
+  });
+
+  final DateTime day;
+  final bool inMonth, isToday, isSelected;
+  final List<(String, Tone)> labels;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    final tones = context.tones;
+    return Opacity(
+      opacity: inMonth ? 1 : 0.35,
+      child: PressFeedback(
+        scale: 0.97,
+        haptic: HapticFeedback.selectionClick,
+        child: GestureDetector(
+          behavior: HitTestBehavior.opaque,
+          onTap: onTap,
+          child: Semantics(
+            button: true,
+            selected: isSelected,
+            child: Container(
+              margin: const EdgeInsets.all(2),
+              padding: const EdgeInsets.fromLTRB(8, 6, 8, 6),
+              decoration: BoxDecoration(
+                color: scheme.surfaceContainerLow,
+                borderRadius: BorderRadius.circular(Space.m),
+                border: isSelected
+                    ? Border.all(color: tones.lilac.strong, width: 2)
+                    : null,
+              ),
+              // Clips the events that do not fit without an overflow error.
+              child: SingleChildScrollView(
+                physics: const NeverScrollableScrollPhysics(),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      '${day.day}',
+                      style: TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w800,
+                        color: isToday ? tones.lilac.strong : scheme.onSurface,
+                      ),
+                    ),
+                    for (final (title, tone) in labels)
+                      Container(
+                        width: double.infinity,
+                        margin: const EdgeInsets.only(top: 4),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 5,
+                          vertical: 2,
+                        ),
+                        decoration: BoxDecoration(
+                          color: tone.fill,
+                          borderRadius: BorderRadius.circular(6),
+                        ),
+                        child: Text(
+                          title,
+                          maxLines: 1,
+                          softWrap: false,
+                          overflow: TextOverflow.fade,
+                          style: TextStyle(
+                            fontSize: 10,
+                            fontWeight: FontWeight.w800,
+                            color: tone.ink,
+                          ),
+                        ),
+                      ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ),
       ),
     );
   }

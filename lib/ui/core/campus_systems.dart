@@ -99,8 +99,15 @@ final campusSystems = {
 
 /// Opens [s] inside the app: systems with their own page go there (the
 /// website is a tap further), the rest open the website.
-void openCampusSystem(BuildContext context, CampusSystem s) {
+void openCampusSystem(
+  BuildContext context,
+  CampusSystem s, {
+  bool replace = false,
+}) {
   switch (inAppPages[s.id]) {
+    case final path? when replace:
+      // Beside the More list (desktop): in place of the page open there.
+      context.go(path);
     case final path?:
       // Pushed, so back returns to wherever it was opened from.
       context.push(path);
@@ -167,7 +174,11 @@ const _shapes = [spikyStar, clover, scallop];
 /// Each office's systems as a list, the in-app pages first in the group's
 /// color, then the school's websites in grey ([query] filters by name).
 /// Design round-11 more-a-full.
-List<Widget> campusSystemSections(BuildContext context, String query) {
+List<Widget> campusSystemSections(
+  BuildContext context,
+  String query, {
+  String? open,
+}) {
   final t = context.tones;
   final scheme = Theme.of(context).colorScheme;
   // Groups use identity colors (靛、湖綠、珊瑚、橄欖、金黃), not the
@@ -193,11 +204,18 @@ List<Widget> campusSystemSections(BuildContext context, String query) {
             children: [
               for (final (i, s) in shown.indexed) ...[
                 if (i > 0) Divider(height: 1, color: scheme.outlineVariant),
-                _SystemRow(
-                  system: s,
-                  tone: groupTones[gi],
-                  shape: _shapes[systems.indexOf(s) % _shapes.length],
-                  onTap: () => openCampusSystem(context, s),
+                // Lit while its page is open beside the list ([open]).
+                ColoredBox(
+                  color: open != null && inAppPages[s.id] == open
+                      ? scheme.surfaceContainerHigh
+                      : Colors.transparent,
+                  child: _SystemRow(
+                    system: s,
+                    tone: groupTones[gi],
+                    shape: _shapes[systems.indexOf(s) % _shapes.length],
+                    onTap: () =>
+                        openCampusSystem(context, s, replace: open != null),
+                  ),
                 ),
               ],
             ],

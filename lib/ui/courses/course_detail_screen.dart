@@ -35,9 +35,13 @@ typedef _Summary = ({
 /// Course page, variant D2-B (design/round-11): identity-colored hero card,
 /// a row of summaries, upcoming work, then entries into the full lists.
 class CourseDetailScreen extends StatelessWidget {
-  const CourseDetailScreen({super.key, required this.courseId});
+  const CourseDetailScreen({super.key, required this.courseId, this.open});
 
   final int courseId;
+
+  /// The page open beside this one in a wide area; its row is lit, and
+  /// another replaces it rather than stacking.
+  final String? open;
 
   @override
   Widget build(BuildContext context) {
@@ -72,6 +76,8 @@ class CourseDetailScreen extends StatelessWidget {
           final tones = context.tones;
           final scheme = Theme.of(context).colorScheme;
           final base = '/courses/$courseId';
+          void show(String path) =>
+              open != null ? context.go(path) : context.push(path);
           final firstDue = summary.due.firstOrNull;
           return ListView(
             padding: scrollPadding(context),
@@ -103,7 +109,7 @@ class CourseDetailScreen extends StatelessWidget {
                     tone: tones.sun,
                     value: '${summary.posts.length}',
                     label: context.l10n.announcementsUnit,
-                    onTap: () => context.push('$base/announcements'),
+                    onTap: () => show('$base/announcements'),
                   ),
                   const SizedBox(width: 8),
                   _Stat(
@@ -114,7 +120,7 @@ class CourseDetailScreen extends StatelessWidget {
                     ),
                     value: summary.total ?? '-',
                     label: context.l10n.currentGrade,
-                    onTap: () => context.push('$base/grades'),
+                    onTap: () => show('$base/grades'),
                   ),
                 ],
               ),
@@ -133,22 +139,25 @@ class CourseDetailScreen extends StatelessWidget {
                 child: Column(
                   children: [
                     _Entry(
+                      selected: open == '$base/contents',
                       icon: Icons.folder_outlined,
                       title: context.l10n.allSections,
                       detail: context.l10n.sectionCount(summary.sections),
-                      onTap: () => context.push('$base/contents'),
+                      onTap: () => show('$base/contents'),
                     ),
                     _Entry(
+                      selected: open == '$base/announcements',
                       icon: Icons.campaign_outlined,
                       title: context.l10n.announcements,
                       detail: context.l10n.postCount(summary.posts.length),
-                      onTap: () => context.push('$base/announcements'),
+                      onTap: () => show('$base/announcements'),
                     ),
                     _Entry(
+                      selected: open == '$base/grades',
                       icon: Icons.grading_outlined,
                       title: context.l10n.grades,
                       detail: context.l10n.itemCount(summary.grades.length),
-                      onTap: () => context.push('$base/grades'),
+                      onTap: () => show('$base/grades'),
                     ),
                   ],
                 ),
@@ -328,16 +337,19 @@ class _Entry extends StatelessWidget {
     required this.title,
     required this.detail,
     required this.onTap,
+    this.selected = false,
   });
 
   final IconData icon;
   final String title, detail;
   final VoidCallback onTap;
+  final bool selected;
 
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
     return ListTile(
+      tileColor: selected ? scheme.surfaceContainerHigh : null,
       leading: Icon(icon),
       title: Text(title, style: const TextStyle(fontWeight: FontWeight.w800)),
       trailing: Text(

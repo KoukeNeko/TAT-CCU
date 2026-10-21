@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:math' as math;
 import 'dart:ui' show ImageFilter;
 
 import 'package:flutter/material.dart';
@@ -27,7 +28,6 @@ AppBar topBar(
   backgroundColor: Colors.transparent,
   scrolledUnderElevation: 0,
   flexibleSpace: const GlassBackdrop(),
-  toolbarHeight: 76,
   title: Text(
     title,
     style: const TextStyle(fontSize: 34, fontWeight: FontWeight.w900),
@@ -82,8 +82,11 @@ AppBar subBar(
   titleSpacing: 16,
   title: Row(
     children: [
-      RoundBackButton(),
-      const SizedBox(width: 10),
+      // A page opened beside a list (desktop) has nothing to go back to.
+      if (_canGoBack(context)) ...[
+        RoundBackButton(),
+        const SizedBox(width: 10),
+      ],
       Expanded(child: Text(title)),
       if (action != null) PressFeedback(child: action),
     ],
@@ -584,14 +587,63 @@ Future<void> openExternal(String url) =>
 /// body under the bar, so the bar's height arrives as bottom media padding.
 /// [top] is the gap below the app bar; one value so every page starts at
 /// the same height.
-EdgeInsets scrollPadding(BuildContext context, {double top = pageTop}) {
+EdgeInsets scrollPadding(
+  BuildContext context, {
+  double top = pageTop,
+  double maxWidth = readableWidth,
+}) {
   // Both bars float: the nav bar below and the glass app bar above arrive
   // as media padding when the body extends behind them.
   final inset = MediaQuery.paddingOf(context);
+  // A wide area centers one readable column.
+  final side = math.max(
+    pageMargin,
+    (MediaQuery.sizeOf(context).width - maxWidth) / 2,
+  );
   return EdgeInsets.fromLTRB(
-    pageMargin,
+    side,
     top + inset.top,
-    pageMargin,
+    side,
     Space.xxl + inset.bottom,
   );
+}
+
+/// Reports the area it is given as the media size, so a page laid out
+/// beside the sidebar or a list measures its own column, not the window.
+class PaneSize extends StatelessWidget {
+  const PaneSize({super.key, required this.child});
+
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) => LayoutBuilder(
+    builder: (context, box) => MediaQuery(
+      data: MediaQuery.of(context).copyWith(size: box.biggest),
+      child: child,
+    ),
+  );
+}
+
+/// Marks a detail pane whose pages sit on the list's own route, [root],
+/// which is hidden behind the list beside them (desktop 更多).
+class ListPaneScope extends InheritedWidget {
+  const ListPaneScope({super.key, required this.root, required super.child});
+
+  final String root;
+
+  @override
+  bool updateShouldNotify(ListPaneScope old) => old.root != root;
+}
+
+/// A page shows a back button when there is a page behind it to return
+/// to, which is not so for the first page in a [ListPaneScope].
+bool _canGoBack(BuildContext context) {
+  final navigator = Navigator.of(context);
+  if (!navigator.canPop()) return false;
+  final scope = context.getInheritedWidgetOfExactType<ListPaneScope>();
+  if (scope == null) return true;
+  final pages = navigator.widget.pages;
+  final settings = ModalRoute.of(context)?.settings;
+  final i = settings is Page<Object?> ? pages.indexOf(settings) : -1;
+  return i < 1 || pages[i - 1].name != scope.root;
 }

@@ -5,17 +5,21 @@ import 'package:provider/provider.dart';
 
 import '../../data/repositories/ecourse_repository.dart';
 import '../core/theme.dart';
+import '../courses/course_detail_screen.dart';
+import '../courses/forum_screen.dart';
 import '../courses/module_screen.dart';
 import '../core/widgets.dart';
 import 'mail_compose_screen.dart';
 import '../../l10n/l10n.dart';
 
 /// Opens an eCourse2 link on its page in the app when there is one, and on
-/// eCourse2 otherwise.
+/// eCourse2 otherwise. [show] takes the page instead of pushing it, such as
+/// into the pane beside a list.
 Future<void> openEcourseLink(
   BuildContext context,
   String url, {
   String? title,
+  ValueChanged<Widget>? show,
 }) async {
   final uri = Uri.parse(url);
   final id = int.tryParse(uri.queryParameters['id'] ?? '');
@@ -23,9 +27,17 @@ Future<void> openEcourseLink(
   final type = RegExp(r'/mod/(\w+)/view\.php$').firstMatch(uri.path)?[1];
   if (uri.path.endsWith('/mod/forum/discuss.php') && discussion != null) {
     // The discussion page loads by its id alone; the course is not used.
-    context.push('/courses/0/discussions/$discussion', extra: title);
+    if (show != null) {
+      show(DiscussionScreen(discussionId: discussion, title: title));
+    } else {
+      context.push('/courses/0/discussions/$discussion', extra: title);
+    }
   } else if (uri.path.endsWith('/course/view.php') && id != null) {
-    context.push('/courses/$id');
+    if (show != null) {
+      show(CourseDetailScreen(courseId: id));
+    } else {
+      context.push('/courses/$id');
+    }
   } else if (id != null && moduleTypesWithPage.contains(type)) {
     final int course;
     try {
@@ -34,7 +46,12 @@ Future<void> openEcourseLink(
       openExternal(url);
       return;
     }
-    if (context.mounted) context.push('/courses/$course/modules/$id');
+    if (!context.mounted) return;
+    if (show != null) {
+      show(ModuleScreen(courseId: course, cmid: id, title: title));
+    } else {
+      context.push('/courses/$course/modules/$id');
+    }
   } else {
     openExternal(url);
   }
@@ -50,6 +67,7 @@ typedef _Item = ({
   String detail,
   DateTime time,
   bool unread,
+  bool selected,
   VoidCallback? onTap,
 });
 
@@ -67,6 +85,20 @@ class _MessagesScreenState extends State<MessagesScreen> {
   var _version = 0;
   var _filter = _Filter.all;
 
+  /// What is shown beside the list in a wide window: a mail id or a
+  /// notification link, and its page. Mail read there shows as read
+  /// without reloading the list.
+  Object? _open;
+  Widget? _page;
+  final _read = <int>{};
+
+  bool get _wide => MediaQuery.sizeOf(context).width >= wideLayout;
+
+  void _show(Object key, Widget page) => setState(() {
+    _open = key;
+    _page = page;
+  });
+
   /// One page per filter, swiped like the timetable's days.
   final _pages = PageController();
 
@@ -83,6 +115,21 @@ class _MessagesScreenState extends State<MessagesScreen> {
   );
 
   Future<void> _openMail(int id) async {
+    if (_wide) {
+      _read.add(id);
+      _show(
+        id,
+        MailScreen(
+          id: id,
+          onUnread: () => setState(() {
+            _read.remove(id);
+            _open = null;
+            _version++;
+          }),
+        ),
+      );
+      return;
+    }
     await Navigator.of(context)
         .push(MaterialPageRoute(builder: (_) => MailScreen(id: id)));
     if (mounted) setState(() => _version++);
@@ -104,14 +151,80 @@ class _MessagesScreenState extends State<MessagesScreen> {
     _Filter.assignment => i.kind == _Kind.assignment,
   };
 
+  /// A new mail; beside the list it opens over an empty pane, so closing
+  /// it leaves the pane empty.
+  void _compose() {
+    if (!_wide) {
+      Navigator.of(context)
+          .push(MaterialPageRoute(builder: (_) => const MailComposeScreen()));
+      return;
+    }
+    _show(_composeKey, const MailComposeScreen());
+  }
+
+  static const _composeKey = 'compose';
+
   @override
   Widget build(BuildContext context) {
+    if (!_wide) return _feed(context);
+    // Desktop direction A: the list, and the open mail beside it.
+    final page = _page;
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        SizedBox(
+          width: paneWidth,
+          child: PaneSize(child: _feed(context)),
+        ),
+        VerticalDivider(
+          width: 1,
+          color: Theme.of(context).colorScheme.outlineVariant,
+        ),
+        Expanded(
+          child: _open == null || page == null
+              ? const SizedBox.shrink()
+              // Its own navigator, so replying opens in this pane.
+              : PaneSize(
+                  child: Navigator(
+                    key: ValueKey(_open),
+                    onGenerateInitialRoutes: (_, _) => [
+                      if (_open == _composeKey)
+                        MaterialPageRoute(
+                          builder: (_) => const SizedBox.shrink(),
+                        ),
+                      MaterialPageRoute(builder: (_) => page),
+                    ],
+                  ),
+                ),
+        ),
+      ],
+    );
+  }
+
+  Widget _feed(BuildContext context) {
     final repo = context.read<EcourseRepository>();
     final l10n = context.l10n;
     return Scaffold(
       extendBodyBehindAppBar: true,
       appBar: topBar(
         l10n.navMessages,
+        // Beside the mail pane, 寫信 sits in the bar instead of floating.
+        actions: [
+          if (_wide)
+            Padding(
+              padding: const EdgeInsets.only(right: Space.l),
+              child: IconButton(
+                tooltip: l10n.compose,
+                style: IconButton.styleFrom(
+                  backgroundColor: Theme.of(context)
+                      .colorScheme
+                      .surfaceContainer,
+                ),
+                onPressed: _compose,
+                icon: const Icon(Icons.edit_outlined),
+              ),
+            ),
+        ],
         bottom: ChipBar(
           children: [
             for (final (f, label) in [
@@ -130,17 +243,19 @@ class _MessagesScreenState extends State<MessagesScreen> {
           ],
         ),
       ),
-      floatingActionButton: Padding(
-        // Clear the floating nav bar.
-        padding: EdgeInsets.only(bottom: MediaQuery.paddingOf(context).bottom),
-        child: FloatingActionButton.extended(
-          onPressed: () => Navigator.of(
-            context,
-          ).push(MaterialPageRoute(builder: (_) => const MailComposeScreen())),
-          icon: const Icon(Icons.edit_outlined),
-          label: Text(l10n.compose),
-        ),
-      ),
+      floatingActionButton: _wide
+          ? null
+          : Padding(
+              // Clear the floating nav bar.
+              padding: EdgeInsets.only(
+                bottom: MediaQuery.paddingOf(context).bottom,
+              ),
+              child: FloatingActionButton.extended(
+                onPressed: _compose,
+                icon: const Icon(Icons.edit_outlined),
+                label: Text(l10n.compose),
+              ),
+            ),
       body: Loader.watch(
         key: ValueKey(_version),
         watch: () => repo.watch(
@@ -159,7 +274,8 @@ class _MessagesScreenState extends State<MessagesScreen> {
                 title: m.subject,
                 detail: '${m.sender}・${names[m.courseId] ?? m.course}',
                 time: m.time,
-                unread: m.unread,
+                unread: m.unread && !_read.contains(m.id),
+                selected: m.id == _open,
                 onTap: () => _openMail(m.id),
               ),
             for (final n in d.notices)
@@ -169,9 +285,15 @@ class _MessagesScreenState extends State<MessagesScreen> {
                 detail: n.text,
                 time: n.time,
                 unread: !n.read,
+                selected: n.url != null && n.url == _open,
                 onTap: n.url == null
                     ? null
-                    : () => openEcourseLink(context, n.url!, title: n.subject),
+                    : () => openEcourseLink(
+                        context,
+                        n.url!,
+                        title: n.subject,
+                        show: _wide ? (page) => _show(n.url!, page) : null,
+                      ),
               ),
           ]..sort((a, b) => b.time.compareTo(a.time));
           return PageView(
@@ -206,7 +328,7 @@ class _MessagesScreenState extends State<MessagesScreen> {
       padding: scrollPadding(
         context,
         top: 0,
-      ).copyWith(bottom: scrollPadding(context).bottom + 72),
+      ).copyWith(bottom: scrollPadding(context).bottom + (_wide ? 0 : 72)),
       children: [
         if (shown.isEmpty)
           Padding(
@@ -259,64 +381,71 @@ class _MessageRow extends StatelessWidget {
     };
     return InkWell(
       onTap: item.onTap,
-      child: Padding(
-        padding: const EdgeInsets.symmetric(
-          horizontal: Space.xs,
-          vertical: Space.m,
+      borderRadius: BorderRadius.circular(14),
+      child: Ink(
+        decoration: BoxDecoration(
+          color: item.selected ? scheme.surfaceContainerHigh : null,
+          borderRadius: BorderRadius.circular(14),
         ),
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Container(
-              width: 36,
-              height: 36,
-              decoration: BoxDecoration(
-                color: tone.fill,
-                borderRadius: BorderRadius.circular(Corners.small),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(
+            horizontal: Space.xs,
+            vertical: Space.m,
+          ),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Container(
+                width: 36,
+                height: 36,
+                decoration: BoxDecoration(
+                  color: tone.fill,
+                  borderRadius: BorderRadius.circular(Corners.small),
+                ),
+                child: Icon(icon, size: 20, color: tone.ink),
               ),
-              child: Icon(icon, size: 20, color: tone.ink),
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    item.title,
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
-                    style: TextStyle(
-                      fontSize: 15,
-                      fontWeight: item.unread
-                          ? FontWeight.w900
-                          : FontWeight.w700,
-                      height: 1.35,
-                    ),
-                  ),
-                  if (item.detail.isNotEmpty)
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
                     Text(
-                      item.detail,
-                      maxLines: 1,
+                      item.title,
+                      maxLines: 2,
                       overflow: TextOverflow.ellipsis,
                       style: TextStyle(
-                        fontSize: 12,
-                        fontWeight: FontWeight.w700,
-                        color: scheme.onSurfaceVariant,
+                        fontSize: 15,
+                        fontWeight: item.unread
+                            ? FontWeight.w900
+                            : FontWeight.w700,
+                        height: 1.35,
                       ),
                     ),
-                ],
+                    if (item.detail.isNotEmpty)
+                      Text(
+                        item.detail,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w700,
+                          color: scheme.onSurfaceVariant,
+                        ),
+                      ),
+                  ],
+                ),
               ),
-            ),
-            const SizedBox(width: 8),
-            Text(
-              dateTimeLabel(context, item.time),
-              style: TextStyle(
-                fontSize: 12,
-                fontWeight: FontWeight.w800,
-                color: item.unread ? t.sun.strong : scheme.onSurfaceVariant,
+              const SizedBox(width: 8),
+              Text(
+                dateTimeLabel(context, item.time),
+                style: TextStyle(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w800,
+                  color: item.unread ? t.sun.strong : scheme.onSurfaceVariant,
+                ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );
@@ -326,9 +455,12 @@ class _MessageRow extends StatelessWidget {
 /// One message, read in the app; opening it marks it read on eCourse2.
 /// Replying and forwarding happen on eCourse2's page for the message.
 class MailScreen extends StatelessWidget {
-  const MailScreen({super.key, required this.id});
+  const MailScreen({super.key, required this.id, this.onUnread});
 
   final int id;
+
+  /// After marking it unread; closes the page when not given.
+  final VoidCallback? onUnread;
 
   @override
   Widget build(BuildContext context) {
@@ -346,7 +478,11 @@ class MailScreen extends StatelessWidget {
           onPressed: () async {
             try {
               await repo.markMailUnread(id);
-              if (context.mounted) Navigator.of(context).pop();
+              if (onUnread != null) {
+                onUnread!();
+              } else if (context.mounted) {
+                Navigator.of(context).pop();
+              }
             } catch (e) {
               if (context.mounted) showSendError(context, e);
             }
@@ -407,16 +543,21 @@ class MailScreen extends StatelessWidget {
                 pageMargin,
                 MediaQuery.paddingOf(context).bottom + Space.s,
               ),
-              child: SizedBox(
-                width: double.infinity,
-                child: FilledButton(
-                  onPressed: () => Navigator.of(context).push(
-                    MaterialPageRoute(
-                      builder: (_) =>
-                          MailComposeScreen(replyTo: id, replyName: m.sender),
+              // A pill under the text beside the list; the full width on a
+              // phone.
+              child: Align(
+                alignment: AlignmentDirectional.centerStart,
+                child: SizedBox(
+                  width: onUnread != null ? null : double.infinity,
+                  child: FilledButton(
+                    onPressed: () => Navigator.of(context).push(
+                      MaterialPageRoute(
+                        builder: (_) =>
+                            MailComposeScreen(replyTo: id, replyName: m.sender),
+                      ),
                     ),
+                    child: Text(l10n.reply),
                   ),
-                  child: Text(l10n.reply),
                 ),
               ),
             ),

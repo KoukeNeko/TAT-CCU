@@ -4,7 +4,10 @@ import 'dart:ui' show ImageFilter;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
+import 'package:provider/provider.dart';
 
+import '../../data/repositories/ecourse_repository.dart';
+import '../../domain/models/course.dart';
 import 'theme.dart';
 import 'widgets.dart';
 import '../../l10n/l10n.dart';
@@ -12,6 +15,8 @@ import '../../l10n/l10n.dart';
 typedef _Tab = (IconData icon, String label, Tone tone, ShapeBorder shape);
 
 const _barHeight = 72.0;
+
+const _sidebarWidth = 232.0;
 
 /// Selected label style; the capsule is sized from it.
 const _labelStyle = TextStyle(fontSize: 15, fontWeight: FontWeight.w900);
@@ -39,9 +44,12 @@ const _dragSlop = 12.0;
 /// across it: the capsule follows the finger, each new tab ticks, and lifting
 /// the finger commits the tab under it.
 class AppShell extends StatefulWidget {
-  const AppShell({super.key, required this.shell});
+  const AppShell({super.key, required this.shell, required this.location});
 
   final StatefulNavigationShell shell;
+
+  /// Where the app is; the sidebar lights the course being shown.
+  final String location;
 
   @override
   State<AppShell> createState() => _AppShellState();
@@ -133,6 +141,27 @@ class _AppShellState extends State<AppShell> {
     ];
     final light = theme.brightness == Brightness.light;
     final pressed = _downX != null;
+    // Wide windows (desktop) trade the floating bar for a sidebar.
+    if (MediaQuery.sizeOf(context).width >= wideLayout) {
+      return Scaffold(
+        backgroundColor: scheme.surface,
+        body: Row(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            _Sidebar(
+              shell: widget.shell,
+              labels: [for (final t in tabs) t.$2],
+              course: int.tryParse(
+                RegExp(r'^/courses/(\d+)').firstMatch(widget.location)?[1] ??
+                    '',
+              ),
+            ),
+            VerticalDivider(width: 1, color: scheme.outlineVariant),
+            Expanded(child: PaneSize(child: widget.shell)),
+          ],
+        ),
+      );
+    }
     // Pages without an app bar (Today) still need status bar icons that
     // contrast with the edge-to-edge background.
     return AnnotatedRegion<SystemUiOverlayStyle>(
@@ -205,6 +234,229 @@ class _AppShellState extends State<AppShell> {
                   );
                 },
               ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// Desktop sidebar, design/round-11 desktop direction A: the five tabs, then
+/// this semester's courses.
+class _Sidebar extends StatefulWidget {
+  const _Sidebar({required this.shell, required this.labels, this.course});
+
+  final StatefulNavigationShell shell;
+  final List<String> labels;
+
+  /// The course whose pages are shown; it is lit instead of a tab.
+  final int? course;
+
+  @override
+  State<_Sidebar> createState() => _SidebarState();
+}
+
+class _SidebarState extends State<_Sidebar> {
+  EcourseRepository? _repo;
+  late Stream<(List<Course>, int)> _data;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    final repo = context.watch<EcourseRepository>();
+    if (repo == _repo) return;
+    _repo = repo;
+    // The pages show their own load errors; the sidebar just stays short.
+    _data = repo.watch(
+      (r) async => (
+        await r.currentCourses(),
+        await r.unreadNotices() + await r.unreadMail(),
+      ),
+    );
+  }
+
+  /// A content area wide enough for list and detail opens the course with
+  /// its sections beside it, in place of whatever course was open; a
+  /// narrower one pushes the course page.
+  void _openCourse(int id) {
+    final content = MediaQuery.sizeOf(context).width - _sidebarWidth - 1;
+    if (content >= wideLayout) {
+      context.go('/courses/$id/contents');
+    } else if (widget.course == null) {
+      context.push('/courses/$id');
+    } else {
+      context.pushReplacement('/courses/$id');
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    final t = context.tones;
+    return Container(
+      width: _sidebarWidth,
+      color: scheme.surfaceContainer,
+      padding: EdgeInsets.fromLTRB(
+        Space.m,
+        MediaQuery.paddingOf(context).top + Space.xxl,
+        Space.m,
+        Space.l,
+      ),
+      child: StreamBuilder(
+        stream: _data,
+        builder: (context, snap) {
+          final (courses, unread) = snap.data ?? (const <Course>[], 0);
+          return ListView(
+            padding: EdgeInsets.zero,
+            children: [
+              for (final (i, label) in widget.labels.indexed)
+                _SideItem(
+                  label: label,
+                  selected:
+                      widget.course == null && i == widget.shell.currentIndex,
+                  badge: i == 1 && unread > 0 ? '$unread' : null,
+                  onTap: () {
+                    widget.shell.goBranch(
+                      i,
+                      initialLocation: i == widget.shell.currentIndex,
+                    );
+                  },
+                ),
+              if (courses.isNotEmpty)
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(Space.m, 18, Space.m, 6),
+                  child: Text(
+                    context.l10n.navCourses,
+                    style: TextStyle(
+                      fontSize: 11,
+                      fontWeight: FontWeight.w900,
+                      color: scheme.onSurfaceVariant,
+                    ),
+                  ),
+                ),
+              for (final c in courses)
+                PressFeedback(
+                  scale: 0.97,
+                  haptic: HapticFeedback.selectionClick,
+                  child: GestureDetector(
+                    behavior: HitTestBehavior.opaque,
+                    onTap: () => _openCourse(c.id),
+                    child: Container(
+                      height: 32,
+                      decoration: BoxDecoration(
+                        color: c.id == widget.course
+                            ? scheme.surfaceContainerHigh
+                            : null,
+                        borderRadius: BorderRadius.circular(Space.m),
+                      ),
+                      child: Row(
+                        children: [
+                          const SizedBox(width: Space.m),
+                          Container(
+                            width: 9,
+                            height: 9,
+                            decoration: BoxDecoration(
+                              color: t.forCourse(c.id).strong,
+                              borderRadius: BorderRadius.circular(3),
+                            ),
+                          ),
+                          const SizedBox(width: 10),
+                          Expanded(
+                            child: Text(
+                              context.courseName(c),
+                              maxLines: 1,
+                              softWrap: false,
+                              overflow: TextOverflow.fade,
+                              style: TextStyle(
+                                fontSize: 13,
+                                fontWeight: FontWeight.w700,
+                                color: c.id == widget.course
+                                    ? scheme.onSurface
+                                    : scheme.onSurfaceVariant,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+            ],
+          );
+        },
+      ),
+    );
+  }
+}
+
+class _SideItem extends StatelessWidget {
+  const _SideItem({
+    required this.label,
+    required this.selected,
+    required this.onTap,
+    this.badge,
+  });
+
+  final String label;
+  final bool selected;
+  final String? badge;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    final sun = context.tones.sun;
+    return Semantics(
+      button: true,
+      selected: selected,
+      child: PressFeedback(
+        scale: 0.97,
+        haptic: HapticFeedback.selectionClick,
+        child: GestureDetector(
+          behavior: HitTestBehavior.opaque,
+          onTap: onTap,
+          child: Container(
+            height: 38,
+            margin: const EdgeInsets.only(bottom: 2),
+            padding: const EdgeInsets.symmetric(horizontal: Space.m),
+            decoration: BoxDecoration(
+              color: selected ? scheme.surfaceContainerHigh : null,
+              borderRadius: BorderRadius.circular(Space.m),
+            ),
+            child: Row(
+              children: [
+                Text(
+                  label,
+                  style: TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w800,
+                    color: selected
+                        ? scheme.onSurface
+                        : scheme.onSurfaceVariant,
+                  ),
+                ),
+                const Spacer(),
+                if (badge case final badge?)
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 7,
+                      vertical: 1,
+                    ),
+                    decoration: BoxDecoration(
+                      color: sun.strong,
+                      borderRadius: BorderRadius.circular(999),
+                    ),
+                    child: Text(
+                      badge,
+                      style: TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w800,
+                        color: sun.fill,
+                      ),
+                    ),
+                  ),
+              ],
             ),
           ),
         ),

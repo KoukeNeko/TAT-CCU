@@ -21,6 +21,8 @@ Future<T?> showGlassSheet<T>(
   context: context,
   useRootNavigator: true,
   isScrollControlled: true,
+  // A desktop window keeps the sheet at a phone's width.
+  constraints: const BoxConstraints(maxWidth: 560),
   backgroundColor: Colors.transparent,
   elevation: 0,
   barrierColor: Colors.black.withValues(alpha: 0.3),

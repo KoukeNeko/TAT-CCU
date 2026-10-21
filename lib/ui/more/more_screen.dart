@@ -21,7 +21,10 @@ typedef _Page = ({String path, IconData icon, Tone tone, String title});
 /// picks (long-press to replace, drag to reorder), every campus system by
 /// office with the in-app pages first, then the app.
 class MoreScreen extends StatefulWidget {
-  const MoreScreen({super.key});
+  const MoreScreen({super.key, this.open});
+
+  /// The page open beside this list in a wide window; its row is lit.
+  final String? open;
 
   @override
   State<MoreScreen> createState() => _MoreScreenState();
@@ -147,6 +150,7 @@ class _MoreScreenState extends State<MoreScreen> {
           builder: (context, constraints) {
             final tile = _StatusTile(
               page: page,
+              onOpen: _open,
               grades: _grades,
               library: _library,
               leave: _leave,
@@ -190,6 +194,11 @@ class _MoreScreenState extends State<MoreScreen> {
     );
   }
 
+  /// Beside the list (desktop) a page replaces the one open there;
+  /// otherwise it is pushed, so back returns here.
+  void _open(String path) =>
+      widget.open != null ? context.go(path) : context.push(path);
+
   @override
   Widget build(BuildContext context) {
     final t = context.tones;
@@ -227,7 +236,7 @@ class _MoreScreenState extends State<MoreScreen> {
                 ),
               ],
             ],
-            ...campusSystemSections(context, _query),
+            ...campusSystemSections(context, _query, open: widget.open),
             if (!searching) ...[
               SectionLabel(context.l10n.aboutApp),
               Card(
@@ -239,7 +248,8 @@ class _MoreScreenState extends State<MoreScreen> {
                       tone: t.peach,
                       icon: Icons.handyman_outlined,
                       title: context.l10n.tools,
-                      onTap: () => context.push('/more/tools'),
+                      selected: widget.open == '/more/tools',
+                      onTap: () => _open('/more/tools'),
                     ),
                     MenuRow(
                       tone: t.lilac,
@@ -257,25 +267,29 @@ class _MoreScreenState extends State<MoreScreen> {
                             ? context.l10n.ecourseSignedIn
                             : context.l10n.ecourseSignedOut,
                       ),
-                      onTap: () => context.push('/more/account'),
+                      selected: widget.open == '/more/account',
+                      onTap: () => _open('/more/account'),
                     ),
                     MenuRow(
                       tone: t.mint,
                       icon: Icons.tune,
                       title: context.l10n.settings,
-                      onTap: () => context.push('/more/settings'),
+                      selected: widget.open == '/more/settings',
+                      onTap: () => _open('/more/settings'),
                     ),
                     MenuRow(
                       tone: t.sun,
                       icon: Icons.palette_outlined,
                       title: context.l10n.designLanguage,
-                      onTap: () => context.push('/more/design'),
+                      selected: widget.open == '/more/design',
+                      onTap: () => _open('/more/design'),
                     ),
                     MenuRow(
                       tone: t.peach,
                       icon: Icons.info_outline,
                       title: context.l10n.about,
-                      onTap: () => context.push('/more/about'),
+                      selected: widget.open == '/more/about',
+                      onTap: () => _open('/more/about'),
                     ),
                   ],
                 ),
@@ -292,12 +306,14 @@ class _MoreScreenState extends State<MoreScreen> {
 class _StatusTile extends StatelessWidget {
   const _StatusTile({
     required this.page,
+    required this.onOpen,
     required this.grades,
     required this.library,
     required this.leave,
   });
 
   final _Page page;
+  final ValueChanged<String> onOpen;
   final Future<Map<int, String>> grades;
   final Future<CachedPage?> library, leave;
 
@@ -345,7 +361,7 @@ class _StatusTile extends StatelessWidget {
     icon: page.icon,
     title: page.title,
     status: status,
-    onTap: () => context.push(page.path),
+    onTap: () => onOpen(page.path),
   );
 }
 
@@ -358,8 +374,10 @@ class MenuRow extends StatelessWidget {
     required this.title,
     required this.onTap,
     this.trailing,
+    this.selected = false,
   });
 
+  final bool selected;
   final Tone tone;
   final IconData icon;
   final String title;
@@ -370,6 +388,7 @@ class MenuRow extends StatelessWidget {
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
     return ListTile(
+      tileColor: selected ? scheme.surfaceContainerHigh : null,
       leading: Container(
         width: 36,
         height: 36,

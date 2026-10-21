@@ -133,6 +133,19 @@ const rowGap = Space.s;
 /// Side margin of every page.
 const pageMargin = Space.l;
 
+/// Width from which the window takes the desktop layout (a sidebar instead
+/// of the nav bar) and a page puts its list beside its detail. Pages
+/// measure the area they get, which [PaneSize] reports.
+const wideLayout = 840.0;
+
+/// Every desktop column beside the main one: the 訊息 and 更多 lists, and
+/// the panels beside the week, the month and today's class.
+const paneWidth = 360.0;
+
+/// Widest a single column of content grows, so a page in a wide area does
+/// not stretch its cards and lines across it.
+const readableWidth = 720.0;
+
 /// Space between the app bar and a page's first content.
 const pageTop = Space.xl;
 
@@ -235,7 +248,7 @@ ThemeData buildTheme(Brightness brightness, {String fontFamily = fontTw}) {
       backgroundColor: colors.surface,
       surfaceTintColor: Colors.transparent,
       centerTitle: false,
-      toolbarHeight: 72,
+      toolbarHeight: 76,
       titleSpacing: 20,
       titleTextStyle: TextStyle(
         fontFamily: fontFamily,

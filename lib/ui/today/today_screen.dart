@@ -138,126 +138,154 @@ class _TodayScreenState extends State<TodayScreen> {
                         case [final first, ...])
                       (slot: first, days: day),
                 ].firstOrNull;
-          return ListView(
-            padding: scrollPadding(context),
-            children: [
-              // Header design A (design/round-09): date above the headline;
-              // notifications moved to the 訊息 tab.
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: Space.xs),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      '${weekdayName(context, now.weekday)} ${now.month}/${now.day}',
-                      style: TextStyle(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w700,
-                        color: theme.colorScheme.onSurfaceVariant,
-                      ),
+          final lead = <Widget>[
+            // Header design A (design/round-09): date above the headline;
+            // notifications moved to the 訊息 tab.
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: Space.xs),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    '${weekdayName(context, now.weekday)} ${now.month}/${now.day}',
+                    style: TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w700,
+                      color: theme.colorScheme.onSurfaceVariant,
                     ),
-                    const SizedBox(height: 4),
-                    Text(
-                      headline,
-                      style: const TextStyle(
-                        fontSize: 34,
-                        fontWeight: FontWeight.w900,
-                        height: 1.15,
-                      ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    headline,
+                    style: const TextStyle(
+                      fontSize: 34,
+                      fontWeight: FontWeight.w900,
+                      height: 1.15,
                     ),
-                  ],
-                ),
+                  ),
+                ],
               ),
-              const SizedBox(height: 16),
-              if (current != null)
-                _Hero(
-                  slot: current,
-                  label: l10n.inClass,
-                  detail: l10n.untilTime(clock(current.session.end)),
-                  minutes: current.session.end - minute,
-                  later: false,
-                  // shortcut: shown in every class, whether or not the course
-                  // takes attendance; check its modules if that gets noisy.
-                  onAttendance: () => scanAttendance(context),
-                )
-              else if (next != null)
-                _Hero(
-                  slot: next,
-                  label: l10n.nextClass,
-                  detail: l10n.startsAt(clock(next.session.start)),
-                  minutes: next.session.start - minute,
-                  later: true,
-                )
-              else if (upcoming != null)
-                _Hero(
-                  slot: upcoming.slot,
-                  label: l10n.firstClassOn(
-                    upcoming.days == 1
-                        ? l10n.tomorrow
-                        : weekdayName(context, upcoming.slot.session.weekday),
-                  ),
-                  detail: l10n.startsAt(clock(upcoming.slot.session.start)),
-                  minutes:
-                      upcoming.days * 24 * 60 +
-                      upcoming.slot.session.start -
-                      minute,
-                  later: true,
-                  tone: tones.mint,
+            ),
+            const SizedBox(height: 16),
+            if (current != null)
+              _Hero(
+                slot: current,
+                label: l10n.inClass,
+                detail: l10n.untilTime(clock(current.session.end)),
+                minutes: current.session.end - minute,
+                later: false,
+                // shortcut: shown in every class, whether or not the course
+                // takes attendance; check its modules if that gets noisy.
+                onAttendance: () => scanAttendance(context),
+              )
+            else if (next != null)
+              _Hero(
+                slot: next,
+                label: l10n.nextClass,
+                detail: l10n.startsAt(clock(next.session.start)),
+                minutes: next.session.start - minute,
+                later: true,
+              )
+            else if (upcoming != null)
+              _Hero(
+                slot: upcoming.slot,
+                label: l10n.firstClassOn(
+                  upcoming.days == 1
+                      ? l10n.tomorrow
+                      : weekdayName(context, upcoming.slot.session.weekday),
                 ),
-              if (after != null) ...[
-                const SizedBox(height: rowGap),
-                _AfterCard(slot: after),
-              ],
-              if (d.due.isNotEmpty) ...[
-                _GroupHeader(
-                  title: l10n.dueThisWeek,
-                  count: d.due.length,
-                  color: tones.peach.strong,
-                  onAll: () => context.push('/today/due'),
+                detail: l10n.startsAt(clock(upcoming.slot.session.start)),
+                minutes:
+                    upcoming.days * 24 * 60 +
+                    upcoming.slot.session.start -
+                    minute,
+                later: true,
+                tone: tones.mint,
+              ),
+            if (after != null) ...[
+              const SizedBox(height: rowGap),
+              _AfterCard(slot: after),
+            ],
+          ];
+          final lists = <Widget>[
+            if (d.due.isNotEmpty) ...[
+              _GroupHeader(
+                title: l10n.dueThisWeek,
+                count: d.due.length,
+                color: tones.peach.strong,
+                onAll: () => context.push('/today/due'),
+              ),
+              for (final (i, item) in d.due.take(3).indexed) ...[
+                if (i > 0) const Divider(height: 1),
+                _ListRow(
+                  // Within two days, as on the due page.
+                  dot: item.due.difference(now).inHours < 48
+                      ? tones.peach.strong
+                      : tones.forCourse(item.courseId).strong,
+                  title: item.name,
+                  subtitle: item.course,
+                  // Within a week, the weekday is enough.
+                  trailing:
+                      '${weekdayName(context, item.due.weekday)} '
+                      '${clock(item.due.hour * 60 + item.due.minute)}',
+                  onTap: item.url == null
+                      ? null
+                      : () => openDueItem(context, item),
                 ),
-                for (final (i, item) in d.due.take(3).indexed) ...[
-                  if (i > 0) const Divider(height: 1),
-                  _ListRow(
-                    // Within two days, as on the due page.
-                    dot: item.due.difference(now).inHours < 48
-                        ? tones.peach.strong
-                        : tones.forCourse(item.courseId).strong,
-                    title: item.name,
-                    subtitle: item.course,
-                    // Within a week, the weekday is enough.
-                    trailing:
-                        '${weekdayName(context, item.due.weekday)} '
-                        '${clock(item.due.hour * 60 + item.due.minute)}',
-                    onTap: item.url == null
-                        ? null
-                        : () => openDueItem(context, item),
-                  ),
-                ],
-              ],
-              if (d.notices + d.mail > 0) ...[
-                _GroupHeader(
-                  title: l10n.unread,
-                  count: d.notices + d.mail,
-                  color: tones.sun.strong,
-                  onAll: () => context.go('/messages'),
-                ),
-                for (final (i, n) in d.latest.indexed) ...[
-                  if (i > 0) const Divider(height: 1),
-                  _ListRow(
-                    dot: tones.sun.strong,
-                    title: n.subject,
-                    subtitle: dateTimeLabel(context, n.time),
-                    onTap: n.url == null
-                        ? null
-                        : () => openEcourseLink(
-                            context,
-                            n.url!,
-                            title: n.subject,
-                          ),
-                  ),
-                ],
               ],
             ],
+            if (d.notices + d.mail > 0) ...[
+              _GroupHeader(
+                title: l10n.unread,
+                count: d.notices + d.mail,
+                color: tones.sun.strong,
+                onAll: () => context.go('/messages'),
+              ),
+              for (final (i, n) in d.latest.indexed) ...[
+                if (i > 0) const Divider(height: 1),
+                _ListRow(
+                  dot: tones.sun.strong,
+                  title: n.subject,
+                  subtitle: dateTimeLabel(context, n.time),
+                  onTap: n.url == null
+                      ? null
+                      : () =>
+                            openEcourseLink(context, n.url!, title: n.subject),
+                ),
+              ],
+            ],
+          ];
+          final wide = MediaQuery.sizeOf(context).width >= wideLayout;
+          return ListView(
+            padding: scrollPadding(
+              context,
+              maxWidth: wide ? double.infinity : readableWidth,
+            ),
+            children: !wide
+                ? [...lead, ...lists]
+                // Desktop direction A: the class on the left, what is due
+                // and unread on the right.
+                : [
+                    Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.stretch,
+                            children: lead,
+                          ),
+                        ),
+                        const SizedBox(width: Space.xxl),
+                        SizedBox(
+                          width: paneWidth,
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.stretch,
+                            children: lists,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
           );
         },
       ),

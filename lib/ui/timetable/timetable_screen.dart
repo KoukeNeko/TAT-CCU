@@ -22,6 +22,9 @@ class TimetableScreen extends StatefulWidget {
 class _TimetableScreenState extends State<TimetableScreen> {
   int _day = DateTime.now().weekday;
 
+  /// Class shown beside the week grid in a wide window.
+  DaySlot? _picked;
+
   /// Chosen semester; null follows the newest one.
   String? _semester;
 
@@ -92,6 +95,7 @@ class _TimetableScreenState extends State<TimetableScreen> {
               ? weekdays.indexOf(_day)
               : weekdays.length - 1;
           final pages = _pages ??= PageController(initialPage: page);
+          final wide = MediaQuery.sizeOf(context).width >= wideLayout;
           return Scaffold(
             extendBodyBehindAppBar: true,
             appBar: topBar(
@@ -123,62 +127,316 @@ class _TimetableScreenState extends State<TimetableScreen> {
                   ),
               ],
               // Days stay pinned in the glass bar while classes scroll.
-              bottom: PreferredSize(
-                preferredSize: const Size.fromHeight(64),
-                child: Padding(
-                  padding: const EdgeInsets.fromLTRB(
-                    Space.m,
-                    0,
-                    Space.m,
-                    Space.m,
-                  ),
-                  child: Row(
-                    children: [
-                      for (final (i, d) in weekdays.indexed)
-                        Expanded(
-                          child: Padding(
-                            padding: const EdgeInsets.symmetric(horizontal: 3),
-                            child: _DayPill(
-                              label: weekdayShort(context, d),
-                              selected: i == page,
-                              busy: days.contains(d),
-                              onTap: () => pages.animateToPage(
-                                i,
-                                duration: const Duration(milliseconds: 420),
-                                curve: Curves.easeOutQuart,
-                              ),
-                            ),
-                          ),
+              bottom: wide
+                  ? null
+                  : PreferredSize(
+                      preferredSize: const Size.fromHeight(64),
+                      child: Padding(
+                        padding: const EdgeInsets.fromLTRB(
+                          Space.m,
+                          0,
+                          Space.m,
+                          Space.m,
                         ),
-                    ],
-                  ),
-                ),
-              ),
+                        child: Row(
+                          children: [
+                            for (final (i, d) in weekdays.indexed)
+                              Expanded(
+                                child: Padding(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 3,
+                                  ),
+                                  child: _DayPill(
+                                    label: weekdayShort(context, d),
+                                    selected: i == page,
+                                    busy: days.contains(d),
+                                    onTap: () => pages.animateToPage(
+                                      i,
+                                      duration: const Duration(
+                                        milliseconds: 420,
+                                      ),
+                                      curve: Curves.easeOutQuart,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                          ],
+                        ),
+                      ),
+                    ),
             ),
             body: CapsuleArea(
               child: StreamBuilder<_Shared>(
                 stream: _shared,
-                builder: (context, shared) => PageView(
-                  controller: pages,
-                  // A day pill lighting up ticks, however it was reached.
-                  onPageChanged: (i) {
-                    HapticFeedback.selectionClick();
-                    setState(() => _day = weekdays[i]);
-                  },
-                  children: [
-                    for (final d in weekdays)
-                      _DayView(
-                        courses: courses,
-                        day: d,
-                        now: DateTime.now(),
-                        shared: shared.data,
+                builder: (context, shared) => wide
+                    ? _week(context, courses, weekdays, shared.data)
+                    : PageView(
+                        controller: pages,
+                        // A day pill lighting up ticks, however it was reached.
+                        onPageChanged: (i) {
+                          HapticFeedback.selectionClick();
+                          setState(() => _day = weekdays[i]);
+                        },
+                        children: [
+                          for (final d in weekdays)
+                            _DayView(
+                              courses: courses,
+                              day: d,
+                              now: DateTime.now(),
+                              shared: shared.data,
+                            ),
+                        ],
                       ),
-                  ],
-                ),
               ),
             ),
           );
         },
+      ),
+    );
+  }
+
+  /// Desktop direction A: the whole week, and the picked class beside it;
+  /// before a pick, today's class in focus.
+  Widget _week(
+    BuildContext context,
+    List<Course> courses,
+    List<int> weekdays,
+    _Shared? shared,
+  ) {
+    final now = DateTime.now();
+    final minute = now.hour * 60 + now.minute;
+    final today = [
+      for (final c in courses)
+        for (final s in c.sessions)
+          if (s.weekday == now.weekday) (course: c, session: s),
+    ]..sort((a, b) => a.session.start.compareTo(b.session.start));
+    int order(DaySlot s) => s.session.weekday * 24 * 60 + s.session.start;
+    // A day without classes left: the week's first class.
+    final week = [
+      for (final c in courses)
+        for (final s in c.sessions) (course: c, session: s),
+    ]..sort((a, b) => order(a).compareTo(order(b)));
+    final picked =
+        _picked ??
+        dayFocus(today, today: true, minute: minute).focus ??
+        week.firstOrNull;
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Expanded(
+          child: ListView(
+            padding: scrollPadding(context, maxWidth: double.infinity),
+            children: [
+              _WeekGrid(
+                courses: courses,
+                weekdays: weekdays,
+                today: now.weekday,
+                picked: picked,
+                onPick: (s) => setState(() => _picked = s),
+              ),
+            ],
+          ),
+        ),
+        SizedBox(
+          width: paneWidth,
+          child: PaneSize(
+            child: ListView(
+              padding: scrollPadding(context).copyWith(left: 0),
+              children: [
+                if (picked != null)
+                  _FocusCard(
+                    slot: picked,
+                    minute: picked.session.weekday == now.weekday
+                        ? minute
+                        : null,
+                    shared: shared,
+                  ),
+              ],
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+/// Monday to Friday (and a weekend day with classes) side by side, each
+/// class placed by its clock times.
+class _WeekGrid extends StatelessWidget {
+  const _WeekGrid({
+    required this.courses,
+    required this.weekdays,
+    required this.today,
+    required this.picked,
+    required this.onPick,
+  });
+
+  final List<Course> courses;
+  final List<int> weekdays;
+  final int today;
+  final DaySlot? picked;
+  final ValueChanged<DaySlot> onPick;
+
+  static const _perMinute = 0.9;
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    final sessions = [for (final c in courses) ...c.sessions];
+    // Whole hours around the week's classes; 8:00–17:00 when there are none.
+    final first = sessions.isEmpty
+        ? 8 * 60
+        : sessions.map((s) => s.start).reduce((a, b) => a < b ? a : b) ~/
+              60 *
+              60;
+    final last = sessions.isEmpty
+        ? 17 * 60
+        : (sessions.map((s) => s.end).reduce((a, b) => a > b ? a : b) + 59) ~/
+              60 *
+              60;
+    final height = (last - first) * _perMinute;
+    final mute = TextStyle(
+      fontSize: 12,
+      fontWeight: FontWeight.w800,
+      color: scheme.onSurfaceVariant,
+    );
+    return Column(
+      children: [
+        Row(
+          children: [
+            const SizedBox(width: 44),
+            for (final d in weekdays)
+              Expanded(
+                child: Padding(
+                  padding: const EdgeInsets.only(bottom: Space.s),
+                  child: Text(
+                    weekdayName(context, d),
+                    textAlign: TextAlign.center,
+                    style: d == today
+                        ? mute.copyWith(color: context.tones.lilac.strong)
+                        : mute,
+                  ),
+                ),
+              ),
+          ],
+        ),
+        SizedBox(
+          height: height,
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              SizedBox(
+                width: 44,
+                child: Stack(
+                  children: [
+                    for (var m = first; m < last; m += 60)
+                      Positioned(
+                        top: (m - first) * _perMinute,
+                        right: 6,
+                        child: Text(
+                          clock(m),
+                          style: mute.copyWith(fontSize: 11),
+                        ),
+                      ),
+                  ],
+                ),
+              ),
+              for (final d in weekdays)
+                Expanded(
+                  child: Container(
+                    margin: const EdgeInsets.symmetric(horizontal: 2),
+                    decoration: BoxDecoration(
+                      color: d == today
+                          ? scheme.surfaceContainer
+                          : Color.lerp(
+                              scheme.surface,
+                              scheme.surfaceContainer,
+                              0.5,
+                            ),
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: Stack(
+                      children: [
+                        for (final c in courses)
+                          for (final s in c.sessions)
+                            if (s.weekday == d)
+                              Positioned(
+                                top: (s.start - first) * _perMinute,
+                                height: (s.end - s.start) * _perMinute - 2,
+                                left: 0,
+                                right: 0,
+                                child: _WeekBlock(
+                                  slot: (course: c, session: s),
+                                  picked:
+                                      picked?.course.id == c.id &&
+                                      picked?.session.weekday == d &&
+                                      picked?.session.start == s.start,
+                                  onTap: () => onPick((course: c, session: s)),
+                                ),
+                              ),
+                      ],
+                    ),
+                  ),
+                ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _WeekBlock extends StatelessWidget {
+  const _WeekBlock({
+    required this.slot,
+    required this.picked,
+    required this.onTap,
+  });
+
+  final DaySlot slot;
+  final bool picked;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final tone = context.tones.forCourse(slot.course.id);
+    return PressFeedback(
+      scale: 0.97,
+      haptic: HapticFeedback.selectionClick,
+      child: GestureDetector(
+        onTap: onTap,
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+          decoration: BoxDecoration(
+            color: tone.strong,
+            borderRadius: BorderRadius.circular(10),
+            border: picked
+                ? Border.all(
+                    color: Theme.of(context).colorScheme.onSurface,
+                    width: 3,
+                  )
+                : null,
+          ),
+          child: Text.rich(
+            TextSpan(
+              text: context.courseName(slot.course),
+              children: [
+                if (slot.course.room case final room?)
+                  TextSpan(
+                    text: '\n$room',
+                    style: TextStyle(color: tone.fill.withValues(alpha: 0.7)),
+                  ),
+              ],
+            ),
+            overflow: TextOverflow.fade,
+            style: TextStyle(
+              fontSize: 11,
+              fontWeight: FontWeight.w900,
+              height: 1.3,
+              color: tone.fill,
+            ),
+          ),
+        ),
       ),
     );
   }
