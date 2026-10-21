@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
@@ -244,11 +245,12 @@ GoRouter buildRouter(EcourseAuthRepository auth) => GoRouter(
                         GoRoute(
                           path: 'mine',
                           builder: (_, state) {
-                            final (
-                              :data,
-                              :onChanged,
-                            ) = state.extra!
-                                as ({EventsData data, VoidCallback onChanged});
+                            final (:data, :onChanged) =
+                                state.extra!
+                                    as ({
+                                      ValueListenable<EventsData?> data,
+                                      VoidCallback onChanged,
+                                    });
                             return MyEventsScreen(
                               data: data,
                               onChanged: onChanged,

@@ -1,6 +1,7 @@
 import 'dart:ui' show ImageFilter;
 
 import 'package:clock/clock.dart' as clk;
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:http/http.dart' as http;
@@ -81,7 +82,11 @@ class _EventsScreenState extends State<EventsScreen> with AutoRefresh {
 
   /// The public pages and 我的活動 together, as cached.
   var _json = <String, dynamic>{};
-  EventsData? _data;
+
+  /// Also read by 我的活動, which shows a sign-up or cancel made from it.
+  final _shown = ValueNotifier<EventsData?>(null);
+  EventsData? get _data => _shown.value;
+  set _data(EventsData? data) => _shown.value = data;
   DateTime? _savedAt;
   String? _error;
   var _time = _Time.week;
@@ -113,6 +118,7 @@ class _EventsScreenState extends State<EventsScreen> with AutoRefresh {
   void dispose() {
     _http.close();
     _field.dispose();
+    _shown.dispose();
     super.dispose();
   }
 
@@ -389,7 +395,7 @@ class _EventsScreenState extends State<EventsScreen> with AutoRefresh {
               count: _json['mine'] == null ? null : data.mine.length,
               onTap: () => context.push(
                 '/more/events/mine',
-                extra: (data: data, onChanged: _refresh),
+                extra: (data: _shown, onChanged: _refresh),
               ),
             ),
       script: () => readMine,
@@ -905,13 +911,20 @@ class _NoMatch extends StatelessWidget {
 class MyEventsScreen extends StatelessWidget {
   const MyEventsScreen({super.key, required this.data, this.onChanged});
 
-  final EventsData data;
+  /// The events page's data, read again after a sign-up or cancel.
+  final ValueListenable<EventsData?> data;
 
   /// Called after a sign-up or cancel in a detail opened from here.
   final VoidCallback? onChanged;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context) => ValueListenableBuilder(
+    valueListenable: data,
+    builder: (context, data, _) =>
+        data == null ? const SizedBox.shrink() : _build(context, data),
+  );
+
+  Widget _build(BuildContext context, EventsData data) {
     final l10n = context.l10n;
     final tones = context.tones;
     final scheme = Theme.of(context).colorScheme;
