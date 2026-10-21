@@ -230,8 +230,15 @@ jobs:
           app="$RUNNER_TEMP/export/TAT CCU.app"
           mkdir -p dist
           ditto -c -k --keepParent "$app" "$RUNNER_TEMP/notarize.zip"
-          xcrun notarytool submit "$RUNNER_TEMP/notarize.zip" --wait \
-            --key "$ASC_KEY" --key-id "$ASC_KEY_ID" --issuer "$ASC_ISSUER"
+          auth=(--key "$ASC_KEY" --key-id "$ASC_KEY_ID" --issuer "$ASC_ISSUER")
+          xcrun notarytool submit "$RUNNER_TEMP/notarize.zip" --wait --output-format json "${auth[@]}" \
+            > "$RUNNER_TEMP/notary.json"
+          cat "$RUNNER_TEMP/notary.json"
+          # Apple's log says which file it rejected and why.
+          if [ "$(plutil -extract status raw -o - "$RUNNER_TEMP/notary.json")" != Accepted ]; then
+            xcrun notarytool log "$(plutil -extract id raw -o - "$RUNNER_TEMP/notary.json")" "${auth[@]}"
+            exit 1
+          fi
           xcrun stapler staple "$app"
           spctl --assess --type execute --verbose "$app"
           # The zip Homebrew installs from carries the stapled ticket.
