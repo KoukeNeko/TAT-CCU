@@ -182,7 +182,7 @@ class CampusSessionState extends State<CampusSession> {
     _cas = CasAutofill(
       _web,
       context,
-      onVerifying: () => _go(_Step.verifying, _casHost),
+      onVerifying: () => _go(_Step.verifying, casHost),
     );
     if (widget.loadOnStart) reload();
   }
@@ -263,7 +263,7 @@ class CampusSessionState extends State<CampusSession> {
       _followedOn = url;
       _go(_Step.connecting, uri.host);
       _web.runJavaScript(
-        "const a = document.querySelector('a[href^=\"https://$_casHost/login\"]');"
+        "const a = document.querySelector('a[href^=\"https://$casHost/login\"]');"
         'if (a) location.href = a.href;',
       );
     } else if (widget.via.any(page.startsWith)) {
@@ -282,7 +282,7 @@ class CampusSessionState extends State<CampusSession> {
       _go(_Step.connecting, uri.host);
       _web.loadRequest(Uri.parse(widget.entry));
     } else if (signsInItself) {
-      _go(uri.host == _casHost ? _Step.signingIn : _Step.connecting, uri.host);
+      _go(uri.host == casHost ? _Step.signingIn : _Step.connecting, uri.host);
     } else {
       // A sign-in form without a saved password, or one that failed: the
       // user fills it in.
@@ -374,8 +374,6 @@ class CampusSessionState extends State<CampusSession> {
     );
   }
 }
-
-const _casHost = 'cas.ccu.edu.tw';
 
 String _stepTitle(AppLocalizations l10n, _Step step) => switch (step) {
   _Step.connecting => l10n.campusConnecting,

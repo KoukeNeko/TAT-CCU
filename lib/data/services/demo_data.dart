@@ -8,18 +8,15 @@ import 'dart:convert';
 import 'dart:io';
 import 'dart:typed_data';
 
+import '../repositories/certificate_store.dart';
 import 'moodle_client.dart';
 
 import 'package:clock/clock.dart' as clk;
 
 const demoName = '示範同學';
 
-/// `115_1` for the semester [d] falls in (first term August to January).
-String _semester(DateTime d) {
-  final year = d.month >= 8 ? d.year - 1911 : d.year - 1912;
-  final term = d.month >= 8 || d.month == 1 ? 1 : 2;
-  return '${year}_$term';
-}
+/// `115_1` for the semester [d] falls in.
+String _semester(DateTime d) => semesterOf(d).replaceAll('-', '_');
 
 String _previous(String semester) {
   final [year, term] = semester.split('_').map(int.parse).toList();

@@ -7,7 +7,8 @@ import 'package:webview_flutter/webview_flutter.dart';
 import '../../data/services/cas_credentials.dart';
 import '../../l10n/l10n.dart';
 
-const _casHost = 'cas.ccu.edu.tw';
+/// The school's CAS sign-in host.
+const casHost = 'cas.ccu.edu.tw';
 
 /// Reports what the user submits on the CAS form and, given a saved login,
 /// fills the form and submits it once Turnstile has passed on its own. The
@@ -83,7 +84,7 @@ class CasAutofill {
       );
       return true;
     }
-    if (uri.host == _casHost) {
+    if (uri.host == casHost) {
       if (!uri.path.startsWith('/login')) return false;
       final saved = _tried ? null : await CasCredentials.read();
       if (saved != null) _tried = true;
