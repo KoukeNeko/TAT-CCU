@@ -154,4 +154,39 @@ void main() {
     expect(find.text('timetable'), findsOneWidget);
     expect(router.state.uri.path, '/timetable');
   });
+
+  // A tab left behind goes offstage once faded: Android cannot fade a
+  // platform view, so a hidden tab's web view would cover the tab shown.
+  testWidgets('a hidden tab stops painting but keeps its state', (t) async {
+    final router = GoRouter(
+      initialLocation: '/a',
+      routes: [
+        StatefulShellRoute(
+          builder: (_, _, shell) => Scaffold(body: shell),
+          navigatorContainerBuilder: (_, shell, children) =>
+              AnimatedBranches(index: shell.currentIndex, children: children),
+          branches: [
+            StatefulShellBranch(
+              routes: [GoRoute(path: '/a', builder: (_, _) => const Text('a'))],
+            ),
+            StatefulShellBranch(
+              routes: [GoRoute(path: '/b', builder: (_, _) => const Text('b'))],
+            ),
+          ],
+        ),
+      ],
+    );
+    await t.pumpWidget(MaterialApp.router(routerConfig: router));
+    await t.pumpAndSettle();
+
+    router.go('/b');
+    await t.pump();
+    // Still fading out.
+    expect(find.text('a'), findsOneWidget);
+    await t.pumpAndSettle();
+
+    expect(find.text('b'), findsOneWidget);
+    expect(find.text('a'), findsNothing);
+    expect(find.text('a', skipOffstage: false), findsOneWidget);
+  });
 }

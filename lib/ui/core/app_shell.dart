@@ -959,7 +959,7 @@ class _TabSlot extends StatelessWidget {
 
 /// Keeps every tab's navigator alive like an IndexedStack, but cross-fades
 /// the incoming tab in with a slight rise instead of cutting to it.
-class AnimatedBranches extends StatelessWidget {
+class AnimatedBranches extends StatefulWidget {
   const AnimatedBranches({
     super.key,
     required this.index,
@@ -969,28 +969,53 @@ class AnimatedBranches extends StatelessWidget {
   final int index;
   final List<Widget> children;
 
+  @override
+  State<AnimatedBranches> createState() => _AnimatedBranchesState();
+}
+
+class _AnimatedBranchesState extends State<AnimatedBranches> {
   static const _duration = Duration(milliseconds: 260);
+
+  /// The tab fading out; null once it is gone.
+  int? _leaving;
+
+  @override
+  void didUpdateWidget(AnimatedBranches old) {
+    super.didUpdateWidget(old);
+    if (old.index != widget.index) _leaving = old.index;
+  }
 
   @override
   Widget build(BuildContext context) {
     return Stack(
       fit: StackFit.expand,
       children: [
-        for (final (i, child) in children.indexed)
-          IgnorePointer(
-            ignoring: i != index,
-            // The fade itself must keep ticking for the outgoing tab, or it
-            // freezes half-visible over the new one; only the tab's own
-            // content pauses.
-            child: AnimatedOpacity(
-              opacity: i == index ? 1 : 0,
-              duration: _duration,
-              curve: _settle,
-              child: AnimatedSlide(
-                offset: i == index ? Offset.zero : const Offset(0, 0.015),
+        for (final (i, child) in widget.children.indexed)
+          // Hidden tabs go offstage once faded: opacity does not hide a
+          // platform view on Android, so a tab's web view would stay
+          // drawn over the tab shown.
+          Offstage(
+            offstage: i != widget.index && i != _leaving,
+            child: IgnorePointer(
+              ignoring: i != widget.index,
+              // The fade itself must keep ticking for the outgoing tab, or
+              // it freezes half-visible over the new one; only the tab's own
+              // content pauses.
+              child: AnimatedOpacity(
+                opacity: i == widget.index ? 1 : 0,
                 duration: _duration,
                 curve: _settle,
-                child: TickerMode(enabled: i == index, child: child),
+                onEnd: () {
+                  if (i == _leaving) setState(() => _leaving = null);
+                },
+                child: AnimatedSlide(
+                  offset: i == widget.index
+                      ? Offset.zero
+                      : const Offset(0, 0.015),
+                  duration: _duration,
+                  curve: _settle,
+                  child: TickerMode(enabled: i == widget.index, child: child),
+                ),
               ),
             ),
           ),
