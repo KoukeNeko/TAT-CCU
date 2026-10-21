@@ -17,28 +17,49 @@ import base64
 import json
 import os
 import pathlib
+import subprocess
 import sys
 import time
 import urllib.error
 import urllib.parse
 import urllib.request
 
-import jwt
-
 BUNDLE_ID = "io.github.koukeneko.tatCcu"
 NAME = "TAT CCU Developer ID"
 API = "https://api.appstoreconnect.apple.com/v1"
 
 
+def b64url(data):
+    return base64.urlsafe_b64encode(data).rstrip(b"=").decode()
+
+
+def der_to_raw(der):
+    """An ECDSA signature as openssl writes it (DER) to the r || s of a JWT."""
+    assert der[0] == 0x30, "not a DER sequence"
+    i = 3 if der[1] & 0x80 else 2
+    parts = []
+    for _ in range(2):
+        assert der[i] == 0x02, "not a DER integer"
+        length = der[i + 1]
+        parts.append(der[i + 2 : i + 2 + length].lstrip(b"\0").rjust(32, b"\0"))
+        i += 2 + length
+    return b"".join(parts)
+
+
 def token():
-    key = pathlib.Path(os.environ["ASC_KEY"]).read_text()
+    # Signed by openssl so the release job runs no package from PyPI next to
+    # the signing key.
     now = int(time.time())
-    return jwt.encode(
-        {"iss": os.environ["ASC_ISSUER"], "iat": now, "exp": now + 1200, "aud": "appstoreconnect-v1"},
-        key,
-        algorithm="ES256",
-        headers={"kid": os.environ["ASC_KEY_ID"], "typ": "JWT"},
-    )
+    header = {"alg": "ES256", "kid": os.environ["ASC_KEY_ID"], "typ": "JWT"}
+    claims = {"iss": os.environ["ASC_ISSUER"], "iat": now, "exp": now + 1200, "aud": "appstoreconnect-v1"}
+    signing_input = b64url(json.dumps(header).encode()) + "." + b64url(json.dumps(claims).encode())
+    der = subprocess.run(
+        ["openssl", "dgst", "-sha256", "-sign", os.environ["ASC_KEY"]],
+        input=signing_input.encode(),
+        capture_output=True,
+        check=True,
+    ).stdout
+    return signing_input + "." + b64url(der_to_raw(der))
 
 
 def call(method, path, query=None, body=None):

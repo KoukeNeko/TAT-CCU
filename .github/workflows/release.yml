@@ -194,9 +194,7 @@ jobs:
           set -euo pipefail
           serial="$(security find-certificate -c "Developer ID Application" -p "$RUNNER_TEMP/build.keychain-db" \
             | openssl x509 -noout -serial | cut -d= -f2)"
-          python3 -m venv "$RUNNER_TEMP/venv"
-          "$RUNNER_TEMP/venv/bin/pip" install --quiet pyjwt cryptography
-          profile="$("$RUNNER_TEMP/venv/bin/python" scripts/developer-id-profile.py "$serial")"
+          profile="$(python3 scripts/developer-id-profile.py "$serial")"
           echo "PROFILE_NAME=$profile" >> "$GITHUB_ENV"
       - name: Archive and export with Developer ID
         run: |
