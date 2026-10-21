@@ -567,7 +567,8 @@ class SectionLabel extends StatelessWidget {
                     padding: const EdgeInsets.symmetric(horizontal: Space.xs),
                     minimumSize: Size.zero,
                     tapTargetSize: MaterialTapTargetSize.padded,
-                    textStyle: const TextStyle(fontWeight: FontWeight.w900),
+                    textStyle: Theme.of(context).textTheme.labelLarge
+                        ?.copyWith(fontWeight: FontWeight.w900),
                   ),
                 ),
                 child: a,

@@ -587,7 +587,8 @@ class _Action extends StatelessWidget {
       minimumSize: const Size.fromHeight(48),
       // Three buttons share the ticket; 重新產生 must fit on one line.
       padding: const EdgeInsets.symmetric(horizontal: Space.s),
-      textStyle: const TextStyle(fontWeight: FontWeight.w900),
+      textStyle: Theme.of(context).textTheme.labelLarge
+          ?.copyWith(fontWeight: FontWeight.w900),
     );
     return primary
         ? FilledButton(

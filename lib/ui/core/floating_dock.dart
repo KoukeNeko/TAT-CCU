@@ -80,10 +80,9 @@ class DockButton extends StatelessWidget {
             // The dock itself shows the press; no overlay inside it.
             overlayColor: Colors.transparent,
             disabledForegroundColor: muted.withValues(alpha: 0.7),
-            textStyle: const TextStyle(
-              fontSize: 16,
-              fontWeight: FontWeight.w900,
-            ),
+            // Merged onto the theme's, so the label keeps the app's family.
+            textStyle: Theme.of(context).textTheme.labelLarge
+                ?.copyWith(fontSize: 16, fontWeight: FontWeight.w900),
           ),
           child: child,
         ),

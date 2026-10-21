@@ -312,7 +312,14 @@ ThemeData buildTheme(Brightness brightness, {String fontFamily = fontTw}) {
       style: FilledButton.styleFrom(
         minimumSize: const Size(64, 52),
         shape: const StadiumBorder(),
-        textStyle: const TextStyle(fontWeight: FontWeight.w800, fontSize: 16),
+        // The family too: a button's text style replaces the theme's, so
+        // without it the label falls back to the platform font.
+        textStyle: TextStyle(
+          fontFamily: fontFamily,
+          fontFamilyFallback: base.textTheme.bodyMedium?.fontFamilyFallback,
+          fontWeight: FontWeight.w800,
+          fontSize: 16,
+        ),
         overlayColor: Colors.transparent,
       ),
     ),

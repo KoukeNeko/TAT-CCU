@@ -202,16 +202,16 @@ class _SessionCard extends StatelessWidget {
                         ),
                         foregroundColor: tone.ink,
                         shape: const StadiumBorder(),
-                        textStyle: const TextStyle(fontWeight: FontWeight.w800),
+                        textStyle: Theme.of(context).textTheme.labelLarge
+                            ?.copyWith(fontWeight: FontWeight.w800),
                       ),
                     ),
                     child: TextButtonTheme(
                       data: TextButtonThemeData(
                         style: TextButton.styleFrom(
                           foregroundColor: tone.ink,
-                          textStyle: const TextStyle(
-                            fontWeight: FontWeight.w800,
-                          ),
+                          textStyle: Theme.of(context).textTheme.labelLarge
+                              ?.copyWith(fontWeight: FontWeight.w800),
                         ),
                       ),
                       child: Wrap(spacing: 8, children: actions),
