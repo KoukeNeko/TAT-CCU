@@ -2728,6 +2728,12 @@ abstract class AppLocalizations {
   /// **'以示範帳號體驗'**
   String get demoEnter;
 
+  /// No description provided for @appTagline.
+  ///
+  /// In zh, this message translates to:
+  /// **'中正大學的課表、eCourse2 與校務系統'**
+  String get appTagline;
+
   /// No description provided for @tools.
   ///
   /// In zh, this message translates to:

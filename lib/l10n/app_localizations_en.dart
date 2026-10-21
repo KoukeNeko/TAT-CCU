@@ -1619,6 +1619,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get demoEnter => 'Try the demo account';
 
   @override
+  String get appTagline => 'Timetable, eCourse2 and campus services of CCU';
+
+  @override
   String get tools => 'Tools';
 
   @override

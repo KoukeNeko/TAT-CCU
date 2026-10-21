@@ -1518,6 +1518,9 @@ class AppLocalizationsZh extends AppLocalizations {
   String get demoEnter => '以示範帳號體驗';
 
   @override
+  String get appTagline => '中正大學的課表、eCourse2 與校務系統';
+
+  @override
   String get tools => '小工具';
 
   @override

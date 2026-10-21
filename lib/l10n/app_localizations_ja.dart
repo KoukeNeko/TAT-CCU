@@ -1507,6 +1507,9 @@ class AppLocalizationsJa extends AppLocalizations {
   String get demoEnter => 'デモアカウントで試す';
 
   @override
+  String get appTagline => '中正大学の時間割、eCourse2 と学務システム';
+
+  @override
   String get tools => 'ツール';
 
   @override

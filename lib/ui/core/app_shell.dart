@@ -37,14 +37,15 @@ const _capsuleChrome = 7.0 + 38 + 8 + 16;
 /// Narrowest an unselected slot gets, so long labels never squeeze icons.
 const _minSlot = 44.0;
 
-// Tuned toward SwiftUI's default spring: unhurried, settles without a
-// visible bounce.
-const _move = Duration(milliseconds: 480);
-const _settle = Curves.easeOutQuart;
+/// The nav bar's motion, shared with the bars that behave like it (the
+/// sign-in's language bar). Tuned toward SwiftUI's default spring:
+/// unhurried, settles without a visible bounce.
+const barMove = Duration(milliseconds: 480);
+const barSettle = Curves.easeOutQuart;
 
 /// Finger travel before a press turns into a drag, so a tap never makes the
 /// capsule jump around.
-const _dragSlop = 12.0;
+const barDragSlop = 12.0;
 
 /// Floating nav bar, variant C3 "色塊膠囊" (design/round-04): only the
 /// selected tab has color; it stretches into a capsule of its own function
@@ -108,7 +109,7 @@ class _AppShellState extends State<AppShell> {
   void _slide(double at, int Function(double) indexAt) {
     final down = _down;
     if (down == null) return;
-    if (_hover == null && (at - down).abs() < _dragSlop) return;
+    if (_hover == null && (at - down).abs() < barDragSlop) return;
     final i = indexAt(at);
     if (i == _hover) return;
     if (_hover != null || i != widget.shell.currentIndex) {
@@ -193,8 +194,8 @@ class _AppShellState extends State<AppShell> {
                   onTap: close,
                   child: AnimatedOpacity(
                     opacity: open ? 1 : 0,
-                    duration: _move,
-                    curve: _settle,
+                    duration: barMove,
+                    curve: barSettle,
                     child: const ColoredBox(
                       color: Colors.black38,
                       child: SizedBox.expand(),
@@ -203,8 +204,8 @@ class _AppShellState extends State<AppShell> {
                 ),
               ),
               AnimatedPositioned(
-                duration: _move,
-                curve: _settle,
+                duration: barMove,
+                curve: barSettle,
                 top: 0,
                 bottom: 0,
                 left: open ? 0 : -_sidebarWidth - 32,
@@ -257,8 +258,8 @@ class _AppShellState extends State<AppShell> {
               child: Center(
                 child: AnimatedScale(
                   scale: pressed ? 1.02 : 1,
-                  duration: _move,
-                  curve: _settle,
+                  duration: barMove,
+                  curve: barSettle,
                   child: _GlassBar(
                     pressed: pressed,
                     light: light,
@@ -325,8 +326,8 @@ class _AppShellState extends State<AppShell> {
               child: AnimatedScale(
                 // Press: the bar lifts slightly; release springs back.
                 scale: pressed ? 1.02 : 1,
-                duration: _move,
-                curve: _settle,
+                duration: barMove,
+                curve: barSettle,
                 child: _GlassBar(
                   pressed: pressed,
                   light: light,
@@ -845,8 +846,8 @@ class _UprightSlot extends StatelessWidget {
       selected: selected,
       label: label,
       child: AnimatedContainer(
-        duration: _move,
-        curve: _settle,
+        duration: barMove,
+        curve: barSettle,
         width: _uprightSlot,
         height: _uprightSlot,
         decoration: BoxDecoration(
@@ -885,9 +886,9 @@ class _TabSlot extends StatelessWidget {
       selected: selected,
       label: label,
       child: AnimatedContainer(
-        duration: _move,
+        duration: barMove,
         // No overshoot here: the slot widths must always sum to the bar.
-        curve: _settle,
+        curve: barSettle,
         width: width,
         height: 52,
         // The capsule fills its slot so its inset matches the bar's, and the
@@ -903,8 +904,8 @@ class _TabSlot extends StatelessWidget {
         ),
         child: AnimatedScale(
           scale: pressed ? 1.03 : 1,
-          duration: _move,
-          curve: _settle,
+          duration: barMove,
+          curve: barSettle,
           alignment: Alignment.centerLeft,
           child: Stack(
             clipBehavior: Clip.none,
@@ -913,8 +914,8 @@ class _TabSlot extends StatelessWidget {
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   AnimatedContainer(
-                    duration: _move,
-                    curve: _settle,
+                    duration: barMove,
+                    curve: barSettle,
                     width: selected ? 38 : 28,
                     height: selected ? 38 : 28,
                     decoration: ShapeDecoration(
@@ -929,8 +930,8 @@ class _TabSlot extends StatelessWidget {
                   ),
                   ClipRect(
                     child: AnimatedSize(
-                      duration: _move,
-                      curve: _settle,
+                      duration: barMove,
+                      curve: barSettle,
                       child: selected
                           ? Padding(
                               padding: const EdgeInsets.only(left: Space.s),
@@ -1004,7 +1005,7 @@ class _AnimatedBranchesState extends State<AnimatedBranches> {
               child: AnimatedOpacity(
                 opacity: i == widget.index ? 1 : 0,
                 duration: _duration,
-                curve: _settle,
+                curve: barSettle,
                 onEnd: () {
                   if (i == _leaving) setState(() => _leaving = null);
                 },
@@ -1013,7 +1014,7 @@ class _AnimatedBranchesState extends State<AnimatedBranches> {
                       ? Offset.zero
                       : const Offset(0, 0.015),
                   duration: _duration,
-                  curve: _settle,
+                  curve: barSettle,
                   child: TickerMode(enabled: i == widget.index, child: child),
                 ),
               ),
