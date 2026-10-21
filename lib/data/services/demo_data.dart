@@ -88,7 +88,7 @@ List<Map<String, Object?>> _deadlines() {
       90041,
       601,
       '小考二：反向傳播',
-      t.add(const Duration(days: 1, hours: 10)),
+      t.add(const Duration(days: 6, hours: 10)),
     ),
     e(
       9001,
@@ -104,7 +104,7 @@ List<Map<String, Object?>> _deadlines() {
       90021,
       502,
       'Lab 4 報告',
-      t.add(const Duration(days: 5, hours: 23, minutes: 59)),
+      t.add(const Duration(days: 6, hours: 23, minutes: 59)),
     ),
     e(
       9005,
@@ -509,7 +509,7 @@ class DemoMoodleClient extends MoodleClient {
             'id': 601,
             'intro': '<p>範圍：第 4 到 5 章，限時 30 分鐘。</p>',
             'timeopen': _ts(_today),
-            'timeclose': _ts(_today.add(const Duration(days: 1, hours: 10))),
+            'timeclose': _ts(_today.add(const Duration(days: 6, hours: 10))),
             'attempts': 1,
             'grade': 100,
           },
