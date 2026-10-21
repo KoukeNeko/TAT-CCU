@@ -1,12 +1,12 @@
 # TAT CCU 隱私權政策
 
-最後更新：2026 年 10 月 21 日
+最後更新：2026 年 10 月 22 日
 
 TAT CCU 是學生自行開發的非官方 App，與國立中正大學沒有隸屬關係。開發者沒有伺服器，不收集、不儲存、也不分享任何使用者資料。
 
 ## 存在裝置上的資料
 
-- **登入資料**：eCourse2 的權杖、校務系統的登入狀態（Cookie），以及你選擇自動登入時的學號與密碼，存放在裝置的鑰匙圈，不會同步到 iCloud。
+- **登入資料**：eCourse2 的權杖、校務系統的登入狀態（Cookie），以及你選擇自動登入時的學號與密碼，存放在系統的安全儲存區：iPhone、iPad 與 Mac 為鑰匙圈，不會同步到 iCloud；Android 為 Android Keystore 加密的儲存區。
 - **讀取過的內容**：課表、公告、成績、行事曆等資料會暫存在裝置上，讓下次開啟時能立即顯示。可在「設定 > 已存資料」查看並刪除；登出時會一併刪除。
 - **小工具**：桌面小工具顯示的課表與到期項目，透過同一台裝置上 App 與小工具共用的空間傳遞。
 
@@ -41,13 +41,13 @@ App 不含廣告、分析或追蹤工具，也不會在 App 或網站之間追�
 
 # TAT CCU Privacy Policy
 
-Last updated: October 21, 2026
+Last updated: October 22, 2026
 
 TAT CCU is an unofficial app made by a student and is not affiliated with National Chung Cheng University. The developer runs no server and does not collect, store or share any user data.
 
 ## Data on your device
 
-- **Sign-in**: the eCourse2 token, the campus systems' sign-in cookies, and your student ID and password when you choose automatic sign-in are kept in the device keychain and are not synced to iCloud.
+- **Sign-in**: the eCourse2 token, the campus systems' sign-in cookies, and your student ID and password when you choose automatic sign-in are kept in the system's secure storage: the keychain on iPhone, iPad and Mac, not synced to iCloud, and storage encrypted with the Android Keystore on Android.
 - **Content you have viewed**: timetables, announcements, grades and calendars are saved on the device so they show at once next time. You can see and delete them in Settings > Saved data; signing out deletes them too.
 - **Widgets**: the timetable and deadlines the home screen widgets show pass through storage shared between the app and its widgets on the same device.
 
