@@ -348,6 +348,9 @@ jobs:
     permissions:
       contents: write
     steps:
+      - uses: actions/checkout@v7
+        with:
+          sparse-checkout: distribution/release-notes
       - uses: actions/download-artifact@v8
         with:
           pattern: '{macos,android}'
@@ -361,9 +364,12 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
           VERSION: ${{ needs.check.outputs.version }}
+        # The notes written for this tag, or ones generated from the commits.
         run: |
+          notes="distribution/release-notes/$GITHUB_REF_NAME.md"
+          if [[ -f $notes ]]; then source=(--notes-file "$notes"); else source=(--generate-notes); fi
           gh release create "$GITHUB_REF_NAME" dist/* --repo "$GITHUB_REPOSITORY" --verify-tag \
-            --title "TAT CCU $VERSION" --generate-notes
+            --title "TAT CCU $VERSION" "${source[@]}"
 
   # Attached to the release that publish made, so a failed Windows job leaves the macOS release and the
   # Homebrew cask as they are.

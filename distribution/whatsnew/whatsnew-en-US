@@ -1,0 +1,13 @@
+New features & improvements
+
+🌐 A redesigned sign-in screen: pick the language on the bar at the bottom, or drag across it.
+
+📱 iPhone Duo support: the nav bar stands upright on the right of the outer display, and the inner display splits into two pages at the fold.
+
+📄 The demo account now has a sample enrollment certificate.
+
+Bug fixes
+
+↩️ Going back from a course opened from the timetable sometimes did not return to the timetable.
+
+🔤 Button labels now use the app's typeface.
