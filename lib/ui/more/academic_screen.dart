@@ -1,5 +1,6 @@
 import 'dart:convert';
 
+import 'package:clock/clock.dart' as clk;
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:pdfrx/pdfrx.dart';
@@ -142,7 +143,7 @@ class _AcademicScreenState extends State<AcademicScreen> {
       case 'pdf':
         try {
           if (json['error'] != null) throw Exception(json['error']);
-          await _store.save(base64Decode('${json['data']}'), DateTime.now());
+          await _store.save(base64Decode('${json['data']}'), clk.clock.now());
           await _refreshList();
           if (_pages.hasClients) _pages.jumpToPage(0);
           _page = 0;
@@ -363,10 +364,10 @@ class _Ticket extends StatelessWidget {
     final tones = context.tones;
     final scheme = Theme.of(context).colorScheme;
     final c = certificate;
-    final current = c != null && isCurrent(c, DateTime.now());
+    final current = c != null && isCurrent(c, clk.clock.now());
     final tone = current ? tones.mint : tones.sun;
     final semester = c == null
-        ? semesterOf(DateTime.now())
+        ? semesterOf(clk.clock.now())
         : semesterOf(c.printedAt);
     final l10n = context.l10n;
     final printLabel = printing

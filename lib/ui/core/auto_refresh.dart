@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:clock/clock.dart' as clk;
 import 'package:flutter/foundation.dart';
 import 'package:flutter/widgets.dart';
 
@@ -18,12 +19,12 @@ mixin AutoRefresh<W extends StatefulWidget> on State<W> {
   /// (the school's sites, through a signed-in web view).
   Duration? get refreshEvery => const Duration(minutes: 5);
 
-  var _asked = DateTime.now();
+  var _asked = clk.clock.now();
   late final AppLifecycleListener _lifecycle;
   Timer? _timer;
   ValueListenable<TickerModeData>? _shown;
 
-  void markAsked() => _asked = DateTime.now();
+  void markAsked() => _asked = clk.clock.now();
 
   @override
   void initState() {
@@ -57,7 +58,7 @@ mixin AutoRefresh<W extends StatefulWidget> on State<W> {
 
   void _refreshIfStale() {
     if (!mounted || !(_shown?.value.enabled ?? true)) return;
-    if (DateTime.now().difference(_asked) < staleAfter) return;
+    if (clk.clock.now().difference(_asked) < staleAfter) return;
     markAsked();
     refresh();
   }

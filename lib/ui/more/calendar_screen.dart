@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:math' as math;
 
+import 'package:clock/clock.dart' as clk;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
@@ -77,7 +78,7 @@ List<SchoolDate> _schoolOn(DateTime day) => [
 ];
 
 class _CalendarScreenState extends State<CalendarScreen> with AutoRefresh {
-  final _today = DateUtils.dateOnly(DateTime.now());
+  final _today = DateUtils.dateOnly(clk.clock.now());
   late DateTime _selected = _today;
   late int _page = _pageOf(_today);
   late final _pages = PageController(initialPage: _page);

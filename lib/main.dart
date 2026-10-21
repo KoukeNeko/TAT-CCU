@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:io';
 
+import 'package:clock/clock.dart' as clk;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
@@ -217,10 +218,10 @@ Future<void> _prefetch(EcourseAuthRepository auth) async {
   final last = _prefetchedAt;
   if (!auth.isSignedIn ||
       auth.isDemo ||
-      last != null && DateTime.now().difference(last).inMinutes < 30) {
+      last != null && clk.clock.now().difference(last).inMinutes < 30) {
     return;
   }
-  _prefetchedAt = DateTime.now();
+  _prefetchedAt = clk.clock.now();
   try {
     await EcourseRepository(auth.client()).prefetch();
   } catch (e) {

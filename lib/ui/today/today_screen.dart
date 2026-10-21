@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:clock/clock.dart' as clk;
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
@@ -52,7 +53,7 @@ class _TodayScreenState extends State<TodayScreen> {
   void _schedule() {
     _tick?.cancel();
     if (mounted) setState(() {});
-    final now = DateTime.now();
+    final now = clk.clock.now();
     _tick = Timer(
       Duration(seconds: 60 - now.second, milliseconds: -now.millisecond),
       _schedule,
@@ -89,7 +90,7 @@ class _TodayScreenState extends State<TodayScreen> {
   @override
   Widget build(BuildContext context) {
     final repo = context.read<EcourseRepository>();
-    final now = DateTime.now();
+    final now = clk.clock.now();
     return Scaffold(
       // Edge to edge: the list itself pads past the status bar.
       body: Loader<_Today>.watch(

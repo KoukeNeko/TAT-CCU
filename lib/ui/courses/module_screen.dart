@@ -1,3 +1,4 @@
+import 'package:clock/clock.dart' as clk;
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -85,7 +86,7 @@ class _AssignmentBody extends StatelessWidget {
   Widget build(BuildContext context) {
     final a = assignment;
     final l10n = context.l10n;
-    final now = DateTime.now();
+    final now = clk.clock.now();
     return ListView(
       padding: scrollPadding(context),
       children: [
@@ -318,7 +319,7 @@ class _QuizBody extends StatelessWidget {
   Widget build(BuildContext context) {
     final q = quiz;
     final l10n = context.l10n;
-    final now = DateTime.now();
+    final now = clk.clock.now();
     return ListView(
       padding: scrollPadding(context),
       children: [

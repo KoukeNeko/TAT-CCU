@@ -1,5 +1,6 @@
 import 'dart:io';
 
+import 'package:clock/clock.dart' as clk;
 import 'package:flutter/services.dart';
 import 'package:path_provider/path_provider.dart';
 
@@ -37,7 +38,7 @@ Future<Certificate> demoCertificate() async {
     '${(await getTemporaryDirectory()).path}/demo-certificate.pdf',
   );
   await file.writeAsBytes(bytes.buffer.asUint8List(), flush: true);
-  return (file: file, printedAt: DateTime.now(), size: bytes.lengthInBytes);
+  return (file: file, printedAt: clk.clock.now(), size: bytes.lengthInBytes);
 }
 
 /// Certificates kept in the app's documents folder so they open offline.

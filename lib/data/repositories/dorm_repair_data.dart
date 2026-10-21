@@ -4,6 +4,7 @@
 /// (research_notes/…/dorm_repair_probe.md).
 library;
 
+import 'package:clock/clock.dart' as clk;
 import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -29,7 +30,7 @@ class DormRepairStore extends ChangeNotifier {
   static final instance = DormRepairStore._();
 
   late final _demoRequests = () {
-    final now = DateTime.now();
+    final now = clk.clock.now();
     final today = DateTime(now.year, now.month, now.day);
     RepairRequest r(int daysAgo, String memo) => (
       date: today.subtract(Duration(days: daysAgo)),

@@ -1,5 +1,6 @@
 import 'dart:convert';
 
+import 'package:clock/clock.dart' as clk;
 import 'package:http/http.dart' as http;
 
 /// The library's Primo VE (資源探索). Searching, records and collections
@@ -217,7 +218,7 @@ class PrimoClient {
       if (onShelf) 'facet_tlevel,exact,available_p',
       if (type != null) 'facet_rtype,exact,${type.name}',
       if (sinceYear != null)
-        'facet_searchcreationdate,exact,[$sinceYear TO ${DateTime.now().year}]',
+        'facet_searchcreationdate,exact,[$sinceYear TO ${clk.clock.now().year}]',
     ];
     return _pnxs({
       'q': 'any,contains,$text',

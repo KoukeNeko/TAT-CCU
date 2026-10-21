@@ -1,3 +1,4 @@
+import 'package:clock/clock.dart' as clk;
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
@@ -49,7 +50,7 @@ class _AccountScreenState extends State<AccountScreen> {
       _ecourseName = null;
       _ecourseError = '$e';
     } finally {
-      _ecourseCheckedAt = DateTime.now();
+      _ecourseCheckedAt = clk.clock.now();
       if (mounted) setState(() => _checking = false);
     }
   }

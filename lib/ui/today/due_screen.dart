@@ -1,3 +1,4 @@
+import 'package:clock/clock.dart' as clk;
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
@@ -43,7 +44,7 @@ class DueBlock extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final tones = context.tones;
-    final left = item.due.difference(DateTime.now());
+    final left = item.due.difference(clk.clock.now());
     final urgent = left.inHours < 48;
     final tone = urgent ? tones.peach : tones.forCourse(item.courseId);
     final value = left.inHours < 24 ? '${left.inHours}' : '${left.inDays}';

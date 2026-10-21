@@ -1,3 +1,4 @@
+import 'package:clock/clock.dart' as clk;
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
@@ -171,7 +172,7 @@ class CourseDetailScreen extends StatelessWidget {
 }
 
 String _left(AppLocalizations l10n, DateTime due) {
-  final left = due.difference(DateTime.now());
+  final left = due.difference(clk.clock.now());
   return left.inHours < 24
       ? l10n.hoursLeft(left.inHours)
       : l10n.daysLeft(left.inDays);
@@ -206,7 +207,7 @@ class _Hero extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final tone = context.tones.forCourse(course.id);
-    final next = nextClassLabel(course, DateTime.now(), context.l10n);
+    final next = nextClassLabel(course, clk.clock.now(), context.l10n);
     return Material(
       color: tone.fill,
       shape: const RoundedRectangleBorder(
@@ -633,7 +634,7 @@ class _ModuleRow extends StatelessWidget {
         : module.files.length > 1
         ? context.l10n.fileCount(module.files.length)
         : null;
-    final overdue = due != null && due.isBefore(DateTime.now());
+    final overdue = due != null && due.isBefore(clk.clock.now());
     final path = modulePath(courseId, module);
     return InkWell(
       onTap: path != null

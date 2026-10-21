@@ -1,5 +1,6 @@
 import 'dart:convert';
 
+import 'package:clock/clock.dart' as clk;
 import 'package:flutter/material.dart';
 
 import '../../data/services/demo_data.dart';
@@ -91,7 +92,7 @@ String _readAccount(Map<String, String>? action) =>
 ) {
   final loan = cached == null ? null : loansOf(cached.json).firstOrNull;
   if (loan == null) return null;
-  final now = DateTime.now();
+  final now = clk.clock.now();
   final days = loan.due
       .difference(DateTime(now.year, now.month, now.day))
       .inDays;
@@ -230,7 +231,7 @@ class _Body extends StatelessWidget {
     final l10n = context.l10n;
     final tones = context.tones;
     final scheme = Theme.of(context).colorScheme;
-    final now = DateTime.now();
+    final now = clk.clock.now();
     final today = DateTime(now.year, now.month, now.day);
     int daysTo(DateTime due) => due.difference(today).inDays;
     return ListView(

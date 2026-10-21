@@ -1,3 +1,4 @@
+import 'package:clock/clock.dart' as clk;
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
@@ -796,7 +797,7 @@ class DesignPartScreen extends StatelessWidget {
         child: const SizedBox(height: 280, child: LoadingView()),
       ),
       const SectionLabel('UpdatedAt'),
-      UpdatedAt(DateTime.now()),
+      UpdatedAt(clk.clock.now()),
     ];
   }
 

@@ -1,3 +1,4 @@
+import 'package:clock/clock.dart' as clk;
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
@@ -166,7 +167,7 @@ class _LibrarySearchScreenState extends State<LibrarySearchScreen> {
                   onShelf: catalog && f.onShelf,
                   type: catalog ? f.type : null,
                   sinceYear: catalog && f.years != null
-                      ? DateTime.now().year - f.years! + 1
+                      ? clk.clock.now().year - f.years! + 1
                       : null,
                   offset: offset,
                 ),
@@ -229,7 +230,7 @@ List<LibraryRecord> _featured(List<LibraryRecord> books) {
   ];
   final pool = onShelf.isEmpty ? books : onShelf;
   if (pool.isEmpty) return const [];
-  final now = DateTime.now();
+  final now = clk.clock.now();
   final day = now.difference(DateTime(now.year)).inDays;
   return [
     for (var i = 0; i < 5 && i < pool.length; i++)

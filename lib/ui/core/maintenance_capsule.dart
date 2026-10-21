@@ -1,5 +1,6 @@
 import 'dart:math';
 
+import 'package:clock/clock.dart' as clk;
 import 'package:flutter/material.dart';
 
 import '../../data/services/ecourse_maintenance.dart';
@@ -65,7 +66,7 @@ class _Countdown extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final left = next?.difference(DateTime.now()) ?? Duration.zero;
+    final left = next?.difference(clk.clock.now()) ?? Duration.zero;
     const total = EcourseMaintenance.interval;
     final start = 1 - (left.inMilliseconds / total.inMilliseconds).clamp(0, 1);
     return TweenAnimationBuilder<double>(

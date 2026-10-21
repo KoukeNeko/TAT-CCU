@@ -1,5 +1,6 @@
 import 'dart:ui' show ImageFilter;
 
+import 'package:clock/clock.dart' as clk;
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:http/http.dart' as http;
@@ -265,7 +266,7 @@ class _EventsScreenState extends State<EventsScreen> with AutoRefresh {
 
   PreferredSizeWidget _bar(BuildContext context) {
     final l10n = context.l10n;
-    final now = DateTime.now();
+    final now = clk.clock.now();
     final events = _results ?? _data?.events ?? const <SchoolEvent>[];
     String timeLabel(_Time t) => switch (t) {
       _Time.days3 => l10n.within3Days,
@@ -407,7 +408,7 @@ class _EventsScreenState extends State<EventsScreen> with AutoRefresh {
   }
 
   Widget _body(BuildContext context, EventsData data) {
-    final now = DateTime.now();
+    final now = clk.clock.now();
     final searching = _query != null;
     final shown = _filtered(_results ?? data.events, now);
     final groups = <DateTime, List<SchoolEvent>>{};
@@ -576,7 +577,7 @@ class EventThumb extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final (tone, _) = eventPill(context, event, DateTime.now());
+    final (tone, _) = eventPill(context, event, clk.clock.now());
     final initial = event.title.replaceAll(RegExp(r'[【〔（(].*?[】〕）)]'), '');
     final fallback = Container(
       color: tone.fill,
@@ -625,7 +626,7 @@ class EventRow extends StatelessWidget {
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
     final tones = context.tones;
-    final (tone, label) = eventPill(context, event, DateTime.now());
+    final (tone, label) = eventPill(context, event, clk.clock.now());
     final start = event.start;
     final end = event.end;
     final time = start == null
@@ -705,7 +706,7 @@ class _NextCard extends StatelessWidget {
     final tone = context.tones.lilac;
     final light = Theme.of(context).brightness == Brightness.light;
     final start = event.start;
-    final days = start == null ? null : daysUntil(start, DateTime.now());
+    final days = start == null ? null : daysUntil(start, clk.clock.now());
     final chip = Colors.white.withValues(alpha: light ? 0.55 : 0.12);
     return ToneBlock(
       tone: tone,
@@ -915,7 +916,7 @@ class MyEventsScreen extends StatelessWidget {
     final tones = context.tones;
     final scheme = Theme.of(context).colorScheme;
     final byId = {for (final e in data.events) e.id: e};
-    final now = DateTime.now();
+    final now = clk.clock.now();
     final next = data.events
         .where((e) => e.signedUp && !(e.end ?? e.start ?? now).isBefore(now))
         .firstOrNull;

@@ -2,6 +2,8 @@ import '../../domain/models/course.dart';
 import '../services/html_text.dart';
 import '../services/moodle_client.dart';
 
+import 'package:clock/clock.dart' as clk;
+
 /// Something due soon, from `core_calendar_get_action_events_by_timesort`.
 typedef DueItem = ({
   String name,
@@ -225,7 +227,7 @@ class EcourseRepository {
   Future<List<DueItem>> dueSoon({int days = 14}) async {
     // Asks from the start of today so the request, and its saved answer,
     // stay the same all day; anything already past is dropped below.
-    final now = DateTime.now();
+    final now = clk.clock.now();
     final from =
         DateTime(now.year, now.month, now.day).millisecondsSinceEpoch ~/ 1000;
     final r = await _client.call(

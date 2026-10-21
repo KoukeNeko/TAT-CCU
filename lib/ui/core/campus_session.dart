@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:convert';
 
+import 'package:clock/clock.dart' as clk;
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:webview_flutter/webview_flutter.dart';
@@ -77,7 +78,7 @@ mixin CampusPageState<W extends StatefulWidget> on AutoRefresh<W> {
       }
       final old =
           cached != null &&
-          DateTime.now().difference(cached.savedAt) > _rereadAfter;
+          clk.clock.now().difference(cached.savedAt) > _rereadAfter;
       if (!keep || readOnOpen || old) session.currentState?.reload();
     });
   }

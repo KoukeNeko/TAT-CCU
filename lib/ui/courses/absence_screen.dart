@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:clock/clock.dart' as clk;
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
@@ -189,7 +190,7 @@ class AbsenceFormScreen extends StatefulWidget {
 
 class _AbsenceFormScreenState extends State<AbsenceFormScreen> {
   final _remark = TextEditingController();
-  var _date = DateUtils.dateOnly(DateTime.now());
+  var _date = DateUtils.dateOnly(clk.clock.now());
   var _type = 0;
   var _online = false;
 
@@ -208,7 +209,7 @@ class _AbsenceFormScreenState extends State<AbsenceFormScreen> {
   ];
 
   Future<void> _pickDate() async {
-    final now = DateTime.now();
+    final now = clk.clock.now();
     final picked = await showDatePicker(
       context: context,
       initialDate: _date,

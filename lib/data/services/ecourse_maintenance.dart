@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:clock/clock.dart' as clk;
 import 'package:flutter/foundation.dart';
 
 import '../repositories/ecourse_auth_repository.dart';
@@ -60,7 +61,7 @@ class EcourseMaintenance extends ChangeNotifier {
   }
 
   void _schedule() {
-    _nextCheck = DateTime.now().add(interval);
+    _nextCheck = clk.clock.now().add(interval);
     _timer = Timer(interval, check);
   }
 }

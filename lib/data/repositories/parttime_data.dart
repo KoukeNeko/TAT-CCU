@@ -4,6 +4,7 @@
 /// The rules below are the site's own notice.
 library;
 
+import 'package:clock/clock.dart' as clk;
 import 'package:flutter/foundation.dart';
 
 /// Hours a week, holidays excluded.
@@ -107,7 +108,7 @@ const allUnits = [
 /// none yet, or made-up ones in demo mode. Kept for the app's run.
 class HoursStore extends ChangeNotifier {
   HoursStore._() {
-    final now = DateTime.now();
+    final now = clk.clock.now();
     final today = _day(now);
     HoursEntry entry(
       int daysAgo,

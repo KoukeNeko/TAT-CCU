@@ -1,3 +1,4 @@
+import 'package:clock/clock.dart' as clk;
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
@@ -194,7 +195,7 @@ class DiscussionList extends StatelessWidget {
 }
 
 /// `10/15`, or with the year when it is not this year.
-String dateLabel(DateTime t) => t.year == DateTime.now().year
+String dateLabel(DateTime t) => t.year == clk.clock.now().year
     ? '${t.month}/${t.day}'
     : '${t.year}/${t.month}/${t.day}';
 

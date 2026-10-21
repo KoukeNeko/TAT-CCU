@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'dart:io';
 
+import 'package:clock/clock.dart' as clk;
 import 'package:flutter/material.dart';
 import 'package:home_widget/home_widget.dart';
 
@@ -69,7 +70,7 @@ abstract final class HomeWidgets {
     final data = widgetData(
       courses: courses,
       due: due,
-      now: DateTime.now(),
+      now: clk.clock.now(),
       l10n: l10nFor(settings.locale),
       signedIn: auth.isSignedIn,
       courseColor: (id) => tones.forCourse(id).strong,

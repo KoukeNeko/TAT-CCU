@@ -1,3 +1,4 @@
+import 'package:clock/clock.dart' as clk;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
@@ -127,7 +128,7 @@ class _DormRepairFormScreenState extends State<DormRepairFormScreen> {
   Future<void> _submit() async {
     final l10n = context.l10n;
     final request = (
-      date: DateTime.now(),
+      date: clk.clock.now(),
       room: _roomText,
       email: _email.text.trim(),
       memo: _memo.text.trim(),

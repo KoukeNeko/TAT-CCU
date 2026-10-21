@@ -10,6 +10,8 @@ import 'dart:typed_data';
 
 import 'moodle_client.dart';
 
+import 'package:clock/clock.dart' as clk;
+
 const demoName = '示範同學';
 
 /// `115_1` for the semester [d] falls in (first term August to January).
@@ -27,7 +29,7 @@ String _previous(String semester) {
 int _ts(DateTime d) => d.millisecondsSinceEpoch ~/ 1000;
 
 DateTime get _today {
-  final now = DateTime.now();
+  final now = clk.clock.now();
   return DateTime(now.year, now.month, now.day);
 }
 
@@ -275,7 +277,7 @@ List<Map<String, Object?>> _discussions(int forum) {
 }
 
 List<Map<String, Object?>> _posts(int discussion) {
-  final t = DateTime.now().subtract(const Duration(days: 4));
+  final t = clk.clock.now().subtract(const Duration(days: 4));
   Map<String, Object?> p(
     int id,
     int parent,
@@ -327,7 +329,7 @@ class DemoMoodleClient extends MoodleClient {
     String function, [
     Map<String, Object?> params = const {},
   ]) async {
-    final now = DateTime.now();
+    final now = clk.clock.now();
     final semester = _semester(now);
     int id(String key) => int.parse('${flattenParams(params)[key]}');
     return switch (function) {
@@ -530,7 +532,7 @@ abstract final class DemoCampus {
       '${d.year}${d.month.toString().padLeft(2, '0')}${d.day.toString().padLeft(2, '0')}';
 
   static Map<String, dynamic> payments(int year) {
-    final now = DateTime.now();
+    final now = clk.clock.now();
     Map<String, dynamic> row(
       int month,
       int day,
@@ -584,7 +586,7 @@ abstract final class DemoCampus {
   }
 
   static Map<String, dynamic> library() {
-    final t = DateTime.now();
+    final t = clk.clock.now();
     return {
       'loans': [
         {
@@ -616,7 +618,7 @@ abstract final class DemoCampus {
   }
 
   static Map<String, dynamic> leave() {
-    final t = DateTime.now();
+    final t = clk.clock.now();
     return {
       'rows': [
         [
@@ -659,7 +661,7 @@ abstract final class DemoCampus {
 
   static Map<String, dynamic> attendance() {
     final rows = <List<String>>[];
-    final t = DateTime.now();
+    final t = clk.clock.now();
     for (var w = 6; w >= -3; w--) {
       final d = t.subtract(Duration(days: w * 7));
       final date =
@@ -688,7 +690,7 @@ abstract final class DemoCampus {
     'head': ['請假日期', '請假類型', '課程類型', '備註'],
     'rows': [
       [
-        _roc(DateTime.now().subtract(const Duration(days: 14))),
+        _roc(clk.clock.now().subtract(const Duration(days: 14))),
         '病假',
         '面授',
         '發燒就醫',

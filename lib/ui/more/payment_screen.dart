@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 
+import 'package:clock/clock.dart' as clk;
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:flutter/services.dart';
@@ -57,7 +58,7 @@ class PaymentScreen extends StatefulWidget {
 class _PaymentScreenState extends State<PaymentScreen>
     with AutoRefresh, CampusPageState {
   final _yearKey = GlobalKey();
-  var _year = rocYear(DateTime.now());
+  var _year = rocYear(clk.clock.now());
   int? _month;
   String? _open;
   ({String title, String file})? _pdf;
@@ -170,7 +171,7 @@ class _PaymentScreenState extends State<PaymentScreen>
 
   Future<void> _pickYear() async {
     final box = _yearKey.currentContext!.findRenderObject()! as RenderBox;
-    final now = rocYear(DateTime.now());
+    final now = rocYear(clk.clock.now());
     final y = await showGlassMenu<int>(
       context,
       anchor: box.localToGlobal(Offset.zero) & box.size,
@@ -237,7 +238,7 @@ class _PaymentScreenState extends State<PaymentScreen>
     final scheme = Theme.of(context).colorScheme;
     final payments = paymentsOf(json);
     final income = incomeOf(json);
-    final now = DateTime.now();
+    final now = clk.clock.now();
     final lastMonth = _year == rocYear(now) ? now.month : 12;
     final byMonth = List.filled(12, 0);
     for (final p in payments) {

@@ -1,3 +1,4 @@
+import 'package:clock/clock.dart' as clk;
 import 'package:flutter/material.dart';
 
 import '../../../data/services/school_calendar.dart';
@@ -16,7 +17,7 @@ class CountdownScreen extends StatelessWidget {
     final l10n = context.l10n;
     final t = context.tones;
     final scheme = Theme.of(context).colorScheme;
-    final today = DateUtils.dateOnly(DateTime.now());
+    final today = DateUtils.dateOnly(clk.clock.now());
     final upcoming = [
       for (final d in schoolCalendar)
         if (!(d.end ?? d.start).isBefore(today)) d,

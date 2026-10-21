@@ -1,3 +1,4 @@
+import 'package:clock/clock.dart' as clk;
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
@@ -15,7 +16,7 @@ class ToolsScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final l10n = context.l10n;
     final t = context.tones;
-    final next = nextSchoolDate(DateTime.now());
+    final next = nextSchoolDate(clk.clock.now());
     final tiles = [
       (
         t.identity[2],
@@ -62,7 +63,9 @@ class ToolsScreen extends StatelessWidget {
 
 /// Whole days from today to [d].
 int daysTo(DateTime d) =>
-    DateUtils.dateOnly(d).difference(DateUtils.dateOnly(DateTime.now())).inDays;
+    DateUtils.dateOnly(d)
+        .difference(DateUtils.dateOnly(clk.clock.now()))
+        .inDays;
 
 /// Each tool's main card: the answer large, what it rests on small.
 class ToolHero extends StatelessWidget {

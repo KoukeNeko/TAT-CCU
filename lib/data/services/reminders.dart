@@ -1,5 +1,6 @@
 import 'dart:io';
 
+import 'package:clock/clock.dart' as clk;
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:timezone/data/latest.dart' as tz;
@@ -81,7 +82,7 @@ class Reminders {
     for (final r in remindersFor(
       courses: courses,
       due: due,
-      now: DateTime.now(),
+      now: clk.clock.now(),
       dueOn: settings.notifyDue,
       classOn: settings.notifyClass,
       l10n: l10n,
@@ -135,7 +136,7 @@ class Reminders {
     final latest = [
       ...notices.map((n) => n.time),
       ...mail.map((m) => m.time),
-    ].fold(DateTime.now(), (a, b) => b.isAfter(a) ? b : a);
+    ].fold(clk.clock.now(), (a, b) => b.isAfter(a) ? b : a);
     await prefs.setInt(_seenKey, latest.millisecondsSinceEpoch);
   }
 

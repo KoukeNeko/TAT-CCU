@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:math' as math;
 
+import 'package:clock/clock.dart' as clk;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
@@ -22,7 +23,7 @@ class TimetableScreen extends StatefulWidget {
 }
 
 class _TimetableScreenState extends State<TimetableScreen> with AutoRefresh {
-  int _day = DateTime.now().weekday;
+  int _day = clk.clock.now().weekday;
 
   /// Class shown beside the week grid in a wide window.
   DaySlot? _picked;
@@ -193,7 +194,7 @@ class _TimetableScreenState extends State<TimetableScreen> with AutoRefresh {
                         _DayView(
                           courses: courses,
                           day: d,
-                          now: DateTime.now(),
+                          now: clk.clock.now(),
                           shared: shared.data,
                           cardsBeside: book,
                         ),
@@ -215,7 +216,7 @@ class _TimetableScreenState extends State<TimetableScreen> with AutoRefresh {
                           child: _DayCards(
                             courses: courses,
                             day: weekdays[page],
-                            now: DateTime.now(),
+                            now: clk.clock.now(),
                             shared: shared.data,
                           ),
                         ),
@@ -240,7 +241,7 @@ class _TimetableScreenState extends State<TimetableScreen> with AutoRefresh {
     List<int> weekdays,
     _Shared? shared,
   ) {
-    final now = DateTime.now();
+    final now = clk.clock.now();
     final minute = now.hour * 60 + now.minute;
     final today = [
       for (final c in courses)

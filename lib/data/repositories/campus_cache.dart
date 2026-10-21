@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'dart:io';
 
+import 'package:clock/clock.dart' as clk;
 import 'package:flutter/foundation.dart';
 import 'package:path_provider/path_provider.dart';
 
@@ -57,7 +58,7 @@ class CampusCache {
   }
 
   static Future<DateTime> write(String key, Map<String, dynamic> json) async {
-    final now = DateTime.now();
+    final now = clk.clock.now();
     await (await _file(key)).writeAsString(
       jsonEncode({'savedAt': now.millisecondsSinceEpoch, 'json': json}),
     );

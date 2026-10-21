@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:clock/clock.dart' as clk;
 import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
 
@@ -56,7 +57,7 @@ class _BusScreenState extends State<BusScreen> {
           builder: (context, snapshot) {
             final timetable = snapshot.data;
             if (timetable == null) return const SizedBox.shrink();
-            final now = DateTime.now();
+            final now = clk.clock.now();
             final palette = [t.lilac, t.identity[2], t.mint, t.identity[6]];
             final tones = {
               for (final (i, r) in timetable.routes.indexed)

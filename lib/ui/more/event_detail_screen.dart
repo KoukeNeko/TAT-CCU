@@ -1,3 +1,4 @@
+import 'package:clock/clock.dart' as clk;
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:go_router/go_router.dart';
@@ -143,7 +144,7 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
     final l10n = context.l10n;
     final tones = context.tones;
     final e = _event;
-    final (label, onPressed, tone) = switch (statusOf(e, DateTime.now())) {
+    final (label, onPressed, tone) = switch (statusOf(e, clk.clock.now())) {
       EventStatus.open => (
         l10n.signUp,
         _fresh && _form != null ? _signUp : null,
@@ -175,7 +176,7 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
     final tones = context.tones;
     final scheme = Theme.of(context).colorScheme;
     final e = _event;
-    final now = DateTime.now();
+    final now = clk.clock.now();
     final status = statusOf(e, now);
     final tone = switch (status) {
       EventStatus.open => tones.mint,

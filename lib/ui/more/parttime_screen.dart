@@ -1,3 +1,4 @@
+import 'package:clock/clock.dart' as clk;
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
@@ -39,7 +40,7 @@ class _ParttimeScreenState extends State<ParttimeScreen> {
   final _keys = {
     for (final k in ['month', 'state', 'unit']) k: GlobalKey(),
   };
-  late DateTime? _month = DateTime(DateTime.now().year, DateTime.now().month);
+  late DateTime? _month = DateTime(clk.clock.now().year, clk.clock.now().month);
   HoursState? _state;
   String? _unit;
 
@@ -104,7 +105,7 @@ class _ParttimeScreenState extends State<ParttimeScreen> {
     final l10n = context.l10n;
     final tones = context.tones;
     final scheme = Theme.of(context).colorScheme;
-    final now = DateTime.now();
+    final now = clk.clock.now();
     final all = _store.entries;
     final shown = [
       for (final e in all)
@@ -444,7 +445,7 @@ class ParttimeAddScreen extends StatefulWidget {
 class _ParttimeAddScreenState extends State<ParttimeAddScreen> {
   final _store = HoursStore.instance;
   final _work = TextEditingController();
-  late var _date = DateUtils.dateOnly(DateTime.now());
+  late var _date = DateUtils.dateOnly(clk.clock.now());
   var _unit = myUnits.first;
   var _start = 9 * 60;
   var _end = 12 * 60;
@@ -490,7 +491,7 @@ class _ParttimeAddScreenState extends State<ParttimeAddScreen> {
   }
 
   Future<void> _pickDate() async {
-    final today = DateUtils.dateOnly(DateTime.now());
+    final today = DateUtils.dateOnly(clk.clock.now());
     final d = await showDatePicker(
       context: context,
       initialDate: _date,
@@ -802,7 +803,7 @@ class ParttimePayScreen extends StatefulWidget {
 class _ParttimePayScreenState extends State<ParttimePayScreen> {
   final _key = GlobalKey();
   late var _month = () {
-    final last = DateTime(DateTime.now().year, DateTime.now().month - 1);
+    final last = DateTime(clk.clock.now().year, clk.clock.now().month - 1);
     return (rocYear(last), last.month);
   }();
 
@@ -810,7 +811,7 @@ class _ParttimePayScreenState extends State<ParttimePayScreen> {
   Widget build(BuildContext context) {
     final l10n = context.l10n;
     final scheme = Theme.of(context).colorScheme;
-    final now = DateTime.now();
+    final now = clk.clock.now();
     final months = [
       for (var i = 0; i < 12; i++)
         () {
