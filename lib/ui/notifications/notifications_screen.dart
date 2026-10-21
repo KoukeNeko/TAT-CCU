@@ -81,16 +81,16 @@ class MessagesScreen extends StatefulWidget {
 }
 
 class _MessagesScreenState extends State<MessagesScreen> {
-  /// Bumped after reading a message, so its unread mark updates.
-  var _version = 0;
   var _filter = _Filter.all;
 
   /// What is shown beside the list in a wide window: a mail id or a
-  /// notification link, and its page. Mail read there shows as read
-  /// without reloading the list.
+  /// notification link, and its page.
   Object? _open;
   Widget? _page;
-  final _read = <int>{};
+
+  /// Mail read or marked unread here, by id: whether it is unread now.
+  /// The list keeps what it shows instead of loading again from scratch.
+  final _unread = <int, bool>{};
 
   bool get _wide => MediaQuery.sizeOf(context).width >= splitLayout;
 
@@ -115,24 +115,23 @@ class _MessagesScreenState extends State<MessagesScreen> {
   );
 
   Future<void> _openMail(int id) async {
+    setState(() => _unread[id] = false);
     if (_wide) {
-      _read.add(id);
       _show(
         id,
         MailScreen(
           id: id,
           onUnread: () => setState(() {
-            _read.remove(id);
+            _unread[id] = true;
             _open = null;
-            _version++;
           }),
         ),
       );
       return;
     }
-    await Navigator.of(context)
-        .push(MaterialPageRoute(builder: (_) => MailScreen(id: id)));
-    if (mounted) setState(() => _version++);
+    final markedUnread = await Navigator.of(context)
+        .push<bool>(MaterialPageRoute(builder: (_) => MailScreen(id: id)));
+    if (markedUnread == true && mounted) setState(() => _unread[id] = true);
   }
 
   /// Forum posts and assignment comments and grades reach eCourse2's
@@ -276,7 +275,6 @@ class _MessagesScreenState extends State<MessagesScreen> {
               ),
             ),
       body: Loader.watch(
-        key: ValueKey(_version),
         watch: () => repo.watch(
           (repo) async => (
             notices: await repo.notices(),
@@ -293,7 +291,7 @@ class _MessagesScreenState extends State<MessagesScreen> {
                 title: m.subject,
                 detail: '${m.sender}・${names[m.courseId] ?? m.course}',
                 time: m.time,
-                unread: m.unread && !_read.contains(m.id),
+                unread: _unread[m.id] ?? m.unread,
                 selected: m.id == _open,
                 onTap: () => _openMail(m.id),
               ),
@@ -316,7 +314,7 @@ class _MessagesScreenState extends State<MessagesScreen> {
               ),
           ]..sort((a, b) => b.time.compareTo(a.time));
           return PageView(
-            // Keeps the page when the list reloads after reading mail.
+            // Keeps the chosen filter page when the list updates.
             key: const PageStorageKey('messages'),
             controller: _pages,
             // A chip lighting up ticks, however it was reached.
@@ -478,7 +476,7 @@ class MailScreen extends StatelessWidget {
 
   final int id;
 
-  /// After marking it unread; closes the page when not given.
+  /// After marking it unread; when not given, the page closes with true.
   final VoidCallback? onUnread;
 
   @override
@@ -500,7 +498,7 @@ class MailScreen extends StatelessWidget {
               if (onUnread != null) {
                 onUnread!();
               } else if (context.mounted) {
-                Navigator.of(context).pop();
+                Navigator.of(context).pop(true);
               }
             } catch (e) {
               if (context.mounted) showSendError(context, e);
