@@ -195,10 +195,12 @@ class EcourseRepository {
       });
 
   /// Enrolled courses with timetable custom fields, newest semester first.
-  /// Cached for the session; pass [refresh] to refetch.
+  /// Screens loading at once share one request; a later call asks again, so
+  /// a course added or dropped shows on refresh. Pass [refresh] to skip
+  /// one still loading.
   Future<List<Course>> courses({bool refresh = false}) {
     if (refresh) _courses = null;
-    return _once(() => _courses, (f) => _courses = f, () async {
+    final future = _once(() => _courses, (f) => _courses = f, () async {
       final enrolled = await _client.call('core_enrol_get_users_courses', {
         'userid': await _currentUserId(),
       }) as List;
@@ -214,6 +216,11 @@ class EcourseRepository {
       assignCourseColors(list);
       return list;
     });
+    // Errors reach the callers; _once already forgets a failed request.
+    future.then((_) {
+      if (identical(_courses, future)) _courses = null;
+    }, onError: (Object _) {});
+    return future;
   }
 
   /// Courses of the newest semester, which is what the timetable shows.
