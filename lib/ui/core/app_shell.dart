@@ -115,10 +115,7 @@ class _AppShellState extends State<AppShell> {
     });
     if (!commit || target == null) return;
     if (target != widget.shell.currentIndex) HapticFeedback.selectionClick();
-    widget.shell.goBranch(
-      target,
-      initialLocation: target == widget.shell.currentIndex,
-    );
+    _openTab(widget.shell, target);
   }
 
   @override
@@ -302,6 +299,19 @@ class _AppShellState extends State<AppShell> {
   }
 }
 
+/// Switches to tab [i]; the tab already shown returns to its first page.
+/// Pages pushed with [Navigator.push] (a mail, the compose screen) are not
+/// go_router's, so they are popped here before go_router resets the tab.
+void _openTab(StatefulNavigationShell shell, int i) {
+  final again = i == shell.currentIndex;
+  if (again) {
+    shell.route.branches[i].navigatorKey.currentState?.popUntil(
+      (r) => r.isFirst,
+    );
+  }
+  shell.goBranch(i, initialLocation: again);
+}
+
 /// Desktop sidebar, design/round-11 desktop direction A: the five tabs, then
 /// this semester's courses.
 class _Sidebar extends StatefulWidget {
@@ -373,7 +383,7 @@ class _SidebarState extends State<_Sidebar> {
 
   void _goTab(int i) {
     widget.onPicked();
-    widget.shell.goBranch(i, initialLocation: i == widget.shell.currentIndex);
+    _openTab(widget.shell, i);
   }
 
   @override
