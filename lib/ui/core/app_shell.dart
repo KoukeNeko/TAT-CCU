@@ -307,7 +307,14 @@ class _AppShellState extends State<AppShell> {
             Space.m,
             0,
             Space.m,
-            math.max(Space.s, MediaQuery.viewPaddingOf(context).bottom - 18),
+            // Android's gesture handle is drawn within its short inset, so
+            // the bar stands above it there.
+            theme.platform == TargetPlatform.android
+                ? MediaQuery.viewPaddingOf(context).bottom + Space.s
+                : math.max(
+                    Space.s,
+                    MediaQuery.viewPaddingOf(context).bottom - 18,
+                  ),
           ),
           // A wide screen held like a phone (an open foldable) keeps the
           // bar at a phone's width.
