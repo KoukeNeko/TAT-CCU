@@ -8,11 +8,14 @@ String plainText(String html) {
       .replaceAll(RegExp(r'<[^>]+>'), '')
       .replaceAllMapped(RegExp(r'&(#x?[0-9a-fA-F]+|\w+);'), (m) {
         final e = m[1]!;
-        if (e.startsWith('#x')) {
-          return String.fromCharCode(int.parse(e.substring(2), radix: 16));
-        }
         if (e.startsWith('#')) {
-          return String.fromCharCode(int.parse(e.substring(1)));
+          final code = e.startsWith('#x')
+              ? int.tryParse(e.substring(2), radix: 16)
+              : int.tryParse(e.substring(1));
+          // A malformed or out-of-range reference stays as written.
+          return code == null || code > 0x10FFFF
+              ? m[0]!
+              : String.fromCharCode(code);
         }
         return const {
               'amp': '&',

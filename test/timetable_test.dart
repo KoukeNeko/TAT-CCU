@@ -26,4 +26,11 @@ void main() {
   test('empty value gives no sessions', () {
     expect(parseSchedule(''), isEmpty);
   });
+
+  // An empty code between commas is an unknown code: its day is skipped,
+  // and the other days still parse, instead of the course failing.
+  test('an empty period code skips its day only', () {
+    final s = parseSchedule('週二 C, 週四 D');
+    expect(s.map((x) => x.weekday), [4]);
+  });
 }

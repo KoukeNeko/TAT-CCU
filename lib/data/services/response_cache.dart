@@ -48,7 +48,13 @@ class ResponseCache {
   Future<Object?> read(String key) async {
     final file = await _file(key);
     if (!await file.exists()) return null;
-    return jsonDecode(await file.readAsString());
+    try {
+      return jsonDecode(await file.readAsString());
+    } on FormatException {
+      // Cut short by a crash or a full disk: as if never answered, so the
+      // request goes to eCourse2 and the answer is written again.
+      return null;
+    }
   }
 
   Future<void> write(String key, Object? value) async =>

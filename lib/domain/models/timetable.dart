@@ -36,8 +36,9 @@ const _weekdays = {
     final start = (6 + n) * 60 + 10;
     return (start: start, end: start + 50);
   }
+  if (code.length != 1) return null;
   final i = code.codeUnitAt(0) - 'A'.codeUnitAt(0);
-  if (code.length != 1 || i < 0 || i > 9) return null;
+  if (i < 0 || i > 9) return null;
   final start = 7 * 60 + 15 + i * 90;
   return (start: start, end: start + 75);
 }
