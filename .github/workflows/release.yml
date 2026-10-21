@@ -294,8 +294,11 @@ jobs:
           done
           echo "$ANDROID_KEYSTORE_BASE64" | base64 --decode > "$RUNNER_TEMP/upload.jks"
           echo "ANDROID_KEYSTORE=$RUNNER_TEMP/upload.jks" >> "$GITHUB_ENV"
-      # The password reaches this step only, not the rest of the job.
-      - run: flutter build apk --release --build-number="$GITHUB_RUN_NUMBER"
+      # The password reaches these steps only, not the rest of the job. The
+      # bundle is what Google Play takes; the APK is for the GitHub release.
+      - run: |
+          flutter build apk --release --build-number="$GITHUB_RUN_NUMBER"
+          flutter build appbundle --release --build-number="$GITHUB_RUN_NUMBER"
         env:
           ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
       - name: Check the signature
@@ -312,6 +315,12 @@ jobs:
         with:
           name: android
           path: dist/TAT-CCU-${{ env.VERSION }}-android.apk
+          if-no-files-found: error
+      # Kept apart from the release files: uploaded to Google Play, not published.
+      - uses: actions/upload-artifact@v7
+        with:
+          name: play
+          path: build/app/outputs/bundle/release/app-release.aab
           if-no-files-found: error
 
   # Unsigned until there is a code signing certificate for Windows.
