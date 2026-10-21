@@ -9,6 +9,7 @@ import 'package:provider/provider.dart';
 import '../../data/repositories/ecourse_repository.dart';
 import '../../data/services/school_calendar.dart';
 import '../core/status_capsule.dart';
+import '../core/auto_refresh.dart';
 import '../core/theme.dart';
 import '../core/widgets.dart';
 import '../../l10n/l10n.dart';
@@ -75,7 +76,7 @@ List<SchoolDate> _schoolOn(DateTime day) => [
     if (!day.isBefore(d.start) && !day.isAfter(d.end ?? d.start)) d,
 ];
 
-class _CalendarScreenState extends State<CalendarScreen> {
+class _CalendarScreenState extends State<CalendarScreen> with AutoRefresh {
   final _today = DateUtils.dateOnly(DateTime.now());
   late DateTime _selected = _today;
   late int _page = _pageOf(_today);
@@ -94,6 +95,9 @@ class _CalendarScreenState extends State<CalendarScreen> {
     super.initState();
     _load(_page);
   }
+
+  @override
+  void refresh() => _load(_page, again: true);
 
   @override
   void dispose() {

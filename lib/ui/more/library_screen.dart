@@ -6,6 +6,7 @@ import '../../data/services/demo_data.dart';
 import '../../data/repositories/campus_cache.dart';
 import '../../data/services/library_data.dart';
 import '../../l10n/l10n.dart';
+import '../core/auto_refresh.dart';
 import '../core/campus_session.dart';
 import '../core/campus_web_screen.dart';
 import '../core/theme.dart';
@@ -115,7 +116,8 @@ class LibraryScreen extends StatefulWidget {
   State<LibraryScreen> createState() => _LibraryScreenState();
 }
 
-class _LibraryScreenState extends State<LibraryScreen> with CampusPageState {
+class _LibraryScreenState extends State<LibraryScreen>
+    with AutoRefresh, CampusPageState {
   @override
   String get cacheKey => LibraryScreen.cacheKey;
 

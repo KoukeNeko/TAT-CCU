@@ -8,6 +8,7 @@ import 'package:webview_flutter/webview_flutter.dart';
 import '../../data/repositories/campus_cache.dart';
 import '../../data/repositories/ecourse_auth_repository.dart';
 import '../../data/services/campus_cookies.dart';
+import 'auto_refresh.dart';
 import 'cas_autofill.dart';
 import 'status_capsule.dart';
 import 'widgets.dart';
@@ -33,7 +34,7 @@ String fetchPdfScript(String url) =>
 /// [CampusCache]: the last read shows at once, and a new read replaces it.
 /// Pass [session] as the CampusSession's key and [received] as its
 /// onMessage.
-mixin CampusPageState<W extends StatefulWidget> on State<W> {
+mixin CampusPageState<W extends StatefulWidget> on AutoRefresh<W> {
   final session = GlobalKey<CampusSessionState>();
   Map<String, dynamic>? json;
   DateTime? savedAt;
@@ -42,11 +43,25 @@ mixin CampusPageState<W extends StatefulWidget> on State<W> {
   String get cacheKey;
 
   /// Reads the school again on opening even when a read is saved; false
-  /// waits for pull to refresh, for pages that change rarely.
+  /// waits for pull to refresh, for pages that change rarely, unless the
+  /// saved read is older than [_rereadAfter].
   bool get readOnOpen => true;
+
+  static const _rereadAfter = Duration(hours: 1);
 
   /// Whether a saved read still fits what the screen shows.
   bool keepsSaved(Map<String, dynamic> saved) => true;
+
+  // Reading the school again goes through a signed-in web view, so a page
+  // left open reads again only on coming back, at most every few minutes.
+  @override
+  Duration? get refreshEvery => null;
+
+  @override
+  Duration get staleAfter => const Duration(minutes: 5);
+
+  @override
+  void refresh() => session.currentState?.reload();
 
   @override
   void initState() {
@@ -60,7 +75,10 @@ mixin CampusPageState<W extends StatefulWidget> on State<W> {
           savedAt = cached.savedAt;
         });
       }
-      if (!keep || readOnOpen) session.currentState?.reload();
+      final old =
+          cached != null &&
+          DateTime.now().difference(cached.savedAt) > _rereadAfter;
+      if (!keep || readOnOpen || old) session.currentState?.reload();
     });
   }
 

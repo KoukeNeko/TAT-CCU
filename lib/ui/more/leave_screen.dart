@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../../data/services/demo_data.dart';
 import '../../l10n/l10n.dart';
 import '../core/campus_systems.dart';
+import '../core/auto_refresh.dart';
 import '../core/campus_session.dart';
 import '../core/campus_web_screen.dart';
 import '../core/theme.dart';
@@ -87,7 +88,8 @@ class LeaveScreen extends StatefulWidget {
   State<LeaveScreen> createState() => _LeaveScreenState();
 }
 
-class _LeaveScreenState extends State<LeaveScreen> with CampusPageState {
+class _LeaveScreenState extends State<LeaveScreen>
+    with AutoRefresh, CampusPageState {
   @override
   String get cacheKey => LeaveScreen.cacheKey;
 

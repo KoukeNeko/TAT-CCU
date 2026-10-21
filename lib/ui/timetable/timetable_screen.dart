@@ -9,6 +9,7 @@ import 'package:provider/provider.dart';
 import '../../data/repositories/ecourse_repository.dart';
 import '../../domain/models/course.dart';
 import '../../domain/models/timetable.dart';
+import '../core/auto_refresh.dart';
 import '../core/theme.dart';
 import '../core/widgets.dart';
 import '../../l10n/l10n.dart';
@@ -20,7 +21,7 @@ class TimetableScreen extends StatefulWidget {
   State<TimetableScreen> createState() => _TimetableScreenState();
 }
 
-class _TimetableScreenState extends State<TimetableScreen> {
+class _TimetableScreenState extends State<TimetableScreen> with AutoRefresh {
   int _day = DateTime.now().weekday;
 
   /// Class shown beside the week grid in a wide window.
@@ -33,15 +34,20 @@ class _TimetableScreenState extends State<TimetableScreen> {
   PageController? _pages;
 
   /// Shared by every card, so swiping between days asks eCourse2 once.
-  late final Stream<_Shared> _shared = context.read<EcourseRepository>().watch((
-    repo,
-  ) async {
-    final (due, grades) = await (
-      repo.dueSoon(days: 60),
-      repo.gradeOverview(),
-    ).wait;
-    return (due: due, grades: grades);
-  });
+  late Stream<_Shared> _shared = _loadShared();
+
+  Stream<_Shared> _loadShared() =>
+      context.read<EcourseRepository>().watch((repo) async {
+        final (due, grades) = await (
+          repo.dueSoon(days: 60),
+          repo.gradeOverview(),
+        ).wait;
+        return (due: due, grades: grades);
+      });
+
+  // The cards' deadlines and grades; the courses refresh in their Loader.
+  @override
+  void refresh() => setState(() => _shared = _loadShared());
 
   /// The progress bar and countdowns move with the clock.
   late final _tick = Timer.periodic(

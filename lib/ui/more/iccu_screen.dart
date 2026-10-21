@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 
 import '../../data/services/demo_data.dart';
 import '../../data/services/html_text.dart';
+import '../core/auto_refresh.dart';
 import '../core/campus_session.dart';
 import '../core/campus_web_screen.dart';
 import '../core/theme.dart';
@@ -131,7 +132,8 @@ class IccuScreen extends StatefulWidget {
   State<IccuScreen> createState() => _IccuScreenState();
 }
 
-class _IccuScreenState extends State<IccuScreen> with CampusPageState {
+class _IccuScreenState extends State<IccuScreen>
+    with AutoRefresh, CampusPageState {
   @override
   String get cacheKey => 'iccu';
 

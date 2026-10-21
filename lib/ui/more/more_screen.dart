@@ -9,6 +9,7 @@ import '../../data/repositories/ecourse_auth_repository.dart';
 import '../../data/repositories/campus_cache.dart';
 import '../../data/repositories/ecourse_repository.dart';
 import '../../data/repositories/more_tiles_prefs.dart';
+import '../core/auto_refresh.dart';
 import '../core/theme.dart';
 import '../core/widgets.dart';
 import 'leave_screen.dart';
@@ -32,7 +33,7 @@ class MoreScreen extends StatefulWidget {
   State<MoreScreen> createState() => _MoreScreenState();
 }
 
-class _MoreScreenState extends State<MoreScreen> {
+class _MoreScreenState extends State<MoreScreen> with AutoRefresh {
   /// Each course's grade, saved answer first; the tile only shows a count
   /// and skips it on failure.
   Map<int, String>? _grades;
@@ -41,11 +42,25 @@ class _MoreScreenState extends State<MoreScreen> {
   @override
   void initState() {
     super.initState();
+    _loadGrades();
+  }
+
+  void _loadGrades() {
+    _gradesSub?.cancel();
     _gradesSub = context
         .read<EcourseRepository>()
         .watch((repo) => repo.gradeOverview())
         .listen((g) => setState(() => _grades = g), onError: (_) {});
   }
+
+  // The tiles: grades from eCourse2, the library and leave from what
+  // their pages last saved.
+  @override
+  void refresh() => setState(() {
+    _loadGrades();
+    _library = CampusCache.read(LibraryScreen.cacheKey);
+    _leave = CampusCache.read(LeaveScreen.cacheKey);
+  });
 
   @override
   void dispose() {
@@ -53,10 +68,11 @@ class _MoreScreenState extends State<MoreScreen> {
     super.dispose();
   }
 
-  // shortcut: the tiles read each page's last saved data once, so they lag
-  // until the More page is rebuilt; listen to the cache if that shows.
-  final _library = CampusCache.read(LibraryScreen.cacheKey);
-  final _leave = CampusCache.read(LeaveScreen.cacheKey);
+  // shortcut: the tiles read each page's last saved data again only when
+  // the More page refreshes ([AutoRefresh]); listen to the cache if a tile
+  // lagging behind its page shows.
+  var _library = CampusCache.read(LibraryScreen.cacheKey);
+  var _leave = CampusCache.read(LeaveScreen.cacheKey);
   final _slots = List.generate(4, (_) => GlobalKey());
   var _query = '';
 

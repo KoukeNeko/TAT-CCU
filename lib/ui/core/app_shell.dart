@@ -8,6 +8,7 @@ import 'package:provider/provider.dart';
 
 import '../../data/repositories/ecourse_repository.dart';
 import '../../domain/models/course.dart';
+import 'auto_refresh.dart';
 import 'theme.dart';
 import 'widgets.dart';
 import '../../l10n/l10n.dart';
@@ -348,7 +349,7 @@ class _Sidebar extends StatefulWidget {
   State<_Sidebar> createState() => _SidebarState();
 }
 
-class _SidebarState extends State<_Sidebar> {
+class _SidebarState extends State<_Sidebar> with AutoRefresh {
   EcourseRepository? _repo;
   late Stream<(List<Course>, int)> _data;
 
@@ -358,6 +359,11 @@ class _SidebarState extends State<_Sidebar> {
     final repo = context.watch<EcourseRepository>();
     if (repo == _repo) return;
     _repo = repo;
+    _load(repo);
+  }
+
+  void _load(EcourseRepository repo) {
+    markAsked();
     // The pages show their own load errors; the sidebar just stays short.
     _data = repo.watch(
       (r) async => (
@@ -365,6 +371,12 @@ class _SidebarState extends State<_Sidebar> {
         await r.unreadNotices() + await r.unreadMail(),
       ),
     );
+  }
+
+  // The unread count keeps up like the pages ([AutoRefresh]).
+  @override
+  void refresh() {
+    if (_repo case final repo?) setState(() => _load(repo));
   }
 
   /// A content area wide enough for list and detail opens the course with

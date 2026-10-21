@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import '../../data/services/ecourse_maintenance.dart';
 import '../../data/services/moodle_client.dart';
 
+import 'auto_refresh.dart';
 import 'maintenance_capsule.dart';
 import 'pull_refresh.dart';
 import 'shapes.dart';
@@ -53,7 +54,7 @@ class Loader<T> extends StatefulWidget {
   State<Loader<T>> createState() => _LoaderState<T>();
 }
 
-class _LoaderState<T> extends State<Loader<T>> {
+class _LoaderState<T> extends State<Loader<T>> with AutoRefresh {
   StreamSubscription<T>? _sub;
   T? _data;
   var _hasData = false;
@@ -76,6 +77,12 @@ class _LoaderState<T> extends State<Loader<T>> {
     super.initState();
     EcourseMaintenance.instance.addListener(_maintenanceChanged);
     _start();
+  }
+
+  // An error waits for the retry button; a load already running finishes.
+  @override
+  void refresh() {
+    if (!_loading && _error == null) _start();
   }
 
   @override
@@ -106,6 +113,7 @@ class _LoaderState<T> extends State<Loader<T>> {
 
   Future<void> _start() {
     _sub?.cancel();
+    markAsked();
     final done = Completer<void>();
     if (mounted) setState(() => _loading = true);
     void finish() {

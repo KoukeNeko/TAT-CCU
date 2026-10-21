@@ -7,6 +7,7 @@ import '../../data/repositories/ecourse_auth_repository.dart';
 import '../../data/services/demo_data.dart';
 import '../../l10n/l10n.dart';
 import '../core/floating_dock.dart';
+import '../core/auto_refresh.dart';
 import '../core/campus_session.dart';
 import '../core/theme.dart';
 import '../core/widgets.dart';
@@ -24,7 +25,8 @@ class AbsenceScreen extends StatefulWidget {
   State<AbsenceScreen> createState() => _AbsenceScreenState();
 }
 
-class _AbsenceScreenState extends State<AbsenceScreen> with CampusPageState {
+class _AbsenceScreenState extends State<AbsenceScreen>
+    with AutoRefresh, CampusPageState {
   var _sending = false;
 
   @override

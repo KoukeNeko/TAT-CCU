@@ -14,6 +14,7 @@ import '../../data/services/demo_data.dart';
 import '../../data/repositories/certificate_store.dart';
 import '../../data/services/payment_data.dart';
 import '../../l10n/l10n.dart';
+import '../core/auto_refresh.dart';
 import '../core/campus_session.dart';
 import '../core/theme.dart';
 import '../core/widgets.dart';
@@ -53,7 +54,8 @@ class PaymentScreen extends StatefulWidget {
   State<PaymentScreen> createState() => _PaymentScreenState();
 }
 
-class _PaymentScreenState extends State<PaymentScreen> with CampusPageState {
+class _PaymentScreenState extends State<PaymentScreen>
+    with AutoRefresh, CampusPageState {
   final _yearKey = GlobalKey();
   var _year = rocYear(DateTime.now());
   int? _month;

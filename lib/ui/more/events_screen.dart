@@ -7,6 +7,7 @@ import 'package:http/http.dart' as http;
 import '../../data/services/demo_data.dart';
 import '../../data/repositories/campus_cache.dart';
 import '../../l10n/l10n.dart';
+import '../core/auto_refresh.dart';
 import '../core/campus_session.dart';
 import '../core/theme.dart';
 import '../core/widgets.dart';
@@ -69,7 +70,7 @@ class EventsScreen extends StatefulWidget {
   State<EventsScreen> createState() => _EventsScreenState();
 }
 
-class _EventsScreenState extends State<EventsScreen> {
+class _EventsScreenState extends State<EventsScreen> with AutoRefresh {
   final _session = GlobalKey<CampusSessionState>();
   final _http = http.Client();
   final _field = TextEditingController();
@@ -175,6 +176,17 @@ class _EventsScreenState extends State<EventsScreen> {
       _results = null;
     });
   }
+
+  // Seats and sign-ups move; reading the school is costly, so only on
+  // coming back, at most every few minutes.
+  @override
+  Duration? get refreshEvery => null;
+
+  @override
+  Duration get staleAfter => const Duration(minutes: 5);
+
+  @override
+  void refresh() => _reload();
 
   Future<void> _reload() async {
     setState(() => _error = null);

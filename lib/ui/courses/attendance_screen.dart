@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../data/services/demo_data.dart';
 import '../../l10n/l10n.dart';
+import '../core/auto_refresh.dart';
 import '../core/campus_session.dart';
 import '../core/theme.dart';
 import '../core/widgets.dart';
@@ -20,7 +21,7 @@ class AttendanceScreen extends StatefulWidget {
 }
 
 class _AttendanceScreenState extends State<AttendanceScreen>
-    with CampusPageState {
+    with AutoRefresh, CampusPageState {
   @override
   String get cacheKey => 'attendance-${widget.cmid}';
 
