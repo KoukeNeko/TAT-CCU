@@ -25,6 +25,10 @@ class TimetableScreen extends StatefulWidget {
 class _TimetableScreenState extends State<TimetableScreen> with AutoRefresh {
   int _day = clk.clock.now().weekday;
 
+  /// The date [_day] was set on: the tab stays alive overnight, and the next
+  /// day opens on its own weekday.
+  DateTime _dayOn = DateUtils.dateOnly(clk.clock.now());
+
   /// Class shown beside the week grid in a wide window.
   DaySlot? _picked;
 
@@ -48,7 +52,18 @@ class _TimetableScreenState extends State<TimetableScreen> with AutoRefresh {
 
   // The cards' deadlines and grades; the courses refresh in their Loader.
   @override
-  void refresh() => setState(() => _shared = _loadShared());
+  void refresh() {
+    final today = DateUtils.dateOnly(clk.clock.now());
+    setState(() {
+      _shared = _loadShared();
+      if (today != _dayOn) {
+        _dayOn = today;
+        _day = today.weekday;
+        _pages?.dispose();
+        _pages = null;
+      }
+    });
+  }
 
   /// The progress bar and countdowns move with the clock.
   late final _tick = Timer.periodic(
@@ -74,6 +89,8 @@ class _TimetableScreenState extends State<TimetableScreen> with AutoRefresh {
     setState(() {
       _semester = semester;
       _pages = null;
+      // A class of the other semester is not in this grid.
+      _picked = null;
     });
   }
 
@@ -270,7 +287,13 @@ class _TimetableScreenState extends State<TimetableScreen> with AutoRefresh {
         ? null
         : _FocusCard(
             slot: picked,
-            minute: picked.session.weekday == now.weekday ? minute : null,
+            // Today's class, while it has not ended: one already over has
+            // no countdown or progress to show.
+            minute:
+                picked.session.weekday == now.weekday &&
+                    minute < picked.session.end
+                ? minute
+                : null,
             shared: shared,
           );
     // iPad in portrait: the picked class under the week.
