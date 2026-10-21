@@ -250,7 +250,7 @@ class _Sidebar extends StatefulWidget {
   final StatefulNavigationShell shell;
   final List<String> labels;
 
-  /// The course whose pages are shown; it is lit instead of a tab.
+  /// The course whose pages are shown; it is lit along with its tab.
   final int? course;
 
   @override
@@ -313,8 +313,7 @@ class _SidebarState extends State<_Sidebar> {
               for (final (i, label) in widget.labels.indexed)
                 _SideItem(
                   label: label,
-                  selected:
-                      widget.course == null && i == widget.shell.currentIndex,
+                  selected: i == widget.shell.currentIndex,
                   badge: i == 1 && unread > 0 ? '$unread' : null,
                   onTap: () {
                     widget.shell.goBranch(

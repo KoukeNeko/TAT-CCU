@@ -271,11 +271,12 @@ class _CalendarScreenState extends State<CalendarScreen> {
                       ),
                       SizedBox(
                         width: paneWidth,
-                        child: PaneSize(
-                          child: ListView(
-                            padding: scrollPadding(context).copyWith(left: 0),
-                            children: [day],
-                          ),
+                        child: ListView(
+                          // The panel's own inset; the page's would center a readable
+                          // column across the whole page.
+                          padding: scrollPadding(context)
+                              .copyWith(left: 0, right: pageMargin),
+                          children: [day],
                         ),
                       ),
                     ],

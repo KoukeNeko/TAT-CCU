@@ -239,20 +239,19 @@ class _TimetableScreenState extends State<TimetableScreen> {
         ),
         SizedBox(
           width: paneWidth,
-          child: PaneSize(
-            child: ListView(
-              padding: scrollPadding(context).copyWith(left: 0),
-              children: [
-                if (picked != null)
-                  _FocusCard(
-                    slot: picked,
-                    minute: picked.session.weekday == now.weekday
-                        ? minute
-                        : null,
-                    shared: shared,
-                  ),
-              ],
-            ),
+          child: ListView(
+            // The panel's own inset; the page's would center a readable
+            // column across the whole page.
+            padding: scrollPadding(context)
+                .copyWith(left: 0, right: pageMargin),
+            children: [
+              if (picked != null)
+                _FocusCard(
+                  slot: picked,
+                  minute: picked.session.weekday == now.weekday ? minute : null,
+                  shared: shared,
+                ),
+            ],
           ),
         ),
       ],
