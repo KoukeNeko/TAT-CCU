@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
@@ -31,8 +33,26 @@ class MoreScreen extends StatefulWidget {
 }
 
 class _MoreScreenState extends State<MoreScreen> {
-  /// Fetched once; the row only shows a count and skips it on failure.
-  late final _grades = context.read<EcourseRepository>().gradeOverview();
+  /// Each course's grade, saved answer first; the tile only shows a count
+  /// and skips it on failure.
+  Map<int, String>? _grades;
+  StreamSubscription<Map<int, String>>? _gradesSub;
+
+  @override
+  void initState() {
+    super.initState();
+    _gradesSub = context
+        .read<EcourseRepository>()
+        .watch((repo) => repo.gradeOverview())
+        .listen((g) => setState(() => _grades = g), onError: (_) {});
+  }
+
+  @override
+  void dispose() {
+    _gradesSub?.cancel();
+    super.dispose();
+  }
+
   // shortcut: the tiles read each page's last saved data once, so they lag
   // until the More page is rebuilt; listen to the cache if that shows.
   final _library = CampusCache.read(LibraryScreen.cacheKey);
@@ -314,7 +334,7 @@ class _StatusTile extends StatelessWidget {
 
   final _Page page;
   final ValueChanged<String> onOpen;
-  final Future<Map<int, String>> grades;
+  final Map<int, String>? grades;
   final Future<CachedPage?> library, leave;
 
   @override
@@ -322,13 +342,10 @@ class _StatusTile extends StatelessWidget {
     final l10n = context.l10n;
     final tones = context.tones;
     final status = switch (page.path) {
-      '/more/grades' => FutureBuilder(
-        future: grades,
-        builder: (context, snap) => _face(
-          context,
-          page.tone,
-          snap.hasData ? l10n.courseCount(snap.data!.length) : null,
-        ),
+      '/more/grades' => _face(
+        context,
+        page.tone,
+        grades == null ? null : l10n.courseCount(grades!.length),
       ),
       '/more/library' => FutureBuilder(
         future: library,
