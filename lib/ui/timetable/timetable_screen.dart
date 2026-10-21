@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -250,12 +251,13 @@ class _TimetableScreenState extends State<TimetableScreen> {
         _picked ??
         dayFocus(today, today: true, minute: minute).focus ??
         week.firstOrNull;
-    final grid = _WeekGrid(
+    _WeekGrid grid({double? fill}) => _WeekGrid(
       courses: courses,
       weekdays: weekdays,
       today: now.weekday,
       picked: picked,
       onPick: (s) => setState(() => _picked = s),
+      fill: fill,
     );
     final card = picked == null
         ? null
@@ -269,7 +271,7 @@ class _TimetableScreenState extends State<TimetableScreen> {
       return ListView(
         padding: scrollPadding(context, maxWidth: double.infinity),
         children: [
-          grid,
+          grid(),
           if (card != null) ...[const SizedBox(height: Space.xl), card],
         ],
       );
@@ -278,9 +280,19 @@ class _TimetableScreenState extends State<TimetableScreen> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Expanded(
-          child: ListView(
-            padding: scrollPadding(context, maxWidth: double.infinity),
-            children: [grid],
+          // The week fills the window's height beside the panel.
+          child: LayoutBuilder(
+            builder: (context, box) {
+              final padding = scrollPadding(context, maxWidth: double.infinity);
+              return ListView(
+                padding: padding,
+                children: [
+                  grid(
+                    fill: box.maxHeight - padding.vertical - _WeekGrid.header,
+                  ),
+                ],
+              );
+            },
           ),
         ),
         SizedBox(
@@ -307,6 +319,7 @@ class _WeekGrid extends StatelessWidget {
     required this.today,
     required this.picked,
     required this.onPick,
+    this.fill,
   });
 
   final List<Course> courses;
@@ -314,6 +327,13 @@ class _WeekGrid extends StatelessWidget {
   final int today;
   final DaySlot? picked;
   final ValueChanged<DaySlot> onPick;
+
+  /// Height for the hours to stretch to; they never get shorter than
+  /// [_perMinute].
+  final double? fill;
+
+  /// Height of the weekday row above the hours.
+  static const header = 28.0;
 
   static const _perMinute = 0.9;
 
@@ -332,7 +352,8 @@ class _WeekGrid extends StatelessWidget {
         : (sessions.map((s) => s.end).reduce((a, b) => a > b ? a : b) + 59) ~/
               60 *
               60;
-    final height = (last - first) * _perMinute;
+    final perMinute = math.max(_perMinute, (fill ?? 0) / (last - first));
+    final height = (last - first) * perMinute;
     final mute = TextStyle(
       fontSize: 12,
       fontWeight: FontWeight.w800,
@@ -369,7 +390,7 @@ class _WeekGrid extends StatelessWidget {
                   children: [
                     for (var m = first; m < last; m += 60)
                       Positioned(
-                        top: (m - first) * _perMinute,
+                        top: (m - first) * perMinute,
                         right: 6,
                         child: Text(
                           clock(m),
@@ -399,8 +420,8 @@ class _WeekGrid extends StatelessWidget {
                           for (final s in c.sessions)
                             if (s.weekday == d)
                               Positioned(
-                                top: (s.start - first) * _perMinute,
-                                height: (s.end - s.start) * _perMinute - 2,
+                                top: (s.start - first) * perMinute,
+                                height: (s.end - s.start) * perMinute - 2,
                                 left: 0,
                                 right: 0,
                                 child: _WeekBlock(

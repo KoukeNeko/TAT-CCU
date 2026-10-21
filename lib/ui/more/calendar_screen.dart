@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -29,6 +30,10 @@ const _rowHeight = 46.0;
 
 /// Desktop rows hold the day's events by name.
 const _wideRowHeight = 82.0;
+
+/// Height around the desktop month's six rows: the card's padding, the
+/// weekday row and the legend under it.
+const _monthChrome = 80.0;
 
 /// What an event is; each kind has its own color in the grid and the list.
 enum _Kind { school, assign, quiz, course, personal, site }
@@ -191,7 +196,7 @@ class _CalendarScreenState extends State<CalendarScreen> {
                   final fold = foldOf(context);
                   final book = fold?.posture == FoldPosture.book;
                   final wide = !book && width >= splitLayout;
-                  final monthView = <Widget>[
+                  List<Widget> monthView(double row) => [
                     Card(
                       // Desktop days are cards of their own.
                       color: wide
@@ -225,7 +230,7 @@ class _CalendarScreenState extends State<CalendarScreen> {
                             ),
                             const SizedBox(height: 4),
                             SizedBox(
-                              height: (wide ? _wideRowHeight : _rowHeight) * 6,
+                              height: row * 6,
                               child: PageView.builder(
                                 controller: _pages,
                                 onPageChanged: (p) {
@@ -234,6 +239,7 @@ class _CalendarScreenState extends State<CalendarScreen> {
                                 },
                                 itemBuilder: (context, page) => _MonthGrid(
                                   wide: wide,
+                                  rowHeight: row,
                                   month: _monthOf(page),
                                   today: _today,
                                   selected: _selected,
@@ -262,14 +268,35 @@ class _CalendarScreenState extends State<CalendarScreen> {
                         context,
                         maxWidth: wide ? double.infinity : readableWidth,
                       ),
-                      children: [...monthView, day],
+                      children: [
+                        ...monthView(wide ? _wideRowHeight : _rowHeight),
+                        day,
+                      ],
                     );
                   }
                   // Desktop direction A: the month, and the picked day
                   // beside it.
-                  final monthList = ListView(
-                    padding: scrollPadding(context, maxWidth: double.infinity),
-                    children: monthView,
+                  final padding = scrollPadding(
+                    context,
+                    maxWidth: double.infinity,
+                  );
+                  // Beside the day the month fills the window's height; on
+                  // a foldable it keeps the phone's rows.
+                  final monthList = LayoutBuilder(
+                    builder: (context, box) => ListView(
+                      padding: padding,
+                      children: monthView(
+                        book
+                            ? _rowHeight
+                            : math.max(
+                                _wideRowHeight,
+                                (box.maxHeight -
+                                        padding.vertical -
+                                        _monthChrome) /
+                                    6,
+                              ),
+                      ),
+                    ),
                   );
                   final dayList = ListView(
                     // The panel's own inset; the page's would center a
@@ -346,9 +373,11 @@ class _MonthGrid extends StatelessWidget {
     required this.events,
     required this.onTap,
     required this.wide,
+    required this.rowHeight,
   });
 
   final bool wide;
+  final double rowHeight;
   final DateTime month, today, selected;
   final List<CalendarEvent> events;
   final ValueChanged<DateTime> onTap;
@@ -365,7 +394,7 @@ class _MonthGrid extends StatelessWidget {
       children: [
         for (var w = 0; w < 6; w++)
           SizedBox(
-            height: wide ? _wideRowHeight : _rowHeight,
+            height: rowHeight,
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
