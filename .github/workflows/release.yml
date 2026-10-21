@@ -21,8 +21,9 @@ concurrency:
   group: release
   cancel-in-progress: false
 
+# Flutter's version is pinned in pubspec.yaml (environment.flutter), for CI and here alike.
 env:
-  FLUTTER_VERSION: 3.47.7
+  XCODE_VERSION: '27.0'
   TEAM_ID: 33832Z66QU
 
 jobs:
@@ -43,9 +44,9 @@ jobs:
             exit 1
           fi
           echo "version=$version" >> "$GITHUB_OUTPUT"
-      - uses: subosito/flutter-action@v2
+      - uses: subosito/flutter-action@1a449444c387b1966244ae4d4f8c696479add0b2 # v2.23.0
         with:
-          flutter-version: ${{ env.FLUTTER_VERSION }}
+          flutter-version-file: pubspec.yaml
           channel: stable
           cache: true
       - run: flutter pub get
@@ -66,15 +67,15 @@ jobs:
       - name: Select Xcode 27.0
         run: |
           xcode_app=""
-          for app in /Applications/Xcode_27.0*.app; do
+          for app in /Applications/Xcode_"$XCODE_VERSION"*.app; do
             [ -d "$app" ] && xcode_app="$app"
           done
-          [ -n "$xcode_app" ] || { echo "::error::Xcode 27.0 is not installed on this image" >&2; exit 1; }
+          [ -n "$xcode_app" ] || { echo "::error::Xcode $XCODE_VERSION is not installed on this image" >&2; exit 1; }
           sudo xcode-select --switch "$xcode_app/Contents/Developer"
           xcodebuild -version
-      - uses: subosito/flutter-action@v2
+      - uses: subosito/flutter-action@1a449444c387b1966244ae4d4f8c696479add0b2 # v2.23.0
         with:
-          flutter-version: ${{ env.FLUTTER_VERSION }}
+          flutter-version-file: pubspec.yaml
           channel: stable
           cache: true
       - name: Install the App Store Connect key
@@ -113,7 +114,7 @@ jobs:
       - name: Export and upload
         run: |
           destination=export
-          [ "$GITHUB_REF_TYPE" = tag ] && destination=upload
+          [ "$GITHUB_EVENT_NAME" = push ] && destination=upload
           cat > "$RUNNER_TEMP/ExportOptions.plist" <<PLIST
           <?xml version="1.0" encoding="UTF-8"?>
           <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
@@ -149,15 +150,15 @@ jobs:
       - name: Select Xcode 27.0
         run: |
           xcode_app=""
-          for app in /Applications/Xcode_27.0*.app; do
+          for app in /Applications/Xcode_"$XCODE_VERSION"*.app; do
             [ -d "$app" ] && xcode_app="$app"
           done
-          [ -n "$xcode_app" ] || { echo "::error::Xcode 27.0 is not installed on this image" >&2; exit 1; }
+          [ -n "$xcode_app" ] || { echo "::error::Xcode $XCODE_VERSION is not installed on this image" >&2; exit 1; }
           sudo xcode-select --switch "$xcode_app/Contents/Developer"
           xcodebuild -version
-      - uses: subosito/flutter-action@v2
+      - uses: subosito/flutter-action@1a449444c387b1966244ae4d4f8c696479add0b2 # v2.23.0
         with:
-          flutter-version: ${{ env.FLUTTER_VERSION }}
+          flutter-version-file: pubspec.yaml
           channel: stable
           cache: true
       - name: Install the signing certificate and the API key
@@ -277,9 +278,9 @@ jobs:
         with:
           distribution: temurin
           java-version: 17
-      - uses: subosito/flutter-action@v2
+      - uses: subosito/flutter-action@1a449444c387b1966244ae4d4f8c696479add0b2 # v2.23.0
         with:
-          flutter-version: ${{ env.FLUTTER_VERSION }}
+          flutter-version-file: pubspec.yaml
           channel: stable
           cache: true
       - name: Install the upload key
@@ -292,11 +293,11 @@ jobs:
             [ -n "${!name}" ] || { echo "::error::the secret $name is not set" >&2; exit 1; }
           done
           echo "$ANDROID_KEYSTORE_BASE64" | base64 --decode > "$RUNNER_TEMP/upload.jks"
-          {
-            echo "ANDROID_KEYSTORE=$RUNNER_TEMP/upload.jks"
-            echo "ANDROID_KEYSTORE_PASSWORD=$ANDROID_KEYSTORE_PASSWORD"
-          } >> "$GITHUB_ENV"
+          echo "ANDROID_KEYSTORE=$RUNNER_TEMP/upload.jks" >> "$GITHUB_ENV"
+      # The password reaches this step only, not the rest of the job.
       - run: flutter build apk --release --build-number="$GITHUB_RUN_NUMBER"
+        env:
+          ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
       - name: Check the signature
         run: |
           apksigner="$(ls "$ANDROID_HOME"/build-tools/*/apksigner | sort -V | tail -1)"
@@ -323,9 +324,9 @@ jobs:
       VERSION: ${{ needs.check.outputs.version }}
     steps:
       - uses: actions/checkout@v7
-      - uses: subosito/flutter-action@v2
+      - uses: subosito/flutter-action@1a449444c387b1966244ae4d4f8c696479add0b2 # v2.23.0
         with:
-          flutter-version: ${{ env.FLUTTER_VERSION }}
+          flutter-version-file: pubspec.yaml
           channel: stable
           cache: true
       - run: flutter build windows --release --build-number="$env:GITHUB_RUN_NUMBER"
@@ -341,7 +342,7 @@ jobs:
 
   # The iOS upload is not waited for: a problem on App Store Connect never holds back the macOS release.
   publish:
-    if: github.ref_type == 'tag'
+    if: github.event_name == 'push'
     needs: [check, macos, android]
     runs-on: ubuntu-latest
     timeout-minutes: 15
@@ -374,7 +375,7 @@ jobs:
   # Attached to the release that publish made, so a failed Windows job leaves the macOS release and the
   # Homebrew cask as they are.
   publish-windows:
-    if: github.ref_type == 'tag'
+    if: github.event_name == 'push'
     needs: [publish, windows]
     runs-on: ubuntu-latest
     timeout-minutes: 15
