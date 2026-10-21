@@ -27,11 +27,26 @@ android {
         versionName = flutter.versionName
     }
 
+    // The release workflow passes the upload key in ANDROID_KEYSTORE and
+    // ANDROID_KEYSTORE_PASSWORD; without it (a local `flutter run --release`)
+    // the debug key signs.
+    val uploadKeystore = System.getenv("ANDROID_KEYSTORE")
+    signingConfigs {
+        if (uploadKeystore != null) {
+            create("upload") {
+                storeFile = file(uploadKeystore)
+                storePassword = System.getenv("ANDROID_KEYSTORE_PASSWORD")
+                keyAlias = "upload"
+                keyPassword = System.getenv("ANDROID_KEYSTORE_PASSWORD")
+            }
+        }
+    }
+
     buildTypes {
         release {
-            // TODO: Add your own signing config for the release build.
-            // Signing with the debug keys for now, so `flutter run --release` works.
-            signingConfig = signingConfigs.getByName("debug")
+            signingConfig = signingConfigs.getByName(
+                if (uploadKeystore != null) "upload" else "debug",
+            )
         }
     }
 }

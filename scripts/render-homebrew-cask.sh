@@ -7,7 +7,7 @@ set -euo pipefail
 tag="$1"
 sums="$2"
 version="${tag#v}"
-asset="TAT-CCU-$version.zip"
+asset="TAT-CCU-$version-macos.zip"
 sha="$(awk -v f="$asset" '$2 == f || $2 == "*" f { print $1 }' "$sums")"
 [[ ${#sha} -eq 64 ]] || { echo "no SHA-256 for $asset in $sums" >&2; exit 1; }
 
@@ -16,7 +16,7 @@ cask "tat-ccu" do
   version "$version"
   sha256 "$sha"
 
-  url "https://github.com/KoukeNeko/TAT-CCU/releases/download/v#{version}/TAT-CCU-#{version}.zip"
+  url "https://github.com/KoukeNeko/TAT-CCU/releases/download/v#{version}/TAT-CCU-#{version}-macos.zip"
   name "TAT CCU"
   desc "Timetable, eCourse2 and campus services of National Chung Cheng University"
   homepage "https://github.com/KoukeNeko/TAT-CCU"
