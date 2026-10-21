@@ -10,7 +10,7 @@ class AppLocalizationsJa extends AppLocalizations {
   AppLocalizationsJa([String locale = 'ja']) : super(locale);
 
   @override
-  String get navToday => '今日';
+  String get navToday => 'ホーム';
 
   @override
   String get navTimetable => '時間割';

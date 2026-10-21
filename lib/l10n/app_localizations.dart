@@ -103,7 +103,7 @@ abstract class AppLocalizations {
   /// No description provided for @navToday.
   ///
   /// In zh, this message translates to:
-  /// **'今天'**
+  /// **'首頁'**
   String get navToday;
 
   /// No description provided for @navTimetable.

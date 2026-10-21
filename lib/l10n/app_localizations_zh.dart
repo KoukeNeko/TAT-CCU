@@ -10,7 +10,7 @@ class AppLocalizationsZh extends AppLocalizations {
   AppLocalizationsZh([String locale = 'zh']) : super(locale);
 
   @override
-  String get navToday => '今天';
+  String get navToday => '首頁';
 
   @override
   String get navTimetable => '課表';

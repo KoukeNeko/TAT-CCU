@@ -33,7 +33,7 @@ TAT CCU 整合 eCourse2、單一入口與各校務系統的資料。首頁顯示
 ## 畫面
 
 <p align="center">
-  <img src="store/app-store/iphone-6.3/01-today.jpg" width="19%" alt="今天" />
+  <img src="store/app-store/iphone-6.3/01-today.jpg" width="19%" alt="首頁" />
   <img src="store/app-store/iphone-6.3/02-timetable.jpg" width="19%" alt="課表" />
   <img src="store/app-store/iphone-6.3/03-course.jpg" width="19%" alt="課程" />
   <img src="store/app-store/iphone-6.3/05-calendar.jpg" width="19%" alt="行事曆" />
@@ -46,7 +46,7 @@ TAT CCU 整合 eCourse2、單一入口與各校務系統的資料。首頁顯示
 
 ## 功能
 
-### 今天
+### 首頁
 
 下一堂課的教室與倒數、當日其餘課程、本週到期的作業與小考，以及未讀的公告與信件。
 
@@ -125,7 +125,7 @@ brew install --cask koukeneko/tap/tat-ccu
 flowchart TB
   subgraph ui["lib/ui"]
     shell["AppShell<br>導覽列・側邊欄"]
-    pages["今天・課表・訊息・行事曆・更多"]
+    pages["首頁・課表・訊息・行事曆・更多"]
     session["CampusSession<br>已登入的 WebView"]
   end
   router["lib/routing<br>go_router"] --> shell --> pages
