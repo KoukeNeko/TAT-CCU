@@ -1,13 +1,15 @@
 New features & improvements
 
-🌐 A redesigned sign-in screen: pick the language on the bar at the bottom, or drag across it.
+🏠 The Today tab is now called Home.
 
-📱 iPhone Duo support: the nav bar stands upright on the right of the outer display, and the inner display splits into two pages at the fold.
-
-📄 The demo account now has a sample enrollment certificate.
+📚 Course pages show the course name in the top bar as you scroll.
 
 Bug fixes
 
-↩️ Going back from a course opened from the timetable sometimes did not return to the timetable.
+🔄 Pull to refresh now reloads the course list, so courses added or dropped show up.
 
-🔤 Button labels now use the app's typeface.
+🔔 Signing out stops that account's reminders; class reminders keep Taiwan time on any device.
+
+📅 The calendar and timetable move to the new day when the app stays open past midnight.
+
+🎟️ My Events updates right after you sign up or cancel.
