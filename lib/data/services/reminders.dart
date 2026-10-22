@@ -50,12 +50,20 @@ class Reminders {
         // Asked for when the student turns a notification on, not at launch.
         iOS: darwin,
         macOS: darwin,
+        windows: WindowsInitializationSettings(
+          appName: 'TAT CCU',
+          appUserModelId: 'io.github.koukeneko.tatCcu',
+          // Identifies the app's toast activator; never change it.
+          guid: '0fda9825-0624-44e3-854c-af68fb1a3c52',
+        ),
       ),
     );
   }
 
   /// False when the student declined in the system prompt.
   static Future<bool> requestPermission() async {
+    // Windows shows toasts without asking.
+    if (Platform.isWindows) return true;
     final ios = _plugin
         .resolvePlatformSpecificImplementation<
           IOSFlutterLocalNotificationsPlugin

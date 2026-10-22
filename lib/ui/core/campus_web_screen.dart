@@ -4,6 +4,7 @@ import 'package:webview_flutter/webview_flutter.dart';
 
 import '../../data/repositories/ecourse_auth_repository.dart';
 import '../../l10n/l10n.dart';
+import 'campus_web_view.dart';
 import 'cas_autofill.dart';
 import 'widgets.dart';
 
@@ -92,7 +93,7 @@ class _CampusWebScreenState extends State<CampusWebScreen> {
         padding: EdgeInsets.only(bottom: MediaQuery.paddingOf(context).bottom),
         child: Stack(
           children: [
-            WebViewWidget(controller: _controller),
+            CampusWebView(controller: _controller),
             if (_progress < 100)
               LinearProgressIndicator(value: _progress / 100),
           ],
