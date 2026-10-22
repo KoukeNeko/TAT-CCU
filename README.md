@@ -20,6 +20,12 @@
 </p>
 
 <p align="center">
+  <a href="https://apps.apple.com/app/id6825362775"><img alt="在 App Store 下載" src="https://toolbox.marketingtools.apple.com/api/badges/download-on-the-app-store/black/zh-tw" height="48"></a>
+  <a href="https://apps.apple.com/app/id6825362775"><img alt="在 Mac App Store 下載" src="https://toolbox.marketingtools.apple.com/api/badges/download-on-the-mac-app-store/black/zh-tw" height="48"></a>
+  <a href="https://play.google.com/store/apps/details?id=io.github.koukeneko.tat_ccu"><img alt="在 Google Play 取得" src="https://play.google.com/intl/en_us/badges/static/images/badges/zh-tw_badge_web_generic.png" height="63"></a>
+</p>
+
+<p align="center">
   <a href="#下載與安裝">下載與安裝</a>
   · <a href="#功能">功能</a>
   · <a href="PRIVACY.md">隱私權政策</a>
