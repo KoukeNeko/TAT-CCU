@@ -188,7 +188,15 @@ class _AppShellState extends State<AppShell> {
               children: [
                 side(rail: rail),
                 VerticalDivider(width: 1, color: scheme.outlineVariant),
-                Expanded(child: PaneSize(child: widget.shell)),
+                // On macOS the pages beside the sidebar take the title bar's
+                // row: their titles line up with the window buttons.
+                Expanded(
+                  child: MediaQuery.removePadding(
+                    context: context,
+                    removeTop: Platform.isMacOS,
+                    child: PaneSize(child: widget.shell),
+                  ),
+                ),
               ],
             ),
             if (rail) ...[
