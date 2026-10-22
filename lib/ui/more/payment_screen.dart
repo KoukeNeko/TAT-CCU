@@ -9,6 +9,7 @@ import 'package:flutter/services.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:pdfrx/pdfrx.dart';
 import 'package:share_plus/share_plus.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import '../../data/repositories/ecourse_auth_repository.dart';
 import '../../data/services/demo_data.dart';
@@ -23,7 +24,10 @@ import '../core/campus_systems.dart';
 
 const _host = 'www026197.ccu.edu.tw';
 const _pdfPreview = MethodChannel('tatccu/pdf_preview');
-final _systemFonts = PdfFontManager(resolvers: const []);
+// pdfium finds no CJK font by itself; Android keeps them here. It can be
+// pointed at fonts only once; top-level, so prepared on first use.
+final _androidFonts = PdfFontManager(resolvers: const [])
+    .prepare(fontPaths: const ['/system/fonts']);
 const _api = 'https://$_host/gensys/site/general';
 
 String _show(int n) => '\$${grouped(n)}';
@@ -78,7 +82,7 @@ class _PaymentScreenState extends State<PaymentScreen>
     }
     if (_pdf != null) return;
     _pdf = (title: title, file: file);
-    session.currentState?.run(fetchPdfScript(url));
+    session.currentState?.runSignedIn(fetchPdfScript(url));
     // An expired session may never answer; let the buttons work again.
     _pdfWatchdog = Timer(const Duration(seconds: 30), () {
       if (!mounted || _pdf == null) return;
@@ -114,6 +118,8 @@ class _PaymentScreenState extends State<PaymentScreen>
     final file = File(
       '${(await getTemporaryDirectory()).path}/${pdf.file}.pdf',
     );
+    // macOS hands out its temporary folder before creating it.
+    await file.parent.create(recursive: true);
     await file.writeAsBytes(bytes, flush: true);
     if (Platform.isIOS) {
       // Quick Look draws the school's unembedded CJK fonts with the
@@ -123,8 +129,13 @@ class _PaymentScreenState extends State<PaymentScreen>
         'title': pdf.title,
       });
     }
-    // pdfium finds no CJK font by itself; Android keeps them here.
-    await _systemFonts.prepare(fontPaths: const ['/system/fonts']);
+    // Preview on macOS, and the default viewer on Windows, draw them with the
+    // system's fonts as Quick Look does.
+    if (!Platform.isAndroid) {
+      await launchUrl(Uri.file(file.path));
+      return;
+    }
+    await _androidFonts;
     if (!mounted) return;
     Navigator.of(context, rootNavigator: true).push(
       MaterialPageRoute(

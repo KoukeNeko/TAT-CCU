@@ -118,7 +118,7 @@ class _AcademicScreenState extends State<AcademicScreen> {
       _error = null;
     });
     if (_signedIn) {
-      _session.currentState?.run(_fetchCertificate);
+      _session.currentState?.runSignedIn(_fetchCertificate);
     } else {
       // Sign in through the hand-off first; printing follows the record.
       _printWhenSignedIn = true;

@@ -37,6 +37,8 @@ Future<Certificate> demoCertificate() async {
   final file = File(
     '${(await getTemporaryDirectory()).path}/demo-certificate.pdf',
   );
+  // macOS hands out its temporary folder before creating it.
+  await file.parent.create(recursive: true);
   await file.writeAsBytes(bytes.buffer.asUint8List(), flush: true);
   return (file: file, printedAt: clk.clock.now(), size: bytes.lengthInBytes);
 }

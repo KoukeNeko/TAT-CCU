@@ -251,6 +251,16 @@ class CampusSessionState extends State<CampusSession> {
     await _web.runJavaScript(script);
   }
 
+  /// Runs [script] like [run], signing in again first when the page has
+  /// fallen back to a sign-in page, as one left open for long does.
+  Future<void> runSignedIn(String script) async {
+    if (!_demo &&
+        Uri.tryParse(await _web.currentUrl() ?? '')?.host != widget.host) {
+      await reload();
+    }
+    await run(script);
+  }
+
   bool get _demo => context.read<EcourseAuthRepository>().isDemo;
 
   Future<void> _arrived(String url) async {
