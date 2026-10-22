@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'dart:math' as math;
 import 'dart:ui' show ImageFilter;
 
@@ -25,7 +26,10 @@ const _uprightSlot = 48.0;
 const _uprightGap = 4.0;
 
 const _sidebarWidth = 232.0;
-const _railWidth = 72.0;
+
+/// On macOS the rail is as wide as the window's traffic lights are far from
+/// its edge doubled, so its icons line up under the middle (yellow) one.
+final _railWidth = Platform.isMacOS ? 98.0 : 72.0;
 
 /// Selected label style; the capsule is sized from it.
 const _labelStyle = TextStyle(fontSize: 15, fontWeight: FontWeight.w900);
