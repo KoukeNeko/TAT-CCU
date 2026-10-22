@@ -6,7 +6,7 @@
 
 <p align="center">
   <strong>國立中正大學的課表、eCourse2 與校務系統</strong><br>
-  iOS・iPadOS・macOS・Android
+  iOS・iPadOS・macOS・Android・Windows
 </p>
 
 <p align="center">
@@ -103,6 +103,16 @@ brew install --cask koukeneko/tap/tat-ccu
 **Android**：從 [最新版本](https://github.com/KoukeNeko/TAT-CCU/releases/latest) 下載
 `TAT-CCU-x.y.z-android.apk`。各版本附 `SHA256SUMS` 供核對。
 
+**Windows**：以 [Scoop](https://scoop.sh) 安裝，以 `scoop update tat-ccu` 更新。
+
+```bash
+scoop bucket add koukeneko https://github.com/KoukeNeko/scoop-bucket
+scoop install koukeneko/tat-ccu
+```
+
+或從 [最新版本](https://github.com/KoukeNeko/TAT-CCU/releases/latest) 下載
+`TAT-CCU-x.y.z-windows-x64.zip`，解壓縮後執行 `tat_ccu.exe`。尚未簽章，首次開啟時 SmartScreen 會提示。
+
 **iPhone 與 iPad**：準備上架 App Store。
 
 ## 支援的裝置
@@ -110,6 +120,7 @@ brew install --cask koukeneko/tap/tat-ccu
 - iPhone、iPad：iOS 17 以上，含 iPhone Duo 的內外螢幕
 - Mac：macOS 12 以上
 - Android 手機與平板，含摺疊機
+- Windows：Windows 10 以上（x64），不含桌面小工具與點名掃描
 - 介面語言：繁體中文、English、日本語
 
 版面依裝置調整：手機使用底部浮動導覽列；iPad 與 Mac 的寬視窗使用側邊欄，清單與內容並排；
