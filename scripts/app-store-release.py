@@ -164,11 +164,13 @@ def send_to_testflight(app, build):
         sys.exit("the app has no external TestFlight group")
     for group in groups:
         call("POST", f"/betaGroups/{group['id']}/relationships/builds", body={"data": [{"type": "builds", "id": build}]})
-    call(
-        "POST",
-        "/betaAppReviewSubmissions",
-        body={"data": {"type": "betaAppReviewSubmissions", "relationships": {"build": resource("builds", build)}}},
-    )
+    # A rerun of a failed release finds the build already sent.
+    if call("GET", f"/builds/{build}/betaAppReviewSubmission")["data"] is None:
+        call(
+            "POST",
+            "/betaAppReviewSubmissions",
+            body={"data": {"type": "betaAppReviewSubmissions", "relationships": {"build": resource("builds", build)}}},
+        )
 
 
 def submit_for_review(app, store_version):
