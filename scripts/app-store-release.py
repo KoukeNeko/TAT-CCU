@@ -15,6 +15,7 @@ itself. The macOS draft, which is never submitted, is renumbered to VERSION.
 import pathlib
 import sys
 import time
+import unicodedata
 
 from asc import BUNDLE_ID, call
 
@@ -34,7 +35,14 @@ def text(locale, name):
 
 
 def whats_new(locale):
-    return (WHATSNEW / f"whatsnew-{LOCALES[locale]}").read_text().strip()
+    text = (WHATSNEW / f"whatsnew-{LOCALES[locale]}").read_text()
+    # App Store Connect refuses emoji, which Google Play shows from the same file.
+    lines = ("".join(c for c in line if not is_emoji(c)).strip() for line in text.splitlines())
+    return "\n".join(lines).strip()
+
+
+def is_emoji(c):
+    return unicodedata.category(c) == "So" or ord(c) > 0xFFFF or c in "️‍"
 
 
 def resource(kind, id):
