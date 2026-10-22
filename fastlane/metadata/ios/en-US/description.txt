@@ -1,0 +1,32 @@
+TAT CCU brings together National Chung Cheng University's eCourse2, the campus portal and the campus systems. One portal sign-in covers all of them.
+
+This is an unofficial app made by a student and is not affiliated with National Chung Cheng University. The developer runs no server: data passes only between the device and the school's systems.
+
+Home
+The next class with its room and countdown, the rest of today's classes, assignments and quizzes due this week, and unread announcements and mail.
+
+Timetable
+The week's classes. Each class shows its next deadline, latest announcement and current grade.
+
+eCourse2 courses
+Sections, materials, assignments, forums, grades and attendance. Assignment progress (open, submitted, due, graded) and forum replies.
+
+Messages
+eCourse2 mail, announcements and discussions. Read, reply to and write mail.
+
+Calendar
+The school calendar (midterm week, holidays, add/drop) and assignment and quiz deadlines on one month view.
+
+Campus systems
+Grades, library holdings and loans, leave requests, payments and income, self-study space QR code and seats, enrollment certificate, event sign-up, bus times and countdowns.
+
+Widgets and reminders
+Home Screen widgets show the next class and what is due. Class and deadline reminders are scheduled on the device.
+
+Demo account
+Try the app without a CCU account. Demo data is kept apart from your own account.
+
+Privacy
+Sign-in data is kept in the system's secure storage. Content you have viewed is saved on the device and can be reviewed and deleted in Settings > Saved data. No ads, analytics or tracking.
+
+Source code: https://github.com/KoukeNeko/TAT-CCU

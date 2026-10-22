@@ -1,8 +1,9 @@
 name: Release
 
 # Pushing a tag vX.Y.Z, where X.Y.Z is the version in pubspec.yaml, uploads the iOS app to App Store
-# Connect (TestFlight), builds, signs and notarizes the macOS app, publishes the GitHub release, and then
-# updates the Homebrew cask and the Scoop manifest (packages.yml). Run by hand it does everything up to
+# Connect and submits it to TestFlight and App Review, builds, signs and notarizes the macOS app,
+# publishes the GitHub release, and then updates the Homebrew cask and the Scoop manifest
+# (packages.yml). Run by hand it does everything up to
 # publishing: the iOS build is exported but not uploaded, and the macOS and Windows zips are kept as
 # artifacts.
 on:
@@ -132,6 +133,34 @@ jobs:
       - name: Remove the key
         if: always()
         run: rm -f "$RUNNER_TEMP/AuthKey.p8"
+
+  # Once the build is processed: the listing in fastlane/metadata/ios and the What's New go on the App Store
+  # version, the build goes to the external TestFlight groups and beta review, and the version to App Review.
+  # Its own job, so a refused submission never holds back the other releases.
+  app-store:
+    if: github.event_name == 'push'
+    needs: [check, ios]
+    runs-on: ubuntu-latest
+    timeout-minutes: 75
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          sparse-checkout: |
+            scripts
+            fastlane/metadata/ios
+            distribution/whatsnew
+      - name: Submit
+        env:
+          ASC_KEY_P8_BASE64: ${{ secrets.ASC_KEY_P8_BASE64 }}
+          ASC_KEY_ID: ${{ secrets.APPLE_API_KEY_ID }}
+          ASC_ISSUER: ${{ secrets.APPLE_API_ISSUER_ID }}
+          VERSION: ${{ needs.check.outputs.version }}
+        run: |
+          set -euo pipefail
+          export ASC_KEY="$RUNNER_TEMP/AuthKey.p8"
+          trap 'rm -f "$ASC_KEY"' EXIT
+          echo "$ASC_KEY_P8_BASE64" | base64 --decode > "$ASC_KEY"
+          python3 scripts/app-store-release.py "$VERSION" "$GITHUB_RUN_NUMBER"
 
   # Archived unsigned and signed ad hoc with the app's entitlements, as the iOS job does, then exported
   # with the Developer ID certificate in a temporary keychain and the profile its keychain entitlement
