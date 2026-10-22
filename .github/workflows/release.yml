@@ -419,8 +419,8 @@ jobs:
           path: build/app/outputs/bundle/release/app-release.aab
           if-no-files-found: error
 
-  # Uploads the bundle to Google Play's production track as a draft: rolling it out stays a Play Console
-  # click. No key is stored: GitHub's OIDC token is exchanged through Workload Identity Federation (zentring
+  # Releases the bundle on Google Play's production track to every user once Google's review passes.
+  # No key is stored: GitHub's OIDC token is exchanged through Workload Identity Federation (zentring
   # project, pool github, provider tat-ccu, which only accepts this repository) for the tat-ccu-play service
   # account, which Play Console lets release and edit the listing of TAT CCU only. Its own job, so a Play
   # problem never holds back the GitHub release.
@@ -451,7 +451,7 @@ jobs:
           packageName: io.github.koukeneko.tat_ccu
           releaseFiles: play/app-release.aab
           tracks: production
-          status: draft
+          status: completed
           whatsNewDirectory: distribution/whatsnew
 
   # Unsigned until there is a code signing certificate for Windows. Flutter builds for the architecture

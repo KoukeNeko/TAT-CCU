@@ -202,7 +202,7 @@ flutter run
 
 推送 `v*` 標籤後，[Release](.github/workflows/release.yml) 建置 macOS、Android、Windows 與 iOS，上傳 iOS
 至 App Store Connect，送交 TestFlight 外部測試與 App 審查，建立 GitHub Release 並更新 Homebrew cask 與
-Scoop manifest，再將 App Bundle 以草稿上傳至 Google Play 正式版軌道（於 Play Console 推出）。版本說明位於
+Scoop manifest，再將 App Bundle 發佈至 Google Play 正式版軌道。版本說明位於
 [`distribution`](distribution)：`release-notes/vX.Y.Z.md` 為 GitHub Release 說明，`whatsnew/` 為 Google Play、
 App Store 與 TestFlight 的「新功能」。App Store 的介紹文字位於 `fastlane/metadata/ios`。
 
