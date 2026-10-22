@@ -2,12 +2,9 @@ name: Release
 
 # Pushing a tag vX.Y.Z, where X.Y.Z is the version in pubspec.yaml, uploads the iOS app to App Store
 # Connect (TestFlight), builds, signs and notarizes the macOS app, publishes the GitHub release, and then
-# updates the Homebrew cask (packages.yml). Run by hand it does everything up to publishing: the iOS
-# build is exported but not uploaded, and the macOS zip is kept as an artifact.
-#
-# Windows (and with it the Scoop manifest) waits for the repository variable WINDOWS_RELEASE=true: the
-# app has no Windows platform folder yet, and webview_flutter, which signs in to the school's sites, has
-# no Windows implementation.
+# updates the Homebrew cask and the Scoop manifest (packages.yml). Run by hand it does everything up to
+# publishing: the iOS build is exported but not uploaded, and the macOS and Windows zips are kept as
+# artifacts.
 on:
   push:
     tags: ['v*']
@@ -325,7 +322,6 @@ jobs:
 
   # Unsigned until there is a code signing certificate for Windows.
   windows:
-    if: vars.WINDOWS_RELEASE == 'true'
     needs: check
     runs-on: windows-latest
     timeout-minutes: 45
