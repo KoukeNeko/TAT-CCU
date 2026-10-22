@@ -9,7 +9,7 @@ New from distribution/whatsnew, on the iOS version VERSION and attaches the
 build. Unless --no-submit, it also gives the build to the external TestFlight
 groups with the What's New as what to test, sends it to beta review, and
 submits the version to App Review. The internal group gets every build by
-itself.
+itself. The macOS draft, which is never submitted, is renumbered to VERSION.
 """
 
 import pathlib
@@ -83,21 +83,28 @@ def wait_for_build(app, version, number):
     sys.exit(f"build {number} of {version} did not finish processing in an hour")
 
 
-def set_listing(app, version, build):
+def editable_version(app, platform, version):
+    """The editable App Store version of `platform`, numbered `version`, if there is one."""
     versions = call(
         "GET",
         f"/apps/{app}/appStoreVersions",
-        {"filter[platform]": "IOS", "filter[appStoreState]": EDITABLE},
+        {"filter[platform]": platform, "filter[appStoreState]": EDITABLE},
     )["data"]
-    if versions:
-        store_version = versions[0]["id"]
-        if versions[0]["attributes"]["versionString"] != version:
-            call(
-                "PATCH",
-                f"/appStoreVersions/{store_version}",
-                body={"data": {"type": "appStoreVersions", "id": store_version, "attributes": {"versionString": version}}},
-            )
-    else:
+    if not versions:
+        return None
+    store_version = versions[0]["id"]
+    if versions[0]["attributes"]["versionString"] != version:
+        call(
+            "PATCH",
+            f"/appStoreVersions/{store_version}",
+            body={"data": {"type": "appStoreVersions", "id": store_version, "attributes": {"versionString": version}}},
+        )
+    return store_version
+
+
+def set_listing(app, version, build):
+    store_version = editable_version(app, "IOS", version)
+    if store_version is None:
         # Fails while an earlier version is still waiting for or in review.
         store_version = call(
             "POST",
@@ -210,6 +217,8 @@ def main():
     build = wait_for_build(app, version, number)
     store_version = set_listing(app, version, build)
     print(f"listing of {version} set, build {number} attached")
+    # The Mac app ships outside the App Store; its draft only keeps the same number.
+    editable_version(app, "MAC_OS", version)
     if submit:
         send_to_testflight(app, build)
         print("sent to TestFlight beta review")
