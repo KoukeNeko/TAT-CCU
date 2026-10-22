@@ -1,4 +1,5 @@
 import 'package:clock/clock.dart' as clk;
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
@@ -47,125 +48,134 @@ class CourseDetailScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final repo = context.read<EcourseRepository>();
-    return Scaffold(
-      body: Loader<(Course?, _Summary)>.watch(
-        watch: () => repo.watch((repo) async {
-          final course = (await repo.courses())
-              .where((c) => c.id == courseId)
-              .firstOrNull;
-          final (due, posts, grades, totals, sections) = await (
-            repo.dueSoon(days: 60),
-            repo.announcements(courseId),
-            repo.gradeItems(courseId),
-            repo.gradeOverview(),
-            repo.contents(courseId),
-          ).wait;
-          return (
-            course,
-            (
-              due: due.where((d) => d.courseId == courseId).toList(),
-              posts: posts,
-              grades: grades,
-              total: totals[courseId],
-              sections: sections.length,
-            ),
-          );
-        }),
-        builder: (context, data) {
-          final (course, summary) = data;
-          if (course == null) return EmptyState(context.l10n.courseNotFound);
-          final tones = context.tones;
-          final scheme = Theme.of(context).colorScheme;
-          final base = '/courses/$courseId';
-          void show(String path) =>
-              open != null ? context.go(path) : context.push(path);
-          final firstDue = summary.due.firstOrNull;
-          return ListView(
-            padding: scrollPadding(context),
-            children: [
-              const Align(
-                alignment: Alignment.centerLeft,
-                child: RoundBackButton(),
-              ),
-              const SizedBox(height: 12),
-              _Hero(course: course),
-              const SizedBox(height: 10),
-              Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
+    return _Titled(
+      builder: (context, titled) => Scaffold(
+        extendBodyBehindAppBar: true,
+        appBar: _CourseBar(courseId: courseId, titled: titled),
+        // The bar takes the course's name once the card's own name has
+        // scrolled up under it, like an iOS large title.
+        body: NotificationListener<ScrollUpdateNotification>(
+          onNotification: (n) {
+            if (n.depth == 0) titled.value = n.metrics.pixels > _nameScrolled;
+            return false;
+          },
+          child: Loader<(Course?, _Summary)>.watch(
+            watch: () => repo.watch((repo) async {
+              final course = (await repo.courses())
+                  .where((c) => c.id == courseId)
+                  .firstOrNull;
+              final (due, posts, grades, totals, sections) = await (
+                repo.dueSoon(days: 60),
+                repo.announcements(courseId),
+                repo.gradeItems(courseId),
+                repo.gradeOverview(),
+                repo.contents(courseId),
+              ).wait;
+              return (
+                course,
+                (
+                  due: due.where((d) => d.courseId == courseId).toList(),
+                  posts: posts,
+                  grades: grades,
+                  total: totals[courseId],
+                  sections: sections.length,
+                ),
+              );
+            }),
+            builder: (context, data) {
+              final (course, summary) = data;
+              if (course == null) {
+                return EmptyState(context.l10n.courseNotFound);
+              }
+              final tones = context.tones;
+              final scheme = Theme.of(context).colorScheme;
+              final base = '/courses/$courseId';
+              void show(String path) =>
+                  open != null ? context.go(path) : context.push(path);
+              final firstDue = summary.due.firstOrNull;
+              return ListView(
+                padding: scrollPadding(context),
                 children: [
-                  _Stat(
-                    tone: tones.peach,
-                    value: firstDue == null
-                        ? '0'
-                        : _left(context.l10n, firstDue.due),
-                    label: firstDue == null
-                        ? context.l10n.nothingDue
-                        : context.l10n.nameDue(firstDue.name),
-                    onTap: firstDue == null
-                        ? null
-                        : () => openDueItem(context, firstDue),
+                  _Hero(course: course),
+                  const SizedBox(height: 10),
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      _Stat(
+                        tone: tones.peach,
+                        value: firstDue == null
+                            ? '0'
+                            : _left(context.l10n, firstDue.due),
+                        label: firstDue == null
+                            ? context.l10n.nothingDue
+                            : context.l10n.nameDue(firstDue.name),
+                        onTap: firstDue == null
+                            ? null
+                            : () => openDueItem(context, firstDue),
+                      ),
+                      const SizedBox(width: 8),
+                      _Stat(
+                        tone: tones.sun,
+                        value: '${summary.posts.length}',
+                        label: context.l10n.announcementsUnit,
+                        onTap: () => show('$base/announcements'),
+                      ),
+                      const SizedBox(width: 8),
+                      _Stat(
+                        tone: Tone(
+                          scheme.surfaceContainerHigh,
+                          scheme.onSurface,
+                          scheme.onSurfaceVariant,
+                        ),
+                        value: summary.total ?? '-',
+                        label: context.l10n.currentGrade,
+                        onTap: () => show('$base/grades'),
+                      ),
+                    ],
                   ),
-                  const SizedBox(width: 8),
-                  _Stat(
-                    tone: tones.sun,
-                    value: '${summary.posts.length}',
-                    label: context.l10n.announcementsUnit,
-                    onTap: () => show('$base/announcements'),
-                  ),
-                  const SizedBox(width: 8),
-                  _Stat(
-                    tone: Tone(
-                      scheme.surfaceContainerHigh,
-                      scheme.onSurface,
-                      scheme.onSurfaceVariant,
+                  if (summary.due.isNotEmpty) ...[
+                    SectionLabel(context.l10n.toDo),
+                    for (final d in summary.due)
+                      Padding(
+                        padding: const EdgeInsets.only(bottom: rowGap),
+                        child: DueBlock(item: d),
+                      ),
+                  ],
+                  SectionLabel(context.l10n.courseSection),
+                  Card(
+                    color: scheme.surfaceContainerLow,
+                    clipBehavior: Clip.antiAlias,
+                    child: Column(
+                      children: [
+                        _Entry(
+                          selected: open == '$base/contents',
+                          icon: Icons.folder_outlined,
+                          title: context.l10n.allSections,
+                          detail: context.l10n.sectionCount(summary.sections),
+                          onTap: () => show('$base/contents'),
+                        ),
+                        _Entry(
+                          selected: open == '$base/announcements',
+                          icon: Icons.campaign_outlined,
+                          title: context.l10n.announcements,
+                          detail: context.l10n.postCount(summary.posts.length),
+                          onTap: () => show('$base/announcements'),
+                        ),
+                        _Entry(
+                          selected: open == '$base/grades',
+                          icon: Icons.grading_outlined,
+                          title: context.l10n.grades,
+                          detail: context.l10n.itemCount(summary.grades.length),
+                          onTap: () => show('$base/grades'),
+                        ),
+                      ],
                     ),
-                    value: summary.total ?? '-',
-                    label: context.l10n.currentGrade,
-                    onTap: () => show('$base/grades'),
                   ),
                 ],
-              ),
-              if (summary.due.isNotEmpty) ...[
-                SectionLabel(context.l10n.toDo),
-                for (final d in summary.due)
-                  Padding(
-                    padding: const EdgeInsets.only(bottom: rowGap),
-                    child: DueBlock(item: d),
-                  ),
-              ],
-              SectionLabel(context.l10n.courseSection),
-              Card(
-                color: scheme.surfaceContainerLow,
-                clipBehavior: Clip.antiAlias,
-                child: Column(
-                  children: [
-                    _Entry(
-                      selected: open == '$base/contents',
-                      icon: Icons.folder_outlined,
-                      title: context.l10n.allSections,
-                      detail: context.l10n.sectionCount(summary.sections),
-                      onTap: () => show('$base/contents'),
-                    ),
-                    _Entry(
-                      selected: open == '$base/announcements',
-                      icon: Icons.campaign_outlined,
-                      title: context.l10n.announcements,
-                      detail: context.l10n.postCount(summary.posts.length),
-                      onTap: () => show('$base/announcements'),
-                    ),
-                    _Entry(
-                      selected: open == '$base/grades',
-                      icon: Icons.grading_outlined,
-                      title: context.l10n.grades,
-                      detail: context.l10n.itemCount(summary.grades.length),
-                      onTap: () => show('$base/grades'),
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          );
-        },
+              );
+            },
+          ),
+        ),
       ),
     );
   }
@@ -197,6 +207,72 @@ String? nextClassLabel(Course course, DateTime now, AppLocalizations l10n) {
     return '$when ${clock(starts.first)}';
   }
   return null;
+}
+
+/// How far the page scrolls before the card's name has passed under the
+/// app bar: the card's top inset and the name's line.
+const _nameScrolled = Space.xl + 26;
+
+/// Holds whether the page has scrolled past the card's name, for the bar.
+class _Titled extends StatefulWidget {
+  const _Titled({required this.builder});
+
+  final Widget Function(BuildContext, ValueNotifier<bool>) builder;
+
+  @override
+  State<_Titled> createState() => _TitledState();
+}
+
+class _TitledState extends State<_Titled> {
+  final _titled = ValueNotifier(false);
+
+  @override
+  void dispose() {
+    _titled.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) => widget.builder(context, _titled);
+}
+
+/// The glass app bar: the back button, and the course's name while
+/// [titled].
+class _CourseBar extends StatefulWidget implements PreferredSizeWidget {
+  const _CourseBar({required this.courseId, required this.titled});
+
+  final int courseId;
+  final ValueListenable<bool> titled;
+
+  @override
+  Size get preferredSize => const Size.fromHeight(kToolbarHeight);
+
+  @override
+  State<_CourseBar> createState() => _CourseBarState();
+}
+
+class _CourseBarState extends State<_CourseBar> {
+  // Shared with the page's own request while both are loading.
+  late final _course = context.read<EcourseRepository>().courses().then(
+    (all) => all.where((c) => c.id == widget.courseId).firstOrNull,
+  );
+
+  @override
+  Widget build(BuildContext context) => FutureBuilder(
+    future: _course,
+    builder: (context, snap) => ValueListenableBuilder(
+      valueListenable: widget.titled,
+      builder: (context, titled, _) => subBar(
+        context,
+        switch (snap.data) {
+          final course? when titled => context.courseName(course),
+          _ => '',
+        },
+        // Until then the back button floats on the page, bar-less.
+        glass: titled,
+      ),
+    ),
+  );
 }
 
 class _Hero extends StatelessWidget {

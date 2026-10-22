@@ -70,17 +70,24 @@ class GlassBackdrop extends StatelessWidget {
 
 /// Sub-page title with the round back button from the mockup.
 /// [action] sits at the title row's end, such as a capsule to another page.
+/// Without [glass] only the buttons show, on the page itself; the glass
+/// fades in when it is turned on.
 AppBar subBar(
   BuildContext context,
   String title, {
   PreferredSizeWidget? bottom,
   Widget? action,
+  bool glass = true,
 }) => AppBar(
   bottom: bottom,
   automaticallyImplyLeading: false,
   backgroundColor: Colors.transparent,
   scrolledUnderElevation: 0,
-  flexibleSpace: const GlassBackdrop(),
+  flexibleSpace: AnimatedOpacity(
+    opacity: glass ? 1 : 0,
+    duration: const Duration(milliseconds: 200),
+    child: const GlassBackdrop(),
+  ),
   titleSpacing: 16,
   title: Row(
     children: [
@@ -89,7 +96,30 @@ AppBar subBar(
         RoundBackButton(),
         const SizedBox(width: 10),
       ],
-      Expanded(child: Text(title)),
+      // A title that comes in later (the course page's, on scrolling)
+      // rises and fades in with the glass rather than appearing at once.
+      Expanded(
+        child: AnimatedSwitcher(
+          duration: const Duration(milliseconds: 200),
+          switchInCurve: Curves.easeOutCubic,
+          switchOutCurve: Curves.easeInCubic,
+          layoutBuilder: (current, previous) => Stack(
+            alignment: Alignment.centerLeft,
+            children: [...previous, ?current],
+          ),
+          transitionBuilder: (child, animation) => FadeTransition(
+            opacity: animation,
+            child: SlideTransition(
+              position: Tween(
+                begin: const Offset(0, 0.4),
+                end: Offset.zero,
+              ).animate(animation),
+              child: child,
+            ),
+          ),
+          child: Text(title, key: ValueKey(title)),
+        ),
+      ),
       if (action != null) PressFeedback(child: action),
     ],
   ),
