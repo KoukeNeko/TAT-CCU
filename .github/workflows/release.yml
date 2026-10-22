@@ -261,6 +261,17 @@ jobs:
           xcodebuild -exportArchive \
             -archivePath "$RUNNER_TEMP/Runner.xcarchive" \
             -exportOptionsPlist "$RUNNER_TEMP/ExportOptions.plist" -exportPath "$RUNNER_TEMP/export"
+      # The same archive, signed ad hoc with the sandbox entitlements, goes to the Mac App Store (mac-app-store).
+      - name: Keep the archive for the Mac App Store
+        if: github.event_name == 'push'
+        run: tar -cf "$RUNNER_TEMP/archive.tar" -C "$RUNNER_TEMP" Runner.xcarchive
+      - uses: actions/upload-artifact@v7
+        if: github.event_name == 'push'
+        with:
+          name: mac-archive
+          path: ${{ runner.temp }}/archive.tar
+          retention-days: 1
+          if-no-files-found: error
       - name: Notarize and staple
         run: |
           set -euo pipefail
@@ -290,6 +301,65 @@ jobs:
           name: macos
           path: dist/TAT-CCU-${{ env.VERSION }}-macos.zip
           if-no-files-found: error
+
+  # The macOS archive exported for the Mac App Store through the API key with the cloud-managed Apple
+  # Distribution and Mac Installer Distribution certificates, uploaded, and then sent to TestFlight and App
+  # Review as the iOS build is. Its own job, so a refused submission never holds back the other releases.
+  mac-app-store:
+    if: github.event_name == 'push'
+    needs: [check, macos]
+    runs-on: xcode-27
+    timeout-minutes: 90
+    env:
+      VERSION: ${{ needs.check.outputs.version }}
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          sparse-checkout: |
+            scripts
+            fastlane/metadata/ios
+            distribution/whatsnew
+      - name: Select Xcode 27.0
+        run: |
+          xcode_app=""
+          for app in /Applications/Xcode_"$XCODE_VERSION"*.app; do
+            [ -d "$app" ] && xcode_app="$app"
+          done
+          [ -n "$xcode_app" ] || { echo "::error::Xcode $XCODE_VERSION is not installed on this image" >&2; exit 1; }
+          sudo xcode-select --switch "$xcode_app/Contents/Developer"
+      - uses: actions/download-artifact@v8
+        with:
+          name: mac-archive
+          path: ${{ runner.temp }}
+      - name: Upload and submit
+        env:
+          ASC_KEY_P8_BASE64: ${{ secrets.ASC_KEY_P8_BASE64 }}
+          ASC_KEY_ID: ${{ secrets.APPLE_API_KEY_ID }}
+          ASC_ISSUER: ${{ secrets.APPLE_API_ISSUER_ID }}
+        run: |
+          set -euo pipefail
+          export ASC_KEY="$RUNNER_TEMP/AuthKey.p8"
+          trap 'rm -f "$ASC_KEY"' EXIT
+          echo "$ASC_KEY_P8_BASE64" | base64 --decode > "$ASC_KEY"
+          tar -xf "$RUNNER_TEMP/archive.tar" -C "$RUNNER_TEMP"
+          cat > "$RUNNER_TEMP/ExportOptions.plist" <<PLIST
+          <?xml version="1.0" encoding="UTF-8"?>
+          <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+          <plist version="1.0">
+          <dict>
+            <key>method</key><string>app-store-connect</string>
+            <key>destination</key><string>upload</string>
+            <key>teamID</key><string>$TEAM_ID</string>
+            <key>signingStyle</key><string>automatic</string>
+          </dict>
+          </plist>
+          PLIST
+          xcodebuild -exportArchive \
+            -archivePath "$RUNNER_TEMP/Runner.xcarchive" \
+            -exportOptionsPlist "$RUNNER_TEMP/ExportOptions.plist" -exportPath "$RUNNER_TEMP/mas" \
+            -allowProvisioningUpdates -authenticationKeyPath "$ASC_KEY" \
+            -authenticationKeyID "$ASC_KEY_ID" -authenticationKeyIssuerID "$ASC_ISSUER"
+          python3 scripts/app-store-release.py "$VERSION" "$GITHUB_RUN_NUMBER" --platform MAC_OS
 
   # Signed with the upload key in the repository secrets (ANDROID_KEYSTORE_BASE64 and its password).
   android:

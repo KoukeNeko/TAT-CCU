@@ -1,15 +1,16 @@
 #!/usr/bin/env python3
-"""Sends a release's iOS build to TestFlight and App Review.
+"""Sends a release's build to TestFlight and App Review.
 
-    scripts/app-store-release.py VERSION BUILD [--no-submit]
+    scripts/app-store-release.py VERSION BUILD [--platform MAC_OS] [--no-submit]
 
 Waits for build BUILD of VERSION to finish processing on App Store Connect,
 then sets the App Store listing from fastlane/metadata/ios, with the What's
-New from distribution/whatsnew, on the iOS version VERSION and attaches the
-build. Unless --no-submit, it also gives the build to the external TestFlight
+New from distribution/whatsnew, on the version VERSION of the platform (IOS
+unless given) and attaches the build. Other platforms copy App Review's
+contact and notes from the iOS version, so they stay out of the repository. Unless --no-submit, it also gives the build to the external TestFlight
 groups with the What's New as what to test, sends it to beta review, and
 submits the version to App Review. The internal group gets every build by
-itself. The macOS draft, which is never submitted, is renumbered to VERSION.
+itself.
 """
 
 import pathlib
@@ -68,7 +69,7 @@ def upsert(existing, kind, parent, parent_kind, locale, attributes):
         )
 
 
-def wait_for_build(app, version, number):
+def wait_for_build(app, platform, version, number):
     # Processing usually takes 5 to 20 minutes; the build is not listed until it starts.
     for _ in range(120):
         builds = call(
@@ -78,7 +79,7 @@ def wait_for_build(app, version, number):
                 "filter[app]": app,
                 "filter[version]": number,
                 "filter[preReleaseVersion.version]": version,
-                "filter[preReleaseVersion.platform]": "IOS",
+                "filter[preReleaseVersion.platform]": platform,
             },
         )["data"]
         state = builds[0]["attributes"]["processingState"] if builds else "not listed"
@@ -110,8 +111,8 @@ def editable_version(app, platform, version):
     return store_version
 
 
-def set_listing(app, version, build):
-    store_version = editable_version(app, "IOS", version)
+def set_listing(app, platform, version, build):
+    store_version = editable_version(app, platform, version)
     if store_version is None:
         # Fails while an earlier version is still waiting for or in review.
         store_version = call(
@@ -120,14 +121,14 @@ def set_listing(app, version, build):
             body={
                 "data": {
                     "type": "appStoreVersions",
-                    "attributes": {"platform": "IOS", "versionString": version},
+                    "attributes": {"platform": platform, "versionString": version},
                     "relationships": {"app": resource("apps", app)},
                 }
             },
         )["data"]["id"]
 
     # The first version of an app has no What's New.
-    all_versions = call("GET", f"/apps/{app}/appStoreVersions", {"filter[platform]": "IOS"})["data"]
+    all_versions = call("GET", f"/apps/{app}/appStoreVersions", {"filter[platform]": platform})["data"]
     first = all(v["id"] == store_version for v in all_versions)
     existing = call("GET", f"/appStoreVersions/{store_version}/appStoreVersionLocalizations")["data"]
     for locale in LOCALES:
@@ -149,8 +150,35 @@ def set_listing(app, version, build):
             attributes = {"name": text(locale, "name"), "subtitle": text(locale, "subtitle"), "privacyPolicyUrl": PRIVACY_URL}
             upsert(existing, "appInfoLocalizations", info["id"], "appInfo", locale, attributes)
 
+    if platform != "IOS":
+        copy_review_detail(app, store_version)
     call("PATCH", f"/appStoreVersions/{store_version}/relationships/build", body=resource("builds", build))
     return store_version
+
+
+def copy_review_detail(app, store_version):
+    """Gives `store_version` the App Review contact and notes of the latest iOS version."""
+    ios = call("GET", f"/apps/{app}/appStoreVersions", {"filter[platform]": "IOS", "limit": 1})["data"]
+    source = ios and call("GET", f"/appStoreVersions/{ios[0]['id']}/appStoreReviewDetail")["data"]
+    if not source:
+        sys.exit("the iOS version has no App Review details to copy")
+    fields = ("contactFirstName", "contactLastName", "contactPhone", "contactEmail", "demoAccountRequired", "notes")
+    attributes = {k: source["attributes"][k] for k in fields}
+    current = call("GET", f"/appStoreVersions/{store_version}/appStoreReviewDetail")["data"]
+    if current:
+        call("PATCH", f"/appStoreReviewDetails/{current['id']}", body={"data": {"type": "appStoreReviewDetails", "id": current["id"], "attributes": attributes}})
+    else:
+        call(
+            "POST",
+            "/appStoreReviewDetails",
+            body={
+                "data": {
+                    "type": "appStoreReviewDetails",
+                    "attributes": attributes,
+                    "relationships": {"appStoreVersion": resource("appStoreVersions", store_version)},
+                }
+            },
+        )
 
 
 def send_to_testflight(app, build):
@@ -173,11 +201,11 @@ def send_to_testflight(app, build):
         )
 
 
-def submit_for_review(app, store_version):
+def submit_for_review(app, platform, store_version):
     open_submissions = call(
         "GET",
         "/reviewSubmissions",
-        {"filter[app]": app, "filter[platform]": "IOS", "filter[state]": "READY_FOR_REVIEW", "include": "items"},
+        {"filter[app]": app, "filter[platform]": platform, "filter[state]": "READY_FOR_REVIEW", "include": "items"},
     )["data"]
     if open_submissions:
         submission = open_submissions[0]["id"]
@@ -189,7 +217,7 @@ def submit_for_review(app, store_version):
             body={
                 "data": {
                     "type": "reviewSubmissions",
-                    "attributes": {"platform": "IOS"},
+                    "attributes": {"platform": platform},
                     "relationships": {"app": resource("apps", app)},
                 }
             },
@@ -217,22 +245,21 @@ def submit_for_review(app, store_version):
 
 
 def main():
-    version, number = sys.argv[1], sys.argv[2]
-    submit = "--no-submit" not in sys.argv[3:]
+    version, number, *flags = sys.argv[1:]
+    platform = flags[flags.index("--platform") + 1] if "--platform" in flags else "IOS"
+    submit = "--no-submit" not in flags
     apps = call("GET", "/apps", {"filter[bundleId]": BUNDLE_ID})["data"]
     if not apps:
         sys.exit(f"no app on App Store Connect has the bundle ID {BUNDLE_ID}")
     app = apps[0]["id"]
 
-    build = wait_for_build(app, version, number)
-    store_version = set_listing(app, version, build)
-    print(f"listing of {version} set, build {number} attached")
-    # The Mac app ships outside the App Store; its draft only keeps the same number.
-    editable_version(app, "MAC_OS", version)
+    build = wait_for_build(app, platform, version, number)
+    store_version = set_listing(app, platform, version, build)
+    print(f"{platform} listing of {version} set, build {number} attached")
     if submit:
         send_to_testflight(app, build)
         print("sent to TestFlight beta review")
-        submit_for_review(app, store_version)
+        submit_for_review(app, platform, store_version)
         print("submitted to App Review")
 
 
