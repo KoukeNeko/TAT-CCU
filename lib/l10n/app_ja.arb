@@ -430,6 +430,8 @@
   "notifyNews": "新しい通知とメール",
   "notifyNewsDetail": "システムが許可したときにバックグラウンドで確認",
   "notifyDenied": "通知がオフです。システム設定でオンにしてください",
+  "notifyTest": "テスト通知を送信",
+  "notifyTestShown": "通知は正常に届いています",
   "reminderDue24": "24 時間後に締切",
   "reminderDue1": "1 時間後に締切",
   "reminderClass": "10 分後に授業",

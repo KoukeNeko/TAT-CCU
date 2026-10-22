@@ -77,6 +77,14 @@ class Reminders {
         false;
   }
 
+  /// Shows [title] at once, so the student can see how alerts look.
+  static Future<void> showTest(String title) => _plugin.show(
+    // Scheduled reminders count up from 1.
+    id: 0,
+    title: title,
+    notificationDetails: _details,
+  );
+
   /// Cancels the scheduled reminders, leaving new-message alerts shown.
   static Future<void> cancelScheduled() async {
     for (final p in await _plugin.pendingNotificationRequests()) {

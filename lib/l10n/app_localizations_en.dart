@@ -1588,6 +1588,12 @@ class AppLocalizationsEn extends AppLocalizations {
       'Notifications are off for this app; turn them on in system settings';
 
   @override
+  String get notifyTest => 'Send a test notification';
+
+  @override
+  String get notifyTestShown => 'Notifications are working';
+
+  @override
   String get reminderDue24 => 'Due in 24 hours';
 
   @override

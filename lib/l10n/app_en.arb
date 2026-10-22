@@ -430,6 +430,8 @@
   "notifyNews": "New notices and mail",
   "notifyNewsDetail": "Checked in the background when the system allows",
   "notifyDenied": "Notifications are off for this app; turn them on in system settings",
+  "notifyTest": "Send a test notification",
+  "notifyTestShown": "Notifications are working",
   "reminderDue24": "Due in 24 hours",
   "reminderDue1": "Due in 1 hour",
   "reminderClass": "Class in 10 minutes",

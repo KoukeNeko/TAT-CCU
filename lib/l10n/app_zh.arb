@@ -808,6 +808,8 @@
   "notifyNews": "新通知與信件",
   "notifyNewsDetail": "在背景檢查，時間由系統決定",
   "notifyDenied": "通知權限已關閉，請到系統設定開啟",
+  "notifyTest": "傳送測試通知",
+  "notifyTestShown": "通知運作正常",
   "reminderDue24": "24 小時後截止",
   "reminderDue1": "1 小時後截止",
   "reminderClass": "10 分鐘後上課",

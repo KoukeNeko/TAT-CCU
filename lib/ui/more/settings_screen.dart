@@ -315,6 +315,16 @@ class _Notifications extends StatelessWidget {
     }
   }
 
+  Future<void> _sendTest(BuildContext context) async {
+    final messenger = ScaffoldMessenger.of(context);
+    final l10n = context.l10n;
+    if (!await Reminders.requestPermission()) {
+      messenger.showSnackBar(SnackBar(content: Text(l10n.notifyDenied)));
+      return;
+    }
+    await Reminders.showTest(l10n.notifyTestShown);
+  }
+
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
@@ -352,6 +362,28 @@ class _Notifications extends StatelessWidget {
             l10n.notifyNewsDetail,
             settings.notifyNews,
             (on) => _set(context, news: on),
+          ),
+          Padding(
+            padding: const EdgeInsets.fromLTRB(
+              Space.m,
+              Space.xs,
+              Space.m,
+              Space.m,
+            ),
+            child: PressFeedback(
+              scale: 0.97,
+              child: SizedBox(
+                width: double.infinity,
+                child: FilledButton.tonalIcon(
+                  onPressed: () => _sendTest(context),
+                  icon: const Icon(
+                    Icons.notifications_active_outlined,
+                    size: 18,
+                  ),
+                  label: Text(l10n.notifyTest),
+                ),
+              ),
+            ),
           ),
         ],
       ),

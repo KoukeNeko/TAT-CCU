@@ -1487,6 +1487,12 @@ class AppLocalizationsZh extends AppLocalizations {
   String get notifyDenied => '通知權限已關閉，請到系統設定開啟';
 
   @override
+  String get notifyTest => '傳送測試通知';
+
+  @override
+  String get notifyTestShown => '通知運作正常';
+
+  @override
   String get reminderDue24 => '24 小時後截止';
 
   @override

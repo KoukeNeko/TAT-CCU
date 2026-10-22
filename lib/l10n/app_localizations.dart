@@ -2674,6 +2674,18 @@ abstract class AppLocalizations {
   /// **'通知權限已關閉，請到系統設定開啟'**
   String get notifyDenied;
 
+  /// No description provided for @notifyTest.
+  ///
+  /// In zh, this message translates to:
+  /// **'傳送測試通知'**
+  String get notifyTest;
+
+  /// No description provided for @notifyTestShown.
+  ///
+  /// In zh, this message translates to:
+  /// **'通知運作正常'**
+  String get notifyTestShown;
+
   /// No description provided for @reminderDue24.
   ///
   /// In zh, this message translates to:

@@ -1476,6 +1476,12 @@ class AppLocalizationsJa extends AppLocalizations {
   String get notifyDenied => '通知がオフです。システム設定でオンにしてください';
 
   @override
+  String get notifyTest => 'テスト通知を送信';
+
+  @override
+  String get notifyTestShown => '通知は正常に届いています';
+
+  @override
   String get reminderDue24 => '24 時間後に締切';
 
   @override
