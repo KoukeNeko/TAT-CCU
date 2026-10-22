@@ -10,6 +10,7 @@ import '../../data/repositories/campus_cache.dart';
 import '../../data/repositories/ecourse_auth_repository.dart';
 import '../../data/services/campus_cookies.dart';
 import 'auto_refresh.dart';
+import 'campus_web_view.dart';
 import 'cas_autofill.dart';
 import 'status_capsule.dart';
 import 'widgets.dart';
@@ -338,7 +339,7 @@ class CampusSessionState extends State<CampusSession> {
                     padding: EdgeInsets.only(
                       bottom: MediaQuery.paddingOf(context).bottom,
                     ),
-                    child: WebViewWidget(controller: _web),
+                    child: CampusWebView(controller: _web, hidden: !_signingIn),
                   ),
                 ),
               ),

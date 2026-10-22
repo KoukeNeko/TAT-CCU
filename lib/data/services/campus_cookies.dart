@@ -1,8 +1,10 @@
 import 'dart:convert';
+import 'dart:io';
 
 import 'package:flutter/services.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:webview_flutter/webview_flutter.dart';
+import 'package:webview_win_floating/webview_win_floating.dart';
 
 /// Keeps the campus sign-in (portal, CAS, each system's session cookie and
 /// the library's Primo sign-in)
@@ -45,7 +47,23 @@ class CampusCookies {
   /// Signs out of every campus system: the WebViews' cookies and the
   /// Keychain copy.
   static Future<void> clear() async {
-    await WebViewCookieManager().clearCookies();
+    await _clearWebViewCookies();
     await _storage.delete(key: _key);
+  }
+
+  /// Windows' cookie manager cannot clear cookies, but any one WebView can
+  /// clear them for all: they share one WebView2 profile.
+  static Future<void> _clearWebViewCookies() async {
+    if (!Platform.isWindows) {
+      await WebViewCookieManager().clearCookies();
+      return;
+    }
+    final web =
+        WebViewController().platform as WindowsPlatformWebViewController;
+    try {
+      await web.controller.clearCookies();
+    } finally {
+      await web.controller.dispose();
+    }
   }
 }

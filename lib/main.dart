@@ -21,6 +21,7 @@ import 'routing/router.dart';
 import 'ui/home_widgets/home_widgets.dart';
 import 'ui/core/theme.dart';
 import 'ui/core/widgets.dart';
+import 'ui/core/windows_caption.dart';
 import 'data/repositories/dorm_repair_data.dart';
 import 'data/repositories/parttime_data.dart';
 
@@ -110,6 +111,7 @@ Future<void> main() async {
   if (Platform.isIOS || Platform.isAndroid) {
     await Workmanager().initialize(backgroundTask);
   }
+  if (Platform.isWindows) await hideWindowsTitleBar();
   unawaited(_remind(auth, settings));
   unawaited(_prefetch(auth));
   unawaited(_updateWidgets(auth, settings));
@@ -172,14 +174,15 @@ class _TatCcuAppState extends State<TatCcuApp> {
         for (final l in AppLocalizations.supportedLocales) _traditional(l)!,
       ],
       builder: (context, child) {
-        // macOS draws the content under its transparent title bar, which
+        // macOS and Windows draw the content under the title bar, which
         // takes the clicks there; pages treat it like a status bar.
-        if (Platform.isMacOS) {
+        final titleBar = _titleBarHeight;
+        if (titleBar != null) {
           final media = MediaQuery.of(context);
           child = MediaQuery(
             data: media.copyWith(
-              padding: media.padding.copyWith(top: _macTitleBar),
-              viewPadding: media.viewPadding.copyWith(top: _macTitleBar),
+              padding: media.padding.copyWith(top: titleBar),
+              viewPadding: media.viewPadding.copyWith(top: titleBar),
             ),
             child: child!,
           );
@@ -195,15 +198,13 @@ class _TatCcuAppState extends State<TatCcuApp> {
           }
         }
         // Japanese gets LINE Seed JP so kanji take Japanese shapes.
-        return Localizations.localeOf(context).languageCode == 'ja'
-            ? Theme(
-                data: buildTheme(
-                  Theme.of(context).brightness,
-                  fontFamily: fontJp,
-                ),
-                child: child!,
-              )
-            : child!;
+        if (Localizations.localeOf(context).languageCode == 'ja') {
+          child = Theme(
+            data: buildTheme(Theme.of(context).brightness, fontFamily: fontJp),
+            child: child!,
+          );
+        }
+        return Platform.isWindows ? WindowsCaption(child: child!) : child!;
       },
       routerConfig: _router,
     );
@@ -212,6 +213,13 @@ class _TatCcuAppState extends State<TatCcuApp> {
 
 /// Height of the macOS unified toolbar title bar (MainFlutterWindow).
 const _macTitleBar = 52.0;
+
+/// Height of the title bar the content draws under, if the window has one.
+final double? _titleBarHeight = Platform.isMacOS
+    ? _macTitleBar
+    : Platform.isWindows
+    ? windowsCaptionHeight
+    : null;
 
 /// Reschedules reminders from the latest deadlines and timetable, so a
 /// changed due date is not announced at the old time.
