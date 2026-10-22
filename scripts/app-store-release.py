@@ -9,8 +9,8 @@ New from distribution/whatsnew, on the version VERSION of the platform (IOS
 unless given) and attaches the build. Other platforms copy App Review's
 contact and notes from the iOS version, so they stay out of the repository. Unless --no-submit, it also gives the build to the external TestFlight
 groups with the What's New as what to test, sends it to beta review, and
-submits the version to App Review. The internal group gets every build by
-itself.
+submits the version to App Review, withdrawing one still waiting there. The
+internal group gets every build by itself.
 """
 
 import pathlib
@@ -111,10 +111,36 @@ def editable_version(app, platform, version):
     return store_version
 
 
+def withdraw_from_review(app, platform):
+    """Takes back a version still waiting for or in App Review, so the new
+    release replaces it. True if there was one."""
+    waiting = call(
+        "GET",
+        "/reviewSubmissions",
+        {"filter[app]": app, "filter[platform]": platform, "filter[state]": "WAITING_FOR_REVIEW,IN_REVIEW"},
+    )["data"]
+    for submission in waiting:
+        call(
+            "PATCH",
+            f"/reviewSubmissions/{submission['id']}",
+            body={"data": {"type": "reviewSubmissions", "id": submission["id"], "attributes": {"canceled": True}}},
+        )
+        print(f"withdrew {platform} submission {submission['id']} from App Review", flush=True)
+    return bool(waiting)
+
+
 def set_listing(app, platform, version, build):
     store_version = editable_version(app, platform, version)
+    if store_version is None and withdraw_from_review(app, platform):
+        # The withdrawn version becomes editable once the cancellation settles.
+        for _ in range(20):
+            time.sleep(15)
+            store_version = editable_version(app, platform, version)
+            if store_version:
+                break
+        else:
+            sys.exit(f"the {platform} version withdrawn from App Review did not become editable")
     if store_version is None:
-        # Fails while an earlier version is still waiting for or in review.
         store_version = call(
             "POST",
             "/appStoreVersions",
