@@ -384,29 +384,54 @@ jobs:
           status: draft
           whatsNewDirectory: distribution/whatsnew
 
-  # Unsigned until there is a code signing certificate for Windows.
+  # Unsigned until there is a code signing certificate for Windows. Flutter builds for the architecture
+  # its own Dart runs on, and its release archives are x64 only, so arm64 is built on an Arm runner from
+  # Flutter's source at the pinned version, which fetches an arm64 Dart. The jni plugin (from the Android
+  # packages) links against a JDK of the same architecture.
   windows:
     needs: check
-    runs-on: windows-latest
+    strategy:
+      matrix:
+        include:
+          - arch: x64
+            runner: windows-latest
+          - arch: arm64
+            runner: windows-11-arm
+    runs-on: ${{ matrix.runner }}
     timeout-minutes: 45
     env:
       VERSION: ${{ needs.check.outputs.version }}
+      ARCH: ${{ matrix.arch }}
     steps:
       - uses: actions/checkout@v7
       - uses: subosito/flutter-action@1a449444c387b1966244ae4d4f8c696479add0b2 # v2.23.0
+        if: matrix.arch == 'x64'
         with:
           flutter-version-file: pubspec.yaml
           channel: stable
           cache: true
+      - uses: actions/setup-java@v5
+        if: matrix.arch == 'arm64'
+        with:
+          distribution: temurin
+          java-version: '21'
+          architecture: aarch64
+      - name: Install Flutter for arm64
+        if: matrix.arch == 'arm64'
+        shell: bash
+        run: |
+          version="$(sed -n 's/^  flutter: *\([0-9][0-9.]*\).*/\1/p' pubspec.yaml)"
+          git clone --depth 1 --branch "$version" https://github.com/flutter/flutter.git "$RUNNER_TEMP/flutter"
+          echo "$RUNNER_TEMP/flutter/bin" >> "$GITHUB_PATH"
       - run: flutter build windows --release --build-number="$env:GITHUB_RUN_NUMBER"
       - name: Zip the app folder
         run: |
           New-Item -ItemType Directory -Force dist | Out-Null
-          Compress-Archive -Path build\windows\x64\runner\Release\* -DestinationPath "dist\TAT-CCU-$env:VERSION-windows-x64.zip"
+          Compress-Archive -Path "build\windows\$env:ARCH\runner\Release\*" -DestinationPath "dist\TAT-CCU-$env:VERSION-windows-$env:ARCH.zip"
       - uses: actions/upload-artifact@v7
         with:
-          name: windows
-          path: dist/TAT-CCU-${{ env.VERSION }}-windows-x64.zip
+          name: windows-${{ matrix.arch }}
+          path: dist/TAT-CCU-${{ env.VERSION }}-windows-${{ matrix.arch }}.zip
           if-no-files-found: error
 
   # The iOS upload is not waited for: a problem on App Store Connect never holds back the macOS release.
@@ -453,8 +478,9 @@ jobs:
     steps:
       - uses: actions/download-artifact@v8
         with:
-          name: windows
+          pattern: windows-*
           path: dist
+          merge-multiple: true
       - name: Checksums
         working-directory: dist
         run: sha256sum -- * > SHA256SUMS-windows
