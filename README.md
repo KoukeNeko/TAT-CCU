@@ -14,7 +14,8 @@
   <a href="https://github.com/KoukeNeko/TAT-CCU/releases"><img alt="GitHub downloads" src="https://img.shields.io/github/downloads/KoukeNeko/TAT-CCU/total?style=for-the-badge&logo=github&label=DOWNLOADS&color=1F4A30"></a>
   <img alt="iOS 17+" src="https://img.shields.io/badge/iOS-17%2B-000000?style=for-the-badge&logo=apple&logoColor=white">
   <img alt="macOS 12+" src="https://img.shields.io/badge/macOS-12%2B-000000?style=for-the-badge&logo=apple&logoColor=white">
-  <img alt="Android" src="https://img.shields.io/badge/ANDROID-3DDC84?style=for-the-badge&logo=android&logoColor=white">
+  <a href="https://play.google.com/store/apps/details?id=io.github.koukeneko.tat_ccu"><img alt="Google Play" src="https://img.shields.io/badge/GOOGLE_PLAY-414141?style=for-the-badge&logo=googleplay&logoColor=white"></a>
+  <img alt="Windows 10+" src="https://img.shields.io/badge/WINDOWS-10%2B-0078D4?style=for-the-badge&logo=windows&logoColor=white">
   <a href="https://github.com/KoukeNeko/TAT-CCU/stargazers"><img alt="Stars" src="https://img.shields.io/github/stars/KoukeNeko/TAT-CCU?style=for-the-badge&logo=github&label=STARS&color=6750A4"></a>
 </p>
 
@@ -100,7 +101,8 @@ brew install --cask koukeneko/tap/tat-ccu
 或從 [最新版本](https://github.com/KoukeNeko/TAT-CCU/releases/latest) 下載
 `TAT-CCU-x.y.z-macos.zip`（已經 Apple 公證）。
 
-**Android**：從 [最新版本](https://github.com/KoukeNeko/TAT-CCU/releases/latest) 下載
+**Android**：從 [Google Play](https://play.google.com/store/apps/details?id=io.github.koukeneko.tat_ccu) 安裝，由 Google Play 更新。
+或從 [最新版本](https://github.com/KoukeNeko/TAT-CCU/releases/latest) 下載
 `TAT-CCU-x.y.z-android.apk`。各版本附 `SHA256SUMS` 供核對。
 
 **Windows**：以 [Scoop](https://scoop.sh) 安裝，以 `scoop update tat-ccu` 更新。
@@ -192,8 +194,9 @@ flutter run
 
 ### 發布
 
-推送 `v*` 標籤後，[Release](.github/workflows/release.yml) 建置 macOS、Android 與 iOS，上傳 iOS 至
-TestFlight，建立 GitHub Release 並更新 Homebrew cask。版本說明位於 [`distribution`](distribution)：
+推送 `v*` 標籤後，[Release](.github/workflows/release.yml) 建置 macOS、Android、Windows 與 iOS，上傳 iOS
+至 TestFlight，建立 GitHub Release 並更新 Homebrew cask 與 Scoop manifest。Google Play 用的 App Bundle
+另存為 `play` artifact，目前需手動上傳。版本說明位於 [`distribution`](distribution)：
 `release-notes/vX.Y.Z.md` 為 GitHub Release 說明，`whatsnew/` 為商店的「新功能」。
 
 <p>
