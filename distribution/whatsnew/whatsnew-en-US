@@ -1,15 +1,3 @@
 New features & improvements
 
-🏠 The Today tab is now called Home.
-
-📚 Course pages show the course name in the top bar as you scroll.
-
-Bug fixes
-
-🔄 Pull to refresh now reloads the course list, so courses added or dropped show up.
-
-🔔 Signing out stops that account's reminders; class reminders keep Taiwan time on any device.
-
-📅 The calendar and timetable move to the new day when the app stays open past midnight.
-
-🎟️ My Events updates right after you sign up or cancel.
+🔔 Settings > Notifications has a new "Send a test notification" button to check that notifications show up.
