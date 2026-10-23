@@ -147,8 +147,8 @@ const inAppPages = {
   '0042': '/more/payment',
 };
 
-/// In-app pages not yet finished, marked in the list: ALPHA still shows
-/// made-up data, BETA reads the real site but is new.
+/// In-app pages not yet finished, marked in the list and explained on More:
+/// ALPHA is not tested yet, BETA is tested but not guaranteed.
 const pageStages = {
   '0014': 'ALPHA',
   '0011': 'ALPHA',

@@ -586,5 +586,13 @@
   "dormNetOnApply": "Entered when applying",
   "dormNetNth": "Time {count}",
   "dormNetPenalty": "{days, plural, =1{1-day penalty} other{{days}-day penalty}}",
-  "dormNetFeeUntil": "NT${fee} {period, select, fall0{by Oct 31} fall1{by Nov 30} fall2{by Dec 31} fall3{until winter break ends} spring0{by Mar 31} spring1{by Apr 30} spring2{by May 31} other{until summer break ends}}"
+  "dormNetFeeUntil": "NT${fee} {period, select, fall0{by Oct 31} fall1{by Nov 30} fall2{by Dec 31} fall3{until winter break ends} spring0{by Mar 31} spring1{by Apr 30} spring2{by May 31} other{until summer break ends}}",
+  "pageStages": "Page stages",
+  "stageAlpha": "Not tested",
+  "stageBeta": "Partly tested",
+  "stagesHelp": "Pages marked ALPHA or BETA are not fully tested. Reports of any problems are welcome.",
+  "reportIssue": "Report a problem",
+  "issueTemplate": "Page:\nWhat happened:\n\nApp {version} · {platform}",
+  "stageAlphaDetail": "Data and actions may be wrong",
+  "stageBetaDetail": "Not every account state is covered"
 }

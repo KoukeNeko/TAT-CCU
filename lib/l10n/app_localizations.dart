@@ -3615,6 +3615,54 @@ abstract class AppLocalizations {
   /// In zh, this message translates to:
   /// **'{period, select, fall0{10/31 前} fall1{11/30 前} fall2{12/31 前} fall3{寒假結束前} spring0{3/31 前} spring1{4/30 前} spring2{5/31 前} other{暑假結束前}} {fee} 元'**
   String dormNetFeeUntil(String period, int fee);
+
+  /// No description provided for @pageStages.
+  ///
+  /// In zh, this message translates to:
+  /// **'頁面階段'**
+  String get pageStages;
+
+  /// No description provided for @stageAlpha.
+  ///
+  /// In zh, this message translates to:
+  /// **'未經測試'**
+  String get stageAlpha;
+
+  /// No description provided for @stageBeta.
+  ///
+  /// In zh, this message translates to:
+  /// **'部分測試'**
+  String get stageBeta;
+
+  /// No description provided for @stagesHelp.
+  ///
+  /// In zh, this message translates to:
+  /// **'標示 ALPHA 或 BETA 的頁面未經完整測試，歡迎回報遇到的問題。'**
+  String get stagesHelp;
+
+  /// No description provided for @reportIssue.
+  ///
+  /// In zh, this message translates to:
+  /// **'回報問題'**
+  String get reportIssue;
+
+  /// No description provided for @issueTemplate.
+  ///
+  /// In zh, this message translates to:
+  /// **'頁面：\n狀況：\n\nApp {version}・{platform}'**
+  String issueTemplate(String version, String platform);
+
+  /// No description provided for @stageAlphaDetail.
+  ///
+  /// In zh, this message translates to:
+  /// **'資料與操作可能有誤'**
+  String get stageAlphaDetail;
+
+  /// No description provided for @stageBetaDetail.
+  ///
+  /// In zh, this message translates to:
+  /// **'未涵蓋所有帳號狀態'**
+  String get stageBetaDetail;
 }
 
 class _AppLocalizationsDelegate

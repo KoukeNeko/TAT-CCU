@@ -586,5 +586,13 @@
   "dormNetOnApply": "申請時に入力",
   "dormNetNth": "{count} 回目",
   "dormNetPenalty": "停止 {days} 日",
-  "dormNetFeeUntil": "{period, select, fall0{10/31 まで} fall1{11/30 まで} fall2{12/31 まで} fall3{冬休み終了まで} spring0{3/31 まで} spring1{4/30 まで} spring2{5/31 まで} other{夏休み終了まで}} {fee} 元"
+  "dormNetFeeUntil": "{period, select, fall0{10/31 まで} fall1{11/30 まで} fall2{12/31 まで} fall3{冬休み終了まで} spring0{3/31 まで} spring1{4/30 まで} spring2{5/31 まで} other{夏休み終了まで}} {fee} 元",
+  "pageStages": "ページの段階",
+  "stageAlpha": "未テスト",
+  "stageBeta": "一部テスト済み",
+  "stagesHelp": "ALPHA・BETA のページは十分にテストされていません。問題があればお知らせください。",
+  "reportIssue": "問題を報告",
+  "issueTemplate": "ページ：\n状況：\n\nApp {version}・{platform}",
+  "stageAlphaDetail": "データや操作に誤りがある可能性",
+  "stageBetaDetail": "すべてのアカウント状態は未確認"
 }

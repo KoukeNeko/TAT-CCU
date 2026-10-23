@@ -2018,4 +2018,30 @@ class AppLocalizationsZh extends AppLocalizations {
     });
     return '$_temp0 $fee 元';
   }
+
+  @override
+  String get pageStages => '頁面階段';
+
+  @override
+  String get stageAlpha => '未經測試';
+
+  @override
+  String get stageBeta => '部分測試';
+
+  @override
+  String get stagesHelp => '標示 ALPHA 或 BETA 的頁面未經完整測試，歡迎回報遇到的問題。';
+
+  @override
+  String get reportIssue => '回報問題';
+
+  @override
+  String issueTemplate(String version, String platform) {
+    return '頁面：\n狀況：\n\nApp $version・$platform';
+  }
+
+  @override
+  String get stageAlphaDetail => '資料與操作可能有誤';
+
+  @override
+  String get stageBetaDetail => '未涵蓋所有帳號狀態';
 }

@@ -1011,5 +1011,14 @@
   "dormNetPenalty": "罰則 {days} 天",
   "@dormNetPenalty": {"placeholders": {"days": {"type": "int"}}},
   "dormNetFeeUntil": "{period, select, fall0{10/31 前} fall1{11/30 前} fall2{12/31 前} fall3{寒假結束前} spring0{3/31 前} spring1{4/30 前} spring2{5/31 前} other{暑假結束前}} {fee} 元",
-  "@dormNetFeeUntil": {"placeholders": {"period": {"type": "String"}, "fee": {"type": "int"}}}
+  "@dormNetFeeUntil": {"placeholders": {"period": {"type": "String"}, "fee": {"type": "int"}}},
+  "pageStages": "頁面階段",
+  "stageAlpha": "未經測試",
+  "stageBeta": "部分測試",
+  "stagesHelp": "標示 ALPHA 或 BETA 的頁面未經完整測試，歡迎回報遇到的問題。",
+  "reportIssue": "回報問題",
+  "issueTemplate": "頁面：\n狀況：\n\nApp {version}・{platform}",
+  "@issueTemplate": {"placeholders": {"version": {"type": "String"}, "platform": {"type": "String"}}},
+  "stageAlphaDetail": "資料與操作可能有誤",
+  "stageBetaDetail": "未涵蓋所有帳號狀態"
 }

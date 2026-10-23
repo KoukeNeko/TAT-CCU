@@ -2008,4 +2008,30 @@ class AppLocalizationsJa extends AppLocalizations {
     });
     return '$_temp0 $fee 元';
   }
+
+  @override
+  String get pageStages => 'ページの段階';
+
+  @override
+  String get stageAlpha => '未テスト';
+
+  @override
+  String get stageBeta => '一部テスト済み';
+
+  @override
+  String get stagesHelp => 'ALPHA・BETA のページは十分にテストされていません。問題があればお知らせください。';
+
+  @override
+  String get reportIssue => '問題を報告';
+
+  @override
+  String issueTemplate(String version, String platform) {
+    return 'ページ：\n状況：\n\nApp $version・$platform';
+  }
+
+  @override
+  String get stageAlphaDetail => 'データや操作に誤りがある可能性';
+
+  @override
+  String get stageBetaDetail => 'すべてのアカウント状態は未確認';
 }

@@ -2139,4 +2139,31 @@ class AppLocalizationsEn extends AppLocalizations {
     });
     return 'NT\$$fee $_temp0';
   }
+
+  @override
+  String get pageStages => 'Page stages';
+
+  @override
+  String get stageAlpha => 'Not tested';
+
+  @override
+  String get stageBeta => 'Partly tested';
+
+  @override
+  String get stagesHelp =>
+      'Pages marked ALPHA or BETA are not fully tested. Reports of any problems are welcome.';
+
+  @override
+  String get reportIssue => 'Report a problem';
+
+  @override
+  String issueTemplate(String version, String platform) {
+    return 'Page:\nWhat happened:\n\nApp $version · $platform';
+  }
+
+  @override
+  String get stageAlphaDetail => 'Data and actions may be wrong';
+
+  @override
+  String get stageBetaDetail => 'Not every account state is covered';
 }
