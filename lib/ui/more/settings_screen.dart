@@ -493,9 +493,12 @@ class _VersionState extends State<_Version> {
                             )
                           else
                             TextButton(
+                              // Flush with the number above and tight to its
+                              // text, so the card's inset is even all round.
                               style: TextButton.styleFrom(
                                 padding: EdgeInsets.zero,
-                                minimumSize: const Size(0, 40),
+                                minimumSize: Size.zero,
+                                tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                               ),
                               onPressed: checking
                                   ? null
