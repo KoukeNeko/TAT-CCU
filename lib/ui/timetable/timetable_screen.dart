@@ -11,8 +11,8 @@ import '../../data/repositories/app_settings.dart';
 import '../../data/repositories/ecourse_repository.dart';
 import '../../domain/models/course.dart';
 import '../../domain/models/timetable.dart';
-import '../core/app_shell.dart';
 import '../core/auto_refresh.dart';
+import '../core/pair_switch.dart';
 import '../core/theme.dart';
 import '../core/widgets.dart';
 import '../../l10n/l10n.dart';
@@ -144,8 +144,13 @@ class _TimetableScreenState extends State<TimetableScreen> with AutoRefresh {
               context.l10n.navTimetable,
               actions: [
                 if (!wide && !book) ...[
-                  _ViewSwitch(
-                    week: settings.timetableWeek,
+                  PairSwitch(
+                    labels: (
+                      context.l10n.timetableDay,
+                      context.l10n.timetableWeek,
+                    ),
+                    second: settings.timetableWeek,
+                    tone: context.tones.lilac,
                     onChanged: _pickView,
                   ),
                   const SizedBox(width: 8),
@@ -1390,124 +1395,6 @@ class _DayPill extends StatelessWidget {
 /// Height of the day pills and of the week's weekdays in their place, the
 /// same so the app bar keeps its height when the view changes.
 const _dayRow = 52.0;
-
-/// The phone's 日 / 週 choice in the app bar: a track as tall as the search
-/// button, the chosen one in a lilac capsule. Like the nav bar, the capsule
-/// follows a finger dragged across, with a tick as it changes sides, and
-/// the choice is made on release.
-class _ViewSwitch extends StatefulWidget {
-  const _ViewSwitch({required this.week, required this.onChanged});
-
-  final bool week;
-  final ValueChanged<bool> onChanged;
-
-  @override
-  State<_ViewSwitch> createState() => _ViewSwitchState();
-}
-
-class _ViewSwitchState extends State<_ViewSwitch> {
-  static const _segment = 44.0;
-
-  /// The side under the finger while one is down; null otherwise.
-  bool? _hover;
-
-  bool _sideAt(double x) => x - Space.xs >= _segment;
-
-  void _move(double x) {
-    final week = _sideAt(x);
-    if (_hover == null || week == _hover) return;
-    HapticFeedback.selectionClick();
-    setState(() => _hover = week);
-  }
-
-  void _release({required bool commit}) {
-    final week = _hover;
-    setState(() => _hover = null);
-    if (commit && week != null && week != widget.week) widget.onChanged(week);
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
-    final tone = context.tones.lilac;
-    final shown = _hover ?? widget.week;
-    final pressed = _hover != null;
-    Widget label(bool value, String text) => Semantics(
-      button: true,
-      selected: widget.week == value,
-      child: SizedBox(
-        width: _segment,
-        child: Center(
-          child: AnimatedDefaultTextStyle(
-            duration: barMove,
-            curve: barSettle,
-            style: DefaultTextStyle.of(context).style.copyWith(
-              fontSize: 15,
-              fontWeight: FontWeight.w900,
-              color: shown == value ? tone.fill : scheme.onSurfaceVariant,
-            ),
-            child: Text(text),
-          ),
-        ),
-      ),
-    );
-    return AnimatedScale(
-      // Pressed, the switch lifts slightly, as the nav bar does.
-      scale: pressed ? 1.04 : 1,
-      duration: barMove,
-      curve: barSettle,
-      child: Listener(
-        behavior: HitTestBehavior.opaque,
-        onPointerDown: (e) {
-          final week = _sideAt(e.localPosition.dx);
-          if (week != widget.week) HapticFeedback.selectionClick();
-          setState(() => _hover = week);
-        },
-        onPointerMove: (e) => _move(e.localPosition.dx),
-        onPointerUp: (_) => _release(commit: true),
-        onPointerCancel: (_) => _release(commit: false),
-        child: Container(
-          height: 40,
-          padding: const EdgeInsets.all(Space.xs),
-          decoration: ShapeDecoration(
-            color: scheme.surfaceContainer,
-            shape: const StadiumBorder(),
-          ),
-          child: Stack(
-            children: [
-              AnimatedPositioned(
-                duration: barMove,
-                curve: barSettle,
-                left: shown ? _segment : 0,
-                top: 0,
-                bottom: 0,
-                width: _segment,
-                child: AnimatedContainer(
-                  duration: barMove,
-                  curve: barSettle,
-                  decoration: ShapeDecoration(
-                    // Held, the capsule deepens, like the nav bar's.
-                    color: pressed
-                        ? Color.lerp(tone.strong, tone.fill, 0.12)
-                        : tone.strong,
-                    shape: const StadiumBorder(),
-                  ),
-                ),
-              ),
-              Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  label(false, context.l10n.timetableDay),
-                  label(true, context.l10n.timetableWeek),
-                ],
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-}
 
 /// The phone week's weekdays and dates in the app bar, where the day pills
 /// are in the day view, so the bar keeps its height; lined up with the
