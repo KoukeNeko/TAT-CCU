@@ -155,6 +155,21 @@ private func rounded(_ size: CGFloat, _ weight: Font.Weight = .heavy) -> Font {
 }
 
 /// Label row at the top of a block: an icon and a short state.
+/// A tone block on the card. Tinted and clear home screens draw a widget in
+/// one color, where the fill would turn solid and hide its own text; there
+/// it is a faint panel instead.
+struct Block: ViewModifier {
+  @Environment(\.widgetRenderingMode) var mode
+  let fill: Color
+
+  func body(content: Content) -> some View {
+    content.background(
+      mode == .fullColor ? fill : .white.opacity(0.16),
+      in: RoundedRectangle(cornerRadius: 16)
+    )
+  }
+}
+
 struct Header: View {
   let icon: String
   let text: String
@@ -365,7 +380,7 @@ struct TodayView: View {
       .frame(width: 124, alignment: .leading)
       .frame(maxHeight: .infinity)
       .foregroundStyle(Tone.lilac.ink)
-      .background(Tone.lilac.fill, in: RoundedRectangle(cornerRadius: 16))
+      .modifier(Block(fill: Tone.lilac.fill))
       VStack(alignment: .leading, spacing: 7) {
         if frame.day.rows.isEmpty {
           nextDay(frame.cls)
@@ -411,7 +426,7 @@ struct TodayView: View {
       }
       .padding(12)
       .foregroundStyle(hero.ink)
-      .background(hero.fill, in: RoundedRectangle(cornerRadius: 16))
+      .modifier(Block(fill: hero.fill))
       if !later.isEmpty {
         section(labels.upcoming)
         VStack(alignment: .leading, spacing: 7) {
