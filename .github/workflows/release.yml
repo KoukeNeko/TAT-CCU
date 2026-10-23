@@ -236,8 +236,15 @@ jobs:
           xcodebuild archive \
             -workspace macos/Runner.xcworkspace -scheme Runner -configuration Release \
             -destination generic/platform=macOS -archivePath "$RUNNER_TEMP/Runner.xcarchive" \
-            CODE_SIGNING_ALLOWED=NO
+            -derivedDataPath "$RUNNER_TEMP/DerivedData" CODE_SIGNING_ALLOWED=NO
           app="$RUNNER_TEMP/Runner.xcarchive/Products/Applications/TAT CCU.app"
+          # pdfium_dart also bundles its own libpdfium as pdfium.framework, which on this case-insensitive
+          # disk overwrites the PDFium.framework the app links, so the app fails to launch. The app loads
+          # PDFium from the XCFramework only, so its copy goes back in.
+          rm -rf "$app/Contents/Frameworks/PDFium.framework"
+          ditto "$RUNNER_TEMP"/DerivedData/SourcePackages/artifacts/pdfium_flutter*/PDFium/PDFium.xcframework/macos-*/PDFium.framework \
+            "$app/Contents/Frameworks/PDFium.framework"
+          otool -D "$app/Contents/Frameworks/PDFium.framework/PDFium" | grep -q '@rpath/PDFium.framework/PDFium'
           # The entitlements as Xcode would expand them; the hardened runtime is kept by the export.
           sed "s/\$(AppIdentifierPrefix)/$TEAM_ID./" macos/Runner/Release.entitlements > "$RUNNER_TEMP/app.entitlements"
           find "$app/Contents/Frameworks" -maxdepth 1 -name '*.framework' -exec codesign -f -s - --options runtime {} \;
