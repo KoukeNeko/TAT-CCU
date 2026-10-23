@@ -11,6 +11,7 @@ import '../../data/services/demo_data.dart';
 import '../../data/repositories/certificate_store.dart';
 import '../../data/repositories/campus_cache.dart';
 import '../core/campus_session.dart';
+import '../core/pdf_viewer.dart';
 import '../core/campus_web_screen.dart';
 import '../core/theme.dart';
 import '../core/widgets.dart';
@@ -337,14 +338,8 @@ class _Ticket extends StatelessWidget {
   final bool printing;
   final VoidCallback? onPrint;
 
-  void _open(BuildContext context, Certificate c) => Navigator.of(context).push(
-    MaterialPageRoute(
-      builder: (_) => Scaffold(
-        appBar: subBar(context, context.l10n.enrollmentCertificate),
-        body: PdfViewer.file(c.file.path),
-      ),
-    ),
-  );
+  void _open(BuildContext context, Certificate c) =>
+      showPdfFile(context, c.file, context.l10n.enrollmentCertificate);
 
   void _share(BuildContext context, Certificate c) {
     final box = context.findRenderObject() as RenderBox?;

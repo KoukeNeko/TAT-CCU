@@ -5,11 +5,7 @@ import 'dart:io';
 import 'package:clock/clock.dart' as clk;
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:flutter/services.dart';
 import 'package:path_provider/path_provider.dart';
-import 'package:pdfrx/pdfrx.dart';
-import 'package:share_plus/share_plus.dart';
-import 'package:url_launcher/url_launcher.dart';
 
 import '../../data/repositories/ecourse_auth_repository.dart';
 import '../../data/services/demo_data.dart';
@@ -18,16 +14,12 @@ import '../../data/services/payment_data.dart';
 import '../../l10n/l10n.dart';
 import '../core/auto_refresh.dart';
 import '../core/campus_session.dart';
+import '../core/pdf_viewer.dart';
 import '../core/theme.dart';
 import '../core/widgets.dart';
 import '../core/campus_systems.dart';
 
 const _host = 'www026197.ccu.edu.tw';
-const _pdfPreview = MethodChannel('tatccu/pdf_preview');
-// pdfium finds no CJK font by itself; Android keeps them here. It can be
-// pointed at fonts only once; top-level, so prepared on first use.
-final _androidFonts = PdfFontManager(resolvers: const [])
-    .prepare(fontPaths: const ['/system/fonts']);
 const _api = 'https://$_host/gensys/site/general';
 
 String _show(int n) => '\$${grouped(n)}';
@@ -121,55 +113,7 @@ class _PaymentScreenState extends State<PaymentScreen>
     // macOS hands out its temporary folder before creating it.
     await file.parent.create(recursive: true);
     await file.writeAsBytes(bytes, flush: true);
-    if (Platform.isIOS) {
-      // Quick Look draws the school's unembedded CJK fonts with the
-      // system's and brings its own share button.
-      return _pdfPreview.invokeMethod('show', {
-        'path': file.path,
-        'title': pdf.title,
-      });
-    }
-    // Preview on macOS, and the default viewer on Windows, draw them with the
-    // system's fonts as Quick Look does.
-    if (!Platform.isAndroid) {
-      await launchUrl(Uri.file(file.path));
-      return;
-    }
-    await _androidFonts;
-    if (!mounted) return;
-    Navigator.of(context, rootNavigator: true).push(
-      MaterialPageRoute(
-        builder: (context) => Scaffold(
-          appBar: subBar(
-            context,
-            pdf.title,
-            action: Builder(
-              builder: (context) {
-                final scheme = Theme.of(context).colorScheme;
-                return IconButton(
-                  tooltip: l10n.share,
-                  style: IconButton.styleFrom(
-                    backgroundColor: scheme.surfaceContainerHigh,
-                    fixedSize: const Size(40, 40),
-                  ),
-                  icon: Icon(
-                    Icons.share,
-                    size: 18,
-                    color: scheme.onSurfaceVariant,
-                  ),
-                  onPressed: () => SharePlus.instance.share(
-                    ShareParams(
-                      files: [XFile(file.path, mimeType: 'application/pdf')],
-                    ),
-                  ),
-                );
-              },
-            ),
-          ),
-          body: PdfViewer.file(file.path),
-        ),
-      ),
-    );
+    if (mounted) await showPdfFile(context, file, pdf.title);
   }
 
   /// A statement answers `pdf`; a new read also clears the chosen month.
