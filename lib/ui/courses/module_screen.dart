@@ -9,6 +9,7 @@ import '../core/theme.dart';
 import '../core/widgets.dart';
 import '../../l10n/l10n.dart';
 import 'forum_screen.dart';
+import '../core/campus_web_screen.dart';
 
 /// Module types with a page of their own; others open on eCourse2.
 const moduleTypesWithPage = {'assign', 'quiz', 'folder', 'resource', 'forum'};
@@ -52,6 +53,21 @@ class ModuleScreen extends StatelessWidget {
       builder: (context, module) => Scaffold(
         extendBodyBehindAppBar: true,
         appBar: subBar(context, module?.name ?? ''),
+        // A quiz is taken on eCourse2, signed in through the campus web view.
+        floatingActionButton: module?.type == 'quiz' && module?.url != null
+            ? Padding(
+                // Clear the floating nav bar.
+                padding: EdgeInsets.only(
+                  bottom: MediaQuery.paddingOf(context).bottom,
+                ),
+                child: FloatingAction(
+                  icon: Icons.open_in_new,
+                  label: context.l10n.openInEcourse,
+                  onPressed: () =>
+                      openCampusPage(context, module!.url!, module.name),
+                ),
+              )
+            : null,
         body: CapsuleArea(
           child: switch (module?.type) {
             null => EmptyState(context.l10n.itemNotFound),
