@@ -120,6 +120,9 @@ class AppLocalizationsZh extends AppLocalizations {
   String get noNotifications => '沒有通知';
 
   @override
+  String get noSubject => '（無主旨）';
+
+  @override
   String get noMail => '沒有信件';
 
   @override

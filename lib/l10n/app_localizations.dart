@@ -274,6 +274,12 @@ abstract class AppLocalizations {
   /// **'沒有通知'**
   String get noNotifications;
 
+  /// No description provided for @noSubject.
+  ///
+  /// In zh, this message translates to:
+  /// **'（無主旨）'**
+  String get noSubject;
+
   /// No description provided for @noMail.
   ///
   /// In zh, this message translates to:

@@ -107,6 +107,9 @@ class AppLocalizationsJa extends AppLocalizations {
   String get noNotifications => '通知はありません';
 
   @override
+  String get noSubject => '（件名なし）';
+
+  @override
   String get noMail => 'メールはありません';
 
   @override

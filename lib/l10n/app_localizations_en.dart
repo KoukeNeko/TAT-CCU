@@ -111,6 +111,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get noNotifications => 'No notifications';
 
   @override
+  String get noSubject => '(No subject)';
+
+  @override
   String get noMail => 'No mail';
 
   @override

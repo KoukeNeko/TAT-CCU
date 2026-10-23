@@ -65,6 +65,7 @@
   },
   "mail": "信件",
   "noNotifications": "沒有通知",
+  "noSubject": "（無主旨）",
   "noMail": "沒有信件",
   "monthTitle": "{month} 月",
   "@monthTitle": {

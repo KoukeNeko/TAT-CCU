@@ -71,6 +71,13 @@ Future<void> openEcourseLink(
   }
 }
 
+/// A draft can be saved before it has a subject or anyone to go to.
+String _subject(AppLocalizations l10n, String subject) =>
+    subject.isEmpty ? l10n.noSubject : subject;
+
+String _to(AppLocalizations l10n, String to) =>
+    to.isEmpty ? '' : l10n.mailTo(to);
+
 enum _Kind { mail, sent, draft, forum, assignment, notice }
 
 enum _Filter { all, unread, mail, forum, assignment }
@@ -344,10 +351,11 @@ class _MessagesScreenState extends State<MessagesScreen> {
                 MailFolder.drafts => _Kind.draft,
                 _ => _Kind.mail,
               },
-              title: m.subject,
-              detail:
-                  '${mine ? l10n.mailTo(m.to) : m.sender}・'
-                  '${names[m.courseId] ?? m.course}',
+              title: _subject(l10n, m.subject),
+              detail: [
+                mine ? _to(l10n, m.to) : m.sender,
+                names[m.courseId] ?? m.course,
+              ].where((s) => s.isNotEmpty).join('・'),
               time: m.time,
               unread: !mine && (_unread[m.id] ?? m.unread),
               selected: m.id == _open,
@@ -568,8 +576,8 @@ class SentMailScreen extends StatelessWidget {
               _MessageRow(
                 item: (
                   kind: _Kind.sent,
-                  title: m.subject,
-                  detail: l10n.mailTo(m.to),
+                  title: _subject(l10n, m.subject),
+                  detail: _to(l10n, m.to),
                   time: m.time,
                   unread: false,
                   selected: false,
@@ -848,7 +856,7 @@ class _MailScreenState extends State<MailScreen> {
           title: '',
           entry: ecourseEntry,
           host: ecourseHost,
-          loadOnStart: false,
+          // Signed in while the message is read, so an action runs at once.
           script: () => ecourseScript("post({ kind: 'ready' });"),
           onMessage: (message) {
             if (message['kind'] == 'mail') _received(message, starred);
@@ -898,82 +906,88 @@ class _MailScreenState extends State<MailScreen> {
               },
             ],
           ),
-          child: Column(
-            children: [
-              Expanded(
-                child: ListView(
-                  // The reply bar below takes the bottom inset, when there
-                  // is one.
-                  padding: _folder == MailFolder.sent
-                      ? scrollPadding(context)
-                      : scrollPadding(context).copyWith(bottom: 16),
-                  children: [
-                    Text(
-                      m.course,
-                      style: TextStyle(
-                        color: scheme.onSurfaceVariant,
-                        fontWeight: FontWeight.w800,
+          // Builder: insets have to come from inside the session's Scaffold,
+          // where the glass app bar is part of the top padding.
+          child: Builder(
+            builder: (context) => Column(
+              children: [
+                Expanded(
+                  child: ListView(
+                    // The reply bar below takes the bottom inset, when there
+                    // is one.
+                    padding: _folder == MailFolder.sent
+                        ? scrollPadding(context)
+                        : scrollPadding(context).copyWith(bottom: 16),
+                    children: [
+                      Text(
+                        m.course,
+                        style: TextStyle(
+                          color: scheme.onSurfaceVariant,
+                          fontWeight: FontWeight.w800,
+                        ),
                       ),
-                    ),
-                    const SizedBox(height: 6),
-                    SelectableText(
-                      m.subject,
-                      style: const TextStyle(
-                        fontSize: 24,
-                        fontWeight: FontWeight.w900,
-                        height: 1.25,
+                      const SizedBox(height: 6),
+                      SelectableText(
+                        _subject(l10n, m.subject),
+                        style: const TextStyle(
+                          fontSize: 24,
+                          fontWeight: FontWeight.w900,
+                          height: 1.25,
+                        ),
                       ),
-                    ),
-                    const SizedBox(height: 8),
-                    Text(
-                      '${sent ? l10n.mailTo(m.to) : m.sender}・'
-                      '${dateTimeLabel(context, m.time)}',
-                      style: TextStyle(
-                        color: scheme.onSurfaceVariant,
-                        fontWeight: FontWeight.w700,
+                      const SizedBox(height: 8),
+                      Text(
+                        [
+                          sent ? _to(l10n, m.to) : m.sender,
+                          dateTimeLabel(context, m.time),
+                        ].where((s) => s.isNotEmpty).join('・'),
+                        style: TextStyle(
+                          color: scheme.onSurfaceVariant,
+                          fontWeight: FontWeight.w700,
+                        ),
                       ),
-                    ),
-                    const SizedBox(height: 16),
-                    SelectableText(
-                      m.body,
-                      style: const TextStyle(fontSize: 15, height: 1.7),
-                    ),
-                    if (m.attachments.isNotEmpty) ...[
-                      SectionLabel(l10n.attachments),
-                      FileList(
-                        files: m.attachments,
-                        detail: (f) => fileSize(f.size),
+                      const SizedBox(height: 16),
+                      SelectableText(
+                        m.body,
+                        style: const TextStyle(fontSize: 15, height: 1.7),
                       ),
+                      if (m.attachments.isNotEmpty) ...[
+                        SectionLabel(l10n.attachments),
+                        FileList(
+                          files: m.attachments,
+                          detail: (f) => fileSize(f.size),
+                        ),
+                      ],
                     ],
-                  ],
-                ),
-              ),
-              if (_folder != MailFolder.sent && _folder != MailFolder.trash)
-                Padding(
-                  padding: EdgeInsets.fromLTRB(
-                    pageMargin,
-                    Space.s,
-                    pageMargin,
-                    MediaQuery.paddingOf(context).bottom + Space.s,
                   ),
-                  // A pill under the text beside the list; the full width on
-                  // a phone.
-                  child: Align(
-                    alignment: AlignmentDirectional.centerStart,
-                    child: SizedBox(
-                      width: widget.onGone != null ? null : double.infinity,
-                      child: FilledButton(
-                        onPressed: busy ? null : () => _write(m),
-                        child: Text(
-                          _folder == MailFolder.drafts
-                              ? l10n.editDraft
-                              : l10n.reply,
+                ),
+                if (_folder != MailFolder.sent && _folder != MailFolder.trash)
+                  Padding(
+                    padding: EdgeInsets.fromLTRB(
+                      pageMargin,
+                      Space.s,
+                      pageMargin,
+                      MediaQuery.paddingOf(context).bottom + Space.s,
+                    ),
+                    // A pill under the text beside the list; the full width on
+                    // a phone.
+                    child: Align(
+                      alignment: AlignmentDirectional.centerStart,
+                      child: SizedBox(
+                        width: widget.onGone != null ? null : double.infinity,
+                        child: FilledButton(
+                          onPressed: busy ? null : () => _write(m),
+                          child: Text(
+                            _folder == MailFolder.drafts
+                                ? l10n.editDraft
+                                : l10n.reply,
+                          ),
                         ),
                       ),
                     ),
                   ),
-                ),
-            ],
+              ],
+            ),
           ),
         );
       },

@@ -30,6 +30,7 @@
   "notificationsUnread": "通知、未読 {count} 件",
   "mail": "メール",
   "noNotifications": "通知はありません",
+  "noSubject": "（件名なし）",
   "noMail": "メールはありません",
   "monthTitle": "{month}月",
   "yearMonthTitle": "{year}年{month}月",
