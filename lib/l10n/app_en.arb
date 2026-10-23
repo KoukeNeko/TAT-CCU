@@ -595,5 +595,11 @@
   "issueTemplate": "Page:\nWhat happened:\n\nApp {version} · {platform}",
   "stageAlphaDetail": "Data and actions may be wrong",
   "stageBetaDetail": "Not every account state is covered",
-  "noMatchingPeople": "No matching people"
+  "noMatchingPeople": "No matching people",
+  "sendUnconfirmed": "Couldn't confirm the letter was sent",
+  "viewSentMail": "View Sent",
+  "sentMail": "Sent",
+  "mailTo": "To {names}",
+  "noSentMail": "No sent mail",
+  "inbox": "Inbox"
 }

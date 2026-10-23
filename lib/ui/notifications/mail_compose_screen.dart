@@ -11,6 +11,7 @@ import '../core/campus_session.dart';
 import '../core/glass_sheet.dart';
 import '../core/theme.dart';
 import '../core/widgets.dart';
+import 'notifications_screen.dart';
 
 typedef _Person = ({int id, String name, bool staff});
 
@@ -104,12 +105,23 @@ class _MailComposeScreenState extends State<MailComposeScreen>
         html: textAsHtml(_body.text.trim()),
       ),
     );
-    // An expired session may never answer; let the button work again.
+    // An expired session may never answer; let the button work again. The
+    // letter may still have gone out, so this does not say it failed.
     _timeout = Timer(const Duration(seconds: 30), () {
       if (!mounted || !_sending) return;
       setState(() => _sending = false);
-      ScaffoldMessenger.of(context)
-          .showSnackBar(SnackBar(content: Text(context.l10n.sendFailed)));
+      final l10n = context.l10n;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(l10n.sendUnconfirmed),
+          action: SnackBarAction(
+            label: l10n.viewSentMail,
+            onPressed: () => Navigator.of(context).push(
+              MaterialPageRoute<void>(builder: (_) => const SentMailScreen()),
+            ),
+          ),
+        ),
+      );
     });
   }
 

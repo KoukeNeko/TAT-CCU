@@ -2037,4 +2037,24 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get noMatchingPeople => '一致する人はいません';
+
+  @override
+  String get sendUnconfirmed => '送信できたか確認できませんでした';
+
+  @override
+  String get viewSentMail => '送信済みを見る';
+
+  @override
+  String get sentMail => '送信済み';
+
+  @override
+  String mailTo(String names) {
+    return '宛先 $names';
+  }
+
+  @override
+  String get noSentMail => '送信したメールはありません';
+
+  @override
+  String get inbox => '受信箱';
 }

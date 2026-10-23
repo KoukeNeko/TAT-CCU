@@ -305,6 +305,9 @@ const _mail = [
   (2, 'Lab 4 繳交方式', '助教', 9002, 72, false),
 ];
 
+/// Sent by the demo account: id, subject, to, course, hours ago.
+const _sentMail = [(3, '回覆：專題進度會議時間', '王教授', 9004, 2)];
+
 /// Answers every eCourse2 function the app calls, without the network.
 class DemoMoodleClient extends MoodleClient {
   DemoMoodleClient()
@@ -405,6 +408,22 @@ class DemoMoodleClient extends MoodleClient {
         ],
       },
       'local_mail_get_unread_count' => 1,
+      'local_mail_get_index' when params['type'] == 'sent' => {
+        'messages': [
+          for (final (id, subject, to, course, hours) in _sentMail)
+            {
+              'id': id,
+              'subject': subject,
+              'sender': {'fullname': demoName},
+              'recipients': [
+                {'type': 'to', 'fullname': to},
+              ],
+              'course': {'id': course, 'shortname': semester},
+              'time': _ts(now.subtract(Duration(hours: hours))),
+              'unread': false,
+            },
+        ],
+      },
       'local_mail_get_index' => {
         'messages': [
           for (final (id, subject, sender, course, hours, unread) in _mail)
@@ -424,12 +443,26 @@ class DemoMoodleClient extends MoodleClient {
           {'id': 9002, 'fullname': '網路安全攻防技術', 'unread': 0},
         ],
       },
+      'local_mail_get_message' when id('id') == _sentMail.first.$1 => {
+        'subject': _sentMail.first.$2,
+        'content': '老師好，週四下午三點可以出席。',
+        'sender': {'fullname': demoName},
+        'recipients': [
+          {'type': 'to', 'fullname': _sentMail.first.$3},
+        ],
+        'course': {'shortname': '深度學習導論'},
+        'time': _ts(now.subtract(Duration(hours: _sentMail.first.$5))),
+        'attachments': [],
+      },
       'local_mail_get_message' => {
         for (final (mid, subject, sender, course, hours, _) in _mail)
           if (mid == id('id')) ...{
             'subject': subject,
             'content': '各位同學好，請在週五前回覆可以出席的時段。',
             'sender': {'fullname': sender},
+            'recipients': [
+              {'type': 'to', 'fullname': demoName},
+            ],
             'course': {'shortname': course == 9004 ? '深度學習導論' : '網路安全攻防技術'},
             'time': _ts(now.subtract(Duration(hours: hours))),
             'attachments': [],

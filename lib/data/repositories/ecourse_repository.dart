@@ -31,6 +31,9 @@ typedef MailItem = ({
   int courseId,
   String subject,
   String sender,
+
+  /// Who it went to, as `王教授、助教`.
+  String to,
   String course,
   DateTime time,
   bool unread,
@@ -40,6 +43,7 @@ typedef MailItem = ({
 typedef MailMessage = ({
   String subject,
   String sender,
+  String to,
   String course,
   DateTime time,
   String body,
@@ -328,9 +332,14 @@ class EcourseRepository {
 
   /// Inbox listing only; reading a message leaves it unread on eCourse2
   /// until [markMailRead].
-  Future<List<MailItem>> inbox() async {
+  Future<List<MailItem>> inbox() => _mailIndex('inbox');
+
+  /// What this account sent, newest first.
+  Future<List<MailItem>> sent() => _mailIndex('sent');
+
+  Future<List<MailItem>> _mailIndex(String type) async {
     final r = await _client.call('local_mail_get_index', {
-      'type': 'inbox',
+      'type': type,
       'itemid': 0,
       'offset': 0,
       'limit': 40,
@@ -342,12 +351,16 @@ class EcourseRepository {
           courseId: (m['course']?['id'] as num?)?.toInt() ?? 0,
           subject: '${m['subject']}',
           sender: '${m['sender']?['fullname'] ?? ''}',
+          to: _recipients(m['recipients']),
           course: '${m['course']?['shortname'] ?? ''}',
           time: _ts(m['time']),
           unread: m['unread'] == true,
         ),
     ];
   }
+
+  static String _recipients(Object? list) =>
+      [for (final r in list as List? ?? const []) '${r['fullname']}'].join('、');
 
   /// Courses with mail and their unread counts, as eCourse2's menu lists them.
   Future<List<({int id, String name, int unread})>> mailCourses() async {
@@ -367,6 +380,7 @@ class EcourseRepository {
     return (
       subject: '${m['subject']}',
       sender: '${m['sender']?['fullname'] ?? ''}',
+      to: _recipients(m['recipients']),
       course: '${m['course']?['shortname'] ?? ''}',
       time: _ts(m['time']),
       body: plainText('${m['content'] ?? ''}'),

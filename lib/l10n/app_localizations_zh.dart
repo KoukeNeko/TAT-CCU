@@ -2047,4 +2047,24 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get noMatchingPeople => '沒有符合的人';
+
+  @override
+  String get sendUnconfirmed => '無法確認是否已寄出';
+
+  @override
+  String get viewSentMail => '查看寄件備份';
+
+  @override
+  String get sentMail => '寄件備份';
+
+  @override
+  String mailTo(String names) {
+    return '給 $names';
+  }
+
+  @override
+  String get noSentMail => '沒有寄出的信件';
+
+  @override
+  String get inbox => '收件匣';
 }

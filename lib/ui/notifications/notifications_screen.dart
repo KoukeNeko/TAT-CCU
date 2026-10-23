@@ -6,6 +6,7 @@ import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 
 import '../../data/repositories/ecourse_repository.dart';
+import '../core/pair_switch.dart';
 import '../core/theme.dart';
 import '../courses/course_detail_screen.dart';
 import '../courses/forum_screen.dart';
@@ -68,7 +69,7 @@ Future<void> openEcourseLink(
   }
 }
 
-enum _Kind { mail, forum, assignment, notice }
+enum _Kind { mail, sent, forum, assignment, notice }
 
 enum _Filter { all, unread, mail, forum, assignment }
 
@@ -93,6 +94,9 @@ class MessagesScreen extends StatefulWidget {
 
 class _MessagesScreenState extends State<MessagesScreen> {
   var _filter = _Filter.all;
+
+  /// 信件 shows what was sent instead of the inbox (design/round-17 A).
+  var _sentBox = false;
 
   /// What is shown beside the list in a wide window: a mail id or a
   /// notification link, and its page.
@@ -128,7 +132,14 @@ class _MessagesScreenState extends State<MessagesScreen> {
     curve: Curves.easeOutQuart,
   );
 
-  Future<void> _openMail(int id) async {
+  Future<void> _openMail(int id, {bool sent = false}) async {
+    if (sent) {
+      if (_wide) return _show(id, MailScreen(id: id, sent: true));
+      await Navigator.of(context).push(
+        MaterialPageRoute<void>(builder: (_) => MailScreen(id: id, sent: true)),
+      );
+      return;
+    }
     setState(() => _unread[id] = false);
     final repo = context.read<EcourseRepository>();
     // Offline it stays unread on eCourse2 and shows so on the next read.
@@ -163,10 +174,11 @@ class _MessagesScreenState extends State<MessagesScreen> {
     _ => _Kind.notice,
   };
 
-  static bool _shows(_Filter filter, _Item i) => switch (filter) {
-    _Filter.all => true,
+  /// Sent mail shows only in 信件, switched to 寄件備份.
+  bool _shows(_Filter filter, _Item i) => switch (filter) {
+    _Filter.all => i.kind != _Kind.sent,
     _Filter.unread => i.unread,
-    _Filter.mail => i.kind == _Kind.mail,
+    _Filter.mail => i.kind == (_sentBox ? _Kind.sent : _Kind.mail),
     _Filter.forum => i.kind == _Kind.forum,
     _Filter.assignment => i.kind == _Kind.assignment,
   };
@@ -300,6 +312,7 @@ class _MessagesScreenState extends State<MessagesScreen> {
           (repo) async => (
             notices: await repo.notices(),
             mail: await repo.inbox(),
+            sent: await repo.sent(),
             courses: await repo.mailCourses(),
           ),
         ),
@@ -315,6 +328,16 @@ class _MessagesScreenState extends State<MessagesScreen> {
                 unread: _unread[m.id] ?? m.unread,
                 selected: m.id == _open,
                 onTap: () => _openMail(m.id),
+              ),
+            for (final m in d.sent)
+              (
+                kind: _Kind.sent,
+                title: m.subject,
+                detail: '${l10n.mailTo(m.to)}・${names[m.courseId] ?? m.course}',
+                time: m.time,
+                unread: false,
+                selected: m.id == _open,
+                onTap: () => _openMail(m.id, sent: true),
               ),
             for (final n in d.notices)
               (
@@ -351,10 +374,32 @@ class _MessagesScreenState extends State<MessagesScreen> {
             },
             children: [
               for (final f in _Filter.values)
-                _list(context, [
-                  for (final i in all)
-                    if (_shows(f, i)) i,
-                ]),
+                _list(
+                  context,
+                  [
+                    for (final i in all)
+                      if (_shows(f, i)) i,
+                  ],
+                  empty: f == _Filter.mail && _sentBox
+                      ? l10n.noSentMail
+                      : l10n.noNotifications,
+                  header: f == _Filter.mail
+                      ? Padding(
+                          padding: const EdgeInsets.only(top: Space.m),
+                          child: Align(
+                            alignment: AlignmentDirectional.centerStart,
+                            child: PairSwitch(
+                              labels: (l10n.inbox, l10n.sentMail),
+                              second: _sentBox,
+                              tone: context.tones.sun,
+                              segment: 88,
+                              onChanged: (sent) =>
+                                  setState(() => _sentBox = sent),
+                            ),
+                          ),
+                        )
+                      : null,
+                ),
             ],
           );
         },
@@ -362,7 +407,12 @@ class _MessagesScreenState extends State<MessagesScreen> {
     );
   }
 
-  Widget _list(BuildContext context, List<_Item> shown) {
+  Widget _list(
+    BuildContext context,
+    List<_Item> shown, {
+    required String empty,
+    Widget? header,
+  }) {
     final l10n = context.l10n;
     final unread = shown.where((i) => i.unread).toList();
     final earlier = shown.where((i) => !i.unread).toList();
@@ -374,12 +424,13 @@ class _MessagesScreenState extends State<MessagesScreen> {
         top: 0,
       ).copyWith(bottom: scrollPadding(context).bottom + (_wide ? 0 : 72)),
       children: [
+        ?header,
         if (shown.isEmpty)
           Padding(
             padding: const EdgeInsets.only(top: 80),
             child: Center(
               child: Text(
-                l10n.noNotifications,
+                empty,
                 style: Theme.of(context).textTheme.titleMedium,
               ),
             ),
@@ -400,6 +451,58 @@ class _MessagesScreenState extends State<MessagesScreen> {
   }
 }
 
+/// What this account sent, on its own page: opened from 寫信 when a send
+/// went unconfirmed, so the letter being written stays behind it.
+class SentMailScreen extends StatelessWidget {
+  const SentMailScreen({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    final repo = context.read<EcourseRepository>();
+    final l10n = context.l10n;
+    return Scaffold(
+      extendBodyBehindAppBar: true,
+      appBar: subBar(context, l10n.sentMail),
+      body: Loader.watch(
+        watch: () => repo.watch((repo) => repo.sent()),
+        builder: (context, sent) => ListView(
+          padding: scrollPadding(context),
+          children: [
+            if (sent.isEmpty)
+              Padding(
+                padding: const EdgeInsets.only(top: 80),
+                child: Center(
+                  child: Text(
+                    l10n.noSentMail,
+                    style: Theme.of(context).textTheme.titleMedium,
+                  ),
+                ),
+              ),
+            for (final (i, m) in sent.indexed) ...[
+              if (i > 0) const Divider(height: 1),
+              _MessageRow(
+                item: (
+                  kind: _Kind.sent,
+                  title: m.subject,
+                  detail: l10n.mailTo(m.to),
+                  time: m.time,
+                  unread: false,
+                  selected: false,
+                  onTap: () => Navigator.of(context).push(
+                    MaterialPageRoute<void>(
+                      builder: (_) => MailScreen(id: m.id, sent: true),
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ],
+        ),
+      ),
+    );
+  }
+}
+
 /// A kind square, the title and who or what it is from, and when.
 class _MessageRow extends StatelessWidget {
   const _MessageRow({required this.item});
@@ -412,6 +515,11 @@ class _MessageRow extends StatelessWidget {
     final t = context.tones;
     final (tone, icon) = switch (item.kind) {
       _Kind.mail => (t.sun, Icons.mail_outline),
+      // Grey, so sent rows read apart from received ones (round-17 A).
+      _Kind.sent => (
+        Tone(scheme.surfaceContainerHigh, t.sun.strong, t.sun.strong),
+        Icons.send_outlined,
+      ),
       _Kind.forum => (t.lilac, Icons.forum_outlined),
       _Kind.assignment => (t.peach, Icons.assignment_outlined),
       _Kind.notice => (
@@ -499,9 +607,17 @@ class _MessageRow extends StatelessWidget {
 /// One message, read in the app; opening it marks it read on eCourse2.
 /// Replying and forwarding happen on eCourse2's page for the message.
 class MailScreen extends StatelessWidget {
-  const MailScreen({super.key, required this.id, this.onUnread});
+  const MailScreen({
+    super.key,
+    required this.id,
+    this.onUnread,
+    this.sent = false,
+  });
 
   final int id;
+
+  /// One this account sent: who it went to, and nothing to mark or reply.
+  final bool sent;
 
   /// After marking it unread; when not given, the page closes with true.
   final VoidCallback? onUnread;
@@ -516,22 +632,24 @@ class MailScreen extends StatelessWidget {
       appBar: subBar(
         context,
         '',
-        action: IconButton(
-          tooltip: l10n.markUnread,
-          icon: const Icon(Icons.mark_email_unread_outlined),
-          onPressed: () async {
-            try {
-              await repo.markMailUnread(id);
-              if (onUnread != null) {
-                onUnread!();
-              } else if (context.mounted) {
-                Navigator.of(context).pop(true);
-              }
-            } catch (e) {
-              if (context.mounted) showSendError(context, e);
-            }
-          },
-        ),
+        action: sent
+            ? null
+            : IconButton(
+                tooltip: l10n.markUnread,
+                icon: const Icon(Icons.mark_email_unread_outlined),
+                onPressed: () async {
+                  try {
+                    await repo.markMailUnread(id);
+                    if (onUnread != null) {
+                      onUnread!();
+                    } else if (context.mounted) {
+                      Navigator.of(context).pop(true);
+                    }
+                  } catch (e) {
+                    if (context.mounted) showSendError(context, e);
+                  }
+                },
+              ),
       ),
       body: Loader.watch(
         watch: () => repo.watch((repo) => repo.mailMessage(id)),
@@ -539,7 +657,10 @@ class MailScreen extends StatelessWidget {
           children: [
             Expanded(
               child: ListView(
-                padding: scrollPadding(context).copyWith(bottom: 16),
+                // The reply bar below takes the bottom inset, when there is one.
+                padding: sent
+                    ? scrollPadding(context)
+                    : scrollPadding(context).copyWith(bottom: 16),
                 children: [
                   Text(
                     m.course,
@@ -559,7 +680,8 @@ class MailScreen extends StatelessWidget {
                   ),
                   const SizedBox(height: 8),
                   Text(
-                    '${m.sender}・${dateTimeLabel(context, m.time)}',
+                    '${sent ? l10n.mailTo(m.to) : m.sender}・'
+                    '${dateTimeLabel(context, m.time)}',
                     style: TextStyle(
                       color: scheme.onSurfaceVariant,
                       fontWeight: FontWeight.w700,
@@ -580,31 +702,34 @@ class MailScreen extends StatelessWidget {
                 ],
               ),
             ),
-            Padding(
-              padding: EdgeInsets.fromLTRB(
-                pageMargin,
-                Space.s,
-                pageMargin,
-                MediaQuery.paddingOf(context).bottom + Space.s,
-              ),
-              // A pill under the text beside the list; the full width on a
-              // phone.
-              child: Align(
-                alignment: AlignmentDirectional.centerStart,
-                child: SizedBox(
-                  width: onUnread != null ? null : double.infinity,
-                  child: FilledButton(
-                    onPressed: () => Navigator.of(context).push(
-                      MaterialPageRoute(
-                        builder: (_) =>
-                            MailComposeScreen(replyTo: id, replyName: m.sender),
+            if (!sent)
+              Padding(
+                padding: EdgeInsets.fromLTRB(
+                  pageMargin,
+                  Space.s,
+                  pageMargin,
+                  MediaQuery.paddingOf(context).bottom + Space.s,
+                ),
+                // A pill under the text beside the list; the full width on a
+                // phone.
+                child: Align(
+                  alignment: AlignmentDirectional.centerStart,
+                  child: SizedBox(
+                    width: onUnread != null ? null : double.infinity,
+                    child: FilledButton(
+                      onPressed: () => Navigator.of(context).push(
+                        MaterialPageRoute(
+                          builder: (_) => MailComposeScreen(
+                            replyTo: id,
+                            replyName: m.sender,
+                          ),
+                        ),
                       ),
+                      child: Text(l10n.reply),
                     ),
-                    child: Text(l10n.reply),
                   ),
                 ),
               ),
-            ),
           ],
         ),
       ),

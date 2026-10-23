@@ -2169,4 +2169,24 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get noMatchingPeople => 'No matching people';
+
+  @override
+  String get sendUnconfirmed => 'Couldn\'t confirm the letter was sent';
+
+  @override
+  String get viewSentMail => 'View Sent';
+
+  @override
+  String get sentMail => 'Sent';
+
+  @override
+  String mailTo(String names) {
+    return 'To $names';
+  }
+
+  @override
+  String get noSentMail => 'No sent mail';
+
+  @override
+  String get inbox => 'Inbox';
 }

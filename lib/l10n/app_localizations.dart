@@ -3669,6 +3669,42 @@ abstract class AppLocalizations {
   /// In zh, this message translates to:
   /// **'沒有符合的人'**
   String get noMatchingPeople;
+
+  /// No description provided for @sendUnconfirmed.
+  ///
+  /// In zh, this message translates to:
+  /// **'無法確認是否已寄出'**
+  String get sendUnconfirmed;
+
+  /// No description provided for @viewSentMail.
+  ///
+  /// In zh, this message translates to:
+  /// **'查看寄件備份'**
+  String get viewSentMail;
+
+  /// No description provided for @sentMail.
+  ///
+  /// In zh, this message translates to:
+  /// **'寄件備份'**
+  String get sentMail;
+
+  /// No description provided for @mailTo.
+  ///
+  /// In zh, this message translates to:
+  /// **'給 {names}'**
+  String mailTo(String names);
+
+  /// No description provided for @noSentMail.
+  ///
+  /// In zh, this message translates to:
+  /// **'沒有寄出的信件'**
+  String get noSentMail;
+
+  /// No description provided for @inbox.
+  ///
+  /// In zh, this message translates to:
+  /// **'收件匣'**
+  String get inbox;
 }
 
 class _AppLocalizationsDelegate

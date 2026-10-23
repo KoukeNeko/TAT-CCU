@@ -139,6 +139,34 @@ void main() {
     expect(await repo.unreadMail(), 1);
   });
 
+  test('reads the sent box with its recipients', () async {
+    // The seed's letter went from the teacher, the other account it creates.
+    final r = await http.post(
+      site.resolve('login/token.php'),
+      body: {
+        'username': 'teacher',
+        'password': fixture['password'],
+        'service': 'moodle_mobile_app',
+      },
+    );
+    final teacher = EcourseRepository(
+      MoodleClient(
+        siteUrl: site,
+        token: (jsonDecode(r.body) as Map)['token'] as String,
+      ),
+    );
+    final mail = (await teacher.sent()).firstWhere(
+      (m) => m.subject == '期中考教室異動',
+    );
+    expect(mail.to, contains('同學'));
+    expect((await teacher.mailMessage(mail.id)).to, contains('同學'));
+    // The student's inbox has it, not the student's sent box.
+    expect(
+      await repo.sent(),
+      isNot(contains(predicate<MailItem>((m) => m.id == mail.id))),
+    );
+  });
+
   test('marks a notification read', () async {
     final notice = (await repo.notices()).firstWhere(
       (n) => n.subject == '作業一已評分',
