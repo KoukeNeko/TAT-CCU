@@ -32,6 +32,9 @@ typedef _Summary = ({
   List<GradeLine> grades,
   String? total,
   int sections,
+
+  /// In the newest semester; an earlier one's has no next class.
+  bool current,
 });
 
 /// Course page, variant D2-B (design/round-11): identity-colored hero card,
@@ -61,9 +64,8 @@ class CourseDetailScreen extends StatelessWidget {
           },
           child: Loader<(Course?, _Summary)>.watch(
             watch: () => repo.watch((repo) async {
-              final course = (await repo.courses())
-                  .where((c) => c.id == courseId)
-                  .firstOrNull;
+              final all = await repo.courses();
+              final course = all.where((c) => c.id == courseId).firstOrNull;
               final (due, posts, grades, totals, sections) = await (
                 repo.dueSoon(days: 60),
                 repo.announcements(courseId),
@@ -79,6 +81,7 @@ class CourseDetailScreen extends StatelessWidget {
                   grades: grades,
                   total: totals[courseId],
                   sections: sections.length,
+                  current: course?.semester == all.firstOrNull?.semester,
                 ),
               );
             }),
@@ -96,7 +99,7 @@ class CourseDetailScreen extends StatelessWidget {
               return ListView(
                 padding: scrollPadding(context),
                 children: [
-                  _Hero(course: course),
+                  _Hero(course: course, current: summary.current),
                   const SizedBox(height: 10),
                   Row(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -276,14 +279,17 @@ class _CourseBarState extends State<_CourseBar> {
 }
 
 class _Hero extends StatelessWidget {
-  const _Hero({required this.course});
+  const _Hero({required this.course, required this.current});
 
   final Course course;
+  final bool current;
 
   @override
   Widget build(BuildContext context) {
     final tone = context.tones.forCourse(course.id);
-    final next = nextClassLabel(course, clk.clock.now(), context.l10n);
+    final next = current
+        ? nextClassLabel(course, clk.clock.now(), context.l10n)
+        : null;
     return Material(
       color: tone.fill,
       shape: const RoundedRectangleBorder(
