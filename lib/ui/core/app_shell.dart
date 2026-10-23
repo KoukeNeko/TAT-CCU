@@ -452,6 +452,18 @@ class _SidebarState extends State<_Sidebar> with AutoRefresh {
   late Stream<(List<Course>, int)> _data;
 
   @override
+  void initState() {
+    super.initState();
+    unreadChanged.addListener(refresh);
+  }
+
+  @override
+  void dispose() {
+    unreadChanged.removeListener(refresh);
+    super.dispose();
+  }
+
+  @override
   void didChangeDependencies() {
     super.didChangeDependencies();
     final repo = context.watch<EcourseRepository>();

@@ -395,6 +395,7 @@ class DemoMoodleClient extends MoodleClient {
             (4, '小考一 已評分', '深度學習導論的小考一已經有成績。', true),
           ])
             {
+              'id': i,
               'subject': subject,
               'smallmessage': text,
               'timecreated': _ts(now.subtract(Duration(hours: i * 7))),

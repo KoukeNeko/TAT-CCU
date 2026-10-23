@@ -95,6 +95,7 @@ class _TodayScreenState extends State<TodayScreen> {
       // Edge to edge: the list itself pads past the status bar.
       body: Loader<_Today>.watch(
         watch: () => repo.watch(_load),
+        refreshOn: unreadChanged,
         builder: (context, d) {
           // Today's classes from the current day, so midnight moves on too.
           final slots = [
@@ -255,8 +256,10 @@ class _TodayScreenState extends State<TodayScreen> {
                   subtitle: dateTimeLabel(context, n.time),
                   onTap: n.url == null
                       ? null
-                      : () =>
-                            openEcourseLink(context, n.url!, title: n.subject),
+                      : () {
+                          markNoticeRead(context, n.id);
+                          openEcourseLink(context, n.url!, title: n.subject);
+                        },
                 ),
               ],
             ],

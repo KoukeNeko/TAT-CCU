@@ -28,6 +28,7 @@ class Loader<T> extends StatefulWidget {
     required this.builder,
     this.bar,
     this.capsuleInBody = false,
+    this.refreshOn,
   }) : watch = (() => Stream.fromFuture(load()));
 
   const Loader.watch({
@@ -36,6 +37,7 @@ class Loader<T> extends StatefulWidget {
     required this.builder,
     this.bar,
     this.capsuleInBody = false,
+    this.refreshOn,
   });
 
   final Stream<T> Function() watch;
@@ -49,6 +51,10 @@ class Loader<T> extends StatefulWidget {
   /// For a route that is a bare Loader: the app bar to show while loading,
   /// so the back button and title arrive with the route, not after it.
   final PreferredSizeWidget Function(BuildContext context)? bar;
+
+  /// Asks again whenever this changes, such as the unread counts after
+  /// mail is read.
+  final Listenable? refreshOn;
 
   @override
   State<Loader<T>> createState() => _LoaderState<T>();
@@ -76,6 +82,7 @@ class _LoaderState<T> extends State<Loader<T>> with AutoRefresh {
   void initState() {
     super.initState();
     EcourseMaintenance.instance.addListener(_maintenanceChanged);
+    widget.refreshOn?.addListener(refresh);
     _start();
   }
 
@@ -88,6 +95,7 @@ class _LoaderState<T> extends State<Loader<T>> with AutoRefresh {
   @override
   void dispose() {
     EcourseMaintenance.instance.removeListener(_maintenanceChanged);
+    widget.refreshOn?.removeListener(refresh);
     _backTimer?.cancel();
     _sub?.cancel();
     super.dispose();

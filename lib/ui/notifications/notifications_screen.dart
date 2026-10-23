@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
@@ -11,6 +13,15 @@ import '../courses/module_screen.dart';
 import '../core/widgets.dart';
 import 'mail_compose_screen.dart';
 import '../../l10n/l10n.dart';
+
+/// Marks a notification read on eCourse2 as it is opened. Offline it stays
+/// unread there and shows so on the next read.
+void markNoticeRead(BuildContext context, int id) => unawaited(
+  context
+      .read<EcourseRepository>()
+      .markNoticeRead(id)
+      .catchError((Object e) => debugPrint('mark read: $e')),
+);
 
 /// Opens an eCourse2 link on its page in the app when there is one, and on
 /// eCourse2 otherwise. [show] takes the page instead of pushing it, such as
@@ -92,6 +103,9 @@ class _MessagesScreenState extends State<MessagesScreen> {
   /// The list keeps what it shows instead of loading again from scratch.
   final _unread = <int, bool>{};
 
+  /// Notifications opened here, read now whatever the list last said.
+  final _seen = <int>{};
+
   bool get _wide => listBeside(context);
 
   void _show(Object key, Widget page) => setState(() {
@@ -116,6 +130,13 @@ class _MessagesScreenState extends State<MessagesScreen> {
 
   Future<void> _openMail(int id) async {
     setState(() => _unread[id] = false);
+    final repo = context.read<EcourseRepository>();
+    // Offline it stays unread on eCourse2 and shows so on the next read.
+    unawaited(
+      repo
+          .markMailRead(id)
+          .catchError((Object e) => debugPrint('mark read: $e')),
+    );
     if (_wide) {
       _show(
         id,
@@ -301,16 +322,22 @@ class _MessagesScreenState extends State<MessagesScreen> {
                 title: n.subject,
                 detail: n.text,
                 time: n.time,
-                unread: !n.read,
+                unread: !n.read && !_seen.contains(n.id),
                 selected: n.url != null && n.url == _open,
                 onTap: n.url == null
                     ? null
-                    : () => openEcourseLink(
-                        context,
-                        n.url!,
-                        title: n.subject,
-                        show: _wide ? (page) => _show(n.url!, page) : null,
-                      ),
+                    : () {
+                        if (!n.read) {
+                          setState(() => _seen.add(n.id));
+                          markNoticeRead(context, n.id);
+                        }
+                        openEcourseLink(
+                          context,
+                          n.url!,
+                          title: n.subject,
+                          show: _wide ? (page) => _show(n.url!, page) : null,
+                        );
+                      },
               ),
           ]..sort((a, b) => b.time.compareTo(a.time));
           return PageView(

@@ -3,6 +3,7 @@ import '../services/html_text.dart';
 import '../services/moodle_client.dart';
 
 import 'package:clock/clock.dart' as clk;
+import 'package:flutter/foundation.dart';
 
 /// Something due soon, from `core_calendar_get_action_events_by_timesort`.
 typedef DueItem = ({
@@ -16,6 +17,7 @@ typedef DueItem = ({
 
 /// [component] is the Moodle part that sent it, such as `mod_forum`.
 typedef NoticeItem = ({
+  int id,
   String subject,
   String component,
   String text,
@@ -141,6 +143,10 @@ DateTime _ts(Object? s) =>
 /// Access to eCourse2. Every read here was verified with a student token
 /// (see CCU 研究報告彙整/eCourse2 功能分類.md); writes go through
 /// [MoodleClient.send].
+/// Ticks when this app marks mail or a notification read or unread, so
+/// the unread counts shown elsewhere ask again.
+final unreadChanged = ValueNotifier(0);
+
 class EcourseRepository {
   EcourseRepository(this._client);
 
@@ -306,6 +312,7 @@ class EcourseRepository {
     return [
       for (final n in r['notifications'] as List)
         (
+          id: (n['id'] as num).toInt(),
           subject: '${n['subject']}',
           component: '${n['component'] ?? ''}',
           text: '${n['smallmessage'] ?? ''}',
@@ -319,7 +326,8 @@ class EcourseRepository {
   Future<int> unreadMail() async =>
       (await _client.call('local_mail_get_unread_count') as num).toInt();
 
-  /// Inbox listing only; opening a message would mark it read on eCourse2.
+  /// Inbox listing only; reading a message leaves it unread on eCourse2
+  /// until [markMailRead].
   Future<List<MailItem>> inbox() async {
     final r = await _client.call('local_mail_get_index', {
       'type': 'inbox',
@@ -400,8 +408,24 @@ class EcourseRepository {
     ];
   }
 
-  Future<void> markMailUnread(int id) =>
-      _client.send('local_mail_set_unread', {'id': id, 'unread': true});
+  /// eCourse2's mail (local_mail 1.x) keeps a message unread when it is
+  /// fetched, so opening one marks it read here.
+  Future<void> markMailRead(int id) => _setMailUnread(id, false);
+
+  Future<void> markMailUnread(int id) => _setMailUnread(id, true);
+
+  Future<void> _setMailUnread(int id, bool unread) async {
+    await _client.send('local_mail_set_unread', {'id': id, 'unread': unread});
+    unreadChanged.value++;
+  }
+
+  Future<void> markNoticeRead(int id) async {
+    await _client.send('core_message_mark_notification_read', {
+      'notificationid': id,
+      'timeread': clk.clock.now().millisecondsSinceEpoch ~/ 1000,
+    });
+    unreadChanged.value++;
+  }
 
   /// Replies under [postId]; the text is sent as HTML, so it is escaped.
   Future<void> replyToPost(int postId, String subject, String text) =>
