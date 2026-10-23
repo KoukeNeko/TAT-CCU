@@ -153,7 +153,7 @@ const pageStages = {
   '0014': 'ALPHA',
   '0011': 'ALPHA',
   '0042': 'BETA',
-  '0065': 'ALPHA',
+  '0065': 'BETA',
 };
 
 /// For an in-app page: opens the school's own site for [systemId], signed
@@ -309,40 +309,41 @@ class _SystemRow extends StatelessWidget {
             ),
             const SizedBox(width: 14),
             Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
+              child: Row(
                 children: [
-                  Row(
-                    children: [
-                      Flexible(
-                        child: Text(
+                  Flexible(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
                           system.name,
                           style: const TextStyle(
                             fontSize: 15,
                             fontWeight: FontWeight.w800,
                           ),
                         ),
-                      ),
-                      if (pageStages[system.id] case final stage?) ...[
-                        const SizedBox(width: 6),
-                        StatusPill(
-                          tone: stage == 'ALPHA'
-                              ? context.tones.peach
-                              : context.tones.lilac,
-                          label: stage,
-                        ),
+                        if (system.note case final note?)
+                          Text(
+                            note,
+                            style: TextStyle(
+                              fontSize: 11,
+                              fontWeight: FontWeight.w700,
+                              color: scheme.onSurfaceVariant,
+                            ),
+                          ),
                       ],
-                    ],
-                  ),
-                  if (system.note case final note?)
-                    Text(
-                      note,
-                      style: TextStyle(
-                        fontSize: 11,
-                        fontWeight: FontWeight.w700,
-                        color: scheme.onSurfaceVariant,
-                      ),
                     ),
+                  ),
+                  // Beside the name and note together, centered on the row.
+                  if (pageStages[system.id] case final stage?) ...[
+                    const SizedBox(width: Space.s),
+                    StatusPill(
+                      tone: stage == 'ALPHA'
+                          ? context.tones.peach
+                          : context.tones.lilac,
+                      label: stage,
+                    ),
+                  ],
                 ],
               ),
             ),
