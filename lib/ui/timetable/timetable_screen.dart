@@ -86,6 +86,14 @@ class _TimetableScreenState extends State<TimetableScreen> with AutoRefresh {
     super.dispose();
   }
 
+  /// The day pages leave the tree in the week view, and a controller put
+  /// back on them would open on its first day, not the one picked.
+  void _pickView(bool week) {
+    _pages?.dispose();
+    setState(() => _pages = null);
+    context.read<AppSettings>().setTimetableWeek(week);
+  }
+
   void _pickSemester(String semester) {
     _pages?.dispose();
     setState(() {
@@ -138,7 +146,7 @@ class _TimetableScreenState extends State<TimetableScreen> with AutoRefresh {
                 if (!wide && !book) ...[
                   _ViewSwitch(
                     week: settings.timetableWeek,
-                    onChanged: settings.setTimetableWeek,
+                    onChanged: _pickView,
                   ),
                   const SizedBox(width: 8),
                 ],
