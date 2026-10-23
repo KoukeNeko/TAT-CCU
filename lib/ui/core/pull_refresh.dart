@@ -24,13 +24,18 @@ class PullRefresh extends StatefulWidget {
 /// outer one neither shows its cookie nor refreshes too.
 final _claimed = Expando<bool>();
 
+/// A vertical list, at the top or one level down: a page view's pages
+/// (the Messages filters, the timetable's days) hold their lists there.
+bool _pulls(ScrollNotification n) =>
+    n.depth <= 1 && n.metrics.axis == Axis.vertical;
+
 class _PullRefreshState extends State<PullRefresh> {
   /// How far the list is pulled, as a share of the distance that arms it.
   var _pull = 0.0;
   RefreshIndicatorStatus? _status;
 
   bool _track(ScrollNotification n) {
-    if (n.depth != 0 || n.metrics.axis != Axis.vertical) return false;
+    if (!_pulls(n)) return false;
     if (_claimed[n] ?? false) return false;
     _claimed[n] = true;
     // RefreshIndicator arms at a quarter of the viewport.
@@ -71,9 +76,7 @@ class _PullRefreshState extends State<PullRefresh> {
         NotificationListener<ScrollNotification>(
           onNotification: _track,
           child: RefreshIndicator.noSpinner(
-            notificationPredicate: (n) =>
-                !(_claimed[n] ?? false) &&
-                defaultScrollNotificationPredicate(n),
+            notificationPredicate: (n) => !(_claimed[n] ?? false) && _pulls(n),
             onRefresh: widget.onRefresh,
             onStatusChange: _changed,
             child: widget.child,
