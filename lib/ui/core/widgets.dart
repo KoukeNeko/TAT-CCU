@@ -17,15 +17,18 @@ export 'loader.dart';
 export 'pull_refresh.dart';
 export 'shapes.dart';
 
+/// A bar action with the controls' press: themed buttons have their own
+/// (button_press.dart), anything else sinks and ticks here.
+Widget _pressable(Widget action) =>
+    action is ButtonStyleButton ? action : PressFeedback(child: action);
+
 /// Top-level tab title: large, no back button.
 AppBar topBar(
   String title, {
   PreferredSizeWidget? bottom,
   List<Widget>? actions,
 }) => AppBar(
-  actions: [
-    for (final a in actions ?? const <Widget>[]) PressFeedback(child: a),
-  ],
+  actions: [for (final a in actions ?? const <Widget>[]) _pressable(a)],
   automaticallyImplyLeading: false,
   backgroundColor: Colors.transparent,
   scrolledUnderElevation: 0,
@@ -120,7 +123,7 @@ AppBar subBar(
           child: Text(title, key: ValueKey(title)),
         ),
       ),
-      if (action != null) PressFeedback(child: action),
+      if (action != null) _pressable(action),
     ],
   ),
 );

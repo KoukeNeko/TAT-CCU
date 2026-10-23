@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../domain/models/course.dart';
+import 'button_press.dart';
 
 // Direction C "形狀卡片" (design/設計說明.md): Material 3 Expressive color
 // blocks and rounded shapes, built on stock widgets because Flutter's
@@ -234,6 +235,12 @@ ThemeData buildTheme(Brightness brightness, {String fontFamily = fontTw}) {
     fontFamilyFallback: [fontFamily == fontTw ? fontJp : fontTw],
   );
   final text = base.textTheme;
+  final buttonText = TextStyle(
+    fontFamily: fontFamily,
+    fontFamilyFallback: base.textTheme.bodyMedium?.fontFamilyFallback,
+    fontWeight: FontWeight.w900,
+    fontSize: 16,
+  );
   return base.copyWith(
     extensions: [tones],
     // No ripple and no press highlight: the main controls sink with a
@@ -307,27 +314,47 @@ ThemeData buildTheme(Brightness brightness, {String fontFamily = fontTw}) {
         borderRadius: BorderRadius.all(Radius.circular(Corners.card)),
       ),
     ),
-    // No pressed or hovered overlay on any button either; see splashFactory.
+    // Buttons (design/round-18 A): a lilac capsule with a heavy label; on
+    // a press it draws in, deepens and ticks (button_press.dart). No
+    // hovered overlay; see splashFactory.
     filledButtonTheme: FilledButtonThemeData(
-      style: FilledButton.styleFrom(
-        minimumSize: const Size(64, 52),
-        shape: const StadiumBorder(),
-        // The family too: a button's text style replaces the theme's, so
-        // without it the label falls back to the platform font.
-        textStyle: TextStyle(
-          fontFamily: fontFamily,
-          fontFamilyFallback: base.textTheme.bodyMedium?.fontFamilyFallback,
-          fontWeight: FontWeight.w800,
-          fontSize: 16,
-        ),
-        overlayColor: Colors.transparent,
-      ),
+      style:
+          FilledButton.styleFrom(
+            minimumSize: const Size(64, 48),
+            // The family too: a button's text style replaces the theme's, so
+            // without it the label falls back to the platform font.
+            textStyle: buttonText,
+          ).copyWith(
+            shape: pressShape,
+            backgroundBuilder: pressHaptic,
+            overlayColor: WidgetStateProperty.resolveWith(
+              (states) => states.contains(WidgetState.pressed)
+                  ? tones.lilac.fill.withValues(alpha: 0.3)
+                  : Colors.transparent,
+            ),
+          ),
     ),
+    // Only the label until pressed; then a soft lilac capsule behind it.
     textButtonTheme: TextButtonThemeData(
-      style: TextButton.styleFrom(overlayColor: Colors.transparent),
+      style:
+          TextButton.styleFrom(
+            minimumSize: const Size(48, 48),
+            padding: const EdgeInsets.symmetric(horizontal: Space.l),
+            textStyle: buttonText,
+            overlayColor: Colors.transparent,
+          ).copyWith(
+            shape: pressShape,
+            backgroundBuilder: pressHaptic,
+            backgroundColor: WidgetStateProperty.resolveWith(
+              (states) => states.contains(WidgetState.pressed)
+                  ? tones.lilac.fill.withValues(alpha: 0.6)
+                  : Colors.transparent,
+            ),
+          ),
     ),
     outlinedButtonTheme: OutlinedButtonThemeData(
-      style: OutlinedButton.styleFrom(overlayColor: Colors.transparent),
+      style: OutlinedButton.styleFrom(overlayColor: Colors.transparent)
+          .copyWith(shape: pressShape, backgroundBuilder: pressHaptic),
     ),
     iconButtonTheme: IconButtonThemeData(
       style: IconButton.styleFrom(overlayColor: Colors.transparent),

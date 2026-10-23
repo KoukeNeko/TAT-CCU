@@ -485,16 +485,13 @@ class _Hero extends StatelessWidget {
         const SizedBox(height: Space.xs),
         Text(detail, style: _meta.copyWith(height: 1.4)),
         const SizedBox(height: Space.l),
-        PressFeedback(
-          scale: 0.97,
-          child: FilledButton(
-            style: FilledButton.styleFrom(
-              backgroundColor: tone.strong,
-              foregroundColor: tone.fill,
-            ),
-            onPressed: action.$2,
-            child: Text('${action.$1} ↗'),
+        FilledButton(
+          style: FilledButton.styleFrom(
+            backgroundColor: tone.strong,
+            foregroundColor: tone.fill,
           ),
+          onPressed: action.$2,
+          child: Text('${action.$1} ↗'),
         ),
       ],
     ),

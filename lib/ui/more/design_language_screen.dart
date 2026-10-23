@@ -733,9 +733,7 @@ class DesignPartScreen extends StatelessWidget {
         children: [
           const RoundBackButton(),
           const SizedBox(width: Space.m),
-          PressFeedback(
-            child: FilledButton(onPressed: () {}, child: Text(l10n.renew)),
-          ),
+          FilledButton(onPressed: () {}, child: Text(l10n.renew)),
         ],
       ),
       const SectionLabel('EmptyState'),

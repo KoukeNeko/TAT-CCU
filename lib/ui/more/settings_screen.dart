@@ -370,18 +370,12 @@ class _Notifications extends StatelessWidget {
               Space.m,
               Space.m,
             ),
-            child: PressFeedback(
-              scale: 0.97,
-              child: SizedBox(
-                width: double.infinity,
-                child: FilledButton.tonalIcon(
-                  onPressed: () => _sendTest(context),
-                  icon: const Icon(
-                    Icons.notifications_active_outlined,
-                    size: 18,
-                  ),
-                  label: Text(l10n.notifyTest),
-                ),
+            child: SizedBox(
+              width: double.infinity,
+              child: FilledButton.tonalIcon(
+                onPressed: () => _sendTest(context),
+                icon: const Icon(Icons.notifications_active_outlined, size: 18),
+                label: Text(l10n.notifyTest),
               ),
             ),
           ),

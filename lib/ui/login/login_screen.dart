@@ -196,25 +196,16 @@ class _LoginScreenState extends State<LoginScreen> {
         ),
         const SizedBox(height: 8),
       ],
-      // Both sink and tick like the bar above them.
-      PressFeedback(
-        scale: 0.97,
-        enabled: !_busy,
-        child: (_maintenance ? FilledButton.tonal : FilledButton.new)(
-          onPressed: _busy ? null : _signIn,
-          child: Text(context.l10n.signInWithPortal),
-        ),
+      (_maintenance ? FilledButton.tonal : FilledButton.new)(
+        onPressed: _busy ? null : _signIn,
+        child: Text(context.l10n.signInWithPortal),
       ),
       const SizedBox(height: 4),
-      PressFeedback(
-        scale: 0.97,
-        enabled: !_busy,
-        child: TextButton(
-          onPressed: _busy
-              ? null
-              : () => context.read<EcourseAuthRepository>().setDemo(true),
-          child: Text(context.l10n.demoEnter),
-        ),
+      TextButton(
+        onPressed: _busy
+            ? null
+            : () => context.read<EcourseAuthRepository>().setDemo(true),
+        child: Text(context.l10n.demoEnter),
       ),
     ],
   );
