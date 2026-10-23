@@ -77,6 +77,17 @@ GoRouter buildRouter(EcourseAuthRepository auth) => GoRouter(
             GoRoute(
               path: '/messages',
               builder: (_, _) => const MessagesScreen(),
+              routes: [
+                // A post opened from a notification, which does not say its
+                // course; back returns to the messages.
+                GoRoute(
+                  path: 'discussions/:did',
+                  builder: (_, state) => DiscussionScreen(
+                    discussionId: int.parse(state.pathParameters['did']!),
+                    title: state.extra as String?,
+                  ),
+                ),
+              ],
             ),
           ],
         ),
