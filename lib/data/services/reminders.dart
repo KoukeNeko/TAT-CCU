@@ -45,8 +45,10 @@ class Reminders {
     // Class times are Taiwan wall-clock times.
     tz.setLocalLocation(tz.getLocation('Asia/Taipei'));
     await _plugin.initialize(
-      settings: const InitializationSettings(
-        android: AndroidInitializationSettings('@drawable/ic_notification'),
+      settings: InitializationSettings(
+        android: const AndroidInitializationSettings(
+          '@drawable/ic_notification',
+        ),
         // Asked for when the student turns a notification on, not at launch.
         iOS: darwin,
         macOS: darwin,
@@ -55,6 +57,12 @@ class Reminders {
           appUserModelId: 'io.github.koukeneko.tatCcu',
           // Identifies the app's toast activator; never change it.
           guid: '0fda9825-0624-44e3-854c-af68fb1a3c52',
+          // A file path, not an asset key: the logo as bundled beside the
+          // exe. Without it the toast has an empty space for the icon.
+          iconPath: Platform.isWindows
+              ? '${File(Platform.resolvedExecutable).parent.path}'
+                    r'\data\flutter_assets\assets\logo.png'
+              : null,
         ),
       ),
     );
