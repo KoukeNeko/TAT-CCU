@@ -1,5 +1,4 @@
-Fixes
+New
 
-📶 Dorm network no longer shows an error right after signing in
-🧩 iOS: the 今日課表 widget shows correctly on tinted and clear home screens
-🔔 Windows: notifications show the app icon
+🔄 Settings checks for a new version and links to the update
+📝 Quiz pages open the quiz in eCourse2
