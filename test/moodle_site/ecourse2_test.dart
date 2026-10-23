@@ -115,16 +115,43 @@ void main() {
     expect(thread.comments.where((c) => c.id == mine.id), isEmpty);
   });
 
-  test('reads mail and marks it unread again', () async {
+  test('marks mail read and unread', () async {
     final inbox = await repo.inbox();
     final mail = inbox.firstWhere((m) => m.subject == '期中考教室異動');
     expect(mail.sender, contains('王'));
 
+    // Fetching a message leaves it unread on local_mail 1.x.
     final message = await repo.mailMessage(mail.id);
     expect(message.body, contains('創新大樓 110'));
+    expect(
+      (await repo.inbox()).firstWhere((m) => m.id == mail.id).unread,
+      isTrue,
+    );
+
+    await repo.markMailRead(mail.id);
+    expect(await repo.unreadMail(), 0);
+    expect(
+      (await repo.inbox()).firstWhere((m) => m.id == mail.id).unread,
+      isFalse,
+    );
 
     await repo.markMailUnread(mail.id);
-    expect(await repo.unreadMail(), greaterThan(0));
+    expect(await repo.unreadMail(), 1);
+  });
+
+  test('marks a notification read', () async {
+    final notice = (await repo.notices()).firstWhere(
+      (n) => n.subject == '作業一已評分',
+    );
+    if (notice.read) return markTestSkipped('already read in an earlier run');
+    final before = await repo.unreadNotices();
+
+    await repo.markNoticeRead(notice.id);
+    expect(await repo.unreadNotices(), before - 1);
+    expect(
+      (await repo.notices()).firstWhere((n) => n.id == notice.id).read,
+      isTrue,
+    );
   });
 
   test('checks in through the attendance QR link', () async {

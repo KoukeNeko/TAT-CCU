@@ -130,6 +130,22 @@ $message->save('期中考教室異動', '<p>期中考改在創新大樓 110。</
 $message->add_recipient('to', $student->id);
 $message->send($now);
 
+// A notification in the student's popup list, like eCourse2 sends for posts.
+$notice = new \core\message\message();
+$notice->component = 'moodle';
+$notice->name = 'instantmessage';
+$notice->userfrom = $teacher;
+$notice->userto = $student;
+$notice->subject = '作業一已評分';
+$notice->fullmessage = '軟體分析與最佳化的作業一已經有成績。';
+$notice->fullmessageformat = FORMAT_PLAIN;
+$notice->fullmessagehtml = '';
+$notice->smallmessage = '軟體分析與最佳化的作業一已經有成績。';
+$notice->notification = 1;
+$notice->contexturl = (new moodle_url('/mod/assign/view.php', ['id' => $assign->cmid]))->out(false);
+$notice->contexturlname = '作業一：效能分析';
+message_send($notice);
+
 echo json_encode([
     'site' => $CFG->wwwroot,
     'username' => 'student',

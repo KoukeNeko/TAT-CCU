@@ -20,6 +20,8 @@ $CFG->dataroot = '/var/www/moodledata';
 $CFG->admin    = 'admin';
 $CFG->directorypermissions = 0777;
 
+// No mail server: notifications go to the popup list only.
+$CFG->noemailever = true;
 $CFG->debug = E_ALL;
 $CFG->debugdisplay = 0;
 
