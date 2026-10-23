@@ -4,6 +4,7 @@ import 'dart:math' as math;
 import 'package:clock/clock.dart' as clk;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 
 import '../../data/repositories/ecourse_repository.dart';
@@ -13,7 +14,6 @@ import '../core/auto_refresh.dart';
 import '../core/theme.dart';
 import '../core/widgets.dart';
 import '../../l10n/l10n.dart';
-import '../../routing/open_page.dart';
 
 /// Month calendar with the selected day's events below
 /// (design/round-11, variant K1). Swipe the month card to change month.
@@ -681,8 +681,7 @@ class _DayEvents extends StatelessWidget {
                   radius: Corners.row,
                   padding: cardPadding,
                   onTap: e.cmid != null && e.courseId != 0
-                      ? () => openPage(
-                          context,
+                      ? () => context.push(
                           '/courses/${e.courseId}/modules/${e.cmid}',
                         )
                       : e.url == null

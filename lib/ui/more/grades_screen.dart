@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 
 import '../../data/repositories/ecourse_repository.dart';
@@ -7,7 +8,6 @@ import '../core/theme.dart';
 import '../core/widgets.dart';
 import '../../l10n/l10n.dart';
 import '../core/campus_systems.dart';
-import '../../routing/open_page.dart';
 
 /// 本學期: eCourse2 running grades per course. 歷年: the semester grades in
 /// 成績查詢, still the school's website.
@@ -70,7 +70,7 @@ class _GradesScreenState extends State<GradesScreen> {
                     return ToneBlock(
                       tone: tone,
                       padding: cardPadding,
-                      onTap: () => openPage(context, '/courses/${c.id}'),
+                      onTap: () => context.push('/courses/${c.id}'),
                       child: Row(
                         children: [
                           Expanded(

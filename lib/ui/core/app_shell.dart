@@ -13,7 +13,6 @@ import 'auto_refresh.dart';
 import 'theme.dart';
 import 'widgets.dart';
 import '../../l10n/l10n.dart';
-import '../../routing/open_page.dart';
 
 typedef _Tab = (IconData icon, String label, Tone tone, ShapeBorder shape);
 
@@ -498,7 +497,7 @@ class _SidebarState extends State<_Sidebar> with AutoRefresh {
     if (widget.content >= splitLayout) {
       context.go('/courses/$id/contents');
     } else if (widget.course == null) {
-      openPage(context, '/courses/$id');
+      context.push('/courses/$id');
     } else {
       context.pushReplacement('/courses/$id');
     }

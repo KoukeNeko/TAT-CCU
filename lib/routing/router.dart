@@ -99,84 +99,70 @@ GoRouter buildRouter(EcourseAuthRepository auth) => GoRouter(
             ),
             // Courses open from the timetable's search and from anywhere
             // else; pushing one shows the 課表 tab.
-            GoRoute(
-              path: '/courses',
-              builder: (_, _) => const CoursesScreen(),
-              routes: [
-                // Desktop: the course page stays at the left and its lists
-                // open beside it. Course 0 only carries discussions opened
-                // from a notification, so it has no page to show.
-                ShellRoute(
-                  builder: (context, state, child) {
-                    final id = int.parse(state.pathParameters['id']!);
-                    if (id == 0) return child;
-                    return _listBeside(
-                      context,
-                      // Keyed: its data loads once, so another course
-                      // needs a page of its own.
-                      list: CourseDetailScreen(
-                        key: ValueKey(id),
-                        courseId: id,
-                        open: state.uri.path,
-                      ),
-                      root: ':id',
-                      atRoot: state.uri.path == '/courses/$id',
-                      child: child,
-                    );
-                  },
+            GoRoute(path: '/courses', builder: (_, _) => const CoursesScreen()),
+            // A course, apart from the list above so opening one does not
+            // build the list under it. Desktop: the course page stays at the
+            // left and its lists open beside it.
+            ..._besideList(
+              [
+                GoRoute(
+                  path: '/courses/:id',
+                  builder: (_, state) => CourseDetailScreen(
+                    courseId: int.parse(state.pathParameters['id']!),
+                  ),
                   routes: [
                     GoRoute(
-                      path: ':id',
-                      builder: (_, state) => CourseDetailScreen(
+                      path: 'modules/:cmid',
+                      builder: (_, state) => ModuleScreen(
                         courseId: int.parse(state.pathParameters['id']!),
+                        cmid: int.parse(state.pathParameters['cmid']!),
+                        title: state.extra as String?,
                       ),
-                      routes: [
-                        GoRoute(
-                          path: 'modules/:cmid',
-                          builder: (_, state) => ModuleScreen(
-                            courseId: int.parse(state.pathParameters['id']!),
-                            cmid: int.parse(state.pathParameters['cmid']!),
-                            title: state.extra as String?,
-                          ),
-                        ),
-                        GoRoute(
-                          path: 'attendance/:cmid',
-                          builder: (_, state) => AttendanceScreen(
-                            cmid: int.parse(state.pathParameters['cmid']!),
-                            title: state.extra as String?,
-                          ),
-                        ),
-                        GoRoute(
-                          path: 'absence/:cmid',
-                          builder: (_, state) => AbsenceScreen(
-                            cmid: int.parse(state.pathParameters['cmid']!),
-                            title: state.extra as String?,
-                          ),
-                        ),
-                        GoRoute(
-                          path: 'discussions/:did',
-                          builder: (_, state) => DiscussionScreen(
-                            discussionId: int.parse(
-                              state.pathParameters['did']!,
-                            ),
-                            title: state.extra as String?,
-                          ),
-                        ),
-                        for (final part in CoursePart.values)
-                          GoRoute(
-                            path: part.name,
-                            // Keyed like the course page beside it.
-                            builder: (_, state) => CoursePartScreen(
-                              key: ValueKey(state.uri.path),
-                              courseId: int.parse(state.pathParameters['id']!),
-                              part: part,
-                            ),
-                          ),
-                      ],
                     ),
+                    GoRoute(
+                      path: 'attendance/:cmid',
+                      builder: (_, state) => AttendanceScreen(
+                        cmid: int.parse(state.pathParameters['cmid']!),
+                        title: state.extra as String?,
+                      ),
+                    ),
+                    GoRoute(
+                      path: 'absence/:cmid',
+                      builder: (_, state) => AbsenceScreen(
+                        cmid: int.parse(state.pathParameters['cmid']!),
+                        title: state.extra as String?,
+                      ),
+                    ),
+                    GoRoute(
+                      path: 'discussions/:did',
+                      builder: (_, state) => DiscussionScreen(
+                        discussionId: int.parse(state.pathParameters['did']!),
+                        title: state.extra as String?,
+                      ),
+                    ),
+                    for (final part in CoursePart.values)
+                      GoRoute(
+                        path: part.name,
+                        // Keyed like the course page beside it.
+                        builder: (_, state) => CoursePartScreen(
+                          key: ValueKey(state.uri.path),
+                          courseId: int.parse(state.pathParameters['id']!),
+                          part: part,
+                        ),
+                      ),
                   ],
                 ),
               ],
+              // Keyed: its data loads once, so another course needs a page
+              // of its own.
+              list: (state) => CourseDetailScreen(
+                key: ValueKey(state.pathParameters['id']),
+                courseId: int.parse(state.pathParameters['id']!),
+                open: state.uri.path,
+              ),
+              root: '/courses/:id',
+              atRoot: (state) =>
+                  state.uri.path == '/courses/${state.pathParameters['id']}',
             ),
           ],
         ),
@@ -192,15 +178,8 @@ GoRouter buildRouter(EcourseAuthRepository auth) => GoRouter(
           routes: [
             // Desktop direction A: the More list stays at the left and its
             // pages open beside it.
-            ShellRoute(
-              builder: (context, state, child) => _listBeside(
-                context,
-                list: MoreScreen(open: state.uri.path),
-                root: '/more',
-                atRoot: state.uri.path == '/more',
-                child: child,
-              ),
-              routes: [
+            ..._besideList(
+              [
                 GoRoute(
                   path: '/more',
                   builder: (_, _) => const MoreScreen(),
@@ -384,6 +363,9 @@ GoRouter buildRouter(EcourseAuthRepository auth) => GoRouter(
                   ],
                 ),
               ],
+              list: (state) => MoreScreen(open: state.uri.path),
+              root: '/more',
+              atRoot: (state) => state.uri.path == '/more',
             ),
           ],
         ),
@@ -394,6 +376,38 @@ GoRouter buildRouter(EcourseAuthRepository auth) => GoRouter(
 
 /// Desktop direction A: a list page at the left and the page opened from
 /// it beside it, at [root]'s route; a narrow area shows only [child].
+/// [routes] with every page set beside [list] on a wide screen. Each page
+/// draws its own list instead of sharing a ShellRoute: a ShellRoute's
+/// navigator has one key, so its pages could not also be pushed onto
+/// another tab, which would build it twice and leave its own tab blank.
+List<RouteBase> _besideList(
+  List<RouteBase> routes, {
+  required Widget Function(GoRouterState state) list,
+  required String root,
+  required bool Function(GoRouterState state) atRoot,
+}) => [
+  for (final route in routes)
+    if (route is GoRoute)
+      GoRoute(
+        path: route.path,
+        builder: (context, state) => _listBeside(
+          context,
+          list: list(state),
+          root: root,
+          atRoot: atRoot(state),
+          child: route.builder!(context, state),
+        ),
+        routes: _besideList(
+          route.routes,
+          list: list,
+          root: root,
+          atRoot: atRoot,
+        ),
+      )
+    else
+      route,
+];
+
 Widget _listBeside(
   BuildContext context, {
   required Widget list,
