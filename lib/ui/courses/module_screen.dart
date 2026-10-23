@@ -53,21 +53,6 @@ class ModuleScreen extends StatelessWidget {
       builder: (context, module) => Scaffold(
         extendBodyBehindAppBar: true,
         appBar: subBar(context, module?.name ?? ''),
-        // A quiz is taken on eCourse2, signed in through the campus web view.
-        floatingActionButton: module?.type == 'quiz' && module?.url != null
-            ? Padding(
-                // Clear the floating nav bar.
-                padding: EdgeInsets.only(
-                  bottom: MediaQuery.paddingOf(context).bottom,
-                ),
-                child: FloatingAction(
-                  icon: Icons.open_in_new,
-                  label: context.l10n.openInEcourse,
-                  onPressed: () =>
-                      openCampusPage(context, module!.url!, module.name),
-                ),
-              )
-            : null,
         body: CapsuleArea(
           child: switch (module?.type) {
             null => EmptyState(context.l10n.itemNotFound),
@@ -82,7 +67,13 @@ class ModuleScreen extends StatelessWidget {
             'quiz' => Loader<Quiz>.watch(
               watch: () =>
                   repo.watch((repo) => repo.quiz(courseId, module!.instance)),
-              builder: (context, q) => _QuizBody(quiz: q),
+              builder: (context, q) => _QuizBody(
+                quiz: q,
+                // Taken on eCourse2, signed in through the campus web view.
+                onOpen: module!.url == null
+                    ? null
+                    : () => openCampusPage(context, module.url!, module.name),
+              ),
             ),
             _ => _FilesBody(files: module!.files),
           },
@@ -327,16 +318,19 @@ class _CommentsState extends State<_Comments> {
 }
 
 class _QuizBody extends StatelessWidget {
-  const _QuizBody({required this.quiz});
+  const _QuizBody({required this.quiz, this.onOpen});
 
   final Quiz quiz;
+
+  /// Opens the quiz on eCourse2; its button shows once the quiz has loaded.
+  final VoidCallback? onOpen;
 
   @override
   Widget build(BuildContext context) {
     final q = quiz;
     final l10n = context.l10n;
     final now = clk.clock.now();
-    return ListView(
+    final list = ListView(
       padding: scrollPadding(context),
       children: [
         _Progress(
@@ -380,6 +374,23 @@ class _QuizBody extends StatelessWidget {
           SectionLabel(l10n.description),
           _Text(q.intro),
         ],
+      ],
+    );
+    final open = onOpen;
+    if (open == null) return list;
+    // As the forum's 新討論: over the list, clear of the nav bar.
+    return Stack(
+      children: [
+        list,
+        Positioned(
+          right: pageMargin,
+          bottom: MediaQuery.paddingOf(context).bottom + 16,
+          child: FloatingAction(
+            icon: Icons.open_in_new,
+            label: l10n.openInEcourse,
+            onPressed: open,
+          ),
+        ),
       ],
     );
   }
