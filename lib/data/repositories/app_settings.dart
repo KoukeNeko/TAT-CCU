@@ -10,6 +10,7 @@ class AppSettings extends ChangeNotifier {
   static const _dueKey = 'notify_due';
   static const _classKey = 'notify_class';
   static const _newsKey = 'notify_news';
+  static const _weekKey = 'timetable_week';
 
   ThemeMode themeMode = ThemeMode.system;
   Locale? locale;
@@ -17,6 +18,9 @@ class AppSettings extends ChangeNotifier {
   /// Local reminders before deadlines and classes, and the background
   /// check for new eCourse2 notices and mail. Off until the student asks.
   bool notifyDue = false, notifyClass = false, notifyNews = false;
+
+  /// The phone timetable shows the whole week instead of one day.
+  bool timetableWeek = false;
 
   Future<void> load() async {
     final prefs = await SharedPreferences.getInstance();
@@ -28,6 +32,7 @@ class AppSettings extends ChangeNotifier {
     notifyDue = prefs.getBool(_dueKey) ?? false;
     notifyClass = prefs.getBool(_classKey) ?? false;
     notifyNews = prefs.getBool(_newsKey) ?? false;
+    timetableWeek = prefs.getBool(_weekKey) ?? false;
     notifyListeners();
   }
 
@@ -49,6 +54,12 @@ class AppSettings extends ChangeNotifier {
     } else {
       await prefs.setString(_localeKey, value.languageCode);
     }
+  }
+
+  Future<void> setTimetableWeek(bool week) async {
+    timetableWeek = week;
+    notifyListeners();
+    await (await SharedPreferences.getInstance()).setBool(_weekKey, week);
   }
 
   Future<void> setNotify({bool? due, bool? classes, bool? news}) async {

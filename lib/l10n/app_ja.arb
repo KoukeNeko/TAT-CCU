@@ -157,6 +157,8 @@
   "semesterLabel": "{year}学年度 {term, select, 1{前期} 2{後期} other{夏期}}",
   "sectionGeneral": "一般",
   "eventLabel": "{kind, select, assign{課題} quiz{小テスト} course{コースの予定} user{個人の予定} site{全学の予定} other{活動}}{action, select, due{締切} close{終了} open{開始} other{}}",
+  "timetableDay": "日",
+  "timetableWeek": "週",
   "weekdayShort": "{day, select, 1{月} 2{火} 3{水} 4{木} 5{金} 6{土} 7{日} other{}}",
   "weekdayFull": "{day, select, 1{月曜} 2{火曜} 3{水曜} 4{木曜} 5{金曜} 6{土曜} 7{日曜} other{}}",
   "leave": "休暇",

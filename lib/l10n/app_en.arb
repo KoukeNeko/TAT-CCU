@@ -157,6 +157,8 @@
   "semesterLabel": "{term, select, 1{Fall} 2{Spring} other{Summer}} of year {year}",
   "sectionGeneral": "General",
   "eventLabel": "{kind, select, assign{Assignment} quiz{Quiz} course{Course event} user{Personal event} site{Campus event} other{Activity}}{action, select, due{ due} close{ closes} open{ opens} other{}}",
+  "timetableDay": "Day",
+  "timetableWeek": "Week",
   "weekdayShort": "{day, select, 1{Mon} 2{Tue} 3{Wed} 4{Thu} 5{Fri} 6{Sat} 7{Sun} other{}}",
   "weekdayFull": "{day, select, 1{Mon} 2{Tue} 3{Wed} 4{Thu} 5{Fri} 6{Sat} 7{Sun} other{}}",
   "leave": "Leave",

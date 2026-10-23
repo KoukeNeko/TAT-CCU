@@ -628,6 +628,12 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String get timetableDay => 'Day';
+
+  @override
+  String get timetableWeek => 'Week';
+
+  @override
   String weekdayShort(String day) {
     String _temp0 = intl.Intl.selectLogic(day, {
       '1': 'Mon',

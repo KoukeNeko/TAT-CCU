@@ -7,9 +7,11 @@ import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 
+import '../../data/repositories/app_settings.dart';
 import '../../data/repositories/ecourse_repository.dart';
 import '../../domain/models/course.dart';
 import '../../domain/models/timetable.dart';
+import '../core/app_shell.dart';
 import '../core/auto_refresh.dart';
 import '../core/theme.dart';
 import '../core/widgets.dart';
@@ -126,11 +128,20 @@ class _TimetableScreenState extends State<TimetableScreen> with AutoRefresh {
           final fold = foldOf(context);
           final book = fold?.posture == FoldPosture.book;
           final wide = !book && width >= splitLayout;
+          final settings = context.watch<AppSettings>();
+          final phoneWeek = !wide && !book && settings.timetableWeek;
           return Scaffold(
             extendBodyBehindAppBar: true,
             appBar: topBar(
               context.l10n.navTimetable,
               actions: [
+                if (!wide && !book) ...[
+                  _ViewSwitch(
+                    week: settings.timetableWeek,
+                    onChanged: settings.setTimetableWeek,
+                  ),
+                  const SizedBox(width: 8),
+                ],
                 IconButton(
                   tooltip: context.l10n.searchCourses,
                   style: IconButton.styleFrom(
@@ -160,7 +171,7 @@ class _TimetableScreenState extends State<TimetableScreen> with AutoRefresh {
               bottom: wide
                   ? null
                   : PreferredSize(
-                      preferredSize: const Size.fromHeight(64),
+                      preferredSize: const Size.fromHeight(_dayRow + Space.m),
                       child: Padding(
                         padding: EdgeInsets.fromLTRB(
                           Space.m,
@@ -168,30 +179,32 @@ class _TimetableScreenState extends State<TimetableScreen> with AutoRefresh {
                           book ? width - fold!.at + Space.m : Space.m,
                           Space.m,
                         ),
-                        child: Row(
-                          children: [
-                            for (final (i, d) in weekdays.indexed)
-                              Expanded(
-                                child: Padding(
-                                  padding: const EdgeInsets.symmetric(
-                                    horizontal: 3,
-                                  ),
-                                  child: _DayPill(
-                                    label: weekdayShort(context, d),
-                                    selected: i == page,
-                                    busy: days.contains(d),
-                                    onTap: () => pages.animateToPage(
-                                      i,
-                                      duration: const Duration(
-                                        milliseconds: 420,
+                        child: phoneWeek
+                            ? _WeekHeader(weekdays: weekdays)
+                            : Row(
+                                children: [
+                                  for (final (i, d) in weekdays.indexed)
+                                    Expanded(
+                                      child: Padding(
+                                        padding: const EdgeInsets.symmetric(
+                                          horizontal: 3,
+                                        ),
+                                        child: _DayPill(
+                                          label: weekdayShort(context, d),
+                                          selected: i == page,
+                                          busy: days.contains(d),
+                                          onTap: () => pages.animateToPage(
+                                            i,
+                                            duration: const Duration(
+                                              milliseconds: 420,
+                                            ),
+                                            curve: Curves.easeOutQuart,
+                                          ),
+                                        ),
                                       ),
-                                      curve: Curves.easeOutQuart,
                                     ),
-                                  ),
-                                ),
+                                ],
                               ),
-                          ],
-                        ),
                       ),
                     ),
             ),
@@ -220,6 +233,9 @@ class _TimetableScreenState extends State<TimetableScreen> with AutoRefresh {
                   if (wide) {
                     return _week(context, courses, weekdays, shared.data);
                   }
+                  if (phoneWeek) {
+                    return _phoneWeek(context, courses, weekdays);
+                  }
                   if (!book) return days;
                   return Row(
                     crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -246,6 +262,35 @@ class _TimetableScreenState extends State<TimetableScreen> with AutoRefresh {
           );
         },
       ),
+    );
+  }
+
+  /// Phone week (design/round-15 timetable-week A): the week grid filling
+  /// the screen under the weekdays in the bar; a class opens its course.
+  Widget _phoneWeek(
+    BuildContext context,
+    List<Course> courses,
+    List<int> weekdays,
+  ) {
+    final now = clk.clock.now();
+    return LayoutBuilder(
+      builder: (context, box) {
+        final padding = scrollPadding(context, maxWidth: double.infinity);
+        return ListView(
+          padding: padding,
+          children: [
+            _WeekGrid(
+              courses: courses,
+              weekdays: weekdays,
+              today: now.weekday,
+              picked: null,
+              compact: true,
+              fill: box.maxHeight - padding.vertical,
+              onPick: (slot) => context.push('/courses/${slot.course.id}'),
+            ),
+          ],
+        );
+      },
     );
   }
 
@@ -352,6 +397,7 @@ class _WeekGrid extends StatelessWidget {
     required this.picked,
     required this.onPick,
     this.fill,
+    this.compact = false,
   });
 
   final List<Course> courses;
@@ -363,6 +409,13 @@ class _WeekGrid extends StatelessWidget {
   /// Height for the hours to stretch to; they never get shorter than
   /// [_perMinute].
   final double? fill;
+
+  /// A phone's width: a narrower hour column labelled by the hour alone,
+  /// and the weekdays left to the app bar.
+  final bool compact;
+
+  /// The compact hour column, which [_WeekHeader] lines up with.
+  static const compactHours = 24.0;
 
   /// Height of the weekday row above the hours.
   static const header = 28.0;
@@ -391,41 +444,44 @@ class _WeekGrid extends StatelessWidget {
       fontWeight: FontWeight.w800,
       color: scheme.onSurfaceVariant,
     );
+    final hours = compact ? compactHours : 44.0;
     return Column(
       children: [
-        Row(
-          children: [
-            const SizedBox(width: 44),
-            for (final d in weekdays)
-              Expanded(
-                child: Padding(
-                  padding: const EdgeInsets.only(bottom: Space.s),
-                  child: Text(
-                    weekdayName(context, d),
-                    textAlign: TextAlign.center,
-                    style: d == today
-                        ? mute.copyWith(color: context.tones.lilac.strong)
-                        : mute,
+        // On a phone the weekdays sit in the app bar ([_WeekHeader]).
+        if (!compact)
+          Row(
+            children: [
+              SizedBox(width: hours),
+              for (final d in weekdays)
+                Expanded(
+                  child: Padding(
+                    padding: const EdgeInsets.only(bottom: Space.s),
+                    child: Text(
+                      weekdayName(context, d),
+                      textAlign: TextAlign.center,
+                      style: d == today
+                          ? mute.copyWith(color: context.tones.lilac.strong)
+                          : mute,
+                    ),
                   ),
                 ),
-              ),
-          ],
-        ),
+            ],
+          ),
         SizedBox(
           height: height,
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               SizedBox(
-                width: 44,
+                width: hours,
                 child: Stack(
                   children: [
                     for (var m = first; m < last; m += 60)
                       Positioned(
                         top: (m - first) * perMinute,
-                        right: 6,
+                        right: compact ? 4 : 6,
                         child: Text(
-                          clock(m),
+                          compact ? '${m ~/ 60}' : clock(m),
                           style: mute.copyWith(fontSize: 11),
                         ),
                       ),
@@ -457,6 +513,7 @@ class _WeekGrid extends StatelessWidget {
                                 left: 0,
                                 right: 0,
                                 child: _WeekBlock(
+                                  compact: compact,
                                   slot: (course: c, session: s),
                                   picked:
                                       picked?.course.id == c.id &&
@@ -482,11 +539,15 @@ class _WeekBlock extends StatelessWidget {
     required this.slot,
     required this.picked,
     required this.onTap,
+    this.compact = false,
   });
 
   final DaySlot slot;
   final bool picked;
   final VoidCallback onTap;
+
+  /// About 60 points wide: the name wraps in tighter padding.
+  final bool compact;
 
   @override
   Widget build(BuildContext context) {
@@ -497,7 +558,9 @@ class _WeekBlock extends StatelessWidget {
       child: GestureDetector(
         onTap: onTap,
         child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+          padding: compact
+              ? const EdgeInsets.symmetric(horizontal: 5, vertical: 5)
+              : const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
           decoration: BoxDecoration(
             color: tone.strong,
             borderRadius: BorderRadius.circular(10),
@@ -508,23 +571,27 @@ class _WeekBlock extends StatelessWidget {
                   )
                 : null,
           ),
-          child: Text.rich(
-            TextSpan(
-              text: context.courseName(slot.course),
-              children: [
-                if (slot.course.room case final room?)
-                  TextSpan(
-                    text: '\n$room',
-                    style: TextStyle(color: tone.fill.withValues(alpha: 0.7)),
-                  ),
-              ],
-            ),
-            overflow: TextOverflow.fade,
-            style: TextStyle(
-              fontSize: 11,
-              fontWeight: FontWeight.w900,
-              height: 1.3,
-              color: tone.fill,
+          // Whole lines only: a short class drops the room, not half a line.
+          child: LayoutBuilder(
+            builder: (context, box) => Text.rich(
+              TextSpan(
+                text: context.courseName(slot.course),
+                children: [
+                  if (slot.course.room case final room?)
+                    TextSpan(
+                      text: '\n$room',
+                      style: TextStyle(color: tone.fill.withValues(alpha: 0.7)),
+                    ),
+                ],
+              ),
+              maxLines: math.max(1, box.maxHeight ~/ (11 * 1.3)),
+              overflow: TextOverflow.clip,
+              style: TextStyle(
+                fontSize: 11,
+                fontWeight: FontWeight.w900,
+                height: 1.3,
+                color: tone.fill,
+              ),
             ),
           ),
         ),
@@ -1279,9 +1346,10 @@ class _DayPill extends StatelessWidget {
         child: InkWell(
           customBorder: const StadiumBorder(),
           onTap: onTap,
-          child: Padding(
-            padding: const EdgeInsets.symmetric(vertical: Space.m),
+          child: SizedBox(
+            height: _dayRow,
             child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 Text(
                   label,
@@ -1306,6 +1374,190 @@ class _DayPill extends StatelessWidget {
             ),
           ),
         ),
+      ),
+    );
+  }
+}
+
+/// Height of the day pills and of the week's weekdays in their place, the
+/// same so the app bar keeps its height when the view changes.
+const _dayRow = 52.0;
+
+/// The phone's 日 / 週 choice in the app bar: a track as tall as the search
+/// button, the chosen one in a lilac capsule. Like the nav bar, the capsule
+/// follows a finger dragged across, with a tick as it changes sides, and
+/// the choice is made on release.
+class _ViewSwitch extends StatefulWidget {
+  const _ViewSwitch({required this.week, required this.onChanged});
+
+  final bool week;
+  final ValueChanged<bool> onChanged;
+
+  @override
+  State<_ViewSwitch> createState() => _ViewSwitchState();
+}
+
+class _ViewSwitchState extends State<_ViewSwitch> {
+  static const _segment = 44.0;
+
+  /// The side under the finger while one is down; null otherwise.
+  bool? _hover;
+
+  bool _sideAt(double x) => x - Space.xs >= _segment;
+
+  void _move(double x) {
+    final week = _sideAt(x);
+    if (_hover == null || week == _hover) return;
+    HapticFeedback.selectionClick();
+    setState(() => _hover = week);
+  }
+
+  void _release({required bool commit}) {
+    final week = _hover;
+    setState(() => _hover = null);
+    if (commit && week != null && week != widget.week) widget.onChanged(week);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    final tone = context.tones.lilac;
+    final shown = _hover ?? widget.week;
+    final pressed = _hover != null;
+    Widget label(bool value, String text) => Semantics(
+      button: true,
+      selected: widget.week == value,
+      child: SizedBox(
+        width: _segment,
+        child: Center(
+          child: AnimatedDefaultTextStyle(
+            duration: barMove,
+            curve: barSettle,
+            style: DefaultTextStyle.of(context).style.copyWith(
+              fontSize: 15,
+              fontWeight: FontWeight.w900,
+              color: shown == value ? tone.fill : scheme.onSurfaceVariant,
+            ),
+            child: Text(text),
+          ),
+        ),
+      ),
+    );
+    return AnimatedScale(
+      // Pressed, the switch lifts slightly, as the nav bar does.
+      scale: pressed ? 1.04 : 1,
+      duration: barMove,
+      curve: barSettle,
+      child: Listener(
+        behavior: HitTestBehavior.opaque,
+        onPointerDown: (e) {
+          final week = _sideAt(e.localPosition.dx);
+          if (week != widget.week) HapticFeedback.selectionClick();
+          setState(() => _hover = week);
+        },
+        onPointerMove: (e) => _move(e.localPosition.dx),
+        onPointerUp: (_) => _release(commit: true),
+        onPointerCancel: (_) => _release(commit: false),
+        child: Container(
+          height: 40,
+          padding: const EdgeInsets.all(Space.xs),
+          decoration: ShapeDecoration(
+            color: scheme.surfaceContainer,
+            shape: const StadiumBorder(),
+          ),
+          child: Stack(
+            children: [
+              AnimatedPositioned(
+                duration: barMove,
+                curve: barSettle,
+                left: shown ? _segment : 0,
+                top: 0,
+                bottom: 0,
+                width: _segment,
+                child: AnimatedContainer(
+                  duration: barMove,
+                  curve: barSettle,
+                  decoration: ShapeDecoration(
+                    // Held, the capsule deepens, like the nav bar's.
+                    color: pressed
+                        ? Color.lerp(tone.strong, tone.fill, 0.12)
+                        : tone.strong,
+                    shape: const StadiumBorder(),
+                  ),
+                ),
+              ),
+              Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  label(false, context.l10n.timetableDay),
+                  label(true, context.l10n.timetableWeek),
+                ],
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// The phone week's weekdays and dates in the app bar, where the day pills
+/// are in the day view, so the bar keeps its height; lined up with the
+/// compact [_WeekGrid] below, today in the selected pill's lilac.
+class _WeekHeader extends StatelessWidget {
+  const _WeekHeader({required this.weekdays});
+
+  final List<int> weekdays;
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    final tone = context.tones.lilac;
+    final today = DateUtils.dateOnly(clk.clock.now());
+    final monday = today.subtract(Duration(days: today.weekday - 1));
+    // The bar pads by Space.m; the grid by the page margin.
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: pageMargin - Space.m),
+      child: Row(
+        children: [
+          const SizedBox(width: _WeekGrid.compactHours),
+          for (final d in weekdays)
+            Expanded(
+              child: Container(
+                margin: const EdgeInsets.symmetric(horizontal: 2),
+                height: _dayRow,
+                decoration: ShapeDecoration(
+                  color: d == today.weekday ? tone.strong : Colors.transparent,
+                  shape: const StadiumBorder(),
+                ),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Text(
+                      weekdayShort(context, d),
+                      style: TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w900,
+                        color: d == today.weekday
+                            ? tone.fill
+                            : scheme.onSurfaceVariant,
+                      ),
+                    ),
+                    Text(
+                      '${monday.add(Duration(days: d - 1)).day}',
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w900,
+                        color: d == today.weekday
+                            ? tone.fill
+                            : scheme.onSurface,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+        ],
       ),
     );
   }

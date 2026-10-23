@@ -1036,6 +1036,18 @@ abstract class AppLocalizations {
   /// **'{kind, select, assign{作業} quiz{測驗} course{課程事件} user{個人事件} site{全校事件} other{活動}}{action, select, due{到期} close{關閉} open{開放} other{}}'**
   String eventLabel(String kind, String action);
 
+  /// No description provided for @timetableDay.
+  ///
+  /// In zh, this message translates to:
+  /// **'日'**
+  String get timetableDay;
+
+  /// No description provided for @timetableWeek.
+  ///
+  /// In zh, this message translates to:
+  /// **'週'**
+  String get timetableWeek;
+
   /// No description provided for @weekdayShort.
   ///
   /// In zh, this message translates to:

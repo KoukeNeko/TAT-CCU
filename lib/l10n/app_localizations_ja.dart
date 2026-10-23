@@ -563,6 +563,12 @@ class AppLocalizationsJa extends AppLocalizations {
   }
 
   @override
+  String get timetableDay => '日';
+
+  @override
+  String get timetableWeek => '週';
+
+  @override
   String weekdayShort(String day) {
     String _temp0 = intl.Intl.selectLogic(day, {
       '1': '月',
