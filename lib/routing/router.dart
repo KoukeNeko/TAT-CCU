@@ -29,6 +29,7 @@ import '../ui/more/event_detail_screen.dart';
 import '../data/services/events_data.dart';
 import '../ui/more/events_screen.dart';
 import '../ui/more/parttime_screen.dart';
+import '../ui/more/dorm_net_screen.dart';
 import '../ui/more/payment_screen.dart';
 import '../ui/more/saved_data_screen.dart';
 import '../ui/more/settings_screen.dart';
@@ -267,6 +268,10 @@ GoRouter buildRouter(EcourseAuthRepository auth) => GoRouter(
                     GoRoute(
                       path: 'payment',
                       builder: (_, _) => const PaymentScreen(),
+                    ),
+                    GoRoute(
+                      path: 'dorm-net',
+                      builder: (_, _) => const DormNetScreen(),
                     ),
                     GoRoute(
                       path: 'dorm-repair',

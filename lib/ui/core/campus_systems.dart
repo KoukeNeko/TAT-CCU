@@ -66,7 +66,14 @@ final campusGroups = <(String, List<CampusSystem>)>[
       _s('0010', '大學部宿舍管理', '/test_DormApply.php', '宿'),
       _s('0009', '碩/博士宿舍系統', '/test_GradDormApply.php', '碩'),
       _s('0011', '宿舍維修系統', '/test_DormRepair.php', '修'),
-      _s('0065', '宿網申請', '/test_0065_DormWifiApply.php', '網', '學生自治網站'),
+      _s(
+        '0065',
+        '宿網申請',
+        // The portal tile only reaches the info site; this signs in.
+        'https://portal.dorm.ccu.edu.tw/sso.php?service=www&redirect=https://student.dorm.ccu.edu.tw',
+        '網',
+        '學生自治網站',
+      ),
     ],
   ),
   (
@@ -124,7 +131,7 @@ void openSchoolSite(BuildContext context, String systemId) {
 
 /// `linkId` → in-app page: 選課系統 (iCCU), 成績查詢 (with eCourse2's running
 /// grades), 學籍系統, 學生請假系統, My圖書館, 圖書館資源探索, 自學空間,
-/// 活動報名系統, 學習暨勞僱時數登錄, 宿舍維修系統 and 付款及所得查詢.
+/// 活動報名系統, 學習暨勞僱時數登錄, 宿舍維修系統, 宿網申請 and 付款及所得查詢.
 const inAppPages = {
   '0075': '/more/iccu',
   '0007': '/more/grades',
@@ -136,12 +143,18 @@ const inAppPages = {
   '0060': '/more/events',
   '0014': '/more/parttime',
   '0011': '/more/dorm-repair',
+  '0065': '/more/dorm-net',
   '0042': '/more/payment',
 };
 
 /// In-app pages not yet finished, marked in the list: ALPHA still shows
 /// made-up data, BETA reads the real site but is new.
-const pageStages = {'0014': 'ALPHA', '0011': 'ALPHA', '0042': 'BETA'};
+const pageStages = {
+  '0014': 'ALPHA',
+  '0011': 'ALPHA',
+  '0042': 'BETA',
+  '0065': 'ALPHA',
+};
 
 /// For an in-app page: opens the school's own site for [systemId], signed
 /// in through the portal.

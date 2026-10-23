@@ -1789,4 +1789,233 @@ class AppLocalizationsZh extends AppLocalizations {
   String commitCount(int count) {
     return '$count 次提交';
   }
+
+  @override
+  String get dormNetTitle => '宿網';
+
+  @override
+  String get dormNetToday => '今日流量 · 00:00 重置';
+
+  @override
+  String get dormNetOk => '連線正常';
+
+  @override
+  String get dormNetNotApplied => '尚未申請';
+
+  @override
+  String get dormNetApply => '申請宿網';
+
+  @override
+  String get dormNetSuspended => '目前停用';
+
+  @override
+  String get dormNetUnsuspend => '申請復線';
+
+  @override
+  String get dormNetAllStopped => '名下所有設備都已停用';
+
+  @override
+  String get dormNetUnsuspendHint => '清除病毒或重灌、更新系統後申請復線；罰則結束後隔天 00:00 恢復。';
+
+  @override
+  String get dormNetWifi => 'Wi-Fi 裝置';
+
+  @override
+  String get dormNetCards => '有線 MAC';
+
+  @override
+  String get dormNetBreaks => '斷線紀錄';
+
+  @override
+  String get dormNetNone => '沒有紀錄';
+
+  @override
+  String get dormNetRestored => '已復線';
+
+  @override
+  String get dormNetStillOff => '停用中';
+
+  @override
+  String get dormNetEditDevices => '編輯裝置';
+
+  @override
+  String get dormNetOffices => '宿網辦公室';
+
+  @override
+  String get dormNetOpenNow => '值班中';
+
+  @override
+  String get dormNetClosed => '已結束';
+
+  @override
+  String get dormNetMeet => '線上客服';
+
+  @override
+  String get dormNetMeetHours => 'Google Meet · 每晚 19:00–22:00';
+
+  @override
+  String get dormNetDevices => '裝置';
+
+  @override
+  String get dormNetDevicesNote => '最多 3 張網卡・Wi-Fi 同時 2 台';
+
+  @override
+  String get dormNetWired => '有線';
+
+  @override
+  String get dormNetPrivateMac => '手機請關閉「私人 Wi-Fi 位址」';
+
+  @override
+  String get dormNetEditCards => '新增或修改網卡';
+
+  @override
+  String get dormNetFee => '本學期費用';
+
+  @override
+  String get dormNetFeeWhen => '申請時間';
+
+  @override
+  String get dormNetFeePay => '繳費';
+
+  @override
+  String get dormNetFeeRefund => '退費';
+
+  @override
+  String get dormNetSlip => '下載繳費單';
+
+  @override
+  String get dormNetSlipHint => '台灣 Pay、ATM、網銀、超商；現金到資訊處 219';
+
+  @override
+  String get dormNetReceipt => '上傳繳費收據';
+
+  @override
+  String get dormNetReceiptHint => '電子繳費入帳要 1–14 天，上傳可先處理';
+
+  @override
+  String get dormNetRules => '使用規範';
+
+  @override
+  String get dormNetRuleTraffic => '100 GiB / 天';
+
+  @override
+  String get dormNetRuleTrafficHint => '有線與 Wi-Fi 合計，超量隔天 00:10 自動恢復';
+
+  @override
+  String get dormNetRuleVirus => '中毒全停';
+
+  @override
+  String get dormNetRuleVirusHint => '一台中毒，名下設備都停；處理後申請復線';
+
+  @override
+  String get dormNetRuleShare => '不可分享';
+
+  @override
+  String get dormNetRuleShareHint => 'IP 分享器、基地台、架站都禁止';
+
+  @override
+  String get dormNetRuleMove => '換床位';
+
+  @override
+  String get dormNetRuleMoveHint => '帶換床證明與學生證到宿網辦公室';
+
+  @override
+  String get dormNetNews => '宿網公告';
+
+  @override
+  String get dormNetHelp => '幫助';
+
+  @override
+  String get dormNetTutorial => '使用教學';
+
+  @override
+  String get dormNetTutorialHint => '查網卡號碼、網路設定、影片';
+
+  @override
+  String get dormNetFaq => '常見問題';
+
+  @override
+  String get dormNetReport => '問題回報';
+
+  @override
+  String get dormNetReportHint => '宿網回報系統';
+
+  @override
+  String dormNetLeft(String left) {
+    return '剩 $left GiB';
+  }
+
+  @override
+  String dormNetLastBed(String bed) {
+    return '上學期床位 $bed';
+  }
+
+  @override
+  String dormNetTimes(int count) {
+    return '$count 次';
+  }
+
+  @override
+  String dormNetWifiOf(int count, int limit) {
+    return 'Wi-Fi $count / $limit 台';
+  }
+
+  @override
+  String dormNetBreakTime(String from, String until) {
+    return '$from 斷線 · $until 復線';
+  }
+
+  @override
+  String dormNetBreakSince(String from) {
+    return '$from 起';
+  }
+
+  @override
+  String dormNetFeePeriod(String period) {
+    String _temp0 = intl.Intl.selectLogic(period, {
+      'fall0': '開學－10/31',
+      'fall1': '11 月',
+      'fall2': '12 月',
+      'fall3': '1 月－寒假',
+      'spring0': '開學－3/31',
+      'spring1': '4 月',
+      'spring2': '5 月',
+      'other': '6 月－暑假',
+    });
+    return '$_temp0';
+  }
+
+  @override
+  String get dormNetTraffic => '今日流量';
+
+  @override
+  String get dormNetAfterApply => '申請後開始計算';
+
+  @override
+  String get dormNetOnApply => '申請時填寫';
+
+  @override
+  String dormNetNth(int count) {
+    return '第 $count 次';
+  }
+
+  @override
+  String dormNetPenalty(int days) {
+    return '罰則 $days 天';
+  }
+
+  @override
+  String dormNetFeeUntil(String period, int fee) {
+    String _temp0 = intl.Intl.selectLogic(period, {
+      'fall0': '10/31 前',
+      'fall1': '11/30 前',
+      'fall2': '12/31 前',
+      'fall3': '寒假結束前',
+      'spring0': '3/31 前',
+      'spring1': '4/30 前',
+      'spring2': '5/31 前',
+      'other': '暑假結束前',
+    });
+    return '$_temp0 $fee 元';
+  }
 }

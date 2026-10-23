@@ -523,6 +523,47 @@ class DemoMoodleClient extends MoodleClient {
 /// Campus pages for the demo account, in the shape each page's script
 /// answers with.
 abstract final class DemoCampus {
+  /// 宿網: paid this term, a quarter of today's traffic, and one virus
+  /// disconnection in spring, since restored.
+  static Map<String, dynamic> dormNet() {
+    final now = clk.clock.now();
+    final fall = now.month >= 8 || now.month == 1;
+    final year = now.year - (fall && now.month != 1 ? 1911 : 1912);
+    return {
+      'usage': 23.4,
+      'disabling': null,
+      'semesters': [
+        {
+          'academic_year': '$year',
+          'semester': fall ? 'fall' : 'spring',
+          'data': {
+            'state': 'paid',
+            'keystone': {'type': 'undergrad', 'room': 'C312', 'bed': '2'},
+          },
+        },
+      ],
+      'labels': {
+        'paid': '已繳費',
+        'fall': '上學期',
+        'spring': '下學期',
+        'disabled.virus': '中毒斷線',
+      },
+      'breaks': [
+        {
+          'type': 'virus',
+          'suspended_at': '${now.year}-03-12T21:40:00',
+          'unsuspended_at': '${now.year}-03-14T00:00:00',
+        },
+      ],
+      'status': {'suspended': false, 'reason': '', 'can_unsuspend': false},
+      'cards': [
+        {'mac': '3C:22:FB:9A:10:41', 'state': 'active'},
+      ],
+      'wifi': 1,
+      'lastBed': {'type': 'undergrad', 'room': 'C312', 'bed': '2'},
+    };
+  }
+
   static String _roc(DateTime d) =>
       '${d.year - 1911}/${d.month.toString().padLeft(2, '0')}/${d.day.toString().padLeft(2, '0')}';
 

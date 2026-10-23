@@ -1778,4 +1778,234 @@ class AppLocalizationsJa extends AppLocalizations {
   String commitCount(int count) {
     return '$count 件のコミット';
   }
+
+  @override
+  String get dormNetTitle => '寮ネット';
+
+  @override
+  String get dormNetToday => '今日の通信量 · 0:00 にリセット';
+
+  @override
+  String get dormNetOk => '接続中';
+
+  @override
+  String get dormNetNotApplied => '未申請';
+
+  @override
+  String get dormNetApply => '申し込む';
+
+  @override
+  String get dormNetSuspended => '停止中';
+
+  @override
+  String get dormNetUnsuspend => '復旧を申請';
+
+  @override
+  String get dormNetAllStopped => 'アカウントのすべての端末が停止中';
+
+  @override
+  String get dormNetUnsuspendHint =>
+      'ウイルスを駆除するか再インストール・更新してから復旧を申請してください。罰則終了の翌日 0:00 に戻ります。';
+
+  @override
+  String get dormNetWifi => 'Wi-Fi 端末';
+
+  @override
+  String get dormNetCards => '有線 MAC';
+
+  @override
+  String get dormNetBreaks => '切断記録';
+
+  @override
+  String get dormNetNone => 'なし';
+
+  @override
+  String get dormNetRestored => '復旧済み';
+
+  @override
+  String get dormNetStillOff => '停止中';
+
+  @override
+  String get dormNetEditDevices => '端末を編集';
+
+  @override
+  String get dormNetOffices => '寮ネット窓口';
+
+  @override
+  String get dormNetOpenNow => '対応中';
+
+  @override
+  String get dormNetClosed => '終了';
+
+  @override
+  String get dormNetMeet => 'オンライン相談';
+
+  @override
+  String get dormNetMeetHours => 'Google Meet · 毎晩 19:00–22:00';
+
+  @override
+  String get dormNetDevices => '端末';
+
+  @override
+  String get dormNetDevicesNote => '最大 3 枚・Wi-Fi 同時 2 台';
+
+  @override
+  String get dormNetWired => '有線';
+
+  @override
+  String get dormNetPrivateMac => 'スマホは「プライベート Wi-Fi アドレス」をオフに';
+
+  @override
+  String get dormNetEditCards => 'カードを追加・変更';
+
+  @override
+  String get dormNetFee => '今学期の料金';
+
+  @override
+  String get dormNetFeeWhen => '申込時期';
+
+  @override
+  String get dormNetFeePay => '料金';
+
+  @override
+  String get dormNetFeeRefund => '返金';
+
+  @override
+  String get dormNetSlip => '払込票をダウンロード';
+
+  @override
+  String get dormNetSlipHint => '台湾 Pay・ATM・ネットバンク・コンビニ。現金は情報処 219';
+
+  @override
+  String get dormNetReceipt => '領収書をアップロード';
+
+  @override
+  String get dormNetReceiptHint => '電子決済の反映は 1–14 日。アップロードで先に処理';
+
+  @override
+  String get dormNetRules => '利用規約';
+
+  @override
+  String get dormNetRuleTraffic => '100 GiB / 日';
+
+  @override
+  String get dormNetRuleTrafficHint => '有線と Wi-Fi の合計。超過すると翌日 0:10 に自動復旧';
+
+  @override
+  String get dormNetRuleVirus => '感染で全停止';
+
+  @override
+  String get dormNetRuleVirusHint => '1 台が感染すると全端末が停止。駆除後に復旧を申請';
+
+  @override
+  String get dormNetRuleShare => '共有禁止';
+
+  @override
+  String get dormNetRuleShareHint => 'ルーター・アクセスポイント・サーバーは禁止';
+
+  @override
+  String get dormNetRuleMove => 'ベッド変更';
+
+  @override
+  String get dormNetRuleMoveHint => '変更証明と学生証を寮ネット窓口へ';
+
+  @override
+  String get dormNetNews => 'お知らせ';
+
+  @override
+  String get dormNetHelp => 'ヘルプ';
+
+  @override
+  String get dormNetTutorial => '使い方';
+
+  @override
+  String get dormNetTutorialHint => 'MAC の確認・設定・動画';
+
+  @override
+  String get dormNetFaq => 'よくある質問';
+
+  @override
+  String get dormNetReport => '問題を報告';
+
+  @override
+  String get dormNetReportHint => '寮ネットの問い合わせ窓口';
+
+  @override
+  String dormNetLeft(String left) {
+    return '残り $left GiB';
+  }
+
+  @override
+  String dormNetLastBed(String bed) {
+    return '前回のベッド $bed';
+  }
+
+  @override
+  String dormNetTimes(int count) {
+    return '$count 回';
+  }
+
+  @override
+  String dormNetWifiOf(int count, int limit) {
+    return 'Wi-Fi $count / $limit 台';
+  }
+
+  @override
+  String dormNetBreakTime(String from, String until) {
+    return '$from 切断 · $until 復旧';
+  }
+
+  @override
+  String dormNetBreakSince(String from) {
+    return '$from から';
+  }
+
+  @override
+  String dormNetFeePeriod(String period) {
+    String _temp0 = intl.Intl.selectLogic(period, {
+      'fall0': '開学–10/31',
+      'fall1': '11 月',
+      'fall2': '12 月',
+      'fall3': '1 月–冬休み',
+      'spring0': '開学–3/31',
+      'spring1': '4 月',
+      'spring2': '5 月',
+      'other': '6 月–夏休み',
+    });
+    return '$_temp0';
+  }
+
+  @override
+  String get dormNetTraffic => '今日の通信量';
+
+  @override
+  String get dormNetAfterApply => '申請後に計測';
+
+  @override
+  String get dormNetOnApply => '申請時に入力';
+
+  @override
+  String dormNetNth(int count) {
+    return '$count 回目';
+  }
+
+  @override
+  String dormNetPenalty(int days) {
+    return '停止 $days 日';
+  }
+
+  @override
+  String dormNetFeeUntil(String period, int fee) {
+    String _temp0 = intl.Intl.selectLogic(period, {
+      'fall0': '10/31 まで',
+      'fall1': '11/30 まで',
+      'fall2': '12/31 まで',
+      'fall3': '冬休み終了まで',
+      'spring0': '3/31 まで',
+      'spring1': '4/30 まで',
+      'spring2': '5/31 まで',
+      'other': '夏休み終了まで',
+    });
+    return '$_temp0 $fee 元';
+  }
 }

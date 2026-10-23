@@ -1892,4 +1892,251 @@ class AppLocalizationsEn extends AppLocalizations {
   String commitCount(int count) {
     return '$count commits';
   }
+
+  @override
+  String get dormNetTitle => 'Dorm network';
+
+  @override
+  String get dormNetToday => 'Today\'s traffic · resets at 00:00';
+
+  @override
+  String get dormNetOk => 'Connected';
+
+  @override
+  String get dormNetNotApplied => 'Not applied';
+
+  @override
+  String get dormNetApply => 'Apply';
+
+  @override
+  String get dormNetSuspended => 'Cut off';
+
+  @override
+  String get dormNetUnsuspend => 'Request reconnection';
+
+  @override
+  String get dormNetAllStopped => 'Every device on the account is cut off';
+
+  @override
+  String get dormNetUnsuspendHint =>
+      'Remove the virus or reinstall and update, then request reconnection. It comes back at 00:00 the day after the penalty ends.';
+
+  @override
+  String get dormNetWifi => 'Wi-Fi devices';
+
+  @override
+  String get dormNetCards => 'Wired MAC';
+
+  @override
+  String get dormNetBreaks => 'Disconnections';
+
+  @override
+  String get dormNetNone => 'None';
+
+  @override
+  String get dormNetRestored => 'Restored';
+
+  @override
+  String get dormNetStillOff => 'Cut off';
+
+  @override
+  String get dormNetEditDevices => 'Edit devices';
+
+  @override
+  String get dormNetOffices => 'DormNet offices';
+
+  @override
+  String get dormNetOpenNow => 'Open';
+
+  @override
+  String get dormNetClosed => 'Closed';
+
+  @override
+  String get dormNetMeet => 'Online help';
+
+  @override
+  String get dormNetMeetHours => 'Google Meet · nightly 19:00–22:00';
+
+  @override
+  String get dormNetDevices => 'Devices';
+
+  @override
+  String get dormNetDevicesNote => 'Up to 3 cards · 2 Wi-Fi at once';
+
+  @override
+  String get dormNetWired => 'Wired';
+
+  @override
+  String get dormNetPrivateMac => 'Turn off private Wi-Fi addresses on phones';
+
+  @override
+  String get dormNetEditCards => 'Add or change cards';
+
+  @override
+  String get dormNetFee => 'This term\'s fee';
+
+  @override
+  String get dormNetFeeWhen => 'Applied';
+
+  @override
+  String get dormNetFeePay => 'Fee';
+
+  @override
+  String get dormNetFeeRefund => 'Refund';
+
+  @override
+  String get dormNetSlip => 'Download payment slip';
+
+  @override
+  String get dormNetSlipHint =>
+      'Taiwan Pay, ATM, online banking or a convenience store; cash at IT R219';
+
+  @override
+  String get dormNetReceipt => 'Upload receipt';
+
+  @override
+  String get dormNetReceiptHint =>
+      'E-payments take 1–14 days to post; uploading speeds it up';
+
+  @override
+  String get dormNetRules => 'Rules';
+
+  @override
+  String get dormNetRuleTraffic => '100 GiB / day';
+
+  @override
+  String get dormNetRuleTrafficHint =>
+      'Wired and Wi-Fi together; over it, back at 00:10 the next day';
+
+  @override
+  String get dormNetRuleVirus => 'One infected, all off';
+
+  @override
+  String get dormNetRuleVirusHint =>
+      'One infected device cuts off them all; request reconnection after cleaning';
+
+  @override
+  String get dormNetRuleShare => 'No sharing';
+
+  @override
+  String get dormNetRuleShareHint => 'No routers, access points or servers';
+
+  @override
+  String get dormNetRuleMove => 'Changing beds';
+
+  @override
+  String get dormNetRuleMoveHint =>
+      'Bring the bed change form and student ID to a DormNet office';
+
+  @override
+  String get dormNetNews => 'Announcements';
+
+  @override
+  String get dormNetHelp => 'Help';
+
+  @override
+  String get dormNetTutorial => 'Tutorials';
+
+  @override
+  String get dormNetTutorialHint => 'Find your MAC, set up, videos';
+
+  @override
+  String get dormNetFaq => 'FAQ';
+
+  @override
+  String get dormNetReport => 'Report a problem';
+
+  @override
+  String get dormNetReportHint => 'DormNet help desk';
+
+  @override
+  String dormNetLeft(String left) {
+    return '$left GiB left';
+  }
+
+  @override
+  String dormNetLastBed(String bed) {
+    return 'Last bed $bed';
+  }
+
+  @override
+  String dormNetTimes(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count times',
+      one: '1 time',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String dormNetWifiOf(int count, int limit) {
+    return 'Wi-Fi $count / $limit';
+  }
+
+  @override
+  String dormNetBreakTime(String from, String until) {
+    return 'Cut $from · back $until';
+  }
+
+  @override
+  String dormNetBreakSince(String from) {
+    return 'Since $from';
+  }
+
+  @override
+  String dormNetFeePeriod(String period) {
+    String _temp0 = intl.Intl.selectLogic(period, {
+      'fall0': 'Start–Oct 31',
+      'fall1': 'November',
+      'fall2': 'December',
+      'fall3': 'Jan–winter break',
+      'spring0': 'Start–Mar 31',
+      'spring1': 'April',
+      'spring2': 'May',
+      'other': 'June–summer break',
+    });
+    return '$_temp0';
+  }
+
+  @override
+  String get dormNetTraffic => 'Today\'s traffic';
+
+  @override
+  String get dormNetAfterApply => 'Counted after applying';
+
+  @override
+  String get dormNetOnApply => 'Entered when applying';
+
+  @override
+  String dormNetNth(int count) {
+    return 'Time $count';
+  }
+
+  @override
+  String dormNetPenalty(int days) {
+    String _temp0 = intl.Intl.pluralLogic(
+      days,
+      locale: localeName,
+      other: '$days-day penalty',
+      one: '1-day penalty',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String dormNetFeeUntil(String period, int fee) {
+    String _temp0 = intl.Intl.selectLogic(period, {
+      'fall0': 'by Oct 31',
+      'fall1': 'by Nov 30',
+      'fall2': 'by Dec 31',
+      'fall3': 'until winter break ends',
+      'spring0': 'by Mar 31',
+      'spring1': 'by Apr 30',
+      'spring2': 'by May 31',
+      'other': 'until summer break ends',
+    });
+    return 'NT\$$fee $_temp0';
+  }
 }

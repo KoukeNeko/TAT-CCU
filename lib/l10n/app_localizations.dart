@@ -3237,6 +3237,384 @@ abstract class AppLocalizations {
   /// In zh, this message translates to:
   /// **'{count} 次提交'**
   String commitCount(int count);
+
+  /// No description provided for @dormNetTitle.
+  ///
+  /// In zh, this message translates to:
+  /// **'宿網'**
+  String get dormNetTitle;
+
+  /// No description provided for @dormNetToday.
+  ///
+  /// In zh, this message translates to:
+  /// **'今日流量 · 00:00 重置'**
+  String get dormNetToday;
+
+  /// No description provided for @dormNetOk.
+  ///
+  /// In zh, this message translates to:
+  /// **'連線正常'**
+  String get dormNetOk;
+
+  /// No description provided for @dormNetNotApplied.
+  ///
+  /// In zh, this message translates to:
+  /// **'尚未申請'**
+  String get dormNetNotApplied;
+
+  /// No description provided for @dormNetApply.
+  ///
+  /// In zh, this message translates to:
+  /// **'申請宿網'**
+  String get dormNetApply;
+
+  /// No description provided for @dormNetSuspended.
+  ///
+  /// In zh, this message translates to:
+  /// **'目前停用'**
+  String get dormNetSuspended;
+
+  /// No description provided for @dormNetUnsuspend.
+  ///
+  /// In zh, this message translates to:
+  /// **'申請復線'**
+  String get dormNetUnsuspend;
+
+  /// No description provided for @dormNetAllStopped.
+  ///
+  /// In zh, this message translates to:
+  /// **'名下所有設備都已停用'**
+  String get dormNetAllStopped;
+
+  /// No description provided for @dormNetUnsuspendHint.
+  ///
+  /// In zh, this message translates to:
+  /// **'清除病毒或重灌、更新系統後申請復線；罰則結束後隔天 00:00 恢復。'**
+  String get dormNetUnsuspendHint;
+
+  /// No description provided for @dormNetWifi.
+  ///
+  /// In zh, this message translates to:
+  /// **'Wi-Fi 裝置'**
+  String get dormNetWifi;
+
+  /// No description provided for @dormNetCards.
+  ///
+  /// In zh, this message translates to:
+  /// **'有線 MAC'**
+  String get dormNetCards;
+
+  /// No description provided for @dormNetBreaks.
+  ///
+  /// In zh, this message translates to:
+  /// **'斷線紀錄'**
+  String get dormNetBreaks;
+
+  /// No description provided for @dormNetNone.
+  ///
+  /// In zh, this message translates to:
+  /// **'沒有紀錄'**
+  String get dormNetNone;
+
+  /// No description provided for @dormNetRestored.
+  ///
+  /// In zh, this message translates to:
+  /// **'已復線'**
+  String get dormNetRestored;
+
+  /// No description provided for @dormNetStillOff.
+  ///
+  /// In zh, this message translates to:
+  /// **'停用中'**
+  String get dormNetStillOff;
+
+  /// No description provided for @dormNetEditDevices.
+  ///
+  /// In zh, this message translates to:
+  /// **'編輯裝置'**
+  String get dormNetEditDevices;
+
+  /// No description provided for @dormNetOffices.
+  ///
+  /// In zh, this message translates to:
+  /// **'宿網辦公室'**
+  String get dormNetOffices;
+
+  /// No description provided for @dormNetOpenNow.
+  ///
+  /// In zh, this message translates to:
+  /// **'值班中'**
+  String get dormNetOpenNow;
+
+  /// No description provided for @dormNetClosed.
+  ///
+  /// In zh, this message translates to:
+  /// **'已結束'**
+  String get dormNetClosed;
+
+  /// No description provided for @dormNetMeet.
+  ///
+  /// In zh, this message translates to:
+  /// **'線上客服'**
+  String get dormNetMeet;
+
+  /// No description provided for @dormNetMeetHours.
+  ///
+  /// In zh, this message translates to:
+  /// **'Google Meet · 每晚 19:00–22:00'**
+  String get dormNetMeetHours;
+
+  /// No description provided for @dormNetDevices.
+  ///
+  /// In zh, this message translates to:
+  /// **'裝置'**
+  String get dormNetDevices;
+
+  /// No description provided for @dormNetDevicesNote.
+  ///
+  /// In zh, this message translates to:
+  /// **'最多 3 張網卡・Wi-Fi 同時 2 台'**
+  String get dormNetDevicesNote;
+
+  /// No description provided for @dormNetWired.
+  ///
+  /// In zh, this message translates to:
+  /// **'有線'**
+  String get dormNetWired;
+
+  /// No description provided for @dormNetPrivateMac.
+  ///
+  /// In zh, this message translates to:
+  /// **'手機請關閉「私人 Wi-Fi 位址」'**
+  String get dormNetPrivateMac;
+
+  /// No description provided for @dormNetEditCards.
+  ///
+  /// In zh, this message translates to:
+  /// **'新增或修改網卡'**
+  String get dormNetEditCards;
+
+  /// No description provided for @dormNetFee.
+  ///
+  /// In zh, this message translates to:
+  /// **'本學期費用'**
+  String get dormNetFee;
+
+  /// No description provided for @dormNetFeeWhen.
+  ///
+  /// In zh, this message translates to:
+  /// **'申請時間'**
+  String get dormNetFeeWhen;
+
+  /// No description provided for @dormNetFeePay.
+  ///
+  /// In zh, this message translates to:
+  /// **'繳費'**
+  String get dormNetFeePay;
+
+  /// No description provided for @dormNetFeeRefund.
+  ///
+  /// In zh, this message translates to:
+  /// **'退費'**
+  String get dormNetFeeRefund;
+
+  /// No description provided for @dormNetSlip.
+  ///
+  /// In zh, this message translates to:
+  /// **'下載繳費單'**
+  String get dormNetSlip;
+
+  /// No description provided for @dormNetSlipHint.
+  ///
+  /// In zh, this message translates to:
+  /// **'台灣 Pay、ATM、網銀、超商；現金到資訊處 219'**
+  String get dormNetSlipHint;
+
+  /// No description provided for @dormNetReceipt.
+  ///
+  /// In zh, this message translates to:
+  /// **'上傳繳費收據'**
+  String get dormNetReceipt;
+
+  /// No description provided for @dormNetReceiptHint.
+  ///
+  /// In zh, this message translates to:
+  /// **'電子繳費入帳要 1–14 天，上傳可先處理'**
+  String get dormNetReceiptHint;
+
+  /// No description provided for @dormNetRules.
+  ///
+  /// In zh, this message translates to:
+  /// **'使用規範'**
+  String get dormNetRules;
+
+  /// No description provided for @dormNetRuleTraffic.
+  ///
+  /// In zh, this message translates to:
+  /// **'100 GiB / 天'**
+  String get dormNetRuleTraffic;
+
+  /// No description provided for @dormNetRuleTrafficHint.
+  ///
+  /// In zh, this message translates to:
+  /// **'有線與 Wi-Fi 合計，超量隔天 00:10 自動恢復'**
+  String get dormNetRuleTrafficHint;
+
+  /// No description provided for @dormNetRuleVirus.
+  ///
+  /// In zh, this message translates to:
+  /// **'中毒全停'**
+  String get dormNetRuleVirus;
+
+  /// No description provided for @dormNetRuleVirusHint.
+  ///
+  /// In zh, this message translates to:
+  /// **'一台中毒，名下設備都停；處理後申請復線'**
+  String get dormNetRuleVirusHint;
+
+  /// No description provided for @dormNetRuleShare.
+  ///
+  /// In zh, this message translates to:
+  /// **'不可分享'**
+  String get dormNetRuleShare;
+
+  /// No description provided for @dormNetRuleShareHint.
+  ///
+  /// In zh, this message translates to:
+  /// **'IP 分享器、基地台、架站都禁止'**
+  String get dormNetRuleShareHint;
+
+  /// No description provided for @dormNetRuleMove.
+  ///
+  /// In zh, this message translates to:
+  /// **'換床位'**
+  String get dormNetRuleMove;
+
+  /// No description provided for @dormNetRuleMoveHint.
+  ///
+  /// In zh, this message translates to:
+  /// **'帶換床證明與學生證到宿網辦公室'**
+  String get dormNetRuleMoveHint;
+
+  /// No description provided for @dormNetNews.
+  ///
+  /// In zh, this message translates to:
+  /// **'宿網公告'**
+  String get dormNetNews;
+
+  /// No description provided for @dormNetHelp.
+  ///
+  /// In zh, this message translates to:
+  /// **'幫助'**
+  String get dormNetHelp;
+
+  /// No description provided for @dormNetTutorial.
+  ///
+  /// In zh, this message translates to:
+  /// **'使用教學'**
+  String get dormNetTutorial;
+
+  /// No description provided for @dormNetTutorialHint.
+  ///
+  /// In zh, this message translates to:
+  /// **'查網卡號碼、網路設定、影片'**
+  String get dormNetTutorialHint;
+
+  /// No description provided for @dormNetFaq.
+  ///
+  /// In zh, this message translates to:
+  /// **'常見問題'**
+  String get dormNetFaq;
+
+  /// No description provided for @dormNetReport.
+  ///
+  /// In zh, this message translates to:
+  /// **'問題回報'**
+  String get dormNetReport;
+
+  /// No description provided for @dormNetReportHint.
+  ///
+  /// In zh, this message translates to:
+  /// **'宿網回報系統'**
+  String get dormNetReportHint;
+
+  /// No description provided for @dormNetLeft.
+  ///
+  /// In zh, this message translates to:
+  /// **'剩 {left} GiB'**
+  String dormNetLeft(String left);
+
+  /// No description provided for @dormNetLastBed.
+  ///
+  /// In zh, this message translates to:
+  /// **'上學期床位 {bed}'**
+  String dormNetLastBed(String bed);
+
+  /// No description provided for @dormNetTimes.
+  ///
+  /// In zh, this message translates to:
+  /// **'{count} 次'**
+  String dormNetTimes(int count);
+
+  /// No description provided for @dormNetWifiOf.
+  ///
+  /// In zh, this message translates to:
+  /// **'Wi-Fi {count} / {limit} 台'**
+  String dormNetWifiOf(int count, int limit);
+
+  /// No description provided for @dormNetBreakTime.
+  ///
+  /// In zh, this message translates to:
+  /// **'{from} 斷線 · {until} 復線'**
+  String dormNetBreakTime(String from, String until);
+
+  /// No description provided for @dormNetBreakSince.
+  ///
+  /// In zh, this message translates to:
+  /// **'{from} 起'**
+  String dormNetBreakSince(String from);
+
+  /// No description provided for @dormNetFeePeriod.
+  ///
+  /// In zh, this message translates to:
+  /// **'{period, select, fall0{開學－10/31} fall1{11 月} fall2{12 月} fall3{1 月－寒假} spring0{開學－3/31} spring1{4 月} spring2{5 月} other{6 月－暑假}}'**
+  String dormNetFeePeriod(String period);
+
+  /// No description provided for @dormNetTraffic.
+  ///
+  /// In zh, this message translates to:
+  /// **'今日流量'**
+  String get dormNetTraffic;
+
+  /// No description provided for @dormNetAfterApply.
+  ///
+  /// In zh, this message translates to:
+  /// **'申請後開始計算'**
+  String get dormNetAfterApply;
+
+  /// No description provided for @dormNetOnApply.
+  ///
+  /// In zh, this message translates to:
+  /// **'申請時填寫'**
+  String get dormNetOnApply;
+
+  /// No description provided for @dormNetNth.
+  ///
+  /// In zh, this message translates to:
+  /// **'第 {count} 次'**
+  String dormNetNth(int count);
+
+  /// No description provided for @dormNetPenalty.
+  ///
+  /// In zh, this message translates to:
+  /// **'罰則 {days} 天'**
+  String dormNetPenalty(int days);
+
+  /// No description provided for @dormNetFeeUntil.
+  ///
+  /// In zh, this message translates to:
+  /// **'{period, select, fall0{10/31 前} fall1{11/30 前} fall2{12/31 前} fall3{寒假結束前} spring0{3/31 前} spring1{4/30 前} spring2{5/31 前} other{暑假結束前}} {fee} 元'**
+  String dormNetFeeUntil(String period, int fee);
 }
 
 class _AppLocalizationsDelegate
