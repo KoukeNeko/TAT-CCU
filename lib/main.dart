@@ -204,7 +204,19 @@ class _TatCcuAppState extends State<TatCcuApp> {
             child: child!,
           );
         }
-        return Platform.isWindows ? WindowsCaption(child: child!) : child!;
+        // A tap outside a text field ends typing on phones too; Flutter only
+        // does so for mice. Fields share one tap group, so moving between
+        // them keeps the keyboard up.
+        child = Actions(
+          actions: {
+            EditableTextTapOutsideIntent:
+                CallbackAction<EditableTextTapOutsideIntent>(
+                  onInvoke: (intent) => intent.focusNode.unfocus(),
+                ),
+          },
+          child: child!,
+        );
+        return Platform.isWindows ? WindowsCaption(child: child) : child;
       },
       routerConfig: _router,
     );
