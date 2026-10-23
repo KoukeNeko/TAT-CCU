@@ -145,23 +145,33 @@ flowchart TB
     pages["首頁・課表・訊息・行事曆・更多"]
     session["CampusSession<br>已登入的 WebView"]
   end
-  router["lib/routing<br>go_router"] --> shell --> pages
+  router["lib/routing<br>go_router・openPage"] --> shell --> pages
+  settings["AppSettings<br>主題・語言・桌布顏色"] --> ui
   pages --> repo["lib/data/repositories<br>EcourseRepository・EcourseAuthRepository"]
+  repo --> models["lib/domain/models<br>課程・課表"]
   pages --> session
   repo --> moodle["MoodleClient<br>Moodle Web Service（REST）"]
-  repo --> rcache[("ResponseCache<br>eCourse2 回應")]
+  moodle --> rcache[("ResponseCache<br>eCourse2 回應")]
   session --> ccache[("CampusCache<br>校務系統資料")]
-  pages --> primo["PrimoClient"]
+  session --> scripts["頁面腳本<br>寄信・點名・請假・校務系統讀取"]
+  pages --> public["PrimoClient・公開 API<br>圖書館・宿網公告・活動"]
   moodle --> ecourse["eCourse2"]
-  session --> campus["單一入口・CAS・校務系統"]
-  primo --> library["圖書館 Primo"]
+  scripts --> ecourse
+  scripts --> campus["單一入口・CAS・校務系統"]
+  public --> sites["圖書館 Primo・宿網資訊網・活動報名"]
   repo -.-> keychain[("安全儲存區<br>權杖・Cookie・CAS 帳密")]
   session -.-> keychain
   repo --> local["Reminders・home_widget<br>本機通知與桌面小工具"]
 ```
 
-eCourse2 的課程、作業、訊息與行事曆透過 Moodle Web Service 取得；無 API 的校務系統，於已登入的
-WebView 中讀取頁面。兩者的資料皆快取於裝置，開啟時先顯示快取，再向學校更新。
+eCourse2 的課程、作業、訊息與行事曆透過 Moodle Web Service 取得。Web Service 不提供的操作（寄信、
+點名、請假）與沒有 API 的校務系統，在已登入的 WebView 中執行頁面腳本；腳本執行期間 WebView 留在畫面
+上，避免 WebKit 暫停背景頁面。圖書館、宿網公告與辦公時間、活動報名等公開資料直接向各網站讀取。資料皆
+快取於裝置，開啟時先顯示快取，再向學校更新。
+
+`lib/routing` 的 `openPage` 在目前分頁開啟同一分頁的頁面；屬於其他分頁的頁面（例如從首頁開啟課程）會
+切換到該分頁開啟。課程與「更多」的頁面在寬螢幕上以清單與內容並排的 ShellRoute 呈現，同一個
+ShellRoute 不能同時出現在兩個分頁。
 
 ### 登入流程
 
@@ -193,7 +203,7 @@ flutter test
 flutter run
 ```
 
-頁面位於 `lib/ui`，資料存取位於 `lib/data`，路由位於 `lib/routing`（go_router）。介面字串位於
+頁面位於 `lib/ui`，資料存取位於 `lib/data`，課程與課表的模型位於 `lib/domain`，路由位於 `lib/routing`（go_router）。介面字串位於
 `lib/l10n` 的 ARB 檔，三種語言須同步更新。
 
 ### 發布
