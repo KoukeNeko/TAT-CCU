@@ -601,5 +601,9 @@
   "sentMail": "送信済み",
   "mailTo": "宛先 {names}",
   "noSentMail": "送信したメールはありません",
-  "inbox": "受信箱"
+  "inbox": "受信箱",
+  "themeColors": "テーマ",
+  "themeDefault": "デフォルト",
+  "themeWallpaper": "壁紙の色",
+  "androidOnly": "Android 12 以降のみ"
 }

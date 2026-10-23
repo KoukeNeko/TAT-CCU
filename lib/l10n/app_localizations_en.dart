@@ -2189,4 +2189,16 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get inbox => 'Inbox';
+
+  @override
+  String get themeColors => 'Theme';
+
+  @override
+  String get themeDefault => 'Default';
+
+  @override
+  String get themeWallpaper => 'Wallpaper colors';
+
+  @override
+  String get androidOnly => 'Android 12 and later';
 }

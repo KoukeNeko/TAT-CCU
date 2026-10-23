@@ -601,5 +601,9 @@
   "sentMail": "Sent",
   "mailTo": "To {names}",
   "noSentMail": "No sent mail",
-  "inbox": "Inbox"
+  "inbox": "Inbox",
+  "themeColors": "Theme",
+  "themeDefault": "Default",
+  "themeWallpaper": "Wallpaper colors",
+  "androidOnly": "Android 12 and later"
 }

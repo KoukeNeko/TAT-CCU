@@ -1,3 +1,6 @@
+import 'dart:io';
+
+import 'package:dynamic_color/dynamic_color.dart';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -11,8 +14,19 @@ class AppSettings extends ChangeNotifier {
   static const _classKey = 'notify_class';
   static const _newsKey = 'notify_news';
   static const _weekKey = 'timetable_week';
+  static const _colorKey = 'wallpaper_colors';
 
   ThemeMode themeMode = ThemeMode.system;
+
+  /// The 主題 picked: the Android wallpaper's colors instead of lilac.
+  bool wallpaperColors = false;
+
+  /// The wallpaper's main color, read at launch; null where the system has
+  /// none (before Android 12, and on iOS, macOS and Windows).
+  Color? wallpaperColor;
+
+  /// The color the theme is built around, when not the app's own.
+  Color? get seed => wallpaperColors ? wallpaperColor : null;
   Locale? locale;
 
   /// Local reminders before deadlines and classes, and the background
@@ -33,6 +47,12 @@ class AppSettings extends ChangeNotifier {
     notifyClass = prefs.getBool(_classKey) ?? false;
     notifyNews = prefs.getBool(_newsKey) ?? false;
     timetableWeek = prefs.getBool(_weekKey) ?? false;
+    wallpaperColors = prefs.getBool(_colorKey) ?? false;
+    // The plugin has no iOS side; Android below 12 answers null.
+    if (Platform.isAndroid) {
+      final palette = await DynamicColorPlugin.getCorePalette();
+      wallpaperColor = palette == null ? null : Color(palette.primary.get(40));
+    }
     notifyListeners();
   }
 
@@ -43,6 +63,12 @@ class AppSettings extends ChangeNotifier {
       _themeKey,
       mode.name,
     );
+  }
+
+  Future<void> setWallpaperColors(bool on) async {
+    wallpaperColors = on;
+    notifyListeners();
+    await (await SharedPreferences.getInstance()).setBool(_colorKey, on);
   }
 
   Future<void> setLocale(Locale? value) async {

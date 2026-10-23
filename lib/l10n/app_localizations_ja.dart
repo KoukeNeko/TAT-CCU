@@ -2057,4 +2057,16 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get inbox => '受信箱';
+
+  @override
+  String get themeColors => 'テーマ';
+
+  @override
+  String get themeDefault => 'デフォルト';
+
+  @override
+  String get themeWallpaper => '壁紙の色';
+
+  @override
+  String get androidOnly => 'Android 12 以降のみ';
 }

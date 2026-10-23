@@ -14,6 +14,7 @@ import '../../l10n/l10n.dart';
 import '../core/theme.dart';
 import '../home_widgets/home_widgets.dart';
 import '../core/widgets.dart';
+import '../core/segment_switch.dart';
 
 /// The app's languages by code; null follows the system. Each language is
 /// named in itself so it can be found from any of the others.
@@ -61,12 +62,32 @@ class SettingsScreen extends StatelessWidget {
                 ],
               ],
             ),
+            // Wallpaper colors exist on Android 12 and later only; elsewhere
+            // the choice shows, unavailable, so the setting is known.
+            SectionLabel(
+              l10n.themeColors,
+              detail: settings.wallpaperColor == null ? l10n.androidOnly : null,
+            ),
+            SegmentSwitch(
+              labels: [l10n.themeDefault, l10n.themeWallpaper],
+              selected: settings.seed != null ? 1 : 0,
+              disabled: {if (settings.wallpaperColor == null) 1},
+              onChanged: (i) => settings.setWallpaperColors(i == 1),
+            ),
             SectionLabel(l10n.language),
-            _Segments(
-              selected: settings.locale?.languageCode,
-              options: languageOptions(context),
-              onSelected: (code) =>
-                  settings.setLocale(code == null ? null : Locale(code)),
+            Builder(
+              builder: (context) {
+                final options = languageOptions(context);
+                return SegmentSwitch(
+                  labels: [for (final (_, label) in options) label],
+                  selected: options.indexWhere(
+                    (o) => o.$1 == settings.locale?.languageCode,
+                  ),
+                  onChanged: (i) => settings.setLocale(
+                    options[i].$1 == null ? null : Locale(options[i].$1!),
+                  ),
+                );
+              },
             ),
             SectionLabel(l10n.notifications),
             const _Notifications(),
@@ -174,8 +195,12 @@ class _Mini extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final scheme = buildTheme(brightness).colorScheme;
-    final lilac = Tones.of(brightness).lilac;
+    final theme = buildTheme(
+      brightness,
+      seed: context.watch<AppSettings>().seed,
+    );
+    final scheme = theme.colorScheme;
+    final lilac = theme.extension<Tones>()!.lilac;
     Widget bar(double width, {double height = 8, Color? color}) => Container(
       width: width,
       height: height,
@@ -212,72 +237,6 @@ class _LeftHalf extends CustomClipper<Rect> {
 }
 
 /// One row of mutually exclusive choices on a track.
-class _Segments extends StatelessWidget {
-  const _Segments({
-    required this.selected,
-    required this.options,
-    required this.onSelected,
-  });
-
-  final String? selected;
-  final List<(String?, String)> options;
-  final ValueChanged<String?> onSelected;
-
-  @override
-  Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
-    return Container(
-      padding: const EdgeInsets.all(Space.xs),
-      decoration: ShapeDecoration(
-        color: scheme.surfaceContainerHighest,
-        shape: const StadiumBorder(),
-      ),
-      child: Row(
-        children: [
-          for (final (value, label) in options)
-            Expanded(
-              child: Semantics(
-                selected: value == selected,
-                button: true,
-                child: GestureDetector(
-                  behavior: HitTestBehavior.opaque,
-                  onTap: () {
-                    HapticFeedback.selectionClick();
-                    onSelected(value);
-                  },
-                  child: AnimatedContainer(
-                    duration: const Duration(milliseconds: 240),
-                    curve: Curves.easeOutQuart,
-                    padding: const EdgeInsets.symmetric(vertical: Space.m),
-                    decoration: ShapeDecoration(
-                      color: value == selected
-                          ? scheme.surface
-                          : Colors.transparent,
-                      shape: const StadiumBorder(),
-                    ),
-                    child: Text(
-                      label,
-                      textAlign: TextAlign.center,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: TextStyle(
-                        fontSize: 13,
-                        fontWeight: FontWeight.w900,
-                        color: value == selected
-                            ? scheme.onSurface
-                            : scheme.onSurfaceVariant,
-                      ),
-                    ),
-                  ),
-                ),
-              ),
-            ),
-        ],
-      ),
-    );
-  }
-}
-
 /// Local reminders and the background check (Reminders); each asks for the
 /// system permission the first time it is turned on.
 class _Notifications extends StatelessWidget {

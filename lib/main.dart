@@ -165,8 +165,8 @@ class _TatCcuAppState extends State<TatCcuApp> {
     return MaterialApp.router(
       key: ValueKey(demo),
       title: 'TAT CCU',
-      theme: buildTheme(Brightness.light),
-      darkTheme: buildTheme(Brightness.dark),
+      theme: buildTheme(Brightness.light, seed: settings.seed),
+      darkTheme: buildTheme(Brightness.dark, seed: settings.seed),
       themeMode: settings.themeMode,
       locale: _traditional(settings.locale),
       localizationsDelegates: AppLocalizations.localizationsDelegates,
@@ -200,7 +200,11 @@ class _TatCcuAppState extends State<TatCcuApp> {
         // Japanese gets LINE Seed JP so kanji take Japanese shapes.
         if (Localizations.localeOf(context).languageCode == 'ja') {
           child = Theme(
-            data: buildTheme(Theme.of(context).brightness, fontFamily: fontJp),
+            data: buildTheme(
+              Theme.of(context).brightness,
+              fontFamily: fontJp,
+              seed: settings.seed,
+            ),
             child: child!,
           );
         }

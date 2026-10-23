@@ -2067,4 +2067,16 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get inbox => '收件匣';
+
+  @override
+  String get themeColors => '主題';
+
+  @override
+  String get themeDefault => '預設';
+
+  @override
+  String get themeWallpaper => '桌布顏色';
+
+  @override
+  String get androidOnly => '僅限 Android 12 以上';
 }

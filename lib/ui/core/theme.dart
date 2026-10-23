@@ -1,4 +1,7 @@
+import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
+import 'package:material_color_utilities/material_color_utilities.dart';
 
 import '../../domain/models/course.dart';
 import 'button_press.dart';
@@ -40,6 +43,30 @@ class Tones extends ThemeExtension<Tones> {
 
   final Tone lilac, mint, peach, sun;
   final List<Tone> identity;
+
+  /// Built around [seed] (主題: wallpaper colors, design A): lilac becomes
+  /// the seed's own palette, the other blocks lean toward it so they sit
+  /// together, and the identity colors stay so courses keep theirs.
+  Tones seeded(Color seed, Brightness brightness) {
+    final hct = Hct.fromInt(seed.toARGB32());
+    // As Android's own palettes: at least chroma 48, so a grey wallpaper
+    // still gives a color.
+    final palette = TonalPalette.of(hct.hue, math.max(hct.chroma, 48));
+    Color at(int tone) => Color(palette.get(tone));
+    Color lean(Color c) =>
+        Color(Blend.harmonize(c.toARGB32(), seed.toARGB32()));
+    Tone near(Tone t) => Tone(lean(t.fill), lean(t.ink), lean(t.strong));
+    return Tones(
+      // The tones lilac's own fill, ink and strong sit at.
+      lilac: brightness == Brightness.light
+          ? Tone(at(90), at(10), at(40))
+          : Tone(at(30), at(90), at(80)),
+      mint: near(mint),
+      peach: near(peach),
+      sun: near(sun),
+      identity: identity,
+    );
+  }
 
   List<Tone> get cycle => [lilac, mint, peach, sun];
 
@@ -208,11 +235,21 @@ class BarInputBorder extends InputBorder {
   );
 }
 
-ThemeData buildTheme(Brightness brightness, {String fontFamily = fontTw}) {
+/// The app's theme; with [seed], built around it (主題: wallpaper colors).
+ThemeData buildTheme(
+  Brightness brightness, {
+  String fontFamily = fontTw,
+  Color? seed,
+}) {
   final light = brightness == Brightness.light;
-  final tones = Tones.of(brightness);
+  final tones = seed == null
+      ? Tones.of(brightness)
+      : Tones.of(brightness).seeded(seed, brightness);
+  // Surfaces take a light tint of the seed.
+  Color tint(int argb) =>
+      Color(seed == null ? argb : Blend.harmonize(argb, seed.toARGB32()));
   final colors = ColorScheme.fromSeed(
-    seedColor: const Color(0xFF6750A4),
+    seedColor: seed ?? const Color(0xFF6750A4),
     brightness: brightness,
     primary: tones.lilac.strong,
     onPrimary: tones.lilac.fill,
@@ -220,14 +257,14 @@ ThemeData buildTheme(Brightness brightness, {String fontFamily = fontTw}) {
     onPrimaryContainer: tones.lilac.ink,
     secondaryContainer: tones.lilac.fill,
     onSecondaryContainer: tones.lilac.ink,
-    surface: Color(light ? 0xFFFFF8F4 : 0xFF17120F),
-    onSurface: Color(light ? 0xFF22191A : 0xFFF1E3DD),
-    onSurfaceVariant: Color(light ? 0xFF7A6766 : 0xFFB09A94),
+    surface: tint(light ? 0xFFFFF8F4 : 0xFF17120F),
+    onSurface: tint(light ? 0xFF22191A : 0xFFF1E3DD),
+    onSurfaceVariant: tint(light ? 0xFF7A6766 : 0xFFB09A94),
     // nav bar / card / track surfaces from the mockup
-    surfaceContainer: Color(light ? 0xFFFFF1EA : 0xFF221A17),
-    surfaceContainerLow: Color(light ? 0xFFFFFFFF : 0xFF251D1A),
-    surfaceContainerHigh: Color(light ? 0xFFF3E7E1 : 0xFF2C2320),
-    outlineVariant: Color(light ? 0xFFF0E3DC : 0xFF3A2E2A),
+    surfaceContainer: tint(light ? 0xFFFFF1EA : 0xFF221A17),
+    surfaceContainerLow: tint(light ? 0xFFFFFFFF : 0xFF251D1A),
+    surfaceContainerHigh: tint(light ? 0xFFF3E7E1 : 0xFF2C2320),
+    outlineVariant: tint(light ? 0xFFF0E3DC : 0xFF3A2E2A),
   );
   final base = ThemeData(
     colorScheme: colors,

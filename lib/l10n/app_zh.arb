@@ -1028,5 +1028,9 @@
   "mailTo": "給 {names}",
   "@mailTo": {"placeholders": {"names": {"type": "String"}}},
   "noSentMail": "沒有寄出的信件",
-  "inbox": "收件匣"
+  "inbox": "收件匣",
+  "themeColors": "主題",
+  "themeDefault": "預設",
+  "themeWallpaper": "桌布顏色",
+  "androidOnly": "僅限 Android 12 以上"
 }

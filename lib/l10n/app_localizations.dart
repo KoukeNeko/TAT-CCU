@@ -3705,6 +3705,30 @@ abstract class AppLocalizations {
   /// In zh, this message translates to:
   /// **'收件匣'**
   String get inbox;
+
+  /// No description provided for @themeColors.
+  ///
+  /// In zh, this message translates to:
+  /// **'主題'**
+  String get themeColors;
+
+  /// No description provided for @themeDefault.
+  ///
+  /// In zh, this message translates to:
+  /// **'預設'**
+  String get themeDefault;
+
+  /// No description provided for @themeWallpaper.
+  ///
+  /// In zh, this message translates to:
+  /// **'桌布顏色'**
+  String get themeWallpaper;
+
+  /// No description provided for @androidOnly.
+  ///
+  /// In zh, this message translates to:
+  /// **'僅限 Android 12 以上'**
+  String get androidOnly;
 }
 
 class _AppLocalizationsDelegate
