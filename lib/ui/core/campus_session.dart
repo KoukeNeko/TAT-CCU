@@ -293,6 +293,8 @@ class CampusSessionState extends State<CampusSession> {
       _go(_Step.connecting, uri.host);
       _web.loadRequest(Uri.parse(widget.entry));
     } else if (signsInItself) {
+      // The filled-in form may already have reported it waits on Turnstile.
+      if (uri.host == casHost && _step == _Step.verifying) return;
       _go(uri.host == casHost ? _Step.signingIn : _Step.connecting, uri.host);
     } else {
       // A sign-in form without a saved password, or one that failed: the
