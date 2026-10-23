@@ -94,8 +94,14 @@ abstract final class HomeWidgets {
       ],
     ];
     for (final name in _androidProviders) {
-      await HomeWidget.updateWidget(androidName: name);
-      await HomeWidget.scheduleWidgetUpdates(times, androidName: name);
+      // The classes keep the app's namespace while a dev build's package
+      // gets a suffix, so the name is given whole.
+      final qualified = 'io.github.koukeneko.tat_ccu.$name';
+      await HomeWidget.updateWidget(qualifiedAndroidName: qualified);
+      await HomeWidget.scheduleWidgetUpdates(
+        times,
+        qualifiedAndroidName: qualified,
+      );
     }
   }
 }

@@ -25,6 +25,7 @@ android {
         targetSdk = flutter.targetSdkVersion
         versionCode = flutter.versionCode
         versionName = flutter.versionName
+        manifestPlaceholders["appName"] = "TAT CCU"
     }
 
     // The release workflow passes the upload key in ANDROID_KEYSTORE and
@@ -43,6 +44,11 @@ android {
     }
 
     buildTypes {
+        // A dev build installs beside the Play one.
+        debug {
+            applicationIdSuffix = ".dev"
+            manifestPlaceholders["appName"] = "TAT CCU Dev"
+        }
         release {
             signingConfig = signingConfigs.getByName(
                 if (uploadKeystore != null) "upload" else "debug",
