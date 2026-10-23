@@ -16,6 +16,7 @@ import '../core/widgets.dart';
 import 'mail_compose_screen.dart';
 import '../../l10n/l10n.dart';
 import '../core/segment_switch.dart';
+import '../core/glass_dialog.dart';
 
 /// Marks a notification read on eCourse2 as it is opened. Offline it stays
 /// unread there and shows so on the next read.
@@ -470,17 +471,17 @@ class _MessagesScreenState extends State<MessagesScreen> {
 
   Future<void> _emptyTrash() async {
     final l10n = context.l10n;
-    final ok = await showDialog<bool>(
+    final ok = await showGlassDialog<bool>(
       context: context,
-      builder: (context) => AlertDialog(
-        title: Text(l10n.emptyTrashTitle),
+      builder: (context) => GlassDialog(
+        title: l10n.emptyTrashTitle,
         content: Text(l10n.emptyTrashBody),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
             child: Text(l10n.cancel),
           ),
-          TextButton(
+          FilledButton(
             onPressed: () => Navigator.pop(context, true),
             child: Text(l10n.emptyTrashAction),
           ),
@@ -763,16 +764,16 @@ class _MailScreenState extends State<MailScreen> {
   Future<void> _run(MailAction action) async {
     if (action == MailAction.discard) {
       final l10n = context.l10n;
-      final ok = await showDialog<bool>(
+      final ok = await showGlassDialog<bool>(
         context: context,
-        builder: (context) => AlertDialog(
-          title: Text(l10n.discardDraftTitle),
+        builder: (context) => GlassDialog(
+          title: l10n.discardDraftTitle,
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(context, false),
               child: Text(l10n.cancel),
             ),
-            TextButton(
+            FilledButton(
               onPressed: () => Navigator.pop(context, true),
               child: Text(l10n.discardDraft),
             ),

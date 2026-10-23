@@ -9,6 +9,7 @@ import '../core/glass_sheet.dart';
 import '../core/widgets.dart';
 import '../../data/repositories/parttime_data.dart';
 import '../core/campus_systems.dart';
+import '../core/glass_dialog.dart';
 
 /// Design round-11 parttime-screens: the five functions of 學習暨勞僱時數登錄
 /// on made-up data (alpha). The app bar button opens the real site.
@@ -65,10 +66,10 @@ class _ParttimeScreenState extends State<ParttimeScreen> {
   Future<void> _delete() async {
     final l10n = context.l10n;
     final ids = _selected!;
-    final yes = await showDialog<bool>(
+    final yes = await showGlassDialog<bool>(
       context: context,
-      builder: (context) => AlertDialog(
-        title: Text(l10n.ptDeleteTitle(ids.length)),
+      builder: (context) => GlassDialog(
+        title: l10n.ptDeleteTitle(ids.length),
         content: Text(
           [
             for (final e in _store.entries)
@@ -529,10 +530,10 @@ class _ParttimeAddScreenState extends State<ParttimeAddScreen> {
 
   Future<void> _save() async {
     final l10n = context.l10n;
-    final yes = await showDialog<bool>(
+    final yes = await showGlassDialog<bool>(
       context: context,
-      builder: (context) => AlertDialog(
-        title: Text(l10n.ptSaveTitle(_staged.length)),
+      builder: (context) => GlassDialog(
+        title: l10n.ptSaveTitle(_staged.length),
         content: Text(
           [
             for (final e in _staged)

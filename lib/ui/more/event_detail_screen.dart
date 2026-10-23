@@ -12,6 +12,7 @@ import '../core/glass_sheet.dart';
 import '../core/widgets.dart';
 import '../../data/services/events_data.dart';
 import 'events_screen.dart';
+import '../core/glass_dialog.dart';
 
 /// An event from the list, read again signed in: whether the student has
 /// signed up, the places left and the sign-up form. Signing up and
@@ -92,10 +93,10 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
     final l10n = context.l10n;
     final cancel = _event.cancel;
     if (cancel == null) return;
-    final yes = await showDialog<bool>(
+    final yes = await showGlassDialog<bool>(
       context: context,
-      builder: (context) => AlertDialog(
-        title: Text(l10n.cancelSignUpTitle),
+      builder: (context) => GlassDialog(
+        title: l10n.cancelSignUpTitle,
         content: Text(_event.title),
         actions: [
           TextButton(

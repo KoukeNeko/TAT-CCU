@@ -6,6 +6,7 @@ import 'package:webview_flutter/webview_flutter.dart';
 
 import '../../data/services/cas_credentials.dart';
 import '../../l10n/l10n.dart';
+import 'glass_dialog.dart';
 
 /// The school's CAS sign-in host.
 const casHost = 'cas.ccu.edu.tw';
@@ -116,10 +117,10 @@ class CasAutofill {
     if (login == await CasCredentials.read()) return;
     if (!_context.mounted) return;
     final l10n = _context.l10n;
-    final remember = await showDialog<bool>(
+    final remember = await showGlassDialog<bool>(
       context: _context,
-      builder: (context) => AlertDialog(
-        title: Text(l10n.rememberPasswordTitle),
+      builder: (context) => GlassDialog(
+        title: l10n.rememberPasswordTitle,
         content: Text(l10n.rememberPasswordBody),
         actions: [
           TextButton(

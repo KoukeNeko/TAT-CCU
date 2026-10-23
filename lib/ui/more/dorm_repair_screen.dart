@@ -10,6 +10,7 @@ import '../core/widgets.dart';
 import '../../data/repositories/dorm_repair_data.dart';
 import '../core/campus_systems.dart';
 import '../core/segment_switch.dart';
+import '../core/glass_dialog.dart';
 
 /// Design round-11 dorm-repair R1-A: past requests, then a full-page form
 /// with the site's four fields (alpha).
@@ -135,10 +136,10 @@ class _DormRepairFormScreenState extends State<DormRepairFormScreen> {
       memo: _memo.text.trim(),
       needPresence: _needPresence,
     );
-    final yes = await showDialog<bool>(
+    final yes = await showGlassDialog<bool>(
       context: context,
-      builder: (context) => AlertDialog(
-        title: Text(l10n.drSubmitTitle),
+      builder: (context) => GlassDialog(
+        title: l10n.drSubmitTitle,
         content: Text(
           '${request.room}・${request.memo}\n'
           '${request.needPresence ? l10n.drNeed : l10n.drNoNeed}・'

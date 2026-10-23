@@ -14,6 +14,7 @@ import '../core/theme.dart';
 import '../core/widgets.dart';
 import '../../data/services/ecourse_web.dart';
 import '../core/segment_switch.dart';
+import '../core/glass_dialog.dart';
 
 /// 請假單 (design/round-11 course-modules-screens), shaped like 宿舍維修:
 /// the student's own requests, then a button to the full-page form.
@@ -228,10 +229,10 @@ class _AbsenceFormScreenState extends State<AbsenceFormScreen> {
       online: _online,
       remark: _remark.text.trim(),
     );
-    final yes = await showDialog<bool>(
+    final yes = await showGlassDialog<bool>(
       context: context,
-      builder: (context) => AlertDialog(
-        title: Text(l10n.absenceSubmitTitle),
+      builder: (context) => GlassDialog(
+        title: l10n.absenceSubmitTitle,
         content: Text(
           '${_date.month}/${_date.day} ${weekdayName(context, _date.weekday)}・'
           '${_types(l10n)[_type]}・'

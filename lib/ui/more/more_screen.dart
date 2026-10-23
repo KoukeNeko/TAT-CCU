@@ -13,7 +13,7 @@ import '../../data/repositories/campus_cache.dart';
 import '../../data/repositories/ecourse_repository.dart';
 import '../../data/repositories/more_tiles_prefs.dart';
 import '../core/auto_refresh.dart';
-import '../core/glass.dart';
+import '../core/glass_dialog.dart';
 import '../core/theme.dart';
 import '../core/widgets.dart';
 import 'leave_screen.dart';
@@ -467,128 +467,61 @@ class MenuRow extends StatelessWidget {
 void _showStages(BuildContext context) {
   final l10n = context.l10n;
   final tones = context.tones;
-  showGeneralDialog<void>(
+  showGlassDialog<void>(
     context: context,
-    barrierDismissible: true,
-    barrierLabel: l10n.close,
-    barrierColor: Colors.black.withValues(alpha: 0.24),
-    transitionDuration: const Duration(milliseconds: 240),
-    // No FadeTransition: an opacity layer above BackdropFilter keeps the
-    // blur from painting until the fade ends.
-    transitionBuilder: (context, animation, _, child) => ScaleTransition(
-      scale: Tween(
-        begin: 0.92,
-        end: 1.0,
-      ).animate(CurvedAnimation(parent: animation, curve: Curves.easeOutQuart)),
-      child: child,
-    ),
-    pageBuilder: (context, _, _) => Center(
-      child: Padding(
-        padding: const EdgeInsets.all(pageMargin),
-        child: ConstrainedBox(
-          constraints: const BoxConstraints(maxWidth: 340),
-          child: GlassSurface(
-            radius: BorderRadius.circular(Corners.card),
-            child: Padding(
-              padding: const EdgeInsets.all(Space.xxl),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.start,
+    builder: (context) => GlassDialog(
+      title: l10n.pageStages,
+      content: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(l10n.stagesHelp),
+          const SizedBox(height: Space.l),
+          for (final (stage, tone, title, detail) in [
+            ('ALPHA', tones.peach, l10n.stageAlpha, l10n.stageAlphaDetail),
+            ('BETA', tones.lilac, l10n.stageBeta, l10n.stageBetaDetail),
+          ])
+            Padding(
+              padding: const EdgeInsets.only(bottom: Space.m),
+              child: Row(
                 children: [
-                  Text(
-                    l10n.pageStages,
-                    style: const TextStyle(
-                      fontSize: 20,
-                      fontWeight: FontWeight.w900,
-                      height: 1.2,
+                  SizedBox(
+                    width: 76,
+                    child: Align(
+                      alignment: Alignment.centerLeft,
+                      child: StatusPill(tone: tone, label: stage),
                     ),
                   ),
-                  const SizedBox(height: Space.xs),
-                  Text(
-                    l10n.stagesHelp,
-                    style: TextStyle(
-                      fontSize: 13,
-                      fontWeight: FontWeight.w700,
-                      height: 1.5,
-                      color: Theme.of(context).colorScheme.onSurfaceVariant,
-                    ),
-                  ),
-                  const SizedBox(height: Space.l),
-                  for (final (stage, tone, title, detail) in [
-                    (
-                      'ALPHA',
-                      tones.peach,
-                      l10n.stageAlpha,
-                      l10n.stageAlphaDetail,
-                    ),
-                    ('BETA', tones.lilac, l10n.stageBeta, l10n.stageBetaDetail),
-                  ])
-                    Padding(
-                      padding: const EdgeInsets.only(bottom: Space.m),
-                      child: Row(
-                        children: [
-                          SizedBox(
-                            width: 76,
-                            child: Align(
-                              alignment: Alignment.centerLeft,
-                              child: StatusPill(tone: tone, label: stage),
-                            ),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          title,
+                          style: TextStyle(
+                            fontSize: 15,
+                            fontWeight: FontWeight.w800,
+                            color: Theme.of(context).colorScheme.onSurface,
                           ),
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  title,
-                                  style: const TextStyle(
-                                    fontSize: 15,
-                                    fontWeight: FontWeight.w800,
-                                  ),
-                                ),
-                                Text(
-                                  detail,
-                                  style: TextStyle(
-                                    fontSize: 12,
-                                    fontWeight: FontWeight.w700,
-                                    color: Theme.of(context)
-                                        .colorScheme
-                                        .onSurfaceVariant,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ],
-                      ),
+                        ),
+                        Text(detail, style: const TextStyle(fontSize: 12)),
+                      ],
                     ),
-                  const SizedBox(height: Space.xs),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.end,
-                    children: [
-                      TextButton(
-                        // Tight, so the panel's inset is the same on all sides.
-                        style: TextButton.styleFrom(
-                          tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                        ),
-                        onPressed: () => Navigator.pop(context),
-                        child: Text(l10n.close),
-                      ),
-                      const SizedBox(width: Space.s),
-                      FilledButton(
-                        style: FilledButton.styleFrom(
-                          tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                        ),
-                        onPressed: () => _reportIssue(context),
-                        child: Text(l10n.reportIssue),
-                      ),
-                    ],
                   ),
                 ],
               ),
             ),
-          ),
-        ),
+        ],
       ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.pop(context),
+          child: Text(l10n.close),
+        ),
+        FilledButton(
+          onPressed: () => _reportIssue(context),
+          child: Text(l10n.reportIssue),
+        ),
+      ],
     ),
   );
 }

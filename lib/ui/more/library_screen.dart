@@ -13,6 +13,7 @@ import '../core/campus_web_screen.dart';
 import '../core/theme.dart';
 import '../core/glass_sheet.dart';
 import '../core/widgets.dart';
+import '../core/glass_dialog.dart';
 
 const _host = 'ccu.primo.exlibrisgroup.com';
 const _vid = '886CCU_INST:886CCU_INST';
@@ -629,17 +630,17 @@ Future<void> _confirmCancel(
   ValueChanged<Hold> onCancel,
 ) async {
   final l10n = context.l10n;
-  final cancel = await showDialog<bool>(
+  final cancel = await showGlassDialog<bool>(
     context: context,
-    builder: (dialog) => AlertDialog(
-      title: Text(l10n.cancelHoldTitle),
+    builder: (dialog) => GlassDialog(
+      title: l10n.cancelHoldTitle,
       content: Text(hold.title),
       actions: [
         TextButton(
           onPressed: () => Navigator.pop(dialog, false),
           child: Text(l10n.keepHold),
         ),
-        TextButton(
+        FilledButton(
           onPressed: () => Navigator.pop(dialog, true),
           child: Text(l10n.cancelHold),
         ),

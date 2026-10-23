@@ -10,6 +10,7 @@ import '../core/widgets.dart';
 import '../../l10n/l10n.dart';
 import 'forum_screen.dart';
 import '../core/campus_web_screen.dart';
+import '../core/glass_dialog.dart';
 
 /// Module types with a page of their own; others open on eCourse2.
 const moduleTypesWithPage = {'assign', 'quiz', 'folder', 'resource', 'forum'};
@@ -177,17 +178,17 @@ class _CommentsState extends State<_Comments> {
 
   Future<void> _delete(SubmissionComment c) async {
     final l10n = context.l10n;
-    final ok = await showDialog<bool>(
+    final ok = await showGlassDialog<bool>(
       context: context,
-      builder: (context) => AlertDialog(
-        title: Text(l10n.deleteComment),
+      builder: (context) => GlassDialog(
+        title: l10n.deleteComment,
         content: Text(c.text, maxLines: 3, overflow: TextOverflow.ellipsis),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
             child: Text(l10n.cancel),
           ),
-          TextButton(
+          FilledButton(
             onPressed: () => Navigator.pop(context, true),
             child: Text(l10n.delete),
           ),
