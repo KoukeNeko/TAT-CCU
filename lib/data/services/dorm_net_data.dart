@@ -21,20 +21,47 @@ const readDormNet = r'''
 (async () => {
   const page = JSON.parse(document.querySelector('#app')?.dataset.page || '{}');
   if (!page.props?.auth?.user) {
-    const sso = [...document.querySelectorAll('a')].find(a => a.href.includes('portal.dorm.ccu.edu.tw/sso.php'));
-    if (sso) { location.href = sso.href; return; }
-    throw new Error('DormNet sign-in link not found');
+    // A sign-in hand-off page (/ssoStore) has no app and moves on by itself;
+    // the script runs again on the page it lands on.
+    if (!document.querySelector('#app')) return;
+    // The welcome page draws its links after loading.
+    for (let i = 0; i < 20; i++) {
+      const sso = [...document.querySelectorAll('a')].find(a => a.href.includes('portal.dorm.ccu.edu.tw/sso.php'));
+      if (sso) { location.href = sso.href; return; }
+      await new Promise(done => setTimeout(done, 250));
+    }
+    throw new Error('DormNet sign-in link not found at ' + location.pathname);
   }
-  const get = async path => {
-    const r = await fetch(path, { credentials: 'same-origin', headers: {
-      'X-Inertia': 'true', 'X-Inertia-Version': page.version, 'X-Requested-With': 'XMLHttpRequest' } });
+  // Read one at a time, each checked to be JSON: right after signing in the
+  // site can still answer a read with a web page while the session settles,
+  // so a page gets one more try before it counts as an error.
+  const read = async (path, inertia) => {
+    const r = await fetch(path, { credentials: 'same-origin', headers: inertia
+      ? { 'X-Inertia': 'true', 'X-Inertia-Version': page.version, 'X-Requested-With': 'XMLHttpRequest' }
+      : { Accept: 'application/json' } });
     if (!r.ok) throw new Error(path + ' ' + r.status);
-    return (await r.json()).props || {};
+    if (!(r.headers.get('content-type') || '').includes('json')) {
+      const at = r.redirected ? ' at ' + new URL(r.url).pathname : '';
+      throw Object.assign(new Error(path + ' answered a web page' + at), { page: true });
+    }
+    return r.json();
   };
-  const [dash, breaks, cards, apply] = await Promise.all(
-    ['/dashboard', '/violations', '/settings/mac', '/apply'].map(get));
-  const wifi = await (await fetch('/wifiDevicesCount', {
-    credentials: 'same-origin', headers: { Accept: 'application/json' } })).json();
+  const readAll = async () => {
+    const props = [];
+    for (const path of ['/dashboard', '/violations', '/settings/mac', '/apply']) {
+      props.push((await read(path, true)).props || {});
+    }
+    return [...props, await read('/wifiDevicesCount', false)];
+  };
+  let all;
+  try {
+    all = await readAll();
+  } catch (e) {
+    if (!e.page) throw e;
+    await new Promise(done => setTimeout(done, 1500));
+    all = await readAll();
+  }
+  const [dash, breaks, cards, apply, wifi] = all;
   Campus.postMessage(JSON.stringify({
     usage: dash.quickActions?.bandwidth_usage ?? 0,
     disabling: dash.quickActions?.disabling ?? null,
