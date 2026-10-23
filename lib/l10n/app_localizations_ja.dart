@@ -2034,4 +2034,7 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get stageBetaDetail => 'すべてのアカウント状態は未確認';
+
+  @override
+  String get noMatchingPeople => '一致する人はいません';
 }

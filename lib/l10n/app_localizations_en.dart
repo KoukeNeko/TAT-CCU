@@ -2166,4 +2166,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get stageBetaDetail => 'Not every account state is covered';
+
+  @override
+  String get noMatchingPeople => 'No matching people';
 }

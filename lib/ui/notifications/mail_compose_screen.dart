@@ -450,7 +450,7 @@ class _Recipient extends StatelessWidget {
 }
 
 /// Everyone in the course to tick, teachers and TAs first; the search
-/// narrows both lists by name or student number.
+/// narrows both lists by name or student number (part of eCourse2's name).
 class _PeopleSheet extends StatefulWidget {
   const _PeopleSheet({
     required this.people,
@@ -487,10 +487,12 @@ class _PeopleSheetState extends State<_PeopleSheet> {
         if (people == null) {
           return const Center(child: CircularProgressIndicator());
         }
-        final q = _query.toLowerCase();
+        // Spaces ignored: Moodle may put one between family and given name.
+        String plain(String s) => s.replaceAll(RegExp(r'\s'), '').toLowerCase();
+        final q = plain(_query);
         final shown = [
           for (final p in people)
-            if (q.isEmpty || p.name.toLowerCase().contains(q)) p,
+            if (plain(p.name).contains(q)) p,
         ];
         Widget row(_Person p) => CheckboxListTile(
           value: widget.chosen.containsKey(p.id),
@@ -523,6 +525,11 @@ class _PeopleSheetState extends State<_PeopleSheet> {
                 for (final p in shown)
                   if (p.staff == staff) row(p),
               ],
+            if (shown.isEmpty)
+              Padding(
+                padding: const EdgeInsets.only(top: 60),
+                child: Center(child: Text(l10n.noMatchingPeople)),
+              ),
           ],
         );
       },

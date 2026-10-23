@@ -1020,5 +1020,6 @@
   "issueTemplate": "頁面：\n狀況：\n\nApp {version}・{platform}",
   "@issueTemplate": {"placeholders": {"version": {"type": "String"}, "platform": {"type": "String"}}},
   "stageAlphaDetail": "資料與操作可能有誤",
-  "stageBetaDetail": "未涵蓋所有帳號狀態"
+  "stageBetaDetail": "未涵蓋所有帳號狀態",
+  "noMatchingPeople": "沒有符合的人"
 }

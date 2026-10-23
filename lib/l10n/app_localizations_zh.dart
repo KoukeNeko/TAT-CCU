@@ -2044,4 +2044,7 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get stageBetaDetail => '未涵蓋所有帳號狀態';
+
+  @override
+  String get noMatchingPeople => '沒有符合的人';
 }

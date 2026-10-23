@@ -3663,6 +3663,12 @@ abstract class AppLocalizations {
   /// In zh, this message translates to:
   /// **'未涵蓋所有帳號狀態'**
   String get stageBetaDetail;
+
+  /// No description provided for @noMatchingPeople.
+  ///
+  /// In zh, this message translates to:
+  /// **'沒有符合的人'**
+  String get noMatchingPeople;
 }
 
 class _AppLocalizationsDelegate

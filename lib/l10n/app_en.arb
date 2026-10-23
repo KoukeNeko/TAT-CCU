@@ -594,5 +594,6 @@
   "reportIssue": "Report a problem",
   "issueTemplate": "Page:\nWhat happened:\n\nApp {version} · {platform}",
   "stageAlphaDetail": "Data and actions may be wrong",
-  "stageBetaDetail": "Not every account state is covered"
+  "stageBetaDetail": "Not every account state is covered",
+  "noMatchingPeople": "No matching people"
 }

@@ -594,5 +594,6 @@
   "reportIssue": "問題を報告",
   "issueTemplate": "ページ：\n状況：\n\nApp {version}・{platform}",
   "stageAlphaDetail": "データや操作に誤りがある可能性",
-  "stageBetaDetail": "すべてのアカウント状態は未確認"
+  "stageBetaDetail": "すべてのアカウント状態は未確認",
+  "noMatchingPeople": "一致する人はいません"
 }
