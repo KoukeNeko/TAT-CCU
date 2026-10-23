@@ -6,6 +6,8 @@ import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 
 import '../../data/repositories/ecourse_repository.dart';
+import '../../data/services/ecourse_web.dart';
+import '../core/campus_session.dart';
 import '../core/theme.dart';
 import '../courses/course_detail_screen.dart';
 import '../courses/forum_screen.dart';
@@ -69,7 +71,7 @@ Future<void> openEcourseLink(
   }
 }
 
-enum _Kind { mail, sent, forum, assignment, notice }
+enum _Kind { mail, sent, draft, forum, assignment, notice }
 
 enum _Filter { all, unread, mail, forum, assignment }
 
@@ -95,8 +97,8 @@ class MessagesScreen extends StatefulWidget {
 class _MessagesScreenState extends State<MessagesScreen> {
   var _filter = _Filter.all;
 
-  /// 信件 shows what was sent instead of the inbox (design/round-17 A).
-  var _sentBox = false;
+  /// The mail folder 信件 shows (design/round-20 B).
+  var _folder = MailFolder.inbox;
 
   /// What is shown beside the list in a wide window: a mail id or a
   /// notification link, and its page.
@@ -132,12 +134,17 @@ class _MessagesScreenState extends State<MessagesScreen> {
     curve: Curves.easeOutQuart,
   );
 
-  Future<void> _openMail(int id, {bool sent = false}) async {
-    if (sent) {
-      if (_wide) return _show(id, MailScreen(id: id, sent: true));
-      await Navigator.of(context).push(
-        MaterialPageRoute<void>(builder: (_) => MailScreen(id: id, sent: true)),
+  Future<void> _openMail(int id, MailFolder folder) async {
+    void gone() => setState(() => _open = null);
+    if (folder == MailFolder.sent || folder == MailFolder.drafts) {
+      final page = MailScreen(
+        id: id,
+        folder: folder,
+        onGone: _wide ? gone : null,
       );
+      if (_wide) return _show(id, page);
+      await Navigator.of(context)
+          .push(MaterialPageRoute<void>(builder: (_) => page));
       return;
     }
     setState(() => _unread[id] = false);
@@ -153,16 +160,21 @@ class _MessagesScreenState extends State<MessagesScreen> {
         id,
         MailScreen(
           id: id,
+          folder: folder,
           onUnread: () => setState(() {
             _unread[id] = true;
             _open = null;
           }),
+          onGone: gone,
         ),
       );
       return;
     }
-    final markedUnread = await Navigator.of(context)
-        .push<bool>(MaterialPageRoute(builder: (_) => MailScreen(id: id)));
+    final markedUnread = await Navigator.of(context).push<bool>(
+      MaterialPageRoute(
+        builder: (_) => MailScreen(id: id, folder: folder),
+      ),
+    );
     if (markedUnread == true && mounted) setState(() => _unread[id] = true);
   }
 
@@ -174,11 +186,11 @@ class _MessagesScreenState extends State<MessagesScreen> {
     _ => _Kind.notice,
   };
 
-  /// Sent mail shows only in 信件, switched to 寄件備份.
+  /// 信件 lists its chosen folder instead, from its own rows.
   bool _shows(_Filter filter, _Item i) => switch (filter) {
-    _Filter.all => i.kind != _Kind.sent,
+    _Filter.all => true,
     _Filter.unread => i.unread,
-    _Filter.mail => i.kind == (_sentBox ? _Kind.sent : _Kind.mail),
+    _Filter.mail => false,
     _Filter.forum => i.kind == _Kind.forum,
     _Filter.assignment => i.kind == _Kind.assignment,
   };
@@ -311,34 +323,44 @@ class _MessagesScreenState extends State<MessagesScreen> {
         watch: () => repo.watch(
           (repo) async => (
             notices: await repo.notices(),
-            mail: await repo.inbox(),
-            sent: await repo.sent(),
+            folders: {
+              for (final (i, mail) in (await Future.wait([
+                for (final f in MailFolder.values) repo.mailFolder(f),
+              ])).indexed)
+                MailFolder.values[i]: mail,
+            },
             courses: await repo.mailCourses(),
           ),
         ),
+        refreshOn: mailChanged,
         builder: (context, d) {
           final names = {for (final c in d.courses) c.id: c.name};
+          _Item mailRow(MailItem m, MailFolder folder) {
+            final mine =
+                folder == MailFolder.sent || folder == MailFolder.drafts;
+            return (
+              kind: switch (folder) {
+                MailFolder.sent => _Kind.sent,
+                MailFolder.drafts => _Kind.draft,
+                _ => _Kind.mail,
+              },
+              title: m.subject,
+              detail:
+                  '${mine ? l10n.mailTo(m.to) : m.sender}・'
+                  '${names[m.courseId] ?? m.course}',
+              time: m.time,
+              unread: !mine && (_unread[m.id] ?? m.unread),
+              selected: m.id == _open,
+              onTap: () => _openMail(m.id, folder),
+            );
+          }
+
+          final mail = [
+            for (final m in d.folders[_folder]!) mailRow(m, _folder),
+          ]..sort((a, b) => b.time.compareTo(a.time));
           final all = <_Item>[
-            for (final m in d.mail)
-              (
-                kind: _Kind.mail,
-                title: m.subject,
-                detail: '${m.sender}・${names[m.courseId] ?? m.course}',
-                time: m.time,
-                unread: _unread[m.id] ?? m.unread,
-                selected: m.id == _open,
-                onTap: () => _openMail(m.id),
-              ),
-            for (final m in d.sent)
-              (
-                kind: _Kind.sent,
-                title: m.subject,
-                detail: '${l10n.mailTo(m.to)}・${names[m.courseId] ?? m.course}',
-                time: m.time,
-                unread: false,
-                selected: m.id == _open,
-                onTap: () => _openMail(m.id, sent: true),
-              ),
+            for (final m in d.folders[MailFolder.inbox]!)
+              mailRow(m, MailFolder.inbox),
             for (final n in d.notices)
               (
                 kind: _kindOf(n.component),
@@ -374,37 +396,100 @@ class _MessagesScreenState extends State<MessagesScreen> {
             },
             children: [
               for (final f in _Filter.values)
-                _list(
-                  context,
-                  [
+                if (f == _Filter.mail)
+                  _mailPage(context, mail)
+                else
+                  _list(context, [
                     for (final i in all)
                       if (_shows(f, i)) i,
-                  ],
-                  empty: f == _Filter.mail && _sentBox
-                      ? l10n.noSentMail
-                      : l10n.noNotifications,
-                  header: f == _Filter.mail
-                      ? Padding(
-                          padding: const EdgeInsets.only(top: Space.m),
-                          child: Align(
-                            alignment: AlignmentDirectional.centerStart,
-                            child: SegmentSwitch(
-                              labels: [l10n.inbox, l10n.sentMail],
-                              selected: _sentBox ? 1 : 0,
-                              tone: context.tones.sun,
-                              segment: 88,
-                              onChanged: (i) =>
-                                  setState(() => _sentBox = i == 1),
-                            ),
-                          ),
-                        )
-                      : null,
-                ),
+                  ], empty: l10n.noNotifications),
             ],
           );
         },
       ),
     );
+  }
+
+  /// The chosen folder under its five, as on eCourse2, which float over
+  /// the list; the trash, when it has mail, can be emptied.
+  Widget _mailPage(BuildContext context, List<_Item> shown) {
+    final l10n = context.l10n;
+    final pad = scrollPadding(context, top: 0);
+    return Stack(
+      children: [
+        _list(
+          context,
+          shown,
+          empty: l10n.noMail,
+          // Room for the folders above the first row.
+          header: Padding(
+            padding: const EdgeInsets.only(top: Space.m + 40),
+            child: _folder == MailFolder.trash && shown.isNotEmpty
+                ? Align(
+                    alignment: AlignmentDirectional.centerEnd,
+                    child: Padding(
+                      padding: const EdgeInsets.only(top: Space.s),
+                      child: TextButton(
+                        onPressed: _emptyTrash,
+                        child: Text(l10n.emptyTrash),
+                      ),
+                    ),
+                  )
+                : null,
+          ),
+        ),
+        Positioned(
+          top: pad.top + Space.m,
+          left: pad.left,
+          right: pad.right,
+          child: SegmentSwitch(
+            labels: [
+              l10n.folderInbox,
+              l10n.folderStarred,
+              l10n.folderDrafts,
+              l10n.folderSent,
+              l10n.folderTrash,
+            ],
+            selected: _folder.index,
+            tone: context.tones.sun,
+            onChanged: (i) => setState(() => _folder = MailFolder.values[i]),
+            floating: true,
+          ),
+        ),
+      ],
+    );
+  }
+
+  Future<void> _emptyTrash() async {
+    final l10n = context.l10n;
+    final ok = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text(l10n.emptyTrashTitle),
+        content: Text(l10n.emptyTrashBody),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: Text(l10n.cancel),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(context, true),
+            child: Text(l10n.emptyTrashAction),
+          ),
+        ],
+      ),
+    );
+    if (ok != true || !mounted) return;
+    final error = await Navigator.of(context).push<String>(
+      MaterialPageRoute(builder: (_) => const _EmptyTrashScreen()),
+    );
+    if (!mounted) return;
+    if (error != null) {
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text(error)));
+    } else {
+      mailChanged.value++;
+    }
   }
 
   Widget _list(
@@ -490,7 +575,8 @@ class SentMailScreen extends StatelessWidget {
                   selected: false,
                   onTap: () => Navigator.of(context).push(
                     MaterialPageRoute<void>(
-                      builder: (_) => MailScreen(id: m.id, sent: true),
+                      builder: (_) =>
+                          MailScreen(id: m.id, folder: MailFolder.sent),
                     ),
                   ),
                 ),
@@ -519,6 +605,10 @@ class _MessageRow extends StatelessWidget {
       _Kind.sent => (
         Tone(scheme.surfaceContainerHigh, t.sun.strong, t.sun.strong),
         Icons.send_outlined,
+      ),
+      _Kind.draft => (
+        Tone(scheme.surfaceContainerHigh, t.sun.strong, t.sun.strong),
+        Icons.edit_outlined,
       ),
       _Kind.forum => (t.lilac, Icons.forum_outlined),
       _Kind.assignment => (t.peach, Icons.assignment_outlined),
@@ -604,135 +694,289 @@ class _MessageRow extends StatelessWidget {
   }
 }
 
+/// Empties the trash on eCourse2's mail pages, showing the sign-in steps
+/// meanwhile; closes with null when done, or the error.
+class _EmptyTrashScreen extends StatelessWidget {
+  const _EmptyTrashScreen();
+
+  @override
+  Widget build(BuildContext context) => CampusSession(
+    title: context.l10n.emptyTrash,
+    entry: ecourseEntry,
+    host: ecourseHost,
+    script: () => mailAction(MailAction.emptyTrash),
+    onMessage: (message) => Navigator.of(context).pop(
+      message['ok'] == true
+          ? null
+          : '${message['error'] ?? context.l10n.sendFailed}',
+    ),
+    child: null,
+  );
+}
+
 /// One message, read in the app; opening it marks it read on eCourse2.
-/// Replying and forwarding happen on eCourse2's page for the message.
-class MailScreen extends StatelessWidget {
+/// Starring, the trash and discarding a draft go through eCourse2's mail
+/// pages in a signed-in page behind the message ([mailAction]).
+class MailScreen extends StatefulWidget {
   const MailScreen({
     super.key,
     required this.id,
+    this.folder = MailFolder.inbox,
     this.onUnread,
-    this.sent = false,
+    this.onGone,
   });
 
   final int id;
 
-  /// One this account sent: who it went to, and nothing to mark or reply.
-  final bool sent;
+  /// Where it was opened from: sent mail has nothing to mark or reply to,
+  /// a draft is edited instead, and one in the trash is restored.
+  final MailFolder folder;
 
   /// After marking it unread; when not given, the page closes with true.
   final VoidCallback? onUnread;
+
+  /// After it leaves its folder (deleted, restored or discarded); when not
+  /// given, the page closes.
+  final VoidCallback? onGone;
+
+  @override
+  State<MailScreen> createState() => _MailScreenState();
+}
+
+class _MailScreenState extends State<MailScreen> {
+  final _session = GlobalKey<CampusSessionState>();
+
+  /// The star as last set here; null until it is.
+  bool? _starred;
+  MailAction? _running;
+
+  MailFolder get _folder => widget.folder;
+
+  Future<void> _run(MailAction action) async {
+    if (action == MailAction.discard) {
+      final l10n = context.l10n;
+      final ok = await showDialog<bool>(
+        context: context,
+        builder: (context) => AlertDialog(
+          title: Text(l10n.discardDraftTitle),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context, false),
+              child: Text(l10n.cancel),
+            ),
+            TextButton(
+              onPressed: () => Navigator.pop(context, true),
+              child: Text(l10n.discardDraft),
+            ),
+          ],
+        ),
+      );
+      if (ok != true || !mounted) return;
+    }
+    setState(() => _running = action);
+    await _session.currentState?.runSignedIn(
+      mailAction(action, folder: _folder.name, id: widget.id),
+    );
+  }
+
+  void _received(Map<String, dynamic> message, bool starred) {
+    final action = _running;
+    setState(() => _running = null);
+    if (message['ok'] != true) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('${message['error'] ?? context.l10n.sendFailed}'),
+        ),
+      );
+      return;
+    }
+    mailChanged.value++;
+    if (action == MailAction.star) {
+      setState(() => _starred = !starred);
+    } else if (widget.onGone != null) {
+      widget.onGone!();
+    } else {
+      Navigator.of(context).pop();
+    }
+  }
+
+  /// A reply, or the draft carried on; a draft sent leaves the drafts.
+  Future<void> _write(MailMessage m) async {
+    final draft = _folder == MailFolder.drafts;
+    final sent = await Navigator.of(context).push<bool>(
+      MaterialPageRoute(
+        builder: (_) => draft
+            ? MailComposeScreen(
+                draft: widget.id,
+                replyName: m.to,
+                subject: m.subject,
+                body: m.body,
+              )
+            : MailComposeScreen(replyTo: widget.id, replyName: m.sender),
+      ),
+    );
+    if (sent != true || !mounted) return;
+    mailChanged.value++;
+    if (!draft) return;
+    if (widget.onGone != null) {
+      widget.onGone!();
+    } else {
+      Navigator.of(context).pop();
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
     final repo = context.read<EcourseRepository>();
     final l10n = context.l10n;
     final scheme = Theme.of(context).colorScheme;
-    return Scaffold(
-      extendBodyBehindAppBar: true,
-      appBar: subBar(
-        context,
-        '',
-        action: sent
-            ? null
-            : IconButton(
-                tooltip: l10n.markUnread,
-                icon: const Icon(Icons.mark_email_unread_outlined),
-                onPressed: () async {
-                  try {
-                    await repo.markMailUnread(id);
-                    if (onUnread != null) {
-                      onUnread!();
-                    } else if (context.mounted) {
-                      Navigator.of(context).pop(true);
-                    }
-                  } catch (e) {
-                    if (context.mounted) showSendError(context, e);
-                  }
-                },
-              ),
-      ),
-      body: Loader.watch(
-        watch: () => repo.watch((repo) => repo.mailMessage(id)),
-        builder: (context, m) => Column(
-          children: [
-            Expanded(
-              child: ListView(
-                // The reply bar below takes the bottom inset, when there is one.
-                padding: sent
-                    ? scrollPadding(context)
-                    : scrollPadding(context).copyWith(bottom: 16),
-                children: [
-                  Text(
-                    m.course,
-                    style: TextStyle(
-                      color: scheme.onSurfaceVariant,
-                      fontWeight: FontWeight.w800,
-                    ),
-                  ),
-                  const SizedBox(height: 6),
-                  SelectableText(
-                    m.subject,
-                    style: const TextStyle(
-                      fontSize: 24,
-                      fontWeight: FontWeight.w900,
-                      height: 1.25,
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  Text(
-                    '${sent ? l10n.mailTo(m.to) : m.sender}・'
-                    '${dateTimeLabel(context, m.time)}',
-                    style: TextStyle(
-                      color: scheme.onSurfaceVariant,
-                      fontWeight: FontWeight.w700,
-                    ),
-                  ),
-                  const SizedBox(height: 16),
-                  SelectableText(
-                    m.body,
-                    style: const TextStyle(fontSize: 15, height: 1.7),
-                  ),
-                  if (m.attachments.isNotEmpty) ...[
-                    SectionLabel(l10n.attachments),
-                    FileList(
-                      files: m.attachments,
-                      detail: (f) => fileSize(f.size),
-                    ),
-                  ],
-                ],
-              ),
-            ),
-            if (!sent)
-              Padding(
-                padding: EdgeInsets.fromLTRB(
-                  pageMargin,
-                  Space.s,
-                  pageMargin,
-                  MediaQuery.paddingOf(context).bottom + Space.s,
+    final sent = _folder == MailFolder.sent || _folder == MailFolder.drafts;
+    return Loader.watch(
+      bar: (context) => subBar(context, ''),
+      watch: () => repo.watch((repo) => repo.mailMessage(widget.id)),
+      builder: (context, m) {
+        final starred = _starred ?? m.starred;
+        final busy = _running != null;
+        IconButton button(String tip, IconData icon, VoidCallback onTap) =>
+            IconButton(
+              tooltip: tip,
+              icon: Icon(icon),
+              onPressed: busy ? null : onTap,
+            );
+        return CampusSession(
+          key: _session,
+          title: '',
+          entry: ecourseEntry,
+          host: ecourseHost,
+          loadOnStart: false,
+          script: () => ecourseScript("post({ kind: 'ready' });"),
+          onMessage: (message) {
+            if (message['kind'] == 'mail') _received(message, starred);
+          },
+          action: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              if (_folder != MailFolder.drafts && _folder != MailFolder.trash)
+                button(
+                  starred ? l10n.unstarMail : l10n.starMail,
+                  starred ? Icons.star_rounded : Icons.star_outline_rounded,
+                  () => _run(MailAction.star),
                 ),
-                // A pill under the text beside the list; the full width on a
-                // phone.
-                child: Align(
-                  alignment: AlignmentDirectional.centerStart,
-                  child: SizedBox(
-                    width: onUnread != null ? null : double.infinity,
-                    child: FilledButton(
-                      onPressed: () => Navigator.of(context).push(
-                        MaterialPageRoute(
-                          builder: (_) => MailComposeScreen(
-                            replyTo: id,
-                            replyName: m.sender,
-                          ),
+              if (!sent && _folder != MailFolder.trash)
+                button(
+                  l10n.markUnread,
+                  Icons.mark_email_unread_outlined,
+                  () async {
+                    try {
+                      await repo.markMailUnread(widget.id);
+                      if (widget.onUnread != null) {
+                        widget.onUnread!();
+                      } else if (context.mounted) {
+                        Navigator.of(context).pop(true);
+                      }
+                    } catch (e) {
+                      if (context.mounted) showSendError(context, e);
+                    }
+                  },
+                ),
+              switch (_folder) {
+                MailFolder.drafts => button(
+                  l10n.discardDraft,
+                  Icons.delete_outline,
+                  () => _run(MailAction.discard),
+                ),
+                MailFolder.trash => button(
+                  l10n.restoreMail,
+                  Icons.restore_from_trash_outlined,
+                  () => _run(MailAction.delete),
+                ),
+                _ => button(
+                  l10n.delete,
+                  Icons.delete_outline,
+                  () => _run(MailAction.delete),
+                ),
+              },
+            ],
+          ),
+          child: Column(
+            children: [
+              Expanded(
+                child: ListView(
+                  // The reply bar below takes the bottom inset, when there
+                  // is one.
+                  padding: _folder == MailFolder.sent
+                      ? scrollPadding(context)
+                      : scrollPadding(context).copyWith(bottom: 16),
+                  children: [
+                    Text(
+                      m.course,
+                      style: TextStyle(
+                        color: scheme.onSurfaceVariant,
+                        fontWeight: FontWeight.w800,
+                      ),
+                    ),
+                    const SizedBox(height: 6),
+                    SelectableText(
+                      m.subject,
+                      style: const TextStyle(
+                        fontSize: 24,
+                        fontWeight: FontWeight.w900,
+                        height: 1.25,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      '${sent ? l10n.mailTo(m.to) : m.sender}・'
+                      '${dateTimeLabel(context, m.time)}',
+                      style: TextStyle(
+                        color: scheme.onSurfaceVariant,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    SelectableText(
+                      m.body,
+                      style: const TextStyle(fontSize: 15, height: 1.7),
+                    ),
+                    if (m.attachments.isNotEmpty) ...[
+                      SectionLabel(l10n.attachments),
+                      FileList(
+                        files: m.attachments,
+                        detail: (f) => fileSize(f.size),
+                      ),
+                    ],
+                  ],
+                ),
+              ),
+              if (_folder != MailFolder.sent && _folder != MailFolder.trash)
+                Padding(
+                  padding: EdgeInsets.fromLTRB(
+                    pageMargin,
+                    Space.s,
+                    pageMargin,
+                    MediaQuery.paddingOf(context).bottom + Space.s,
+                  ),
+                  // A pill under the text beside the list; the full width on
+                  // a phone.
+                  child: Align(
+                    alignment: AlignmentDirectional.centerStart,
+                    child: SizedBox(
+                      width: widget.onGone != null ? null : double.infinity,
+                      child: FilledButton(
+                        onPressed: busy ? null : () => _write(m),
+                        child: Text(
+                          _folder == MailFolder.drafts
+                              ? l10n.editDraft
+                              : l10n.reply,
                         ),
                       ),
-                      child: Text(l10n.reply),
                     ),
                   ),
                 ),
-              ),
-          ],
-        ),
-      ),
+            ],
+          ),
+        );
+      },
     );
   }
 }

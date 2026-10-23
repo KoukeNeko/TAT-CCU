@@ -2056,7 +2056,49 @@ class AppLocalizationsJa extends AppLocalizations {
   String get noSentMail => '送信したメールはありません';
 
   @override
-  String get inbox => '受信箱';
+  String get folderInbox => '受信';
+
+  @override
+  String get folderStarred => 'スター';
+
+  @override
+  String get folderDrafts => '下書き';
+
+  @override
+  String get folderSent => '送信';
+
+  @override
+  String get folderTrash => 'ゴミ箱';
+
+  @override
+  String get starMail => 'スターを付ける';
+
+  @override
+  String get unstarMail => 'スターを外す';
+
+  @override
+  String get restoreMail => '元に戻す';
+
+  @override
+  String get discardDraft => '破棄';
+
+  @override
+  String get discardDraftTitle => 'この下書きを破棄しますか？';
+
+  @override
+  String get editDraft => '編集を続ける';
+
+  @override
+  String get emptyTrash => 'ゴミ箱を空にする';
+
+  @override
+  String get emptyTrashTitle => 'ゴミ箱を空にしますか？';
+
+  @override
+  String get emptyTrashBody => 'ゴミ箱のメールは完全に削除されます。';
+
+  @override
+  String get emptyTrashAction => '空にする';
 
   @override
   String get themeColors => 'テーマ';

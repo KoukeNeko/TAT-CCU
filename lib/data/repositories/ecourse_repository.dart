@@ -37,7 +37,12 @@ typedef MailItem = ({
   String course,
   DateTime time,
   bool unread,
+  bool starred,
 });
+
+/// eCourse2's mail folders, as its menu lists them; the names are the
+/// `type` its index takes.
+enum MailFolder { inbox, starred, drafts, sent, trash }
 
 /// One message in full; reading it marks it read on eCourse2.
 typedef MailMessage = ({
@@ -48,6 +53,7 @@ typedef MailMessage = ({
   DateTime time,
   String body,
   List<ModuleFile> attachments,
+  bool starred,
 });
 
 /// A comment on an assignment submission; [mine] can be deleted.
@@ -150,6 +156,10 @@ DateTime _ts(Object? s) =>
 /// Ticks when this app marks mail or a notification read or unread, so
 /// the unread counts shown elsewhere ask again.
 final unreadChanged = ValueNotifier(0);
+
+/// Ticks when mail is starred, moved to or from the trash, sent or
+/// discarded through eCourse2's pages, so the mail folders ask again.
+final mailChanged = ValueNotifier(0);
 
 class EcourseRepository {
   EcourseRepository(this._client);
@@ -337,6 +347,9 @@ class EcourseRepository {
   /// What this account sent, newest first.
   Future<List<MailItem>> sent() => _mailIndex('sent');
 
+  Future<List<MailItem>> mailFolder(MailFolder folder) =>
+      _mailIndex(folder.name);
+
   Future<List<MailItem>> _mailIndex(String type) async {
     final r = await _client.call('local_mail_get_index', {
       'type': type,
@@ -355,6 +368,7 @@ class EcourseRepository {
           course: '${m['course']?['shortname'] ?? ''}',
           time: _ts(m['time']),
           unread: m['unread'] == true,
+          starred: m['starred'] == true,
         ),
     ];
   }
@@ -393,6 +407,7 @@ class EcourseRepository {
             modified: _ts(m['time']),
           ),
       ],
+      starred: m['starred'] == true,
     );
   }
 

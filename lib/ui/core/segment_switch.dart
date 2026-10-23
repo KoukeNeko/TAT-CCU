@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 import 'app_shell.dart';
+import 'glass.dart';
 import 'theme.dart';
 
 /// The app's one choice control, as the timetable's 日 / 週: a track as tall
@@ -17,6 +18,7 @@ class SegmentSwitch extends StatefulWidget {
     this.tone,
     this.segment,
     this.disabled = const {},
+    this.floating = false,
   });
 
   final List<String> labels;
@@ -34,6 +36,9 @@ class SegmentSwitch extends StatefulWidget {
 
   /// Options shown but not available here: dimmed, and skipped by a finger.
   final Set<int> disabled;
+
+  /// A glass track floating over a list, which lifts with it when pressed.
+  final bool floating;
 
   @override
   State<SegmentSwitch> createState() => _SegmentSwitchState();
@@ -59,6 +64,12 @@ class _SegmentSwitchState extends State<SegmentSwitch> {
     setState(() => _hover = null);
     if (commit && i != null && i != widget.selected) widget.onChanged(i);
   }
+
+  /// The track in glass when [SegmentSwitch.floating]: inside the press
+  /// scale, so the glass's clip grows with it.
+  Widget _glass(Widget track) => widget.floating
+      ? GlassSurface(radius: BorderRadius.circular(20), child: track)
+      : track;
 
   @override
   Widget build(BuildContext context) {
@@ -119,40 +130,44 @@ class _SegmentSwitchState extends State<SegmentSwitch> {
               onPointerMove: (e) => _move(e.localPosition.dx),
               onPointerUp: (_) => _release(commit: true),
               onPointerCancel: (_) => _release(commit: false),
-              child: Container(
-                height: 40,
-                width: _segment * count + 2 * Space.xs,
-                padding: const EdgeInsets.all(Space.xs),
-                decoration: ShapeDecoration(
-                  color: scheme.surfaceContainer,
-                  shape: const StadiumBorder(),
-                ),
-                child: Stack(
-                  children: [
-                    AnimatedPositioned(
-                      duration: barMove,
-                      curve: barSettle,
-                      left: shown * _segment,
-                      top: 0,
-                      bottom: 0,
-                      width: _segment,
-                      child: AnimatedContainer(
-                        duration: barMove,
-                        curve: barSettle,
-                        decoration: ShapeDecoration(
-                          // Held, the capsule deepens, like the nav bar's.
-                          color: pressed
-                              ? Color.lerp(tone.strong, tone.fill, 0.12)
-                              : tone.strong,
+              child: _glass(
+                Container(
+                  height: 40,
+                  width: _segment * count + 2 * Space.xs,
+                  padding: const EdgeInsets.all(Space.xs),
+                  decoration: widget.floating
+                      ? null
+                      : ShapeDecoration(
+                          color: scheme.surfaceContainer,
                           shape: const StadiumBorder(),
                         ),
+                  child: Stack(
+                    children: [
+                      AnimatedPositioned(
+                        duration: barMove,
+                        curve: barSettle,
+                        left: shown * _segment,
+                        top: 0,
+                        bottom: 0,
+                        width: _segment,
+                        child: AnimatedContainer(
+                          duration: barMove,
+                          curve: barSettle,
+                          decoration: ShapeDecoration(
+                            // Held, the capsule deepens, like the nav bar's.
+                            color: pressed
+                                ? Color.lerp(tone.strong, tone.fill, 0.12)
+                                : tone.strong,
+                            shape: const StadiumBorder(),
+                          ),
+                        ),
                       ),
-                    ),
-                    Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [for (var i = 0; i < count; i++) label(i)],
-                    ),
-                  ],
+                      Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [for (var i = 0; i < count; i++) label(i)],
+                      ),
+                    ],
+                  ),
                 ),
               ),
             ),

@@ -20,12 +20,24 @@ typedef _Person = ({int id, String name, bool staff});
 /// docked above the keyboard. Sending runs [sendMail] in a signed-in
 /// eCourse2 page behind the fields, so nothing exists on eCourse2 until
 /// 送出. A reply ([replyTo]) keeps the recipient and subject eCourse2
-/// fills in.
+/// fills in; a [draft] keeps its course and recipients, and starts from its
+/// [subject] and [body].
 class MailComposeScreen extends StatefulWidget {
-  const MailComposeScreen({super.key, this.replyTo, this.replyName});
+  const MailComposeScreen({
+    super.key,
+    this.replyTo,
+    this.replyName,
+    this.draft,
+    this.subject = '',
+    this.body = '',
+  });
 
   final int? replyTo;
+
+  /// Who a reply or the draft goes to.
   final String? replyName;
+  final int? draft;
+  final String subject, body;
 
   @override
   State<MailComposeScreen> createState() => _MailComposeScreenState();
@@ -34,8 +46,8 @@ class MailComposeScreen extends StatefulWidget {
 class _MailComposeScreenState extends State<MailComposeScreen>
     with SingleTickerProviderStateMixin {
   final _session = GlobalKey<CampusSessionState>();
-  final _subject = TextEditingController();
-  final _body = TextEditingController();
+  late final _subject = TextEditingController(text: widget.subject);
+  late final _body = TextEditingController(text: widget.body);
 
   /// The send animation: the letter sinks into the envelope, the envelope
   /// shoots up, then the 已寄出 badge.
@@ -57,11 +69,15 @@ class _MailComposeScreenState extends State<MailComposeScreen>
 
   bool get _reply => widget.replyTo != null;
 
+  /// The recipients are set already: a reply's or the draft's.
+  bool get _addressed => _reply || widget.draft != null;
+
   bool get _canSend =>
       _ready &&
       !_sending &&
       _body.text.trim().isNotEmpty &&
-      (_reply || _to.isNotEmpty && _subject.text.trim().isNotEmpty);
+      (_reply ||
+          (_addressed || _to.isNotEmpty) && _subject.text.trim().isNotEmpty);
 
   @override
   void dispose() {
@@ -101,6 +117,7 @@ class _MailComposeScreenState extends State<MailComposeScreen>
         courseId: _course?.id,
         to: _to.keys.toList(),
         replyTo: widget.replyTo,
+        draft: widget.draft,
         subject: _subject.text.trim(),
         html: textAsHtml(_body.text.trim()),
       ),
@@ -265,7 +282,7 @@ class _MailComposeScreenState extends State<MailComposeScreen>
           child: ListView(
             padding: scrollPadding(context),
             children: [
-              if (!_reply)
+              if (!_addressed)
                 Align(
                   alignment: Alignment.centerLeft,
                   child: Material(
@@ -308,7 +325,7 @@ class _MailComposeScreenState extends State<MailComposeScreen>
                   runSpacing: 6,
                   crossAxisAlignment: WrapCrossAlignment.center,
                   children: [
-                    if (_reply)
+                    if (_addressed)
                       _Recipient(name: widget.replyName ?? '')
                     else ...[
                       for (final MapEntry(key: id, value: name) in _to.entries)

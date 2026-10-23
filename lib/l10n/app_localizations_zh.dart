@@ -2066,7 +2066,49 @@ class AppLocalizationsZh extends AppLocalizations {
   String get noSentMail => '沒有寄出的信件';
 
   @override
-  String get inbox => '收件匣';
+  String get folderInbox => '收件';
+
+  @override
+  String get folderStarred => '星號';
+
+  @override
+  String get folderDrafts => '草稿';
+
+  @override
+  String get folderSent => '寄件';
+
+  @override
+  String get folderTrash => '垃圾';
+
+  @override
+  String get starMail => '加上星號';
+
+  @override
+  String get unstarMail => '移除星號';
+
+  @override
+  String get restoreMail => '還原';
+
+  @override
+  String get discardDraft => '捨棄';
+
+  @override
+  String get discardDraftTitle => '捨棄這份草稿？';
+
+  @override
+  String get editDraft => '繼續編輯';
+
+  @override
+  String get emptyTrash => '清空垃圾桶';
+
+  @override
+  String get emptyTrashTitle => '清空垃圾桶？';
+
+  @override
+  String get emptyTrashBody => '垃圾桶裡的信件會永久刪除。';
+
+  @override
+  String get emptyTrashAction => '清空';
 
   @override
   String get themeColors => '主題';

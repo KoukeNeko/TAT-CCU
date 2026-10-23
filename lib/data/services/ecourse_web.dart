@@ -166,17 +166,24 @@ Attendance attendanceOf(Map<String, dynamic> json) {
 
 /// Sends eCourse2 mail through its own pages (local_mail 1.x has no web
 /// service to send): create.php makes a draft in [courseId] addressed to
-/// [to], or view.php's reply makes one answering [replyTo]; then the
-/// compose form it lands on is posted with `send`. An empty [subject] keeps
-/// the one eCourse2 filled in (`RE: …` for a reply). Answers `sent`.
+/// [to], view.php's reply makes one answering [replyTo], or [draft] is one
+/// saved before; then the compose form it lands on is posted with `send`.
+/// An empty [subject] keeps the one eCourse2 filled in (`RE: …` for a
+/// reply). Answers `sent`.
 String sendMail({
   int? courseId,
   List<int> to = const [],
   int? replyTo,
+  int? draft,
   required String subject,
   required String html,
 }) {
-  final start = replyTo != null
+  final start = draft != null
+      ? {
+          'url': '/local/mail/compose.php',
+          'body': {'m': '$draft'},
+        }
+      : replyTo != null
       ? {
           'url': '/local/mail/view.php',
           'body': {'t': 'inbox', 'm': '$replyTo', 'reply': '1'},
@@ -218,5 +225,55 @@ String sendMail({
   const error = ok ? null : ([...done.querySelectorAll('.error, .invalid-feedback, .alert-danger')]
     .map(e => e.textContent.trim()).find(Boolean) || 'HTTP ' + sent.status);
   post({ kind: 'sent', ok, error });
+''');
+}
+
+/// What [mailAction] does; local_mail 1.x has a web service only for
+/// marking mail read.
+enum MailAction { star, delete, emptyTrash, discard }
+
+/// Does [action] on eCourse2's mail pages: [MailAction.star] and
+/// [MailAction.delete] toggle the star and the trash of message [id] as
+/// seen in [folder] (deleting one in the trash restores it), and
+/// [MailAction.discard] posts draft [id]'s form with `discard`. Answers
+/// `{kind: 'mail', ok, error}`.
+String mailAction(MailAction action, {String folder = 'inbox', int id = 0}) {
+  final params = switch (action) {
+    MailAction.star => {'t': folder, 'm': '$id', 'starred': '$id'},
+    // A letters-only value: view.php reads it as PARAM_ALPHA.
+    MailAction.delete => {'t': folder, 'm': '$id', 'delete': 'delete'},
+    // confirmmsg skips the page that asks first; the app asks instead.
+    MailAction.emptyTrash => {
+      't': 'trash',
+      'emptytrash': '1',
+      'confirmmsg': '1',
+    },
+    MailAction.discard => null,
+  };
+  return ecourseScript('''
+  const sesskey = M.cfg.sesskey;
+  const params = ${jsonEncode(params)};
+  let done;
+  if (params) {
+    done = await fetch('/local/mail/view.php', { method: 'POST', credentials: 'same-origin',
+      body: new URLSearchParams({ ...params, sesskey }) });
+  } else {
+    const draft = await fetch('/local/mail/compose.php?m=$id', { credentials: 'same-origin' });
+    const page = new DOMParser().parseFromString(await draft.text(), 'text/html');
+    const form = page.querySelector('form[action*="compose.php"]');
+    if (!form) throw new Error('compose form not found');
+    const body = new URLSearchParams();
+    for (const input of form.querySelectorAll('input[type=hidden], input[name=subject]')) {
+      body.set(input.name, input.value);
+    }
+    body.set('discard', '1');
+    done = await fetch(form.getAttribute('action'),
+      { method: 'POST', body, credentials: 'same-origin' });
+  }
+  const page = new DOMParser().parseFromString(await done.text(), 'text/html');
+  const error = !done.ok ? 'HTTP ' + done.status
+    : ([...page.querySelectorAll('.errorbox, .alert-danger')]
+      .map(e => e.textContent.trim()).find(Boolean) || null);
+  post({ kind: 'mail', ok: !error, error });
 ''');
 }

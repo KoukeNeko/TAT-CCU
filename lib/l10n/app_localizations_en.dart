@@ -2188,7 +2188,49 @@ class AppLocalizationsEn extends AppLocalizations {
   String get noSentMail => 'No sent mail';
 
   @override
-  String get inbox => 'Inbox';
+  String get folderInbox => 'Inbox';
+
+  @override
+  String get folderStarred => 'Starred';
+
+  @override
+  String get folderDrafts => 'Drafts';
+
+  @override
+  String get folderSent => 'Sent';
+
+  @override
+  String get folderTrash => 'Trash';
+
+  @override
+  String get starMail => 'Star';
+
+  @override
+  String get unstarMail => 'Unstar';
+
+  @override
+  String get restoreMail => 'Restore';
+
+  @override
+  String get discardDraft => 'Discard';
+
+  @override
+  String get discardDraftTitle => 'Discard this draft?';
+
+  @override
+  String get editDraft => 'Continue editing';
+
+  @override
+  String get emptyTrash => 'Empty trash';
+
+  @override
+  String get emptyTrashTitle => 'Empty the trash?';
+
+  @override
+  String get emptyTrashBody => 'Mail in the trash is deleted for good.';
+
+  @override
+  String get emptyTrashAction => 'Empty';
 
   @override
   String get themeColors => 'Theme';

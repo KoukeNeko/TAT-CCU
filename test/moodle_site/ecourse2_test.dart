@@ -167,6 +167,99 @@ void main() {
     );
   });
 
+  test('stars, trashes and restores mail through its pages', () async {
+    final web = _WebSession(site);
+    await web.signIn(
+      fixture['username'] as String,
+      fixture['password'] as String,
+    );
+    final mail = (await repo.inbox()).firstWhere((m) => m.subject == '期中考教室異動');
+    final m = '${mail.id}';
+    Future<List<int>> ids(MailFolder folder) async => [
+      for (final m in await repo.mailFolder(folder)) m.id,
+    ];
+
+    // The requests mailAction makes, with the same parameters.
+    await web.mail({'t': 'inbox', 'm': m, 'starred': m});
+    expect(await ids(MailFolder.starred), contains(mail.id));
+    expect(
+      (await repo.inbox()).firstWhere((i) => i.id == mail.id).starred,
+      isTrue,
+    );
+    await web.mail({'t': 'inbox', 'm': m, 'starred': m});
+    expect(await ids(MailFolder.starred), isNot(contains(mail.id)));
+
+    await web.mail({'t': 'inbox', 'm': m, 'delete': 'delete'});
+    expect(await ids(MailFolder.trash), contains(mail.id));
+    expect(await ids(MailFolder.inbox), isNot(contains(mail.id)));
+    await web.mail({'t': 'trash', 'm': m, 'delete': 'delete'});
+    expect(await ids(MailFolder.inbox), contains(mail.id));
+    expect(await ids(MailFolder.trash), isNot(contains(mail.id)));
+
+    // Opening it on the page read it; the read test expects it unread.
+    await repo.markMailUnread(mail.id);
+  });
+
+  test('sends and discards drafts, and empties the trash', () async {
+    final web = _WebSession(site);
+    await web.signIn(
+      fixture['username'] as String,
+      fixture['password'] as String,
+    );
+    final course = fixture['courseId'] as int;
+    final teacher = (await repo.participants(course))
+        .firstWhere((p) => p.staff);
+    Future<int> save(String subject) async {
+      final form = await web.composeForm('local/mail/create.php', {
+        'c': '$course',
+        'rs': '${teacher.id}',
+        'local_mail_role': '0',
+      });
+      await web.submit(form, {
+        'subject': subject,
+        'content[text]': '<p>草稿內容</p>',
+        'save': '1',
+      });
+      final drafts = await repo.mailFolder(MailFolder.drafts);
+      return drafts.firstWhere((m) => m.subject == subject).id;
+    }
+
+    // sendMail(draft:) opens the draft's form and posts it with send.
+    final sending = await save('寄出的草稿 $stamp');
+    expect((await repo.mailMessage(sending)).to, contains('王'));
+    final form = await web.composeForm('local/mail/compose.php', {
+      'm': '$sending',
+    });
+    await web.submit(form, {'content[text]': '<p>改過的內容</p>', 'send': '1'});
+    final sent = await repo.mailFolder(MailFolder.sent);
+    expect(sent.map((m) => m.id), contains(sending));
+    expect(
+      (await repo.mailFolder(MailFolder.drafts)).map((m) => m.id),
+      isNot(contains(sending)),
+    );
+
+    // mailAction(discard) posts the draft's form with discard.
+    final discarding = await save('捨棄的草稿 $stamp');
+    final discardForm = await web.composeForm('local/mail/compose.php', {
+      'm': '$discarding',
+    });
+    await web.submit(discardForm, {'discard': '1'});
+    expect(
+      (await repo.mailFolder(MailFolder.drafts)).map((m) => m.id),
+      isNot(contains(discarding)),
+    );
+
+    // The sent letter goes to the trash, which is then emptied.
+    final m = '$sending';
+    await web.mail({'t': 'sent', 'm': m, 'delete': 'delete'});
+    expect(
+      (await repo.mailFolder(MailFolder.trash)).map((m) => m.id),
+      contains(sending),
+    );
+    await web.mail({'t': 'trash', 'emptytrash': '1', 'confirmmsg': '1'});
+    expect(await repo.mailFolder(MailFolder.trash), isEmpty);
+  });
+
   test('marks a notification read', () async {
     final notice = (await repo.notices()).firstWhere(
       (n) => n.subject == '作業一已評分',
@@ -258,6 +351,50 @@ class _WebSession {
     throw StateError('too many redirects from $url');
   }
 
+  String? _sesskey;
+
+  /// A POST to local_mail's view.php, as mailAction makes it.
+  Future<void> mail(Map<String, String> params) async {
+    final page = await _send('POST', site.resolve('local/mail/view.php'), {
+      ...params,
+      'sesskey': _sesskey!,
+    });
+    expect(page.statusCode, 200);
+    expect(html.parse(page.body).querySelector('.errorbox'), isNull);
+  }
+
+  /// The compose form [path] lands on when posted [params], as sendMail
+  /// reads it: its hidden fields and subject.
+  Future<(Uri, Map<String, String>)> composeForm(
+    String path,
+    Map<String, String> params,
+  ) async {
+    final page = await _send('POST', site.resolve(path), {
+      ...params,
+      'sesskey': _sesskey!,
+    });
+    final form = html
+        .parse(page.body)
+        .querySelector('form[action*="compose.php"]')!;
+    return (
+      site.resolve(form.attributes['action']!),
+      {
+        for (final input in form.querySelectorAll(
+          'input[type=hidden], input[name=subject]',
+        ))
+          input.attributes['name']!: input.attributes['value'] ?? '',
+      },
+    );
+  }
+
+  Future<void> submit(
+    (Uri, Map<String, String>) form,
+    Map<String, String> fields,
+  ) async {
+    final page = await _send('POST', form.$1, {...form.$2, ...fields});
+    expect(page.request!.url.path, isNot(endsWith('/compose.php')));
+  }
+
   Future<void> signIn(String username, String password) async {
     final login = site.resolve('login/index.php');
     final form = html.parse(await get(login));
@@ -272,5 +409,6 @@ class _WebSession {
     if (!page.body.contains('/login/logout.php')) {
       throw StateError('test site sign-in failed');
     }
+    _sesskey = RegExp(r'"sesskey":"(\w+)"').firstMatch(page.body)!.group(1);
   }
 }

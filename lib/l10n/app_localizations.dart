@@ -3700,11 +3700,95 @@ abstract class AppLocalizations {
   /// **'沒有寄出的信件'**
   String get noSentMail;
 
-  /// No description provided for @inbox.
+  /// No description provided for @folderInbox.
   ///
   /// In zh, this message translates to:
-  /// **'收件匣'**
-  String get inbox;
+  /// **'收件'**
+  String get folderInbox;
+
+  /// No description provided for @folderStarred.
+  ///
+  /// In zh, this message translates to:
+  /// **'星號'**
+  String get folderStarred;
+
+  /// No description provided for @folderDrafts.
+  ///
+  /// In zh, this message translates to:
+  /// **'草稿'**
+  String get folderDrafts;
+
+  /// No description provided for @folderSent.
+  ///
+  /// In zh, this message translates to:
+  /// **'寄件'**
+  String get folderSent;
+
+  /// No description provided for @folderTrash.
+  ///
+  /// In zh, this message translates to:
+  /// **'垃圾'**
+  String get folderTrash;
+
+  /// No description provided for @starMail.
+  ///
+  /// In zh, this message translates to:
+  /// **'加上星號'**
+  String get starMail;
+
+  /// No description provided for @unstarMail.
+  ///
+  /// In zh, this message translates to:
+  /// **'移除星號'**
+  String get unstarMail;
+
+  /// No description provided for @restoreMail.
+  ///
+  /// In zh, this message translates to:
+  /// **'還原'**
+  String get restoreMail;
+
+  /// No description provided for @discardDraft.
+  ///
+  /// In zh, this message translates to:
+  /// **'捨棄'**
+  String get discardDraft;
+
+  /// No description provided for @discardDraftTitle.
+  ///
+  /// In zh, this message translates to:
+  /// **'捨棄這份草稿？'**
+  String get discardDraftTitle;
+
+  /// No description provided for @editDraft.
+  ///
+  /// In zh, this message translates to:
+  /// **'繼續編輯'**
+  String get editDraft;
+
+  /// No description provided for @emptyTrash.
+  ///
+  /// In zh, this message translates to:
+  /// **'清空垃圾桶'**
+  String get emptyTrash;
+
+  /// No description provided for @emptyTrashTitle.
+  ///
+  /// In zh, this message translates to:
+  /// **'清空垃圾桶？'**
+  String get emptyTrashTitle;
+
+  /// No description provided for @emptyTrashBody.
+  ///
+  /// In zh, this message translates to:
+  /// **'垃圾桶裡的信件會永久刪除。'**
+  String get emptyTrashBody;
+
+  /// No description provided for @emptyTrashAction.
+  ///
+  /// In zh, this message translates to:
+  /// **'清空'**
+  String get emptyTrashAction;
 
   /// No description provided for @themeColors.
   ///
