@@ -59,8 +59,18 @@ GoRouter buildRouter(EcourseAuthRepository auth) => GoRouter(
     StatefulShellRoute(
       builder: (_, state, shell) =>
           AppShell(shell: shell, location: state.uri.path),
-      navigatorContainerBuilder: (_, shell, children) =>
-          AnimatedBranches(index: shell.currentIndex, children: children),
+      navigatorContainerBuilder: (context, shell, children) => AnimatedBranches(
+        index: shell.currentIndex,
+        children: [
+          for (final (i, child) in children.indexed)
+            i == _moreBranch
+                ? _MoreBeside(
+                    open: GoRouter.of(context).state.uri.path,
+                    child: child,
+                  )
+                : child,
+        ],
+      ),
       branches: [
         StatefulShellBranch(
           routes: [
@@ -178,199 +188,177 @@ GoRouter buildRouter(EcourseAuthRepository auth) => GoRouter(
         StatefulShellBranch(
           routes: [
             // Desktop direction A: the More list stays at the left and its
-            // pages open beside it.
-            ..._besideList(
-              [
+            // pages open beside it ([_MoreBeside]), so beside it the first
+            // page is empty.
+            GoRoute(
+              path: '/more',
+              // The pane beside the list measures itself, not the window.
+              builder: (context, _) =>
+                  context.getInheritedWidgetOfExactType<ListPaneScope>() == null
+                  ? const MoreScreen()
+                  : const SizedBox.shrink(),
+              routes: [
                 GoRoute(
-                  path: '/more',
-                  builder: (_, _) => const MoreScreen(),
+                  path: 'grades',
+                  builder: (_, _) => const GradesScreen(),
+                ),
+                GoRoute(
+                  path: 'tools',
+                  builder: (_, _) => const ToolsScreen(),
                   routes: [
+                    GoRoute(path: 'bus', builder: (_, _) => const BusScreen()),
                     GoRoute(
-                      path: 'grades',
-                      builder: (_, _) => const GradesScreen(),
-                    ),
-                    GoRoute(
-                      path: 'tools',
-                      builder: (_, _) => const ToolsScreen(),
-                      routes: [
-                        GoRoute(
-                          path: 'bus',
-                          builder: (_, _) => const BusScreen(),
-                        ),
-                        GoRoute(
-                          path: 'countdown',
-                          builder: (_, _) => const CountdownScreen(),
-                        ),
-                      ],
-                    ),
-                    GoRoute(
-                      path: 'iccu',
-                      builder: (_, _) => const IccuScreen(),
-                    ),
-                    GoRoute(
-                      path: 'leave',
-                      builder: (_, _) => const LeaveScreen(),
-                    ),
-                    GoRoute(
-                      path: 'space',
-                      builder: (_, _) => const SpaceScreen(),
-                    ),
-                    GoRoute(
-                      path: 'events',
-                      builder: (_, _) => const EventsScreen(),
-                      routes: [
-                        GoRoute(
-                          path: 'detail',
-                          builder: (_, state) {
-                            final (:event, :onChanged) =
-                                state.extra!
-                                    as ({
-                                      SchoolEvent event,
-                                      VoidCallback? onChanged,
-                                    });
-                            return EventDetailScreen(
-                              event: event,
-                              onChanged: onChanged,
-                            );
-                          },
-                        ),
-                        GoRoute(
-                          path: 'mine',
-                          builder: (_, state) {
-                            final (:data, :onChanged) =
-                                state.extra!
-                                    as ({
-                                      ValueListenable<EventsData?> data,
-                                      VoidCallback onChanged,
-                                    });
-                            return MyEventsScreen(
-                              data: data,
-                              onChanged: onChanged,
-                            );
-                          },
-                        ),
-                        GoRoute(
-                          path: 'poster',
-                          builder: (_, state) =>
-                              PosterScreen(url: state.extra! as String),
-                        ),
-                      ],
-                    ),
-                    GoRoute(
-                      path: 'payment',
-                      builder: (_, _) => const PaymentScreen(),
-                    ),
-                    GoRoute(
-                      path: 'software',
-                      builder: (_, _) => const SoftwareScreen(),
-                    ),
-                    GoRoute(
-                      path: 'dorm-net',
-                      builder: (_, _) => const DormNetScreen(),
-                    ),
-                    GoRoute(
-                      path: 'dorm-repair',
-                      builder: (_, _) => const DormRepairScreen(),
-                      routes: [
-                        GoRoute(
-                          path: 'new',
-                          builder: (_, _) => const DormRepairFormScreen(),
-                        ),
-                      ],
-                    ),
-                    GoRoute(
-                      path: 'parttime',
-                      builder: (_, _) => const ParttimeScreen(),
-                      routes: [
-                        GoRoute(
-                          path: 'add',
-                          builder: (_, _) => const ParttimeAddScreen(),
-                        ),
-                        GoRoute(
-                          path: 'pay',
-                          builder: (_, _) => const ParttimePayScreen(),
-                        ),
-                        GoRoute(
-                          path: 'print',
-                          builder: (_, _) => const ParttimePrintScreen(),
-                        ),
-                      ],
-                    ),
-                    GoRoute(
-                      path: 'settings',
-                      builder: (_, _) => const SettingsScreen(),
-                      routes: [
-                        GoRoute(
-                          path: 'saved',
-                          builder: (_, _) => const SavedDataScreen(),
-                        ),
-                      ],
-                    ),
-                    GoRoute(
-                      path: 'about',
-                      builder: (_, _) => const AboutScreen(),
-                    ),
-                    GoRoute(
-                      path: 'design',
-                      builder: (_, _) => const DesignLanguageScreen(),
-                      routes: [
-                        GoRoute(
-                          path: ':part',
-                          builder: (_, state) => DesignPartScreen(
-                            part: DesignPart.values.byName(
-                              state.pathParameters['part']!,
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                    GoRoute(
-                      path: 'library',
-                      builder: (_, _) => const LibraryScreen(),
-                      routes: [
-                        GoRoute(
-                          path: 'search',
-                          builder: (_, _) => const LibrarySearchScreen(),
-                        ),
-                        GoRoute(
-                          path: 'record',
-                          builder: (_, state) {
-                            final (:record, :index) =
-                                state.extra!
-                                    as ({LibraryRecord record, int index});
-                            return LibraryRecordScreen(
-                              record: record,
-                              index: index,
-                            );
-                          },
-                        ),
-                        GoRoute(
-                          path: 'collections',
-                          builder: (_, _) => const LibraryCollectionsScreen(),
-                        ),
-                        GoRoute(
-                          path: 'collection/:id',
-                          builder: (_, state) => LibraryCollectionScreen(
-                            id: state.pathParameters['id']!,
-                            title: state.extra as String?,
-                          ),
-                        ),
-                      ],
-                    ),
-                    GoRoute(
-                      path: 'academic',
-                      builder: (_, _) => const AcademicScreen(),
-                    ),
-                    GoRoute(
-                      path: 'account',
-                      builder: (_, _) => const AccountScreen(),
+                      path: 'countdown',
+                      builder: (_, _) => const CountdownScreen(),
                     ),
                   ],
                 ),
+                GoRoute(path: 'iccu', builder: (_, _) => const IccuScreen()),
+                GoRoute(path: 'leave', builder: (_, _) => const LeaveScreen()),
+                GoRoute(path: 'space', builder: (_, _) => const SpaceScreen()),
+                GoRoute(
+                  path: 'events',
+                  builder: (_, _) => const EventsScreen(),
+                  routes: [
+                    GoRoute(
+                      path: 'detail',
+                      builder: (_, state) {
+                        final (
+                          :event,
+                          :onChanged,
+                        ) = state.extra!
+                            as ({SchoolEvent event, VoidCallback? onChanged});
+                        return EventDetailScreen(
+                          event: event,
+                          onChanged: onChanged,
+                        );
+                      },
+                    ),
+                    GoRoute(
+                      path: 'mine',
+                      builder: (_, state) {
+                        final (:data, :onChanged) =
+                            state.extra!
+                                as ({
+                                  ValueListenable<EventsData?> data,
+                                  VoidCallback onChanged,
+                                });
+                        return MyEventsScreen(data: data, onChanged: onChanged);
+                      },
+                    ),
+                    GoRoute(
+                      path: 'poster',
+                      builder: (_, state) =>
+                          PosterScreen(url: state.extra! as String),
+                    ),
+                  ],
+                ),
+                GoRoute(
+                  path: 'payment',
+                  builder: (_, _) => const PaymentScreen(),
+                ),
+                GoRoute(
+                  path: 'software',
+                  builder: (_, _) => const SoftwareScreen(),
+                ),
+                GoRoute(
+                  path: 'dorm-net',
+                  builder: (_, _) => const DormNetScreen(),
+                ),
+                GoRoute(
+                  path: 'dorm-repair',
+                  builder: (_, _) => const DormRepairScreen(),
+                  routes: [
+                    GoRoute(
+                      path: 'new',
+                      builder: (_, _) => const DormRepairFormScreen(),
+                    ),
+                  ],
+                ),
+                GoRoute(
+                  path: 'parttime',
+                  builder: (_, _) => const ParttimeScreen(),
+                  routes: [
+                    GoRoute(
+                      path: 'add',
+                      builder: (_, _) => const ParttimeAddScreen(),
+                    ),
+                    GoRoute(
+                      path: 'pay',
+                      builder: (_, _) => const ParttimePayScreen(),
+                    ),
+                    GoRoute(
+                      path: 'print',
+                      builder: (_, _) => const ParttimePrintScreen(),
+                    ),
+                  ],
+                ),
+                GoRoute(
+                  path: 'settings',
+                  builder: (_, _) => const SettingsScreen(),
+                  routes: [
+                    GoRoute(
+                      path: 'saved',
+                      builder: (_, _) => const SavedDataScreen(),
+                    ),
+                  ],
+                ),
+                GoRoute(path: 'about', builder: (_, _) => const AboutScreen()),
+                GoRoute(
+                  path: 'design',
+                  builder: (_, _) => const DesignLanguageScreen(),
+                  routes: [
+                    GoRoute(
+                      path: ':part',
+                      builder: (_, state) => DesignPartScreen(
+                        part: DesignPart.values.byName(
+                          state.pathParameters['part']!,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                GoRoute(
+                  path: 'library',
+                  builder: (_, _) => const LibraryScreen(),
+                  routes: [
+                    GoRoute(
+                      path: 'search',
+                      builder: (_, _) => const LibrarySearchScreen(),
+                    ),
+                    GoRoute(
+                      path: 'record',
+                      builder: (_, state) {
+                        final (:record, :index) =
+                            state.extra! as ({LibraryRecord record, int index});
+                        return LibraryRecordScreen(
+                          record: record,
+                          index: index,
+                        );
+                      },
+                    ),
+                    GoRoute(
+                      path: 'collections',
+                      builder: (_, _) => const LibraryCollectionsScreen(),
+                    ),
+                    GoRoute(
+                      path: 'collection/:id',
+                      builder: (_, state) => LibraryCollectionScreen(
+                        id: state.pathParameters['id']!,
+                        title: state.extra as String?,
+                      ),
+                    ),
+                  ],
+                ),
+                GoRoute(
+                  path: 'academic',
+                  builder: (_, _) => const AcademicScreen(),
+                ),
+                GoRoute(
+                  path: 'account',
+                  builder: (_, _) => const AccountScreen(),
+                ),
               ],
-              list: (state) => MoreScreen(open: state.uri.path),
-              root: '/more',
-              atRoot: (state) => state.uri.path == '/more',
             ),
           ],
         ),
@@ -395,13 +383,23 @@ List<RouteBase> _besideList(
     if (route is GoRoute)
       GoRoute(
         path: route.path,
-        builder: (context, state) => _listBeside(
-          context,
-          list: list(state),
-          root: root,
-          atRoot: atRoot(state),
-          child: route.builder!(context, state),
-        ),
+        pageBuilder: (context, state) {
+          final page = _listBeside(
+            context,
+            list: list(state),
+            root: root,
+            atRoot: atRoot(state),
+            child: route.builder!(context, state),
+          );
+          // Beside the list a page changes in place: a transition would
+          // move the list with it, since each page draws its own.
+          // Named as go_router names its own pages: the back button finds
+          // the list's root page by it (ListPaneScope).
+          final name = state.name ?? state.path;
+          return listBeside(context)
+              ? NoTransitionPage(key: state.pageKey, name: name, child: page)
+              : MaterialPage(key: state.pageKey, name: name, child: page);
+        },
         routes: _besideList(
           route.routes,
           list: list,
@@ -441,4 +439,40 @@ Widget _listBeside(
       ),
     ],
   );
+}
+
+/// The More tab's place among the branches.
+const _moreBranch = 4;
+
+/// The More tab beside its list in a wide window: one list for every page,
+/// so it keeps its scroll and its tiles while pages change beside it.
+class _MoreBeside extends StatelessWidget {
+  const _MoreBeside({required this.open, required this.child});
+
+  /// The page open beside the list; its row is lit.
+  final String open;
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
+    if (!listBeside(context)) return child;
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        SizedBox(
+          width: listWidthOf(context),
+          child: PaneSize(child: MoreScreen(open: open)),
+        ),
+        VerticalDivider(
+          width: 1,
+          color: Theme.of(context).colorScheme.outlineVariant,
+        ),
+        Expanded(
+          child: PaneSize(
+            child: ListPaneScope(root: '/more', child: child),
+          ),
+        ),
+      ],
+    );
+  }
 }
