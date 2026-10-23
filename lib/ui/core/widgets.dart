@@ -9,6 +9,7 @@ import 'package:go_router/go_router.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import 'floating_dock.dart';
+import 'glass.dart';
 import 'theme.dart';
 
 export 'format.dart';
@@ -513,6 +514,57 @@ class StatusPill extends StatelessWidget {
             color: tone.ink,
             fontSize: 11,
             fontWeight: FontWeight.w900,
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// The page's floating action, as 寫信: lilac-tinted liquid glass over the
+/// list, like the nav bar and [FloatingDock], sinking with a tick.
+class FloatingAction extends StatelessWidget {
+  const FloatingAction({
+    super.key,
+    required this.icon,
+    required this.label,
+    required this.onPressed,
+  });
+
+  final IconData icon;
+  final String label;
+  final VoidCallback onPressed;
+
+  @override
+  Widget build(BuildContext context) {
+    final tone = context.tones.lilac;
+    return PressFeedback(
+      scale: 0.96,
+      child: GlassSurface(
+        radius: const BorderRadius.all(Radius.circular(28)),
+        tint: tone.fill,
+        child: InkWell(
+          onTap: onPressed,
+          child: SizedBox(
+            height: 56,
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: Space.xl),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(icon, color: tone.ink),
+                  const SizedBox(width: Space.s),
+                  Text(
+                    label,
+                    style: TextStyle(
+                      color: tone.ink,
+                      fontSize: 16,
+                      fontWeight: FontWeight.w900,
+                    ),
+                  ),
+                ],
+              ),
+            ),
           ),
         ),
       ),

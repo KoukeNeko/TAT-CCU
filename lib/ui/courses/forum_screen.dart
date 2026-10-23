@@ -66,10 +66,10 @@ class _ForumBodyState extends State<ForumBody> {
             future: _canStart,
             builder: (context, can) => can.data != true
                 ? const SizedBox.shrink()
-                : FloatingActionButton.extended(
+                : FloatingAction(
                     onPressed: _start,
-                    icon: const Icon(Icons.add),
-                    label: Text(context.l10n.newDiscussion),
+                    icon: Icons.add,
+                    label: context.l10n.newDiscussion,
                   ),
           ),
         ),

@@ -301,10 +301,10 @@ class _MessagesScreenState extends State<MessagesScreen> {
               padding: EdgeInsets.only(
                 bottom: MediaQuery.paddingOf(context).bottom,
               ),
-              child: FloatingActionButton.extended(
+              child: FloatingAction(
                 onPressed: _compose,
-                icon: const Icon(Icons.edit_outlined),
-                label: Text(l10n.compose),
+                icon: Icons.edit_outlined,
+                label: l10n.compose,
               ),
             ),
       body: Loader.watch(
