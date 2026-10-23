@@ -1,0 +1,33 @@
+# A local stand-in for eCourse2: Moodle 4.5.3 with the plugins CCU runs.
+# OrbStack serves it at https://ecourse2.tatccu.orb.local with a trusted
+# certificate; see README.md.
+name: tatccu-moodle
+
+services:
+  db:
+    image: mariadb:11.4
+    environment:
+      MARIADB_ROOT_PASSWORD: moodle
+      MARIADB_DATABASE: moodle
+      MARIADB_USER: moodle
+      MARIADB_PASSWORD: moodle
+    command: --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci
+    tmpfs: /var/lib/mysql
+    healthcheck:
+      test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
+      interval: 2s
+      retries: 30
+
+  web:
+    image: moodlehq/moodle-php-apache:8.3
+    depends_on:
+      db:
+        condition: service_healthy
+    labels:
+      dev.orbstack.domains: ecourse2.tatccu.orb.local
+    volumes:
+      - ./build/moodle:/var/www/html
+      - ./config.php:/var/www/html/config.php:ro
+      - ./seed.php:/var/www/tatccu-seed.php:ro
+      - ./build/lang:/var/www/moodledata/lang:ro
+    tmpfs: /var/www/moodledata:uid=33,gid=33
