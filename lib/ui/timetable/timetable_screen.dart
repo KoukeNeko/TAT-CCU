@@ -12,10 +12,10 @@ import '../../data/repositories/ecourse_repository.dart';
 import '../../domain/models/course.dart';
 import '../../domain/models/timetable.dart';
 import '../core/auto_refresh.dart';
-import '../core/pair_switch.dart';
 import '../core/theme.dart';
 import '../core/widgets.dart';
 import '../../l10n/l10n.dart';
+import '../core/segment_switch.dart';
 
 class TimetableScreen extends StatefulWidget {
   const TimetableScreen({super.key});
@@ -144,14 +144,14 @@ class _TimetableScreenState extends State<TimetableScreen> with AutoRefresh {
               context.l10n.navTimetable,
               actions: [
                 if (!wide && !book) ...[
-                  PairSwitch(
-                    labels: (
+                  SegmentSwitch(
+                    labels: [
                       context.l10n.timetableDay,
                       context.l10n.timetableWeek,
-                    ),
-                    second: settings.timetableWeek,
-                    tone: context.tones.lilac,
-                    onChanged: _pickView,
+                    ],
+                    selected: settings.timetableWeek ? 1 : 0,
+                    segment: 44,
+                    onChanged: (i) => _pickView(i == 1),
                   ),
                   const SizedBox(width: 8),
                 ],

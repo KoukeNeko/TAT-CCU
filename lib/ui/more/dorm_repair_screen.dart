@@ -9,6 +9,7 @@ import '../core/theme.dart';
 import '../core/widgets.dart';
 import '../../data/repositories/dorm_repair_data.dart';
 import '../core/campus_systems.dart';
+import '../core/segment_switch.dart';
 
 /// Design round-11 dorm-repair R1-A: past requests, then a full-page form
 /// with the site's four fields (alpha).
@@ -281,21 +282,11 @@ class _DormRepairFormScreenState extends State<DormRepairFormScreen> {
                       children: [
                         Text(l10n.drPresence, style: labelStyle),
                         const SizedBox(height: 8),
-                        SegmentedButton<bool>(
-                          showSelectedIcon: false,
-                          segments: [
-                            ButtonSegment(
-                              value: false,
-                              label: Text(l10n.drNoNeed),
-                            ),
-                            ButtonSegment(
-                              value: true,
-                              label: Text(l10n.drNeed),
-                            ),
-                          ],
-                          selected: {_needPresence},
-                          onSelectionChanged: (s) =>
-                              setState(() => _needPresence = s.first),
+                        SegmentSwitch(
+                          labels: [l10n.drNoNeed, l10n.drNeed],
+                          selected: _needPresence ? 1 : 0,
+                          onChanged: (i) =>
+                              setState(() => _needPresence = i == 1),
                         ),
                         const SizedBox(height: 8),
                         Text(

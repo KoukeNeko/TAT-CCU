@@ -13,6 +13,7 @@ import '../core/campus_session.dart';
 import '../core/theme.dart';
 import '../core/widgets.dart';
 import '../../data/services/ecourse_web.dart';
+import '../core/segment_switch.dart';
 
 /// 請假單 (design/round-11 course-modules-screens), shaped like 宿舍維修:
 /// the student's own requests, then a button to the full-page form.
@@ -338,21 +339,10 @@ class _AbsenceFormScreenState extends State<AbsenceFormScreen> {
                   const Divider(height: 1),
                   row(
                     l10n.absenceMode,
-                    SegmentedButton<bool>(
-                      showSelectedIcon: false,
-                      segments: [
-                        ButtonSegment(
-                          value: false,
-                          label: Text(l10n.absenceInPerson),
-                        ),
-                        ButtonSegment(
-                          value: true,
-                          label: Text(l10n.absenceOnline),
-                        ),
-                      ],
-                      selected: {_online},
-                      onSelectionChanged: (s) =>
-                          setState(() => _online = s.first),
+                    SegmentSwitch(
+                      labels: [l10n.absenceInPerson, l10n.absenceOnline],
+                      selected: _online ? 1 : 0,
+                      onChanged: (i) => setState(() => _online = i == 1),
                     ),
                   ),
                   const Divider(height: 1),

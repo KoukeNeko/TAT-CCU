@@ -5,7 +5,6 @@ import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 
 import '../../data/repositories/ecourse_repository.dart';
-import '../core/pair_switch.dart';
 import '../core/theme.dart';
 import '../courses/course_detail_screen.dart';
 import '../courses/forum_screen.dart';
@@ -14,6 +13,7 @@ import '../core/widgets.dart';
 import 'mail_compose_screen.dart';
 import '../../l10n/l10n.dart';
 import '../../routing/open_page.dart';
+import '../core/segment_switch.dart';
 
 /// Marks a notification read on eCourse2 as it is opened. Offline it stays
 /// unread there and shows so on the next read.
@@ -388,13 +388,13 @@ class _MessagesScreenState extends State<MessagesScreen> {
                           padding: const EdgeInsets.only(top: Space.m),
                           child: Align(
                             alignment: AlignmentDirectional.centerStart,
-                            child: PairSwitch(
-                              labels: (l10n.inbox, l10n.sentMail),
-                              second: _sentBox,
+                            child: SegmentSwitch(
+                              labels: [l10n.inbox, l10n.sentMail],
+                              selected: _sentBox ? 1 : 0,
                               tone: context.tones.sun,
                               segment: 88,
-                              onChanged: (sent) =>
-                                  setState(() => _sentBox = sent),
+                              onChanged: (i) =>
+                                  setState(() => _sentBox = i == 1),
                             ),
                           ),
                         )
