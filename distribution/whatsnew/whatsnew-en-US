@@ -1,3 +1,5 @@
 Bug fixes
 
-🔐 When a page has been open for a while, downloading an income statement, withholding statement or enrollment certificate signs in again first instead of failing.
+✉️ Opening a message or notification marks it read on eCourse2, and the unread count updates at once instead of coming back after a refresh.
+
+🔔 Android: the status bar shows the TAT logo for notifications instead of a white square.
