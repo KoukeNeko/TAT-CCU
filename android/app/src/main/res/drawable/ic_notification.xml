@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- The app's Bauhaus TAT (design/round-11/logo-bauhaus.svg) in one color
+     for the status bar, which draws a small icon as a silhouette. The second
+     T is cut out of its circle where they overlap. -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp"
+    android:height="24dp"
+    android:viewportWidth="860"
+    android:viewportHeight="860">
+    <group
+        android:translateX="-85"
+        android:translateY="-80">
+        <path
+            android:fillColor="#FFFFFFFF"
+            android:pathData="M120,300 H370 V360 H275 V720 H215 V360 H120 Z" />
+        <path
+            android:fillColor="#FFFFFFFF"
+            android:pathData="M512,300 L660,720 H364 Z" />
+        <path
+            android:fillColor="#FFFFFFFF"
+            android:fillType="evenOdd"
+            android:pathData="M650,510 A130,130 0 1,0 910,510 A130,130 0 1,0 650,510 Z M650,380 H910 V430 H805 V720 H755 V430 H650 Z" />
+    </group>
+</vector>

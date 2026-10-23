@@ -46,7 +46,7 @@ class Reminders {
     tz.setLocalLocation(tz.getLocation('Asia/Taipei'));
     await _plugin.initialize(
       settings: const InitializationSettings(
-        android: AndroidInitializationSettings('@mipmap/ic_launcher'),
+        android: AndroidInitializationSettings('@drawable/ic_notification'),
         // Asked for when the student turns a notification on, not at launch.
         iOS: darwin,
         macOS: darwin,
