@@ -14,6 +14,7 @@ import '../courses/attendance_scan_screen.dart';
 import '../notifications/notifications_screen.dart';
 import 'due_screen.dart';
 import '../../l10n/l10n.dart';
+import '../../routing/open_page.dart';
 
 // Layout follows design/round-11/today-c-variants.html C1: headline, one
 // hero block, a card for the class after it, then (today-final.html) what
@@ -414,7 +415,7 @@ class _Hero extends StatelessWidget {
       ),
       clipBehavior: Clip.antiAlias,
       child: InkWell(
-        onTap: () => context.push('/courses/${slot.course.id}'),
+        onTap: () => openPage(context, '/courses/${slot.course.id}'),
         child: SizedBox(
           height: 226,
           child: Stack(
@@ -580,7 +581,7 @@ class _AfterCard extends StatelessWidget {
       color: scheme.surfaceContainerLow,
       clipBehavior: Clip.antiAlias,
       child: InkWell(
-        onTap: () => context.push('/courses/${slot.course.id}'),
+        onTap: () => openPage(context, '/courses/${slot.course.id}'),
         child: Padding(
           padding: const EdgeInsets.fromLTRB(
             Space.xl,

@@ -1,6 +1,5 @@
 import 'package:clock/clock.dart' as clk;
 import 'package:flutter/material.dart';
-import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 
 import '../../data/repositories/ecourse_repository.dart';
@@ -8,6 +7,7 @@ import '../core/theme.dart';
 import '../core/widgets.dart';
 import '../courses/module_screen.dart';
 import '../../l10n/l10n.dart';
+import '../../routing/open_page.dart';
 
 /// Assignments, quizzes and other dated activities in the next two weeks.
 class DueScreen extends StatelessWidget {
@@ -104,7 +104,7 @@ void openDueItem(BuildContext context, DueItem item) {
     Uri.tryParse(item.url ?? '')?.queryParameters['id'] ?? '',
   );
   if (cmid != null && moduleTypesWithPage.contains(item.module)) {
-    context.push('/courses/${item.courseId}/modules/$cmid');
+    openPage(context, '/courses/${item.courseId}/modules/$cmid');
   } else if (item.url != null) {
     openExternal(item.url!);
   }

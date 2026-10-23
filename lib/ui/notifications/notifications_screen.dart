@@ -2,7 +2,6 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 
 import '../../data/repositories/ecourse_repository.dart';
@@ -14,6 +13,7 @@ import '../courses/module_screen.dart';
 import '../core/widgets.dart';
 import 'mail_compose_screen.dart';
 import '../../l10n/l10n.dart';
+import '../../routing/open_page.dart';
 
 /// Marks a notification read on eCourse2 as it is opened. Offline it stays
 /// unread there and shows so on the next read.
@@ -42,13 +42,13 @@ Future<void> openEcourseLink(
     if (show != null) {
       show(DiscussionScreen(discussionId: discussion, title: title));
     } else {
-      context.push('/courses/0/discussions/$discussion', extra: title);
+      openPage(context, '/courses/0/discussions/$discussion', extra: title);
     }
   } else if (uri.path.endsWith('/course/view.php') && id != null) {
     if (show != null) {
       show(CourseDetailScreen(courseId: id));
     } else {
-      context.push('/courses/$id');
+      openPage(context, '/courses/$id');
     }
   } else if (id != null && moduleTypesWithPage.contains(type)) {
     final int course;
@@ -62,7 +62,7 @@ Future<void> openEcourseLink(
     if (show != null) {
       show(ModuleScreen(courseId: course, cmid: id, title: title));
     } else {
-      context.push('/courses/$course/modules/$id');
+      openPage(context, '/courses/$course/modules/$id');
     }
   } else {
     openExternal(url);

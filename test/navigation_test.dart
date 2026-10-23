@@ -2,6 +2,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
+import 'package:tat_ccu/routing/open_page.dart';
 import 'package:tat_ccu/ui/core/app_shell.dart';
 import 'package:tat_ccu/ui/core/widgets.dart';
 
@@ -188,5 +189,104 @@ void main() {
     expect(find.text('b'), findsOneWidget);
     expect(find.text('a'), findsNothing);
     expect(find.text('a', skipOffstage: false), findsOneWidget);
+  });
+
+  // A course opened from 首頁 sits in the 課表 tab's list-beside shell.
+  // Pushed into 首頁, that shell's navigator (one key) moved over and left
+  // 課表 blank; openPage opens it in its own tab instead.
+  testWidgets('a page of another tab opens there, leaving no tab blank', (
+    t,
+  ) async {
+    late StatefulNavigationShell tabs;
+    final router = GoRouter(
+      initialLocation: '/today',
+      routes: [
+        StatefulShellRoute(
+          builder: (_, _, shell) => Scaffold(body: tabs = shell),
+          navigatorContainerBuilder: (_, shell, children) =>
+              AnimatedBranches(index: shell.currentIndex, children: children),
+          branches: [
+            StatefulShellBranch(
+              routes: [
+                GoRoute(
+                  path: '/today',
+                  builder: (context, _) => Scaffold(
+                    body: TextButton(
+                      onPressed: () => openPage(context, '/courses/1'),
+                      child: const Text('today'),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            StatefulShellBranch(
+              routes: [
+                GoRoute(
+                  path: '/courses',
+                  builder: (_, _) => const Scaffold(body: Text('courses')),
+                  routes: [
+                    ShellRoute(
+                      builder: (_, _, child) => child,
+                      routes: [
+                        GoRoute(
+                          path: ':id',
+                          builder: (_, _) =>
+                              const Scaffold(body: Text('course')),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ],
+        ),
+      ],
+    );
+    await t.pumpWidget(MaterialApp.router(routerConfig: router));
+    // The course tab has its shell already, as after opening one there.
+    tabs.goBranch(1);
+    router.go('/courses/1');
+    await t.pumpAndSettle();
+    tabs.goBranch(0);
+    await t.pumpAndSettle();
+
+    await t.tap(find.text('today'));
+    await t.pumpAndSettle();
+    expect(find.text('course'), findsOneWidget);
+    tabs.goBranch(0);
+    await t.pumpAndSettle();
+    expect(find.text('today'), findsOneWidget);
+    tabs.goBranch(1);
+    await t.pumpAndSettle();
+    expect(find.text('course'), findsOneWidget);
+  });
+
+  test('tabs come from the router\'s branches', () {
+    final routes = <RouteBase>[
+      StatefulShellRoute.indexedStack(
+        builder: (_, _, shell) => shell,
+        branches: [
+          StatefulShellBranch(
+            routes: [
+              GoRoute(path: '/today', builder: (_, _) => const Text('')),
+            ],
+          ),
+          StatefulShellBranch(
+            routes: [
+              ShellRoute(
+                builder: (_, _, child) => child,
+                routes: [
+                  GoRoute(path: '/more', builder: (_, _) => const Text('')),
+                ],
+              ),
+            ],
+          ),
+        ],
+      ),
+    ];
+    expect(tabOf(routes, '/today/due'), 0);
+    expect(tabOf(routes, '/more/grades?x=1'), 1);
+    expect(tabOf(routes, '/login'), isNull);
   });
 }

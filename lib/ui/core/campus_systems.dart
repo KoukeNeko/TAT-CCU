@@ -5,6 +5,7 @@ import 'theme.dart';
 import 'campus_web_screen.dart';
 import 'widgets.dart';
 import '../../l10n/l10n.dart';
+import '../../routing/open_page.dart';
 
 /// Portal home; bounces to the portal login when its session has lapsed.
 const portalHome = 'https://portal.ccu.edu.tw/sso_index.php';
@@ -117,7 +118,7 @@ void openCampusSystem(
       context.go(path);
     case final path?:
       // Pushed, so back returns to wherever it was opened from.
-      context.push(path);
+      openPage(context, path);
     case null:
       openSchoolSite(context, s.id);
   }
