@@ -3885,6 +3885,48 @@ abstract class AppLocalizations {
   /// In zh, this message translates to:
   /// **'在 eCourse2 開啟'**
   String get openInEcourse;
+
+  /// No description provided for @campusSoftware.
+  ///
+  /// In zh, this message translates to:
+  /// **'校園授權軟體'**
+  String get campusSoftware;
+
+  /// No description provided for @swDownloads.
+  ///
+  /// In zh, this message translates to:
+  /// **'↓ {count} 次'**
+  String swDownloads(int count);
+
+  /// No description provided for @swOnSite.
+  ///
+  /// In zh, this message translates to:
+  /// **'到網站下載'**
+  String get swOnSite;
+
+  /// No description provided for @swLink.
+  ///
+  /// In zh, this message translates to:
+  /// **'連結'**
+  String get swLink;
+
+  /// No description provided for @swHere.
+  ///
+  /// In zh, this message translates to:
+  /// **'啟用與說明'**
+  String get swHere;
+
+  /// No description provided for @swHereHint.
+  ///
+  /// In zh, this message translates to:
+  /// **'在 App 開啟'**
+  String get swHereHint;
+
+  /// No description provided for @swInstallers.
+  ///
+  /// In zh, this message translates to:
+  /// **'安裝檔'**
+  String get swInstallers;
 }
 
 class _AppLocalizationsDelegate

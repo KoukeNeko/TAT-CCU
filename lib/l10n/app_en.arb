@@ -632,5 +632,12 @@
   "checkUpdate": "Check for updates",
   "update": "Update",
   "whatsNewIn": "What's new in {version}",
-  "openInEcourse": "Open in eCourse2"
+  "openInEcourse": "Open in eCourse2",
+  "campusSoftware": "Campus software",
+  "swDownloads": "↓ {count}",
+  "swOnSite": "On website",
+  "swLink": "Link",
+  "swHere": "Activation and guides",
+  "swHereHint": "Opens in the app",
+  "swInstallers": "Installers"
 }

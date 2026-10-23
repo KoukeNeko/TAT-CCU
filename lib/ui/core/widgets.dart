@@ -82,6 +82,9 @@ AppBar subBar(
   PreferredSizeWidget? bottom,
   Widget? action,
   bool glass = true,
+
+  /// In place of [title]'s text, such as a menu of what the page shows.
+  Widget? titleChild,
 }) => AppBar(
   bottom: bottom,
   automaticallyImplyLeading: false,
@@ -121,7 +124,9 @@ AppBar subBar(
               child: child,
             ),
           ),
-          child: Text(title, key: ValueKey(title)),
+          child: titleChild == null
+              ? Text(title, key: ValueKey(title))
+              : KeyedSubtree(key: ValueKey(title), child: titleChild),
         ),
       ),
       if (action != null) _pressable(action),

@@ -2151,4 +2151,27 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get openInEcourse => 'eCourse2 で開く';
+
+  @override
+  String get campusSoftware => '学内ライセンスソフト';
+
+  @override
+  String swDownloads(int count) {
+    return '↓ $count 回';
+  }
+
+  @override
+  String get swOnSite => 'サイトでダウンロード';
+
+  @override
+  String get swLink => 'リンク';
+
+  @override
+  String get swHere => '認証と説明';
+
+  @override
+  String get swHereHint => 'アプリで開く';
+
+  @override
+  String get swInstallers => 'インストーラー';
 }

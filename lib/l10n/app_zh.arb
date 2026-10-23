@@ -1061,5 +1061,13 @@
   "update": "更新",
   "whatsNewIn": "{version} 新功能",
   "@whatsNewIn": {"placeholders": {"version": {"type": "String"}}},
-  "openInEcourse": "在 eCourse2 開啟"
+  "openInEcourse": "在 eCourse2 開啟",
+  "campusSoftware": "校園授權軟體",
+  "swDownloads": "↓ {count} 次",
+  "swOnSite": "到網站下載",
+  "swLink": "連結",
+  "@swDownloads": {"placeholders": {"count": {"type": "int"}}},
+  "swHere": "啟用與說明",
+  "swHereHint": "在 App 開啟",
+  "swInstallers": "安裝檔"
 }

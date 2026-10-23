@@ -1,3 +1,6 @@
+import 'dart:convert';
+import 'dart:typed_data';
+
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:webview_flutter/webview_flutter.dart';
@@ -18,8 +21,9 @@ import 'widgets.dart';
 Future<void> openCampusPage(
   BuildContext context,
   String url,
-  String title,
-) async {
+  String title, {
+  Map<String, String>? form,
+}) async {
   if (context.read<EcourseAuthRepository>().isDemo) {
     ScaffoldMessenger.of(context)
         .showSnackBar(SnackBar(content: Text(context.l10n.demoUnavailable)));
@@ -27,7 +31,7 @@ Future<void> openCampusPage(
   }
   await Navigator.of(context, rootNavigator: true).push(
     MaterialPageRoute(
-      builder: (_) => CampusWebScreen(url: url, title: title),
+      builder: (_) => CampusWebScreen(url: url, title: title, form: form),
     ),
   );
 }
@@ -38,9 +42,13 @@ class CampusWebScreen extends StatefulWidget {
     required this.url,
     required this.title,
     this.returnScheme,
+    this.form,
   });
 
   final String url, title;
+
+  /// Posted to [url] as a form, for a page reached by a form button.
+  final Map<String, String>? form;
 
   /// When the page navigates to this URL scheme, the screen closes and
   /// returns that URL instead (the eCourse2 token callback).
@@ -79,7 +87,17 @@ class _CampusWebScreenState extends State<CampusWebScreen> {
       );
     // The channel must exist before the first page loads.
     _cas = CasAutofill(_controller, context);
-    _controller.loadRequest(Uri.parse(widget.url));
+    final form = widget.form;
+    _controller.loadRequest(
+      Uri.parse(widget.url),
+      method: form == null ? LoadRequestMethod.get : LoadRequestMethod.post,
+      headers: form == null
+          ? const {}
+          : const {'Content-Type': 'application/x-www-form-urlencoded'},
+      body: form == null
+          ? null
+          : Uint8List.fromList(utf8.encode(Uri(queryParameters: form).query)),
+    );
   }
 
   int _progress = 0;

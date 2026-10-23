@@ -632,5 +632,12 @@
   "checkUpdate": "アップデートを確認",
   "update": "アップデート",
   "whatsNewIn": "{version} の新機能",
-  "openInEcourse": "eCourse2 で開く"
+  "openInEcourse": "eCourse2 で開く",
+  "campusSoftware": "学内ライセンスソフト",
+  "swDownloads": "↓ {count} 回",
+  "swOnSite": "サイトでダウンロード",
+  "swLink": "リンク",
+  "swHere": "認証と説明",
+  "swHereHint": "アプリで開く",
+  "swInstallers": "インストーラー"
 }

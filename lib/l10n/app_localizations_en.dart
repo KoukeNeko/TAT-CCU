@@ -2283,4 +2283,27 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get openInEcourse => 'Open in eCourse2';
+
+  @override
+  String get campusSoftware => 'Campus software';
+
+  @override
+  String swDownloads(int count) {
+    return '↓ $count';
+  }
+
+  @override
+  String get swOnSite => 'On website';
+
+  @override
+  String get swLink => 'Link';
+
+  @override
+  String get swHere => 'Activation and guides';
+
+  @override
+  String get swHereHint => 'Opens in the app';
+
+  @override
+  String get swInstallers => 'Installers';
 }

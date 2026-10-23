@@ -81,7 +81,7 @@ final campusGroups = <(String, List<CampusSystem>)>[
     [
       _s('0042', '付款及所得查詢', '/test_payment.php', '付'),
       _s('0063', '車證申請', '/test_0063_CarApply.php', '車', '限校內網路'),
-      _s('0008', '校園授權軟體下載', '/test_0008_Software.php', '軟'),
+      _s('0008', '校園授權軟體下載', '/test_0008_Software.php', '軟', '限校內網路'),
       _s('0023', '會計Web系統', '/test_Accounting.php', '會'),
       _s('0030', '物品管理系統', '/test_Consume.php', '物'),
       _s('0031', '計畫WEB系統', '/test_Project.php', '計'),
@@ -131,7 +131,8 @@ void openSchoolSite(BuildContext context, String systemId) {
 
 /// `linkId` → in-app page: 選課系統 (iCCU), 成績查詢 (with eCourse2's running
 /// grades), 學籍系統, 學生請假系統, My圖書館, 圖書館資源探索, 自學空間,
-/// 活動報名系統, 學習暨勞僱時數登錄, 宿舍維修系統, 宿網申請 and 付款及所得查詢.
+/// 活動報名系統, 學習暨勞僱時數登錄, 宿舍維修系統, 宿網申請, 付款及所得查詢 and
+/// 校園授權軟體下載.
 const inAppPages = {
   '0075': '/more/iccu',
   '0007': '/more/grades',
@@ -145,12 +146,14 @@ const inAppPages = {
   '0011': '/more/dorm-repair',
   '0065': '/more/dorm-net',
   '0042': '/more/payment',
+  '0008': '/more/software',
 };
 
 /// In-app pages not yet finished, marked in the list and explained on More:
 /// ALPHA is not tested yet, BETA is tested but not guaranteed.
 const pageStages = {
   '0014': 'ALPHA',
+  '0008': 'ALPHA',
   '0011': 'ALPHA',
   '0042': 'BETA',
   '0065': 'BETA',

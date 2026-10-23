@@ -73,7 +73,9 @@ class _MenuLayout extends SingleChildLayoutDelegate {
 
   @override
   Offset getPositionForChild(Size size, Size child) {
-    final x = anchor.center.dx > size.width / 2
+    // By the left edge: a wide anchor left of the middle, such as a page
+    // title beside the list, still opens rightward from its start.
+    final x = anchor.left > size.width / 2
         ? anchor.right - child.width
         : anchor.left;
     final below = anchor.bottom + rowGap;

@@ -2161,4 +2161,27 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get openInEcourse => '在 eCourse2 開啟';
+
+  @override
+  String get campusSoftware => '校園授權軟體';
+
+  @override
+  String swDownloads(int count) {
+    return '↓ $count 次';
+  }
+
+  @override
+  String get swOnSite => '到網站下載';
+
+  @override
+  String get swLink => '連結';
+
+  @override
+  String get swHere => '啟用與說明';
+
+  @override
+  String get swHereHint => '在 App 開啟';
+
+  @override
+  String get swInstallers => '安裝檔';
 }

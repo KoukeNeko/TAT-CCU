@@ -124,6 +124,7 @@ class CampusSession extends StatefulWidget {
     this.loadOnStart = true,
     this.via = const [],
     this.casLinks = const [],
+    this.titleChild,
     this.bottom,
     this.action,
     this.demo,
@@ -136,6 +137,9 @@ class CampusSession extends StatefulWidget {
 
   /// At the title's end once signed in, such as a capsule to another page.
   final Widget? action;
+
+  /// In place of the title's text once signed in, such as a menu.
+  final Widget? titleChild;
 
   /// What the page answers for the demo account, which never loads the
   /// school's site; null says the page has nothing to show there.
@@ -347,6 +351,7 @@ class CampusSessionState extends State<CampusSession> {
         _signingIn ? context.l10n.signInPortal : widget.title,
         bottom: _signingIn ? null : widget.bottom,
         action: _signingIn ? null : widget.action,
+        titleChild: _signingIn ? null : widget.titleChild,
       ),
       // Builder: the capsule reads insets from inside this Scaffold, where
       // the glass app bar's height is part of the top padding.
