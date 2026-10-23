@@ -605,5 +605,16 @@
   "themeColors": "テーマ",
   "themeDefault": "デフォルト",
   "themeWallpaper": "壁紙の色",
-  "androidOnly": "Android 12 以降のみ"
+  "androidOnly": "Android 12 以降のみ",
+  "version": "バージョン",
+  "versionLatest": "最新バージョン",
+  "versionCurrent": "現在 {version}",
+  "versionUpdatable": "アップデートできます",
+  "versionChecked": "確認しました",
+  "versionChecking": "確認中",
+  "versionCheckFailed": "確認できませんでした",
+  "checkUpdate": "アップデートを確認",
+  "update": "アップデート",
+  "whatsNewIn": "{version} の新機能",
+  "openInEcourse": "eCourse2 で開く"
 }

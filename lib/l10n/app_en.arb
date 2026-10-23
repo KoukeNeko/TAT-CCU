@@ -605,5 +605,16 @@
   "themeColors": "Theme",
   "themeDefault": "Default",
   "themeWallpaper": "Wallpaper colors",
-  "androidOnly": "Android 12 and later"
+  "androidOnly": "Android 12 and later",
+  "version": "Version",
+  "versionLatest": "Up to date",
+  "versionCurrent": "Current {version}",
+  "versionUpdatable": "Update available",
+  "versionChecked": "Just checked",
+  "versionChecking": "Checking",
+  "versionCheckFailed": "Couldn't check",
+  "checkUpdate": "Check for updates",
+  "update": "Update",
+  "whatsNewIn": "What's new in {version}",
+  "openInEcourse": "Open in eCourse2"
 }

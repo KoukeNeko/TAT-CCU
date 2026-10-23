@@ -1,11 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
+import 'package:package_info_plus/package_info_plus.dart';
 import 'package:provider/provider.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import '../../data/repositories/ecourse_auth_repository.dart';
 import '../../data/repositories/app_settings.dart';
 import '../../data/repositories/ecourse_repository.dart';
+import '../../data/services/app_update.dart';
 import '../../data/services/reminders.dart';
 import '../../data/services/response_cache.dart';
 import '../../data/services/folder_stats.dart';
@@ -89,6 +92,7 @@ class SettingsScreen extends StatelessWidget {
                 );
               },
             ),
+            const _Version(),
             SectionLabel(l10n.notifications),
             const _Notifications(),
             SectionLabel(l10n.savedData),
@@ -392,6 +396,153 @@ class _SavedDataState extends State<_SavedData> {
                   trailing: const Icon(Icons.chevron_right),
                   onTap: () => context.push('/more/settings/saved'),
                 ),
+            ],
+          );
+        },
+      ),
+    );
+  }
+}
+
+/// Design round-19 C: the version on its own card, checked against the
+/// store on opening; with a newer one, its number, an update button and
+/// its notes.
+class _Version extends StatefulWidget {
+  const _Version();
+
+  @override
+  State<_Version> createState() => _VersionState();
+}
+
+class _VersionState extends State<_Version> {
+  // Apart, so the installed version shows when the store cannot be read.
+  final _current = PackageInfo.fromPlatform();
+  late Future<AppRelease?> _check = latestRelease();
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = context.l10n;
+    final scheme = Theme.of(context).colorScheme;
+    final mute = TextStyle(
+      fontSize: 12,
+      fontWeight: FontWeight.w800,
+      color: scheme.onSurfaceVariant,
+    );
+    return FutureBuilder(
+      future: _current,
+      builder: (context, info) => FutureBuilder(
+        future: _check,
+        builder: (context, snap) {
+          final current = info.data?.version;
+          final latest = snap.data;
+          final update =
+              current != null &&
+              latest != null &&
+              isNewer(latest.version, current);
+          final checking = snap.connectionState != ConnectionState.done;
+          final (status, note) = checking
+              ? (l10n.versionChecking, null)
+              : snap.hasError || latest == null
+              ? (l10n.versionCheckFailed, null)
+              : update
+              ? (l10n.versionUpdatable, l10n.versionCurrent(current))
+              : (l10n.versionChecked, l10n.versionLatest);
+          return Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              SectionLabel(l10n.version, detail: latest?.source),
+              Card(
+                color: scheme.surfaceContainerLow,
+                clipBehavior: Clip.antiAlias,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Padding(
+                      padding: const EdgeInsets.all(Space.l),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            crossAxisAlignment: CrossAxisAlignment.baseline,
+                            textBaseline: TextBaseline.alphabetic,
+                            children: [
+                              Text(
+                                (update ? latest.version : current) ?? '',
+                                style: const TextStyle(
+                                  fontSize: 34,
+                                  fontWeight: FontWeight.w900,
+                                  height: 1,
+                                ),
+                              ),
+                              if (note != null) ...[
+                                const SizedBox(width: Space.s),
+                                Text(note, style: mute.copyWith(fontSize: 15)),
+                              ],
+                            ],
+                          ),
+                          const SizedBox(height: Space.s),
+                          Text(status, style: mute),
+                          const SizedBox(height: Space.m),
+                          if (update)
+                            FilledButton(
+                              onPressed: () => launchUrl(
+                                latest.url,
+                                mode: LaunchMode.externalApplication,
+                              ),
+                              child: Text(l10n.update),
+                            )
+                          else
+                            TextButton(
+                              style: TextButton.styleFrom(
+                                padding: EdgeInsets.zero,
+                                minimumSize: const Size(0, 40),
+                              ),
+                              onPressed: checking
+                                  ? null
+                                  : () => setState(
+                                      () => _check = latestRelease(),
+                                    ),
+                              child: Text(l10n.checkUpdate),
+                            ),
+                        ],
+                      ),
+                    ),
+                    if (update && latest.notes.isNotEmpty) ...[
+                      const Divider(height: 1),
+                      Padding(
+                        padding: const EdgeInsets.fromLTRB(
+                          Space.l,
+                          Space.m,
+                          Space.l,
+                          Space.l,
+                        ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              l10n.whatsNewIn(latest.version),
+                              style: const TextStyle(
+                                fontSize: 13,
+                                fontWeight: FontWeight.w900,
+                              ),
+                            ),
+                            const SizedBox(height: Space.xs),
+                            for (final line in latest.notes)
+                              Text(
+                                line,
+                                style: mute.copyWith(
+                                  fontSize: 13,
+                                  fontWeight: FontWeight.w700,
+                                  height: 1.6,
+                                ),
+                              ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ],
+                ),
+              ),
             ],
           );
         },

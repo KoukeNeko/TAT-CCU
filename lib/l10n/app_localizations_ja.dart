@@ -2069,4 +2069,41 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get androidOnly => 'Android 12 以降のみ';
+
+  @override
+  String get version => 'バージョン';
+
+  @override
+  String get versionLatest => '最新バージョン';
+
+  @override
+  String versionCurrent(String version) {
+    return '現在 $version';
+  }
+
+  @override
+  String get versionUpdatable => 'アップデートできます';
+
+  @override
+  String get versionChecked => '確認しました';
+
+  @override
+  String get versionChecking => '確認中';
+
+  @override
+  String get versionCheckFailed => '確認できませんでした';
+
+  @override
+  String get checkUpdate => 'アップデートを確認';
+
+  @override
+  String get update => 'アップデート';
+
+  @override
+  String whatsNewIn(String version) {
+    return '$version の新機能';
+  }
+
+  @override
+  String get openInEcourse => 'eCourse2 で開く';
 }

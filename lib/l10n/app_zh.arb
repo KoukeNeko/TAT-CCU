@@ -1032,5 +1032,18 @@
   "themeColors": "主題",
   "themeDefault": "預設",
   "themeWallpaper": "桌布顏色",
-  "androidOnly": "僅限 Android 12 以上"
+  "androidOnly": "僅限 Android 12 以上",
+  "version": "版本",
+  "versionLatest": "最新版本",
+  "versionCurrent": "目前 {version}",
+  "@versionCurrent": {"placeholders": {"version": {"type": "String"}}},
+  "versionUpdatable": "可以更新",
+  "versionChecked": "剛剛檢查",
+  "versionChecking": "檢查中",
+  "versionCheckFailed": "無法檢查",
+  "checkUpdate": "檢查更新",
+  "update": "更新",
+  "whatsNewIn": "{version} 新功能",
+  "@whatsNewIn": {"placeholders": {"version": {"type": "String"}}},
+  "openInEcourse": "在 eCourse2 開啟"
 }

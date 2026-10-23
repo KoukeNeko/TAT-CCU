@@ -2201,4 +2201,41 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get androidOnly => 'Android 12 and later';
+
+  @override
+  String get version => 'Version';
+
+  @override
+  String get versionLatest => 'Up to date';
+
+  @override
+  String versionCurrent(String version) {
+    return 'Current $version';
+  }
+
+  @override
+  String get versionUpdatable => 'Update available';
+
+  @override
+  String get versionChecked => 'Just checked';
+
+  @override
+  String get versionChecking => 'Checking';
+
+  @override
+  String get versionCheckFailed => 'Couldn\'t check';
+
+  @override
+  String get checkUpdate => 'Check for updates';
+
+  @override
+  String get update => 'Update';
+
+  @override
+  String whatsNewIn(String version) {
+    return 'What\'s new in $version';
+  }
+
+  @override
+  String get openInEcourse => 'Open in eCourse2';
 }

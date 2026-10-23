@@ -3729,6 +3729,72 @@ abstract class AppLocalizations {
   /// In zh, this message translates to:
   /// **'僅限 Android 12 以上'**
   String get androidOnly;
+
+  /// No description provided for @version.
+  ///
+  /// In zh, this message translates to:
+  /// **'版本'**
+  String get version;
+
+  /// No description provided for @versionLatest.
+  ///
+  /// In zh, this message translates to:
+  /// **'最新版本'**
+  String get versionLatest;
+
+  /// No description provided for @versionCurrent.
+  ///
+  /// In zh, this message translates to:
+  /// **'目前 {version}'**
+  String versionCurrent(String version);
+
+  /// No description provided for @versionUpdatable.
+  ///
+  /// In zh, this message translates to:
+  /// **'可以更新'**
+  String get versionUpdatable;
+
+  /// No description provided for @versionChecked.
+  ///
+  /// In zh, this message translates to:
+  /// **'剛剛檢查'**
+  String get versionChecked;
+
+  /// No description provided for @versionChecking.
+  ///
+  /// In zh, this message translates to:
+  /// **'檢查中'**
+  String get versionChecking;
+
+  /// No description provided for @versionCheckFailed.
+  ///
+  /// In zh, this message translates to:
+  /// **'無法檢查'**
+  String get versionCheckFailed;
+
+  /// No description provided for @checkUpdate.
+  ///
+  /// In zh, this message translates to:
+  /// **'檢查更新'**
+  String get checkUpdate;
+
+  /// No description provided for @update.
+  ///
+  /// In zh, this message translates to:
+  /// **'更新'**
+  String get update;
+
+  /// No description provided for @whatsNewIn.
+  ///
+  /// In zh, this message translates to:
+  /// **'{version} 新功能'**
+  String whatsNewIn(String version);
+
+  /// No description provided for @openInEcourse.
+  ///
+  /// In zh, this message translates to:
+  /// **'在 eCourse2 開啟'**
+  String get openInEcourse;
 }
 
 class _AppLocalizationsDelegate

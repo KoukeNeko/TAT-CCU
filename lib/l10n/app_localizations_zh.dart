@@ -2079,4 +2079,41 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get androidOnly => '僅限 Android 12 以上';
+
+  @override
+  String get version => '版本';
+
+  @override
+  String get versionLatest => '最新版本';
+
+  @override
+  String versionCurrent(String version) {
+    return '目前 $version';
+  }
+
+  @override
+  String get versionUpdatable => '可以更新';
+
+  @override
+  String get versionChecked => '剛剛檢查';
+
+  @override
+  String get versionChecking => '檢查中';
+
+  @override
+  String get versionCheckFailed => '無法檢查';
+
+  @override
+  String get checkUpdate => '檢查更新';
+
+  @override
+  String get update => '更新';
+
+  @override
+  String whatsNewIn(String version) {
+    return '$version 新功能';
+  }
+
+  @override
+  String get openInEcourse => '在 eCourse2 開啟';
 }
