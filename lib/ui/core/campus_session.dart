@@ -248,7 +248,21 @@ class CampusSessionState extends State<CampusSession> {
           .showSnackBar(SnackBar(content: Text(context.l10n.demoUnavailable)));
       return;
     }
+    // Kept on screen under the cover until the script answers, as during a
+    // hand-off: WebKit holds back a page that is not shown, and a send or
+    // download there stalls.
+    final pending = _pending ??= Completer<void>();
+    setState(() {});
     await _web.runJavaScript(script);
+    // One that never answers must not keep the page up for good.
+    unawaited(
+      pending.future.timeout(
+        const Duration(seconds: 30),
+        onTimeout: () {
+          if (identical(_pending, pending)) _settle();
+        },
+      ),
+    );
   }
 
   /// Runs [script] like [run], signing in again first when the page has
