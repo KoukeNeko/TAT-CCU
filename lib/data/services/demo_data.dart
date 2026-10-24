@@ -425,9 +425,7 @@ class DemoMoodleClient extends MoodleClient {
         ],
       },
       // The demo's starred, drafts and trash are empty.
-      'local_mail_get_index' when params['type'] != 'inbox' => {
-        'messages': [],
-      },
+      'local_mail_get_index' when params['type'] != 'inbox' => {'messages': []},
       'local_mail_get_index' => {
         'messages': [
           for (final (id, subject, sender, course, hours, unread) in _mail)
