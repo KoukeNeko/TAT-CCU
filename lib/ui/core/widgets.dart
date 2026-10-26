@@ -763,8 +763,9 @@ EdgeInsets scrollPadding(
 enum FoldPosture { book, tabletop, across }
 
 /// The fold across the screen and where it runs: its x for a book, its y
-/// otherwise. Null on a flat screen, or another foldable's flat fold across
-/// a landscape screen, which reads as one screen with a sidebar.
+/// otherwise. Null on a flat screen. Another foldable open flat on its
+/// side (the fold across) still reads as a book split down the middle,
+/// keeping the phone's bar and the two halves.
 ({FoldPosture posture, double at})? foldOf(BuildContext context) {
   for (final f in MediaQuery.displayFeaturesOf(context)) {
     if (f.type == DisplayFeatureType.cutout) continue;
@@ -776,6 +777,10 @@ enum FoldPosture { book, tabletop, across }
       return (posture: FoldPosture.tabletop, at: b.center.dy);
     }
     if (isPhoneDevice) return (posture: FoldPosture.across, at: b.center.dy);
+    return (
+      posture: FoldPosture.book,
+      at: MediaQuery.sizeOf(context).width / 2,
+    );
   }
   return null;
 }

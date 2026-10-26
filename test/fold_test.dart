@@ -7,12 +7,13 @@ import 'package:tat_ccu/ui/core/widgets.dart';
 void main() {
   Future<({FoldPosture posture, double at})?> foldWith(
     WidgetTester tester,
-    List<DisplayFeature> features,
-  ) async {
+    List<DisplayFeature> features, {
+    Size size = Size.zero,
+  }) async {
     ({FoldPosture posture, double at})? fold;
     await tester.pumpWidget(
       MediaQuery(
-        data: MediaQueryData(displayFeatures: features),
+        data: MediaQueryData(size: size, displayFeatures: features),
         child: Builder(
           builder: (context) {
             fold = foldOf(context);
@@ -46,7 +47,9 @@ void main() {
     expect(fold, (posture: FoldPosture.tabletop, at: 353.0));
   });
 
-  testWidgets('a flat fold across and a cutout are one screen', (tester) async {
+  testWidgets('a foldable open flat on its side splits down the middle', (
+    tester,
+  ) async {
     final fold = await foldWith(tester, const [
       DisplayFeature(
         bounds: Rect.fromLTWH(0, 353, 823, 0),
@@ -58,8 +61,8 @@ void main() {
         type: DisplayFeatureType.cutout,
         state: DisplayFeatureState.unknown,
       ),
-    ]);
-    expect(fold, isNull);
+    ], size: const Size(823, 706));
+    expect(fold, (posture: FoldPosture.book, at: 411.5));
   });
 
   testWidgets('an iPhone Duo open flat in landscape splits across', (
