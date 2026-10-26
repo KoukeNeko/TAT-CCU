@@ -34,9 +34,15 @@ AppBar topBar(
   backgroundColor: Colors.transparent,
   scrolledUnderElevation: 0,
   flexibleSpace: const GlassBackdrop(),
-  title: Text(
-    title,
-    style: const TextStyle(fontSize: 34, fontWeight: FontWeight.w900),
+  // One line on a flip phone's outer display (design/round-24 flip-all).
+  title: Builder(
+    builder: (context) => Text(
+      title,
+      style: TextStyle(
+        fontSize: coverScreen(context) ? 20 : 34,
+        fontWeight: FontWeight.w900,
+      ),
+    ),
   ),
   bottom: bottom,
 );
@@ -98,8 +104,9 @@ AppBar subBar(
   titleSpacing: 16,
   title: Row(
     children: [
-      // A page opened beside a list (desktop) has nothing to go back to.
-      if (_canGoBack(context)) ...[
+      // A page opened beside a list (desktop) has nothing to go back to;
+      // on a flip phone's outer display the rail has the back button.
+      if (_canGoBack(context) && !coverScreen(context)) ...[
         RoundBackButton(),
         const SizedBox(width: 10),
       ],
@@ -125,7 +132,19 @@ AppBar subBar(
             ),
           ),
           child: titleChild == null
-              ? Text(title, key: ValueKey(title))
+              ? Text(
+                  title,
+                  key: ValueKey(title),
+                  // One line on a flip phone's outer display.
+                  maxLines: coverScreen(context) ? 1 : null,
+                  overflow: coverScreen(context) ? TextOverflow.ellipsis : null,
+                  style: coverScreen(context)
+                      ? const TextStyle(
+                          fontSize: 20,
+                          fontWeight: FontWeight.w900,
+                        )
+                      : null,
+                )
               : KeyedSubtree(key: ValueKey(title), child: titleChild),
         ),
       ),
@@ -270,6 +289,27 @@ class StatusTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final light = Theme.of(context).brightness == Brightness.light;
+    // A flip phone's outer display keeps the name alone, in a short block
+    // (design/round-24 flip-all).
+    if (coverScreen(context)) {
+      return SizedBox(
+        height: 56,
+        child: ToneBlock(
+          tone: tone,
+          padding: const EdgeInsets.all(Space.m),
+          onTap: onTap,
+          child: Align(
+            alignment: Alignment.bottomLeft,
+            child: Text(
+              status ?? title,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w900),
+            ),
+          ),
+        ),
+      );
+    }
     return SizedBox(
       height: height,
       child: ToneBlock(
@@ -688,6 +728,12 @@ double endInset(BuildContext context) {
   return math.max(0, inset.right - inset.left);
 }
 
+/// The same at the left, where a flip phone's outer display has the bar.
+double startInset(BuildContext context) {
+  final inset = MediaQuery.paddingOf(context);
+  return math.max(0, inset.left - inset.right);
+}
+
 EdgeInsets scrollPadding(
   BuildContext context, {
   double top = pageTop,
@@ -702,7 +748,7 @@ EdgeInsets scrollPadding(
     (MediaQuery.sizeOf(context).width - maxWidth) / 2,
   );
   return EdgeInsets.fromLTRB(
-    side,
+    side + startInset(context),
     top + inset.top,
     side + endInset(context),
     Space.xxl + inset.bottom,
@@ -764,6 +810,19 @@ bool barsOnRight(BuildContext context) {
   final inset = MediaQuery.viewPaddingOf(context);
   return inset.right > inset.top && inset.right > inset.left;
 }
+
+/// A flip phone's outer display (Galaxy Z Flip, razr): small and nearly
+/// square, unlike a phone held either way (design/round-24 C).
+bool coverScreen(BuildContext context) {
+  final size = MediaQuery.sizeOf(context);
+  return size.shortestSide < 480 &&
+      size.aspectRatio > 0.75 &&
+      size.aspectRatio < 1.34;
+}
+
+/// Space above a flip phone's outer display's rail and the home page's
+/// first card: level with the title rows, (toolbar 56 - button 44) / 2.
+const coverTop = 6.0;
 
 /// Whether a list has its detail beside it: on a wide screen, or open as a
 /// book, one on each side of the fold (an iPhone Duo's inner display is

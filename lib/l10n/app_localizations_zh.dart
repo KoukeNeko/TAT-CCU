@@ -2184,4 +2184,13 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get swInstallers => '安裝檔';
+
+  @override
+  String get calUpcoming => '接下來';
+
+  @override
+  String get calThisMonth => '本月';
+
+  @override
+  String get calNothingAhead => '沒有接下來的事項';
 }

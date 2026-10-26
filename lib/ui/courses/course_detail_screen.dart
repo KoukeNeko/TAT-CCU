@@ -96,11 +96,14 @@ class CourseDetailScreen extends StatelessWidget {
               void show(String path) =>
                   open != null ? context.go(path) : context.push(path);
               final firstDue = summary.due.firstOrNull;
+              final cover = coverScreen(context);
               return ListView(
-                padding: scrollPadding(context),
+                padding: scrollPadding(context, top: cover ? Space.s : pageTop),
                 children: [
-                  _Hero(course: course, current: summary.current),
-                  const SizedBox(height: 10),
+                  if (!cover) ...[
+                    _Hero(course: course, current: summary.current),
+                    const SizedBox(height: 10),
+                  ],
                   Row(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
@@ -265,15 +268,20 @@ class _CourseBarState extends State<_CourseBar> {
     future: _course,
     builder: (context, snap) => ValueListenableBuilder(
       valueListenable: widget.titled,
-      builder: (context, titled, _) => subBar(
-        context,
-        switch (snap.data) {
-          final course? when titled => context.courseName(course),
-          _ => '',
-        },
-        // Until then the back button floats on the page, bar-less.
-        glass: titled,
-      ),
+      builder: (context, titled, _) {
+        // A flip phone's outer display has no card with the name, so the
+        // bar always shows it (design/round-24 flip-all).
+        final shown = titled || coverScreen(context);
+        return subBar(
+          context,
+          switch (snap.data) {
+            final course? when shown => context.courseName(course),
+            _ => '',
+          },
+          // Until then the back button floats on the page, bar-less.
+          glass: shown,
+        );
+      },
     ),
   );
 }

@@ -140,6 +140,46 @@ class _TodayScreenState extends State<TodayScreen> {
                         case [final first, ...])
                       (slot: first, days: day),
                 ].firstOrNull;
+          Widget? heroCard({bool cover = false}) => current != null
+              ? _Hero(
+                  slot: current,
+                  label: l10n.inClass,
+                  detail: l10n.untilTime(clock(current.session.end)),
+                  minutes: current.session.end - minute,
+                  later: false,
+                  // shortcut: shown in every class, whether or not the course
+                  // takes attendance; check its modules if that gets noisy.
+                  onAttendance: () => scanAttendance(context),
+                  cover: cover,
+                )
+              : next != null
+              ? _Hero(
+                  slot: next,
+                  label: l10n.nextClass,
+                  detail: l10n.startsAt(clock(next.session.start)),
+                  minutes: next.session.start - minute,
+                  later: true,
+                  cover: cover,
+                )
+              : upcoming != null
+              ? _Hero(
+                  slot: upcoming.slot,
+                  label: l10n.firstClassOn(
+                    upcoming.days == 1
+                        ? l10n.tomorrow
+                        : weekdayName(context, upcoming.slot.session.weekday),
+                  ),
+                  detail: l10n.startsAt(clock(upcoming.slot.session.start)),
+                  minutes:
+                      upcoming.days * 24 * 60 +
+                      upcoming.slot.session.start -
+                      minute,
+                  later: true,
+                  tone: tones.mint,
+                  cover: cover,
+                )
+              : null;
+
           final classCards = <Widget>[
             // Header design A (design/round-09): date above the headline;
             // notifications moved to the 訊息 tab.
@@ -169,41 +209,7 @@ class _TodayScreenState extends State<TodayScreen> {
               ),
             ),
             const SizedBox(height: 16),
-            if (current != null)
-              _Hero(
-                slot: current,
-                label: l10n.inClass,
-                detail: l10n.untilTime(clock(current.session.end)),
-                minutes: current.session.end - minute,
-                later: false,
-                // shortcut: shown in every class, whether or not the course
-                // takes attendance; check its modules if that gets noisy.
-                onAttendance: () => scanAttendance(context),
-              )
-            else if (next != null)
-              _Hero(
-                slot: next,
-                label: l10n.nextClass,
-                detail: l10n.startsAt(clock(next.session.start)),
-                minutes: next.session.start - minute,
-                later: true,
-              )
-            else if (upcoming != null)
-              _Hero(
-                slot: upcoming.slot,
-                label: l10n.firstClassOn(
-                  upcoming.days == 1
-                      ? l10n.tomorrow
-                      : weekdayName(context, upcoming.slot.session.weekday),
-                ),
-                detail: l10n.startsAt(clock(upcoming.slot.session.start)),
-                minutes:
-                    upcoming.days * 24 * 60 +
-                    upcoming.slot.session.start -
-                    minute,
-                later: true,
-                tone: tones.mint,
-              ),
+            ?heroCard(),
           ];
           final lead = [
             ...classCards,
@@ -264,6 +270,55 @@ class _TodayScreenState extends State<TodayScreen> {
               ],
             ],
           ];
+          // A flip phone's outer display: the class filling the height,
+          // what is due and unread as two counts (design/round-24 C).
+          if (coverScreen(context)) {
+            final hero = heroCard(cover: true);
+            return Padding(
+              // Level with the rail, and as far from the bottom.
+              padding: scrollPadding(context, top: coverTop).copyWith(
+                bottom: MediaQuery.paddingOf(context).bottom + Space.m,
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  Expanded(
+                    child:
+                        hero ??
+                        Center(
+                          child: Text(
+                            headline,
+                            style: const TextStyle(
+                              fontSize: 24,
+                              fontWeight: FontWeight.w900,
+                            ),
+                          ),
+                        ),
+                  ),
+                  const SizedBox(height: Space.s),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: _CountTile(
+                          count: d.due.length,
+                          label: l10n.dueThisWeek,
+                          onTap: () => context.push('/today/due'),
+                        ),
+                      ),
+                      const SizedBox(width: Space.s),
+                      Expanded(
+                        child: _CountTile(
+                          count: d.notices + d.mail,
+                          label: l10n.unread,
+                          onTap: () => context.go('/messages'),
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            );
+          }
           final width = MediaQuery.sizeOf(context).width;
           final fold = foldOf(context);
           // An open foldable: the class on the half left of the fold,
@@ -379,7 +434,12 @@ class _Hero extends StatelessWidget {
     required this.later,
     this.tone,
     this.onAttendance,
+    this.cover = false,
   });
+
+  /// On a flip phone's outer display: it fills the height it is given,
+  /// with the count in large type and no badge (design/round-24 C).
+  final bool cover;
 
   final _Slot slot;
   final String label, detail;
@@ -416,33 +476,34 @@ class _Hero extends StatelessWidget {
       child: InkWell(
         onTap: () => context.push('/courses/${slot.course.id}'),
         child: SizedBox(
-          height: 226,
+          height: cover ? null : 226,
           child: Stack(
             children: [
               // The badge sits partly outside the card, as in the mockup,
               // centred behind the count below.
-              Positioned(
-                right: -25,
-                bottom: -32,
-                child: Container(
-                  width: 150,
-                  height: 150,
-                  decoration: ShapeDecoration(
-                    color: tone.strong,
-                    shape: const StarBorder(
-                      points: 11,
-                      innerRadiusRatio: 0.78,
-                      pointRounding: 0.15,
-                      valleyRounding: 0.1,
+              if (!cover)
+                Positioned(
+                  right: -25,
+                  bottom: -32,
+                  child: Container(
+                    width: 150,
+                    height: 150,
+                    decoration: ShapeDecoration(
+                      color: tone.strong,
+                      shape: const StarBorder(
+                        points: 11,
+                        innerRadiusRatio: 0.78,
+                        pointRounding: 0.15,
+                        valleyRounding: 0.1,
+                      ),
                     ),
                   ),
                 ),
-              ),
               // Count with its unit beside it; the unit's side bearing makes a
               // smaller right inset read the same as the bottom one.
               Positioned(
-                right: 20,
-                bottom: 26,
+                right: cover ? Space.l : 20,
+                bottom: cover ? Space.m : 26,
                 child: Row(
                   crossAxisAlignment: CrossAxisAlignment.baseline,
                   textBaseline: TextBaseline.alphabetic,
@@ -450,8 +511,8 @@ class _Hero extends StatelessWidget {
                     Text(
                       '$count',
                       style: TextStyle(
-                        color: tone.fill,
-                        fontSize: 34,
+                        color: cover ? tone.ink : tone.fill,
+                        fontSize: cover ? 40 : 34,
                         fontWeight: FontWeight.w900,
                         height: 1,
                       ),
@@ -460,7 +521,7 @@ class _Hero extends StatelessWidget {
                     Text(
                       unit,
                       style: TextStyle(
-                        color: tone.fill,
+                        color: cover ? tone.ink : tone.fill,
                         fontSize: 12,
                         fontWeight: FontWeight.w800,
                       ),
@@ -469,12 +530,14 @@ class _Hero extends StatelessWidget {
                 ),
               ),
               Padding(
-                padding: const EdgeInsets.fromLTRB(
-                  Space.xl,
-                  Space.xl,
-                  120,
-                  Space.xl,
-                ),
+                padding: cover
+                    ? const EdgeInsets.all(Space.l)
+                    : const EdgeInsets.fromLTRB(
+                        Space.xl,
+                        Space.xl,
+                        120,
+                        Space.xl,
+                      ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
@@ -503,7 +566,7 @@ class _Hero extends StatelessWidget {
                       overflow: TextOverflow.ellipsis,
                       style: TextStyle(
                         color: tone.ink,
-                        fontSize: 23,
+                        fontSize: cover ? 20 : 23,
                         fontWeight: FontWeight.w900,
                         height: 1.25,
                       ),
@@ -748,6 +811,60 @@ class _ListRow extends StatelessWidget {
                 ),
               ),
           ],
+        ),
+      ),
+    );
+  }
+}
+
+/// A count and what it counts, for a flip phone's outer display.
+class _CountTile extends StatelessWidget {
+  const _CountTile({
+    required this.count,
+    required this.label,
+    required this.onTap,
+  });
+
+  final int count;
+  final String label;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    return Material(
+      color: scheme.surfaceContainerLow,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.all(Radius.circular(18)),
+      ),
+      clipBehavior: Clip.antiAlias,
+      child: InkWell(
+        onTap: onTap,
+        child: Padding(
+          padding: const EdgeInsets.all(Space.m),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                '$count',
+                style: const TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.w900,
+                  height: 1.1,
+                ),
+              ),
+              Text(
+                label,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: TextStyle(
+                  fontSize: 11,
+                  fontWeight: FontWeight.w800,
+                  color: scheme.onSurfaceVariant,
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );

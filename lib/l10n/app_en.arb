@@ -639,5 +639,8 @@
   "swLink": "Link",
   "swHere": "Activation and guides",
   "swHereHint": "Opens in the app",
-  "swInstallers": "Installers"
+  "swInstallers": "Installers",
+  "calUpcoming": "Upcoming",
+  "calThisMonth": "This month",
+  "calNothingAhead": "Nothing coming up"
 }

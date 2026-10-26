@@ -275,13 +275,15 @@ class _MessagesScreenState extends State<MessagesScreen> {
   Widget _feed(BuildContext context) {
     final repo = context.read<EcourseRepository>();
     final l10n = context.l10n;
+    // Beside the mail pane, and on a flip phone's outer display, 寫信 sits
+    // in the bar instead of floating.
+    final inBar = _wide || coverScreen(context);
     return Scaffold(
       extendBodyBehindAppBar: true,
       appBar: topBar(
         l10n.navMessages,
-        // Beside the mail pane, 寫信 sits in the bar instead of floating.
         actions: [
-          if (_wide)
+          if (inBar)
             Padding(
               padding: const EdgeInsets.only(right: Space.l),
               child: IconButton(
@@ -314,7 +316,7 @@ class _MessagesScreenState extends State<MessagesScreen> {
           ],
         ),
       ),
-      floatingActionButton: _wide
+      floatingActionButton: inBar
           ? null
           : Padding(
               // Clear the floating nav bar.
@@ -513,10 +515,11 @@ class _MessagesScreenState extends State<MessagesScreen> {
     return ListView(
       // Room for the 寫信 button over the last message.
       // The list opens with a section label, which brings its own gap.
-      padding: scrollPadding(
-        context,
-        top: 0,
-      ).copyWith(bottom: scrollPadding(context).bottom + (_wide ? 0 : 72)),
+      padding: scrollPadding(context, top: 0).copyWith(
+        bottom:
+            scrollPadding(context).bottom +
+            (_wide || coverScreen(context) ? 0 : 72),
+      ),
       children: [
         ?header,
         if (shown.isEmpty)

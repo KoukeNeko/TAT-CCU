@@ -73,6 +73,7 @@ GoRouter buildRouter(EcourseAuthRepository auth) => GoRouter(
       ),
       branches: [
         StatefulShellBranch(
+          observers: [PagesObserver()],
           routes: [
             GoRoute(
               path: '/today',
@@ -84,6 +85,7 @@ GoRouter buildRouter(EcourseAuthRepository auth) => GoRouter(
           ],
         ),
         StatefulShellBranch(
+          observers: [PagesObserver()],
           routes: [
             GoRoute(
               path: '/messages',
@@ -103,6 +105,7 @@ GoRouter buildRouter(EcourseAuthRepository auth) => GoRouter(
           ],
         ),
         StatefulShellBranch(
+          observers: [PagesObserver()],
           routes: [
             GoRoute(
               path: '/timetable',
@@ -178,6 +181,7 @@ GoRouter buildRouter(EcourseAuthRepository auth) => GoRouter(
           ],
         ),
         StatefulShellBranch(
+          observers: [PagesObserver()],
           routes: [
             GoRoute(
               path: '/calendar',
@@ -186,6 +190,7 @@ GoRouter buildRouter(EcourseAuthRepository auth) => GoRouter(
           ],
         ),
         StatefulShellBranch(
+          observers: [PagesObserver()],
           routes: [
             // Desktop direction A: the More list stays at the left and its
             // pages open beside it ([_MoreBeside]), so beside it the first

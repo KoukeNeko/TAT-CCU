@@ -3927,6 +3927,24 @@ abstract class AppLocalizations {
   /// In zh, this message translates to:
   /// **'安裝檔'**
   String get swInstallers;
+
+  /// No description provided for @calUpcoming.
+  ///
+  /// In zh, this message translates to:
+  /// **'接下來'**
+  String get calUpcoming;
+
+  /// No description provided for @calThisMonth.
+  ///
+  /// In zh, this message translates to:
+  /// **'本月'**
+  String get calThisMonth;
+
+  /// No description provided for @calNothingAhead.
+  ///
+  /// In zh, this message translates to:
+  /// **'沒有接下來的事項'**
+  String get calNothingAhead;
 }
 
 class _AppLocalizationsDelegate

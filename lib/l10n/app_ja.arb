@@ -639,5 +639,8 @@
   "swLink": "リンク",
   "swHere": "認証と説明",
   "swHereHint": "アプリで開く",
-  "swInstallers": "インストーラー"
+  "swInstallers": "インストーラー",
+  "calUpcoming": "これから",
+  "calThisMonth": "今月",
+  "calNothingAhead": "予定はありません"
 }

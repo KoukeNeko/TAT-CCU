@@ -12,6 +12,7 @@ import '../../data/services/school_calendar.dart';
 import '../core/status_capsule.dart';
 import '../core/auto_refresh.dart';
 import '../core/theme.dart';
+import '../core/segment_switch.dart';
 import '../core/widgets.dart';
 import '../../l10n/l10n.dart';
 
@@ -155,10 +156,147 @@ class _CalendarScreenState extends State<CalendarScreen> with AutoRefresh {
     }
   }
 
+  /// On a flip phone's outer display: the shown month's events instead of
+  /// what is coming up.
+  var _wholeMonth = false;
+
+  /// Design round-24 flip-all: a list instead of the month grid, of what
+  /// is coming up or of the shown month, each with its kind's color.
+  Widget _coverList(BuildContext context) {
+    final l10n = context.l10n;
+    final tones = context.tones;
+    final scheme = Theme.of(context).colorScheme;
+    final month = _monthOf(_page);
+    final from = _wholeMonth ? month : _today;
+    final until = _wholeMonth
+        ? DateTime(month.year, month.month + 1)
+        : DateTime(_today.year, _today.month + 2);
+    bool within(DateTime d) => !d.isBefore(from) && d.isBefore(until);
+    final items =
+        <
+            ({
+              DateTime at,
+              String title,
+              String detail,
+              Tone tone,
+              VoidCallback? onTap,
+            })
+          >[
+            for (final d in schoolCalendar)
+              if (within(d.start) ||
+                  (d.end != null &&
+                      d.start.isBefore(from) &&
+                      !d.end!.isBefore(from)))
+                (
+                  at: d.start,
+                  title: d.title,
+                  detail: d.end == null
+                      ? monthDay(d.start)
+                      : '${monthDay(d.start)} – ${monthDay(d.end!)}',
+                  tone: _Kind.school.tone(tones),
+                  onTap: null,
+                ),
+            for (final p in {
+              _pageOf(from),
+              _pageOf(until.subtract(const Duration(days: 1))),
+            })
+              for (final e in _months[p] ?? const <CalendarEvent>[])
+                if (within(e.time))
+                  (
+                    at: e.time,
+                    title: e.name,
+                    detail:
+                        '${monthDay(e.time)} ${weekdayName(context, e.time.weekday)} '
+                        '${clock(e.time.hour * 60 + e.time.minute)}',
+                    tone: _kindOf(e).tone(tones),
+                    onTap: e.cmid != null && e.courseId != 0
+                        ? () => context.push(
+                            '/courses/${e.courseId}/modules/${e.cmid}',
+                          )
+                        : e.url == null
+                        ? null
+                        : () => openExternal(e.url!),
+                  ),
+          ]
+          ..sort((a, b) => a.at.compareTo(b.at));
+    return PullRefresh(
+      onRefresh: () async => _load(_page, again: true),
+      child: ListView(
+        padding: scrollPadding(context, top: Space.s),
+        children: [
+          SegmentSwitch(
+            labels: [l10n.calUpcoming, l10n.calThisMonth],
+            selected: _wholeMonth ? 1 : 0,
+            onChanged: (i) => setState(() => _wholeMonth = i == 1),
+          ),
+          const SizedBox(height: Space.s),
+          if (items.isEmpty)
+            Padding(
+              padding: const EdgeInsets.only(top: Space.xxl),
+              child: Text(
+                _pending.contains(_page) ? '' : l10n.calNothingAhead,
+                textAlign: TextAlign.center,
+                style: Theme.of(context).textTheme.titleMedium,
+              ),
+            ),
+          for (final (i, item) in items.indexed) ...[
+            if (i > 0) const Divider(height: 1),
+            InkWell(
+              onTap: item.onTap,
+              child: Padding(
+                padding: const EdgeInsets.symmetric(vertical: Space.s),
+                child: IntrinsicHeight(
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      Container(
+                        width: 4,
+                        decoration: BoxDecoration(
+                          color: item.tone.strong,
+                          borderRadius: BorderRadius.circular(2),
+                        ),
+                      ),
+                      const SizedBox(width: Space.m),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              item.title,
+                              maxLines: 2,
+                              overflow: TextOverflow.ellipsis,
+                              style: const TextStyle(
+                                fontSize: 13,
+                                fontWeight: FontWeight.w900,
+                              ),
+                            ),
+                            Text(
+                              item.detail,
+                              style: TextStyle(
+                                fontSize: 11,
+                                fontWeight: FontWeight.w800,
+                                color: scheme.onSurfaceVariant,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final month = _monthOf(_page);
     final scheme = Theme.of(context).colorScheme;
+    final cover = coverScreen(context);
     return Scaffold(
       extendBodyBehindAppBar: true,
       appBar: topBar(
@@ -171,173 +309,182 @@ class _CalendarScreenState extends State<CalendarScreen> with AutoRefresh {
             label: context.l10n.goToToday,
             onTap: () => _select(_today),
           ),
-          _RoundAction(
-            icon: Icons.chevron_left,
-            onTap: () => _pages.previousPage(
-              duration: const Duration(milliseconds: 420),
-              curve: Curves.easeOutQuart,
+          if (!cover) ...[
+            _RoundAction(
+              icon: Icons.chevron_left,
+              onTap: () => _pages.previousPage(
+                duration: const Duration(milliseconds: 420),
+                curve: Curves.easeOutQuart,
+              ),
             ),
-          ),
-          _RoundAction(
-            icon: Icons.chevron_right,
-            onTap: () => _pages.nextPage(
-              duration: const Duration(milliseconds: 420),
-              curve: Curves.easeOutQuart,
+            _RoundAction(
+              icon: Icons.chevron_right,
+              onTap: () => _pages.nextPage(
+                duration: const Duration(milliseconds: 420),
+                curve: Curves.easeOutQuart,
+              ),
             ),
-          ),
+          ],
           const SizedBox(width: 12),
         ],
       ),
-      body: Builder(
-        builder: (context) => Stack(
-          children: [
-            PullRefresh(
-              // The capsule shows the progress, as on the other pages.
-              onRefresh: () async => _load(_page, again: true),
-              child: Builder(
-                builder: (context) {
-                  final width = MediaQuery.sizeOf(context).width;
-                  // An open foldable: the phone's month on the left of the
-                  // fold, the picked day on the right.
-                  final fold = foldOf(context);
-                  final book = fold?.posture == FoldPosture.book;
-                  final wide = !book && width >= splitLayout;
-                  List<Widget> monthView(double row) => [
-                    Card(
-                      // Desktop days are cards of their own.
-                      color: wide
-                          ? Colors.transparent
-                          : scheme.surfaceContainerLow,
-                      margin: wide ? EdgeInsets.zero : null,
-                      child: Padding(
-                        padding: const EdgeInsets.fromLTRB(
-                          Space.s,
-                          Space.m,
-                          Space.s,
-                          Space.s,
-                        ),
-                        child: Column(
-                          children: [
-                            Row(
-                              children: [
-                                for (var d = 1; d <= 7; d++)
-                                  Expanded(
-                                    child: Text(
-                                      weekdayShort(context, d),
-                                      textAlign: TextAlign.center,
-                                      style: TextStyle(
-                                        fontSize: 11,
-                                        fontWeight: FontWeight.w800,
-                                        color: scheme.onSurfaceVariant,
-                                      ),
+      body: cover
+          ? Builder(builder: _coverList)
+          : Builder(
+              builder: (context) => Stack(
+                children: [
+                  PullRefresh(
+                    // The capsule shows the progress, as on the other pages.
+                    onRefresh: () async => _load(_page, again: true),
+                    child: Builder(
+                      builder: (context) {
+                        final width = MediaQuery.sizeOf(context).width;
+                        // An open foldable: the phone's month on the left of the
+                        // fold, the picked day on the right.
+                        final fold = foldOf(context);
+                        final book = fold?.posture == FoldPosture.book;
+                        final wide = !book && width >= splitLayout;
+                        List<Widget> monthView(double row) => [
+                          Card(
+                            // Desktop days are cards of their own.
+                            color: wide
+                                ? Colors.transparent
+                                : scheme.surfaceContainerLow,
+                            margin: wide ? EdgeInsets.zero : null,
+                            child: Padding(
+                              padding: const EdgeInsets.fromLTRB(
+                                Space.s,
+                                Space.m,
+                                Space.s,
+                                Space.s,
+                              ),
+                              child: Column(
+                                children: [
+                                  Row(
+                                    children: [
+                                      for (var d = 1; d <= 7; d++)
+                                        Expanded(
+                                          child: Text(
+                                            weekdayShort(context, d),
+                                            textAlign: TextAlign.center,
+                                            style: TextStyle(
+                                              fontSize: 11,
+                                              fontWeight: FontWeight.w800,
+                                              color: scheme.onSurfaceVariant,
+                                            ),
+                                          ),
+                                        ),
+                                    ],
+                                  ),
+                                  const SizedBox(height: 4),
+                                  SizedBox(
+                                    height: row * 6,
+                                    child: PageView.builder(
+                                      controller: _pages,
+                                      onPageChanged: (p) {
+                                        setState(() => _page = p);
+                                        _load(p);
+                                      },
+                                      itemBuilder: (context, page) =>
+                                          _MonthGrid(
+                                            wide: wide,
+                                            rowHeight: row,
+                                            month: _monthOf(page),
+                                            today: _today,
+                                            selected: _selected,
+                                            events: _months[page] ?? const [],
+                                            onTap: _select,
+                                          ),
                                     ),
                                   ),
-                              ],
-                            ),
-                            const SizedBox(height: 4),
-                            SizedBox(
-                              height: row * 6,
-                              child: PageView.builder(
-                                controller: _pages,
-                                onPageChanged: (p) {
-                                  setState(() => _page = p);
-                                  _load(p);
-                                },
-                                itemBuilder: (context, page) => _MonthGrid(
-                                  wide: wide,
-                                  rowHeight: row,
-                                  month: _monthOf(page),
-                                  today: _today,
-                                  selected: _selected,
-                                  events: _months[page] ?? const [],
-                                  onTap: _select,
-                                ),
+                                ],
                               ),
                             ),
-                          ],
-                        ),
-                      ),
+                          ),
+                          _Legend(
+                            month: month,
+                            events: _months[_page] ?? const [],
+                          ),
+                        ];
+                        final day = _DayEvents(
+                          key: ValueKey(_selected),
+                          day: _selected,
+                          events: _months[_pageOf(_selected)],
+                          error: _errors[_pageOf(_selected)],
+                        );
+                        // The phone, and an iPad in portrait with the day under
+                        // the month.
+                        if (!book && width < wideLayout) {
+                          return ListView(
+                            padding: scrollPadding(
+                              context,
+                              maxWidth: wide ? double.infinity : readableWidth,
+                            ),
+                            children: [
+                              ...monthView(wide ? _wideRowHeight : _rowHeight),
+                              day,
+                            ],
+                          );
+                        }
+                        // Desktop direction A: the month, and the picked day
+                        // beside it.
+                        final page = scrollPadding(
+                          context,
+                          maxWidth: double.infinity,
+                        );
+                        // The day panel takes the right edge.
+                        final padding = page.copyWith(right: page.left);
+                        // Beside the day the month fills the window's height; on
+                        // a foldable it keeps the phone's rows.
+                        final monthList = LayoutBuilder(
+                          builder: (context, box) => ListView(
+                            padding: padding,
+                            children: monthView(
+                              book
+                                  ? _rowHeight
+                                  : math.max(
+                                      _wideRowHeight,
+                                      (box.maxHeight -
+                                              padding.vertical -
+                                              _monthChrome) /
+                                          6,
+                                    ),
+                            ),
+                          ),
+                        );
+                        final dayList = ListView(
+                          // The panel's own inset; the page's would center a
+                          // readable column across the whole page.
+                          padding: scrollPadding(context).copyWith(
+                            left: book ? pageMargin : 0,
+                            right: pageMargin + endInset(context),
+                          ),
+                          children: [day],
+                        );
+                        return Row(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: book
+                              ? [
+                                  SizedBox(width: fold!.at, child: monthList),
+                                  Expanded(child: dayList),
+                                ]
+                              : [
+                                  Expanded(child: monthList),
+                                  SizedBox(width: paneWidth, child: dayList),
+                                ],
+                        );
+                      },
                     ),
-                    _Legend(month: month, events: _months[_page] ?? const []),
-                  ];
-                  final day = _DayEvents(
-                    key: ValueKey(_selected),
-                    day: _selected,
-                    events: _months[_pageOf(_selected)],
-                    error: _errors[_pageOf(_selected)],
-                  );
-                  // The phone, and an iPad in portrait with the day under
-                  // the month.
-                  if (!book && width < wideLayout) {
-                    return ListView(
-                      padding: scrollPadding(
-                        context,
-                        maxWidth: wide ? double.infinity : readableWidth,
-                      ),
-                      children: [
-                        ...monthView(wide ? _wideRowHeight : _rowHeight),
-                        day,
-                      ],
-                    );
-                  }
-                  // Desktop direction A: the month, and the picked day
-                  // beside it.
-                  final page = scrollPadding(
-                    context,
-                    maxWidth: double.infinity,
-                  );
-                  // The day panel takes the right edge.
-                  final padding = page.copyWith(right: page.left);
-                  // Beside the day the month fills the window's height; on
-                  // a foldable it keeps the phone's rows.
-                  final monthList = LayoutBuilder(
-                    builder: (context, box) => ListView(
-                      padding: padding,
-                      children: monthView(
-                        book
-                            ? _rowHeight
-                            : math.max(
-                                _wideRowHeight,
-                                (box.maxHeight -
-                                        padding.vertical -
-                                        _monthChrome) /
-                                    6,
-                              ),
-                      ),
-                    ),
-                  );
-                  final dayList = ListView(
-                    // The panel's own inset; the page's would center a
-                    // readable column across the whole page.
-                    padding: scrollPadding(context).copyWith(
-                      left: book ? pageMargin : 0,
-                      right: pageMargin + endInset(context),
-                    ),
-                    children: [day],
-                  );
-                  return Row(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: book
-                        ? [
-                            SizedBox(width: fold!.at, child: monthList),
-                            Expanded(child: dayList),
-                          ]
-                        : [
-                            Expanded(child: monthList),
-                            SizedBox(width: paneWidth, child: dayList),
-                          ],
-                  );
-                },
+                  ),
+                  CapsuleSlot(
+                    capsule:
+                        _pending.contains(_page) && _months.containsKey(_page)
+                        ? const ReadingCapsule()
+                        : null,
+                  ),
+                ],
               ),
             ),
-            CapsuleSlot(
-              capsule: _pending.contains(_page) && _months.containsKey(_page)
-                  ? const ReadingCapsule()
-                  : null,
-            ),
-          ],
-        ),
-      ),
     );
   }
 }

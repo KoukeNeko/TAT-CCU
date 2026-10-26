@@ -156,6 +156,9 @@ class _AppShellState extends State<AppShell> {
       (Icons.event_outlined, context.l10n.navCalendar, t.sun, scallop),
       (Icons.apps, context.l10n.navMore, gray, clover),
     ];
+    if (coverScreen(context)) {
+      return _CoverShell(shell: widget.shell, tabs: tabs);
+    }
     final light = theme.brightness == Brightness.light;
     final pressed = _down != null;
     // Wide windows (desktop, iPad in landscape) trade the floating bar for
@@ -1045,6 +1048,174 @@ class _AnimatedBranchesState extends State<AnimatedBranches> {
             ),
           ),
       ],
+    );
+  }
+}
+
+/// Ticks when a tab's navigator pushes or pops a page, so the cover
+/// screen's rail shows or hides its back button.
+final pagesChanged = ValueNotifier(0);
+
+/// One per tab's navigator, which can have one observer of a kind.
+class PagesObserver extends NavigatorObserver {
+  void _tick() =>
+      WidgetsBinding.instance.addPostFrameCallback((_) => pagesChanged.value++);
+
+  @override
+  void didPush(Route<dynamic> route, Route<dynamic>? previousRoute) => _tick();
+
+  @override
+  void didPop(Route<dynamic> route, Route<dynamic>? previousRoute) => _tick();
+
+  @override
+  void didRemove(Route<dynamic> route, Route<dynamic>? previousRoute) =>
+      _tick();
+
+  @override
+  void didReplace({Route<dynamic>? newRoute, Route<dynamic>? oldRoute}) =>
+      _tick();
+}
+
+/// A flip phone's outer display (design/round-24 flip-all): the tabs as a
+/// column of squares at the left, from the top, with a back button above
+/// them on a page within a tab; pages leave their own back button out.
+class _CoverShell extends StatelessWidget {
+  const _CoverShell({required this.shell, required this.tabs});
+
+  final StatefulNavigationShell shell;
+  final List<_Tab> tabs;
+
+  static const _gap = 6.0;
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    final media = MediaQuery.of(context);
+    final left = math.max(media.viewPadding.left, Space.m);
+    const width = 44.0;
+    // Pages add their own margin, so the rail is as far from them as from
+    // the edge.
+    final room = left + width;
+    return Scaffold(
+      backgroundColor: scheme.surface,
+      body: Stack(
+        children: [
+          MediaQuery(
+            data: media.copyWith(
+              padding: media.padding.copyWith(left: room),
+              viewPadding: media.viewPadding.copyWith(left: room),
+            ),
+            child: shell,
+          ),
+          Positioned(
+            left: left,
+            // Level with the pages' title row: (toolbar 56 - button 44) / 2.
+            top: media.viewPadding.top + coverTop,
+            bottom: media.viewPadding.bottom + Space.m,
+            width: width,
+            child: ListenableBuilder(
+              listenable: pagesChanged,
+              builder: (context, _) {
+                final navigator = shell
+                    .route
+                    .branches[shell.currentIndex]
+                    .navigatorKey
+                    .currentState;
+                final back = navigator?.canPop() ?? false;
+                final buttons = [
+                  if (back)
+                    _CoverButton(
+                      icon: Icons.chevron_left,
+                      label: MaterialLocalizations.of(context)
+                          .backButtonTooltip,
+                      round: true,
+                      onTap: () => navigator?.maybePop(),
+                    ),
+                  for (final (i, (icon, label, tone, _)) in tabs.indexed)
+                    _CoverButton(
+                      icon: icon,
+                      label: label,
+                      tone: i == shell.currentIndex ? tone : null,
+                      onTap: () {
+                        if (i != shell.currentIndex) {
+                          HapticFeedback.selectionClick();
+                        }
+                        _openTab(shell, i);
+                      },
+                    ),
+                ];
+                // Square up to the width, smaller when the column would
+                // reach the cameras.
+                return LayoutBuilder(
+                  builder: (context, box) {
+                    final n = buttons.length;
+                    final size = ((box.maxHeight - _gap * (n - 1)) / n).clamp(
+                      32.0,
+                      width,
+                    );
+                    return Column(
+                      spacing: _gap,
+                      children: [
+                        for (final b in buttons)
+                          SizedBox.square(dimension: size, child: b),
+                      ],
+                    );
+                  },
+                );
+              },
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _CoverButton extends StatelessWidget {
+  const _CoverButton({
+    required this.icon,
+    required this.label,
+    required this.onTap,
+    this.tone,
+    this.round = false,
+  });
+
+  final IconData icon;
+  final String label;
+
+  /// The tab shown, in its tone; null for the others.
+  final Tone? tone;
+  final bool round;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    final tone = this.tone;
+    final shape = round
+        ? const CircleBorder()
+        : const RoundedRectangleBorder(
+            borderRadius: BorderRadius.all(Radius.circular(15)),
+          );
+    return Semantics(
+      button: true,
+      selected: tone != null,
+      label: label,
+      child: PressFeedback(
+        child: Material(
+          color: tone?.fill ?? scheme.surfaceContainerHigh,
+          shape: shape,
+          child: InkWell(
+            customBorder: shape,
+            onTap: onTap,
+            child: Icon(
+              icon,
+              size: 20,
+              color: tone?.ink ?? scheme.onSurfaceVariant,
+            ),
+          ),
+        ),
+      ),
     );
   }
 }

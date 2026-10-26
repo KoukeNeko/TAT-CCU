@@ -129,6 +129,14 @@ class _TimetableScreenState extends State<TimetableScreen> with AutoRefresh {
           final page = weekdays.contains(_day)
               ? weekdays.indexOf(_day)
               : weekdays.length - 1;
+          if (coverScreen(context)) {
+            return _CoverDay(
+              courses: courses,
+              weekdays: weekdays,
+              day: weekdays[page],
+              onDay: (d) => setState(() => _day = d),
+            );
+          }
           final pages = _pages ??= PageController(initialPage: page);
           final width = MediaQuery.sizeOf(context).width;
           // An open foldable: the day on the left of the fold, its cards
@@ -1520,6 +1528,198 @@ class _SemesterMenu extends StatelessWidget {
                   ),
                 ),
                 Icon(Icons.arrow_drop_down, color: tone.ink),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// A flip phone's outer display (design/round-24 flip-all): the week's days
+/// with their dates, and the chosen day's classes as cards in their course
+/// colors.
+class _CoverDay extends StatelessWidget {
+  const _CoverDay({
+    required this.courses,
+    required this.weekdays,
+    required this.day,
+    required this.onDay,
+  });
+
+  final List<Course> courses;
+  final List<int> weekdays;
+  final int day;
+  final ValueChanged<int> onDay;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = context.l10n;
+    final scheme = Theme.of(context).colorScheme;
+    final tones = context.tones;
+    final today = DateUtils.dateOnly(clk.clock.now());
+    final monday = today.subtract(Duration(days: today.weekday - 1));
+    final slots = [
+      for (final c in courses)
+        for (final s in c.sessions)
+          if (s.weekday == day) (course: c, session: s),
+    ]..sort((a, b) => a.session.start.compareTo(b.session.start));
+    return Scaffold(
+      extendBodyBehindAppBar: true,
+      appBar: topBar(
+        l10n.navTimetable,
+        actions: [
+          Padding(
+            padding: const EdgeInsets.only(right: Space.l),
+            child: IconButton(
+              tooltip: l10n.searchCourses,
+              style: IconButton.styleFrom(
+                backgroundColor: scheme.surfaceContainer,
+              ),
+              onPressed: () => context.push('/courses'),
+              icon: const Icon(Icons.search),
+            ),
+          ),
+        ],
+      ),
+      body: Builder(
+        // Reads insets from inside this Scaffold, below the glass app bar.
+        builder: (context) => ListView(
+          padding: scrollPadding(context, top: Space.s),
+          children: [
+            Row(
+              spacing: 4,
+              children: [
+                for (final d in weekdays)
+                  Expanded(
+                    child: _CoverDayPill(
+                      label: weekdayShort(context, d),
+                      date: monday.add(Duration(days: d - 1)).day,
+                      selected: d == day,
+                      onTap: () => onDay(d),
+                    ),
+                  ),
+              ],
+            ),
+            const SizedBox(height: Space.s),
+            if (slots.isEmpty)
+              Padding(
+                padding: const EdgeInsets.only(top: Space.xxl),
+                child: Text(
+                  l10n.noClassesThisDay,
+                  textAlign: TextAlign.center,
+                  style: Theme.of(context).textTheme.titleMedium,
+                ),
+              ),
+            for (final (:course, :session) in slots)
+              Padding(
+                padding: const EdgeInsets.only(bottom: Space.s),
+                child: ToneBlock(
+                  tone: tones.forCourse(course.id),
+                  radius: 16,
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: Space.m,
+                    vertical: Space.s + 2,
+                  ),
+                  onTap: () => context.push('/courses/${course.id}'),
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      SizedBox(
+                        width: 40,
+                        child: Text(
+                          '${clock(session.start)}\n${clock(session.end)}',
+                          style: const TextStyle(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w900,
+                            height: 1.25,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: Space.s),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              context.courseName(course),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: const TextStyle(
+                                fontSize: 14,
+                                fontWeight: FontWeight.w900,
+                              ),
+                            ),
+                            if (course.room case final room?)
+                              Text(
+                                room,
+                                style: const TextStyle(
+                                  fontSize: 11,
+                                  fontWeight: FontWeight.w800,
+                                ),
+                              ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _CoverDayPill extends StatelessWidget {
+  const _CoverDayPill({
+    required this.label,
+    required this.date,
+    required this.selected,
+    required this.onTap,
+  });
+
+  final String label;
+  final int date;
+  final bool selected;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    final lilac = context.tones.lilac;
+    final ink = selected ? lilac.fill : scheme.onSurfaceVariant;
+    return Semantics(
+      button: true,
+      selected: selected,
+      child: Material(
+        color: selected ? lilac.strong : scheme.surfaceContainerLow,
+        borderRadius: BorderRadius.circular(12),
+        child: InkWell(
+          borderRadius: BorderRadius.circular(12),
+          onTap: onTap,
+          child: Padding(
+            padding: const EdgeInsets.symmetric(vertical: 5),
+            child: Column(
+              children: [
+                Text(
+                  label,
+                  style: TextStyle(
+                    fontSize: 11,
+                    fontWeight: FontWeight.w900,
+                    color: ink,
+                  ),
+                ),
+                Text(
+                  '$date',
+                  style: TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w900,
+                    color: selected ? lilac.fill : scheme.onSurface,
+                  ),
+                ),
               ],
             ),
           ),

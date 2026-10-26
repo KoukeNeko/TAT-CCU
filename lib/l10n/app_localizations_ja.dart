@@ -2174,4 +2174,13 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get swInstallers => 'インストーラー';
+
+  @override
+  String get calUpcoming => 'これから';
+
+  @override
+  String get calThisMonth => '今月';
+
+  @override
+  String get calNothingAhead => '予定はありません';
 }

@@ -1069,5 +1069,8 @@
   "@swDownloads": {"placeholders": {"count": {"type": "int"}}},
   "swHere": "啟用與說明",
   "swHereHint": "在 App 開啟",
-  "swInstallers": "安裝檔"
+  "swInstallers": "安裝檔",
+  "calUpcoming": "接下來",
+  "calThisMonth": "本月",
+  "calNothingAhead": "沒有接下來的事項"
 }

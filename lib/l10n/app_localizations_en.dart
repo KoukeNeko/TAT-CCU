@@ -2306,4 +2306,13 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get swInstallers => 'Installers';
+
+  @override
+  String get calUpcoming => 'Upcoming';
+
+  @override
+  String get calThisMonth => 'This month';
+
+  @override
+  String get calNothingAhead => 'Nothing coming up';
 }

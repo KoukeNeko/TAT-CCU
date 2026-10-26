@@ -80,6 +80,10 @@ class _MoreScreenState extends State<MoreScreen> with AutoRefresh {
   final _slots = List.generate(4, (_) => GlobalKey());
   var _query = '';
 
+  /// On a flip phone's outer display the search field shows once its
+  /// button in the title is pressed.
+  var _searchOpen = false;
+
   Map<String, _Page> _pages(BuildContext context) {
     final t = context.tones;
     final l10n = context.l10n;
@@ -248,6 +252,7 @@ class _MoreScreenState extends State<MoreScreen> with AutoRefresh {
     final auth = context.watch<EcourseAuthRepository>();
     final signedIn = auth.isSignedIn;
     final searching = _query.isNotEmpty;
+    final cover = coverScreen(context);
     return Scaffold(
       extendBodyBehindAppBar: true,
       appBar: topBar(
@@ -255,14 +260,26 @@ class _MoreScreenState extends State<MoreScreen> with AutoRefresh {
         actions: [
           Padding(
             padding: const EdgeInsets.only(right: Space.l),
-            child: IconButton(
-              tooltip: context.l10n.pageStages,
-              style: IconButton.styleFrom(
-                backgroundColor: scheme.surfaceContainer,
-              ),
-              icon: const Icon(Icons.info_outline),
-              onPressed: () => _showStages(context),
-            ),
+            child: cover
+                ? IconButton(
+                    tooltip: context.l10n.searchSystems,
+                    style: IconButton.styleFrom(
+                      backgroundColor: scheme.surfaceContainer,
+                    ),
+                    icon: const Icon(Icons.search),
+                    onPressed: () => setState(() {
+                      _searchOpen = !_searchOpen;
+                      if (!_searchOpen) _query = '';
+                    }),
+                  )
+                : IconButton(
+                    tooltip: context.l10n.pageStages,
+                    style: IconButton.styleFrom(
+                      backgroundColor: scheme.surfaceContainer,
+                    ),
+                    icon: const Icon(Icons.info_outline),
+                    onPressed: () => _showStages(context),
+                  ),
           ),
         ],
       ),
@@ -271,15 +288,18 @@ class _MoreScreenState extends State<MoreScreen> with AutoRefresh {
         builder: (context) => ListView(
           padding: scrollPadding(context),
           children: [
-            TextField(
-              onChanged: (v) => setState(() => _query = v.trim()),
-              decoration: InputDecoration(
-                hintText: context.l10n.searchSystems,
-                prefixIcon: const Icon(Icons.search),
+            // A flip phone's outer display searches from the title instead.
+            if (!cover || _searchOpen)
+              TextField(
+                autofocus: cover,
+                onChanged: (v) => setState(() => _query = v.trim()),
+                decoration: InputDecoration(
+                  hintText: context.l10n.searchSystems,
+                  prefixIcon: const Icon(Icons.search),
+                ),
               ),
-            ),
             if (!searching) ...[
-              const SizedBox(height: rowGap),
+              if (!cover || _searchOpen) const SizedBox(height: rowGap),
               for (final row in [0, 2]) ...[
                 if (row > 0) const SizedBox(height: rowGap),
                 Row(
