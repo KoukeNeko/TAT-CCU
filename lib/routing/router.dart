@@ -172,11 +172,18 @@ GoRouter buildRouter(EcourseAuthRepository auth) => GoRouter(
               list: (state) => CourseDetailScreen(
                 key: ValueKey(state.pathParameters['id']),
                 courseId: int.parse(state.pathParameters['id']!),
-                open: state.uri.path,
+                open: _atCourse(state)
+                    ? '${state.uri.path}/contents'
+                    : state.uri.path,
               ),
               root: '/courses/:id',
-              atRoot: (state) =>
-                  state.uri.path == '/courses/${state.pathParameters['id']}',
+              atRoot: _atCourse,
+              // Beside the course, its sections open at once.
+              first: (state) => CoursePartScreen(
+                key: ValueKey('${state.uri.path}/contents'),
+                courseId: int.parse(state.pathParameters['id']!),
+                part: CoursePart.contents,
+              ),
             ),
           ],
         ),
@@ -383,6 +390,7 @@ List<RouteBase> _besideList(
   required Widget Function(GoRouterState state) list,
   required String root,
   required bool Function(GoRouterState state) atRoot,
+  Widget Function(GoRouterState state)? first,
 }) => [
   for (final route in routes)
     if (route is GoRoute)
@@ -394,6 +402,7 @@ List<RouteBase> _besideList(
             list: list(state),
             root: root,
             atRoot: atRoot(state),
+            first: first?.call(state),
             child: route.builder!(context, state),
           );
           // Beside the list a page changes in place: a transition would
@@ -410,6 +419,7 @@ List<RouteBase> _besideList(
           list: list,
           root: root,
           atRoot: atRoot,
+          first: first,
         ),
       )
     else
@@ -422,6 +432,9 @@ Widget _listBeside(
   required String root,
   required bool atRoot,
   required Widget child,
+
+  /// Beside the list at its first page; empty when null.
+  Widget? first,
 }) {
   if (!listBeside(context)) return child;
   return Row(
@@ -436,15 +449,21 @@ Widget _listBeside(
         color: Theme.of(context).colorScheme.outlineVariant,
       ),
       Expanded(
-        child: atRoot
+        child: atRoot && first == null
             ? const SizedBox.shrink()
             : PaneSize(
-                child: ListPaneScope(root: root, child: child),
+                child: ListPaneScope(
+                  root: root,
+                  child: atRoot ? first! : child,
+                ),
               ),
       ),
     ],
   );
 }
+
+bool _atCourse(GoRouterState state) =>
+    state.uri.path == '/courses/${state.pathParameters['id']}';
 
 /// The More tab's place among the branches.
 const _moreBranch = 4;

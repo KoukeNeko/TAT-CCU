@@ -887,6 +887,8 @@ bool _canGoBack(BuildContext context) {
   if (scope == null) return true;
   final pages = navigator.widget.pages;
   final settings = ModalRoute.of(context)?.settings;
+  // The list's own first page, shown beside it (a course's sections).
+  if (settings is Page<Object?> && settings.name == scope.root) return false;
   final i = settings is Page<Object?> ? pages.indexOf(settings) : -1;
   return i < 1 || pages[i - 1].name != scope.root;
 }
