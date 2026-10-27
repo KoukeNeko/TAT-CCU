@@ -12,6 +12,8 @@ import '../../data/repositories/ecourse_auth_repository.dart';
 import '../../data/repositories/campus_cache.dart';
 import '../../data/repositories/ecourse_repository.dart';
 import '../../data/repositories/more_tiles_prefs.dart';
+import '../core/desk_list.dart';
+import '../core/desktop_mode.dart';
 import '../core/auto_refresh.dart';
 import '../core/glass_dialog.dart';
 import '../core/theme.dart';
@@ -208,7 +210,7 @@ class _MoreScreenState extends State<MoreScreen> with AutoRefresh {
                 data: i,
                 feedback: SizedBox(
                   width: constraints.maxWidth,
-                  height: StatusTile.height,
+                  height: StatusTile.heightOf(context),
                   child: Transform.scale(
                     scale: 1.04,
                     child: PhysicalShape(
@@ -315,7 +317,14 @@ class _MoreScreenState extends State<MoreScreen> with AutoRefresh {
             if (!searching) ...[
               SectionLabel(context.l10n.aboutApp),
               Card(
-                color: scheme.surfaceContainerLow,
+                // Rows straight under the heading on a desktop.
+                color: desktopUi(context)
+                    ? Colors.transparent
+                    : scheme.surfaceContainerLow,
+                shape: desktopUi(context)
+                    ? const RoundedRectangleBorder()
+                    : null,
+                margin: desktopUi(context) ? EdgeInsets.zero : null,
                 clipBehavior: Clip.antiAlias,
                 child: Column(
                   children: [
@@ -459,6 +468,21 @@ class MenuRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
+    if (desktopUi(context)) {
+      return DeskRow(
+        leading: Icon(icon, size: 16, color: tone.strong),
+        title: title,
+        selected: selected,
+        trailing: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            ?trailing,
+            Icon(Icons.chevron_right, size: 16, color: scheme.onSurfaceVariant),
+          ],
+        ),
+        onTap: onTap,
+      );
+    }
     return ListTile(
       tileColor: selected ? scheme.surfaceContainerHigh : null,
       leading: Container(

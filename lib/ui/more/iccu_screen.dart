@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 
 import '../../data/services/demo_data.dart';
 import '../../data/services/html_text.dart';
+import '../core/desktop_mode.dart';
 import '../core/auto_refresh.dart';
 import '../core/campus_session.dart';
 import '../core/campus_web_screen.dart';
@@ -296,14 +297,15 @@ class _Hub extends StatelessWidget {
           ),
           SectionLabel(l10n.onSchoolWebsite),
           GridView.count(
-            crossAxisCount: 2,
+            // Four across on a desktop, as tiles a pointer picks from.
+            crossAxisCount: desktopUi(context) ? 4 : 2,
             shrinkWrap: true,
             // A nested GridView otherwise pads itself by the screen insets.
-            padding: EdgeInsets.zero,
+            padding: EdgeInsets.only(top: desktopUi(context) ? Space.m : 0),
             physics: const NeverScrollableScrollPhysics(),
             mainAxisSpacing: 8,
             crossAxisSpacing: 8,
-            childAspectRatio: 2.6,
+            childAspectRatio: desktopUi(context) ? 2.4 : 2.6,
             children: [
               for (final MapEntry(key: path, value: name) in _seasonal.entries)
                 _WebTile(

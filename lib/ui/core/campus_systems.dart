@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
+import 'desk_list.dart';
+import 'desktop_mode.dart';
 import 'theme.dart';
 import 'campus_web_screen.dart';
 import 'widgets.dart';
@@ -213,30 +215,40 @@ List<Widget> campusSystemSections(
           ].where((s) => s.name.toLowerCase().contains(q)).toList()
           case final shown when shown.isNotEmpty) ...[
         SectionLabel(group, detail: '${shown.length}'),
-        Card(
-          color: scheme.surfaceContainerLow,
-          clipBehavior: Clip.antiAlias,
-          child: Column(
-            children: [
-              for (final (i, s) in shown.indexed) ...[
-                if (i > 0) Divider(height: 1, color: scheme.outlineVariant),
-                // Lit while its page is open beside the list ([open]).
-                ColoredBox(
-                  color: open != null && inAppPages[s.id] == open
-                      ? scheme.surfaceContainerHigh
-                      : Colors.transparent,
-                  child: _SystemRow(
-                    system: s,
-                    tone: groupTones[gi],
-                    shape: _shapes[systems.indexOf(s) % _shapes.length],
-                    onTap: () =>
-                        openCampusSystem(context, s, replace: open != null),
+        if (desktopUi(context))
+          for (final s in shown)
+            _SystemRow(
+              system: s,
+              tone: groupTones[gi],
+              shape: _shapes[systems.indexOf(s) % _shapes.length],
+              selected: open != null && inAppPages[s.id] == open,
+              onTap: () => openCampusSystem(context, s, replace: open != null),
+            )
+        else
+          Card(
+            color: scheme.surfaceContainerLow,
+            clipBehavior: Clip.antiAlias,
+            child: Column(
+              children: [
+                for (final (i, s) in shown.indexed) ...[
+                  if (i > 0) Divider(height: 1, color: scheme.outlineVariant),
+                  // Lit while its page is open beside the list ([open]).
+                  ColoredBox(
+                    color: open != null && inAppPages[s.id] == open
+                        ? scheme.surfaceContainerHigh
+                        : Colors.transparent,
+                    child: _SystemRow(
+                      system: s,
+                      tone: groupTones[gi],
+                      shape: _shapes[systems.indexOf(s) % _shapes.length],
+                      onTap: () =>
+                          openCampusSystem(context, s, replace: open != null),
+                    ),
                   ),
-                ),
+                ],
               ],
-            ],
+            ),
           ),
-        ),
       ],
   ];
 }
@@ -285,6 +297,7 @@ class _SystemRow extends StatelessWidget {
     required this.tone,
     required this.shape,
     required this.onTap,
+    this.selected = false,
   });
 
   final CampusSystem system;
@@ -292,9 +305,62 @@ class _SystemRow extends StatelessWidget {
   final ShapeBorder shape;
   final VoidCallback onTap;
 
+  /// Lit while its page is open beside the list (desktop UI).
+  final bool selected;
+
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
+    final inApp = inAppPages.containsKey(system.id);
+    if (desktopUi(context)) {
+      final stage = pageStages[system.id];
+      return DeskRow(
+        leading: Container(
+          width: 24,
+          height: 24,
+          alignment: Alignment.center,
+          decoration: BoxDecoration(
+            color: inApp
+                ? tone.strong.withValues(alpha: 0.2)
+                : scheme.surfaceContainerHigh,
+            borderRadius: BorderRadius.circular(6),
+          ),
+          child: Text(
+            system.mark,
+            style: TextStyle(
+              fontSize: 12,
+              fontWeight: FontWeight.w800,
+              color: inApp ? tone.strong : scheme.onSurfaceVariant,
+            ),
+          ),
+        ),
+        title: system.name,
+        subtitle: system.note,
+        // School websites step back behind the app's own pages.
+        dimmed: !inApp,
+        selected: selected,
+        trailing: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            if (stage != null) ...[
+              DeskTag(
+                stage,
+                color: stage == 'ALPHA'
+                    ? context.tones.peach.strong
+                    : context.tones.lilac.strong,
+              ),
+              const SizedBox(width: 6),
+            ],
+            Icon(
+              inApp ? Icons.chevron_right : Icons.north_east,
+              size: 15,
+              color: scheme.onSurfaceVariant,
+            ),
+          ],
+        ),
+        onTap: onTap,
+      );
+    }
     return InkWell(
       onTap: onTap,
       child: Padding(

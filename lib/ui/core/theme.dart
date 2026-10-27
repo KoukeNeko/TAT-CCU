@@ -418,6 +418,39 @@ const desktopBarHeight = 52.0;
 /// height title bars with 15 px titles, and controls sized for a mouse.
 ThemeData desktopTheme(ThemeData theme) => theme.copyWith(
   visualDensity: VisualDensity.compact,
+  // Ruled boxes and pointer-sized buttons in place of the phone's soft
+  // cards and pills.
+  cardTheme: theme.cardTheme.copyWith(
+    elevation: 0,
+    shape: RoundedRectangleBorder(
+      borderRadius: BorderRadius.circular(10),
+      side: BorderSide(color: theme.colorScheme.outlineVariant),
+    ),
+  ),
+  filledButtonTheme: FilledButtonThemeData(
+    style: _deskButton(theme, theme.filledButtonTheme.style),
+  ),
+  textButtonTheme: TextButtonThemeData(
+    style: _deskButton(theme, theme.textButtonTheme.style),
+  ),
+  outlinedButtonTheme: OutlinedButtonThemeData(
+    style: _deskButton(theme, theme.outlinedButtonTheme.style),
+  ),
+  // A boxed field, as on a desktop, in place of the phone's edge bar.
+  inputDecorationTheme: theme.inputDecorationTheme.copyWith(
+    isDense: true,
+    filled: true,
+    fillColor: theme.colorScheme.surfaceContainerLow,
+    contentPadding: const EdgeInsets.symmetric(
+      horizontal: Space.m,
+      vertical: 10,
+    ),
+    border: _box(theme.colorScheme.outlineVariant),
+    enabledBorder: _box(theme.colorScheme.outlineVariant),
+    focusedBorder: _box(theme.colorScheme.primary),
+    errorBorder: _box(theme.colorScheme.error),
+    focusedErrorBorder: _box(theme.colorScheme.error),
+  ),
   materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
   appBarTheme: theme.appBarTheme.copyWith(
     toolbarHeight: desktopBarHeight,
@@ -428,3 +461,26 @@ ThemeData desktopTheme(ThemeData theme) => theme.copyWith(
     ),
   ),
 );
+
+OutlineInputBorder _box(Color color) => OutlineInputBorder(
+  borderRadius: BorderRadius.circular(7),
+  borderSide: BorderSide(color: color),
+);
+
+/// [base] at a pointer's size: 32 px high, 13 px text in its own font.
+ButtonStyle _deskButton(ThemeData theme, ButtonStyle? base) {
+  final text = base?.textStyle?.resolve({}) ?? theme.textTheme.labelLarge;
+  return ButtonStyle(
+    minimumSize: const WidgetStatePropertyAll(Size(0, 32)),
+    padding: const WidgetStatePropertyAll(EdgeInsets.symmetric(horizontal: 14)),
+    shape: WidgetStatePropertyAll(
+      RoundedRectangleBorder(borderRadius: BorderRadius.circular(7)),
+    ),
+    textStyle: WidgetStatePropertyAll(
+      (text ?? const TextStyle()).copyWith(
+        fontSize: 13,
+        fontWeight: FontWeight.w800,
+      ),
+    ),
+  ).merge(base);
+}

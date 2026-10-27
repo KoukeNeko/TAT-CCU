@@ -309,6 +309,10 @@ class StatusTile extends StatelessWidget {
 
   static const height = 120.0;
 
+  /// A small bordered box in the desktop UI (design/round-25).
+  static double heightOf(BuildContext context) =>
+      desktopUi(context) ? 58 : height;
+
   final Tone tone;
   final IconData icon;
   final String title;
@@ -318,6 +322,49 @@ class StatusTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final light = Theme.of(context).brightness == Brightness.light;
+    if (desktopUi(context)) {
+      final scheme = Theme.of(context).colorScheme;
+      return GestureDetector(
+        onTap: onTap,
+        child: MouseRegion(
+          cursor: SystemMouseCursors.click,
+          child: Container(
+            height: heightOf(context),
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 9),
+            decoration: BoxDecoration(
+              border: Border.all(color: scheme.outlineVariant),
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Text(
+                  title,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w800,
+                  ),
+                ),
+                if (status != null)
+                  Text(
+                    status!,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w700,
+                      color: tone.strong,
+                    ),
+                  ),
+              ],
+            ),
+          ),
+        ),
+      );
+    }
     // A flip phone's outer display keeps the name alone, in a short block
     // (design/round-24 flip-all).
     if (coverScreen(context)) {
@@ -417,6 +464,35 @@ class ToneBlock extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    if (desktopUi(context)) {
+      // design/round-25: a quiet box, its tone only an edge.
+      final scheme = Theme.of(context).colorScheme;
+      return Material(
+        color: scheme.surfaceContainer,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(10),
+          side: BorderSide(color: scheme.outlineVariant),
+        ),
+        clipBehavior: Clip.antiAlias,
+        child: InkWell(
+          onTap: onTap,
+          child: IntrinsicHeight(
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                ColoredBox(color: tone.strong, child: const SizedBox(width: 3)),
+                Expanded(
+                  child: DefaultTextStyle.merge(
+                    style: TextStyle(color: tone.ink),
+                    child: Padding(padding: padding, child: child),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      );
+    }
     return Material(
       color: tone.fill,
       shape: RoundedRectangleBorder(
