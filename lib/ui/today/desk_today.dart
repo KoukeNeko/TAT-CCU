@@ -165,7 +165,7 @@ class _DeskTodayState extends State<DeskToday> {
       children: [
         SizedBox(
           width: paneWidth,
-          child: ColoredBox(color: scheme.surfaceContainerLowest, child: list),
+          child: list,
         ),
         VerticalDivider(width: 1, color: scheme.outlineVariant),
         Expanded(
