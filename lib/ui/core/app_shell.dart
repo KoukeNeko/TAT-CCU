@@ -7,6 +7,7 @@ import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 
+import '../../data/repositories/ecourse_auth_repository.dart';
 import '../../data/repositories/ecourse_repository.dart';
 import '../../domain/models/course.dart';
 import 'auto_refresh.dart';
@@ -83,6 +84,9 @@ class _AppShellState extends State<AppShell> {
 
   /// The full sidebar is open over the page from the rail.
   var _expanded = false;
+
+  /// The desktop UI's toolbar button has put the sidebar away.
+  var _sidebarHidden = false;
 
   /// Width of each tab's capsule when selected, from its label in the
   /// current language and text size; set on every layout.
@@ -169,6 +173,8 @@ class _AppShellState extends State<AppShell> {
     // and its pages split at the fold instead.
     if (width >= railLayout && foldOf(context) == null) {
       final rail = width < wideLayout;
+      final toggles = desktopUi(context) && !rail;
+      final hidden = toggles && _sidebarHidden;
       void close() => setState(() => _expanded = false);
       _Sidebar side({required bool rail}) => _Sidebar(
         shell: widget.shell,
@@ -178,7 +184,9 @@ class _AppShellState extends State<AppShell> {
         ),
         rail: rail,
         // Content width for the course pages: the window less the bar.
-        content: width - (rail ? _railWidth : _sidebarWidth) - 1,
+        content: hidden
+            ? width
+            : width - (rail ? _railWidth : _sidebarWidth) - 1,
         onExpand: () => setState(() => _expanded = true),
         onPicked: close,
       );
@@ -190,15 +198,40 @@ class _AppShellState extends State<AppShell> {
             Row(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                side(rail: rail),
-                VerticalDivider(width: 1, color: scheme.outlineVariant),
+                ClipRect(
+                  child: AnimatedAlign(
+                    alignment: Alignment.centerRight,
+                    widthFactor: hidden ? 0 : 1,
+                    duration: barMove,
+                    curve: barSettle,
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        side(rail: rail),
+                        VerticalDivider(width: 1, color: scheme.outlineVariant),
+                      ],
+                    ),
+                  ),
+                ),
                 // On macOS the pages beside the sidebar take the title bar's
                 // row: their titles line up with the window buttons.
                 Expanded(
                   child: MediaQuery.removePadding(
                     context: context,
                     removeTop: Platform.isMacOS,
-                    child: PaneSize(child: widget.shell),
+                    child: PaneSize(
+                      child: toggles
+                          ? SidebarToggle(
+                              // Past the window buttons, which stay put.
+                              inset: hidden && Platform.isMacOS ? 64 : 0,
+                              onToggle: () => setState(
+                                () => _sidebarHidden = !_sidebarHidden,
+                              ),
+                              child: widget.shell,
+                            )
+                          : widget.shell,
+                    ),
                   ),
                 ),
               ],
@@ -455,6 +488,12 @@ class _SidebarState extends State<_Sidebar> with AutoRefresh {
   EcourseRepository? _repo;
   late Stream<(List<Course>, int)> _data;
 
+  /// Asked once, when the desktop footer first shows; the account page
+  /// reports it failing.
+  late final Future<String> _name = context
+      .read<EcourseAuthRepository>()
+      .verify();
+
   @override
   void initState() {
     super.initState();
@@ -516,8 +555,6 @@ class _SidebarState extends State<_Sidebar> with AutoRefresh {
   Widget build(BuildContext context) {
     if (widget.rail) return _buildRail(context);
     final scheme = Theme.of(context).colorScheme;
-    final t = context.tones;
-    final desktop = desktopUi(context);
     return Container(
       width: _sidebarWidth,
       color: scheme.surfaceContainer,
@@ -527,86 +564,170 @@ class _SidebarState extends State<_Sidebar> with AutoRefresh {
         Space.m,
         Space.l,
       ),
-      child: StreamBuilder(
-        stream: _data,
-        builder: (context, snap) {
-          final (courses, unread) = snap.data ?? (const <Course>[], 0);
-          return ListView(
-            padding: EdgeInsets.zero,
-            children: [
-              for (final (i, (icon, label)) in widget.tabs.indexed)
-                _SideItem(
-                  icon: icon,
-                  label: label,
-                  selected: i == widget.shell.currentIndex,
-                  badge: i == 1 && unread > 0 ? '$unread' : null,
-                  onTap: () => _goTab(i),
-                ),
-              if (courses.isNotEmpty)
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(Space.m, 18, Space.m, 6),
-                  child: Text(
-                    context.l10n.navCourses,
-                    style: TextStyle(
-                      fontSize: 11,
-                      fontWeight: FontWeight.w900,
-                      color: scheme.onSurfaceVariant,
-                    ),
-                  ),
-                ),
-              for (final c in courses)
-                PressFeedback(
-                  scale: 0.97,
-                  haptic: HapticFeedback.selectionClick,
-                  child: GestureDetector(
-                    behavior: HitTestBehavior.opaque,
-                    onTap: () => _openCourse(c.id),
-                    child: Container(
-                      height: desktop ? 28 : 32,
+      child: _list(context),
+    );
+  }
+
+  /// design/round-25: who is signed in, and a refresh for the pages shown.
+  Widget _foot(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    final lilac = context.tones.lilac;
+    return Container(
+      padding: const EdgeInsets.fromLTRB(Space.m, 10, 6, 0),
+      decoration: BoxDecoration(
+        border: Border(top: BorderSide(color: scheme.outlineVariant)),
+      ),
+      child: Row(
+        children: [
+          Expanded(
+            child: FutureBuilder(
+              future: _name,
+              builder: (context, snap) {
+                // eCourse2 puts the student number before the name.
+                final name = (snap.data ?? '').replaceFirst(
+                  RegExp(r'^\d+\s+'),
+                  '',
+                );
+                if (name.isEmpty) return const SizedBox.shrink();
+                return Row(
+                  children: [
+                    Container(
+                      width: 24,
+                      height: 24,
+                      alignment: Alignment.center,
                       decoration: BoxDecoration(
-                        color: c.id == widget.course
-                            ? scheme.surfaceContainerHigh
-                            : null,
-                        borderRadius: BorderRadius.circular(
-                          desktop ? 7 : Space.m,
+                        color: lilac.strong,
+                        shape: BoxShape.circle,
+                      ),
+                      child: Text(
+                        name.characters.first,
+                        style: TextStyle(
+                          fontSize: 11,
+                          fontWeight: FontWeight.w800,
+                          color: lilac.fill,
                         ),
                       ),
-                      child: Row(
-                        children: [
-                          const SizedBox(width: Space.m),
-                          Container(
-                            width: 9,
-                            height: 9,
-                            decoration: BoxDecoration(
-                              color: t.forCourse(c.id).strong,
-                              borderRadius: BorderRadius.circular(3),
-                            ),
-                          ),
-                          const SizedBox(width: 10),
-                          Expanded(
-                            child: Text(
-                              context.courseName(c),
-                              maxLines: 1,
-                              softWrap: false,
-                              overflow: TextOverflow.fade,
-                              style: TextStyle(
-                                fontSize: 13,
-                                fontWeight: FontWeight.w700,
-                                color: c.id == widget.course
-                                    ? scheme.onSurface
-                                    : scheme.onSurfaceVariant,
-                              ),
-                            ),
-                          ),
-                        ],
+                    ),
+                    const SizedBox(width: 9),
+                    Flexible(
+                      child: Text(
+                        name,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: TextStyle(
+                          fontSize: 13,
+                          fontWeight: FontWeight.w700,
+                          color: scheme.onSurfaceVariant,
+                        ),
                       ),
+                    ),
+                  ],
+                );
+              },
+            ),
+          ),
+          IconButton(
+            tooltip: context.l10n.refresh,
+            onPressed: () => refreshShown.value++,
+            iconSize: 16,
+            color: scheme.onSurfaceVariant,
+            icon: const Icon(Icons.refresh),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _list(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    final t = context.tones;
+    final desktop = desktopUi(context);
+    return StreamBuilder(
+      stream: _data,
+      builder: (context, snap) {
+        final (courses, unread) = snap.data ?? (const <Course>[], 0);
+        final list = ListView(
+          padding: EdgeInsets.zero,
+          children: [
+            for (final (i, (icon, label)) in widget.tabs.indexed)
+              _SideItem(
+                icon: icon,
+                label: label,
+                selected: i == widget.shell.currentIndex,
+                badge: i == 1 && unread > 0 ? '$unread' : null,
+                onTap: () => _goTab(i),
+              ),
+            if (courses.isNotEmpty)
+              Padding(
+                padding: const EdgeInsets.fromLTRB(Space.m, 18, Space.m, 6),
+                child: Text(
+                  context.l10n.navCourses,
+                  style: TextStyle(
+                    fontSize: 11,
+                    fontWeight: FontWeight.w900,
+                    color: scheme.onSurfaceVariant,
+                  ),
+                ),
+              ),
+            for (final c in courses)
+              PressFeedback(
+                scale: 0.97,
+                haptic: HapticFeedback.selectionClick,
+                child: GestureDetector(
+                  behavior: HitTestBehavior.opaque,
+                  onTap: () => _openCourse(c.id),
+                  child: Container(
+                    height: desktop ? 28 : 32,
+                    decoration: BoxDecoration(
+                      color: c.id == widget.course
+                          ? scheme.surfaceContainerHigh
+                          : null,
+                      borderRadius: BorderRadius.circular(
+                        desktop ? 7 : Space.m,
+                      ),
+                    ),
+                    child: Row(
+                      children: [
+                        const SizedBox(width: Space.m),
+                        Container(
+                          width: 9,
+                          height: 9,
+                          decoration: BoxDecoration(
+                            color: t.forCourse(c.id).strong,
+                            borderRadius: BorderRadius.circular(3),
+                          ),
+                        ),
+                        const SizedBox(width: 10),
+                        Expanded(
+                          child: Text(
+                            context.courseName(c),
+                            maxLines: 1,
+                            softWrap: false,
+                            overflow: TextOverflow.fade,
+                            style: TextStyle(
+                              fontSize: 13,
+                              fontWeight: FontWeight.w700,
+                              color: c.id == widget.course
+                                  ? scheme.onSurface
+                                  : scheme.onSurfaceVariant,
+                            ),
+                          ),
+                        ),
+                      ],
                     ),
                   ),
                 ),
-            ],
-          );
-        },
-      ),
+              ),
+          ],
+        );
+        if (!desktop) return list;
+        return Column(
+          children: [
+            Expanded(child: list),
+            _foot(context),
+          ],
+        );
+      },
     );
   }
 }

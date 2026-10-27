@@ -2211,4 +2211,7 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get within14Days => '14 天內';
+
+  @override
+  String get sidebar => '側欄';
 }

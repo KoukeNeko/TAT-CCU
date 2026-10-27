@@ -272,7 +272,7 @@ class _MessagesScreenState extends State<MessagesScreen> {
           child: LeadingPane(child: PaneSize(child: _feed(context))),
         ),
         VerticalDivider(width: 1, color: outline),
-        Expanded(child: detail),
+        Expanded(child: BesideList(child: detail)),
       ],
     );
   }

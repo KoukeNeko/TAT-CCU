@@ -466,9 +466,11 @@ Widget _listBeside(
         child: atRoot && first == null
             ? const SizedBox.shrink()
             : PaneSize(
-                child: ListPaneScope(
-                  root: root,
-                  child: atRoot ? first! : child,
+                child: BesideList(
+                  child: ListPaneScope(
+                    root: root,
+                    child: atRoot ? first! : child,
+                  ),
                 ),
               ),
       ),
@@ -506,7 +508,9 @@ class _MoreBeside extends StatelessWidget {
         const _PaneDivider(),
         Expanded(
           child: PaneSize(
-            child: ListPaneScope(root: '/more', child: child),
+            child: BesideList(
+              child: ListPaneScope(root: '/more', child: child),
+            ),
           ),
         ),
       ],

@@ -648,5 +648,6 @@
   "palettePages": "Pages",
   "paletteSelect": "Select",
   "openCourse": "Open course",
-  "within14Days": "Next 14 days"
+  "within14Days": "Next 14 days",
+  "sidebar": "Sidebar"
 }

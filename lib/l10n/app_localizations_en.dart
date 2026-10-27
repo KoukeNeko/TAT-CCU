@@ -2333,4 +2333,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get within14Days => 'Next 14 days';
+
+  @override
+  String get sidebar => 'Sidebar';
 }

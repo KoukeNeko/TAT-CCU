@@ -3981,6 +3981,12 @@ abstract class AppLocalizations {
   /// In zh, this message translates to:
   /// **'14 天內'**
   String get within14Days;
+
+  /// No description provided for @sidebar.
+  ///
+  /// In zh, this message translates to:
+  /// **'側欄'**
+  String get sidebar;
 }
 
 class _AppLocalizationsDelegate

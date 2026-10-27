@@ -4,6 +4,10 @@ import 'package:clock/clock.dart' as clk;
 import 'package:flutter/foundation.dart';
 import 'package:flutter/widgets.dart';
 
+/// Bumped by the desktop sidebar's refresh button: every page on screen
+/// asks again at once.
+final refreshShown = ValueNotifier(0);
+
 /// Asks again for what a page shows when it may have gone stale: the app
 /// coming back, the page's tab coming back on screen, and every
 /// [refreshEvery] while it stays there. A page under another or a tab in
@@ -30,6 +34,7 @@ mixin AutoRefresh<W extends StatefulWidget> on State<W> {
   void initState() {
     super.initState();
     _lifecycle = AppLifecycleListener(onResume: _refreshIfStale);
+    refreshShown.addListener(_refreshNow);
     if (refreshEvery case final every?) {
       _timer = Timer.periodic(every, (_) => _refreshIfStale());
     }
@@ -47,6 +52,7 @@ mixin AutoRefresh<W extends StatefulWidget> on State<W> {
   @override
   void dispose() {
     _lifecycle.dispose();
+    refreshShown.removeListener(_refreshNow);
     _timer?.cancel();
     _shown?.removeListener(_shownChanged);
     super.dispose();
@@ -57,8 +63,12 @@ mixin AutoRefresh<W extends StatefulWidget> on State<W> {
   }
 
   void _refreshIfStale() {
-    if (!mounted || !(_shown?.value.enabled ?? true)) return;
     if (clk.clock.now().difference(_asked) < staleAfter) return;
+    _refreshNow();
+  }
+
+  void _refreshNow() {
+    if (!mounted || !(_shown?.value.enabled ?? true)) return;
     markAsked();
     refresh();
   }

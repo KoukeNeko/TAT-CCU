@@ -51,3 +51,36 @@ class LeadingPane extends InheritedWidget {
 
 bool inLeadingPane(BuildContext context) =>
     context.getInheritedWidgetOfExactType<LeadingPane>() != null;
+
+/// Marks a page beside a list: the toolbar's first bar, with the sidebar
+/// toggle, is the list's.
+class BesideList extends InheritedWidget {
+  const BesideList({super.key, required super.child});
+
+  @override
+  bool updateShouldNotify(BesideList old) => false;
+}
+
+/// The desktop sidebar's toggle, at the start of the toolbar
+/// (design/round-25); [inset] clears the window buttons while the sidebar
+/// is hidden.
+class SidebarToggle extends InheritedWidget {
+  const SidebarToggle({
+    super.key,
+    required this.inset,
+    required this.onToggle,
+    required super.child,
+  });
+
+  final double inset;
+  final VoidCallback onToggle;
+
+  @override
+  bool updateShouldNotify(SidebarToggle old) => old.inset != inset;
+}
+
+/// The toggle for the bar in [context], if it is the toolbar's first.
+SidebarToggle? sidebarToggleOf(BuildContext context) {
+  if (context.getInheritedWidgetOfExactType<BesideList>() != null) return null;
+  return context.dependOnInheritedWidgetOfExactType<SidebarToggle>();
+}

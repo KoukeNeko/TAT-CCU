@@ -43,16 +43,24 @@ AppBar topBar(
   flexibleSpace: const GlassBackdrop(),
   // One line on a flip phone's outer display (design/round-24 flip-all).
   title: Builder(
-    builder: (context) => Text(
-      title,
-      style: TextStyle(
-        fontSize: coverScreen(context)
-            ? 20
-            : desktopUi(context)
-            ? null
-            : 34,
-        fontWeight: FontWeight.w900,
-      ),
+    builder: (context) => Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        const _SidebarButton(),
+        Flexible(
+          child: Text(
+            title,
+            style: TextStyle(
+              fontSize: coverScreen(context)
+                  ? 20
+                  : desktopUi(context)
+                  ? null
+                  : 34,
+              fontWeight: FontWeight.w900,
+            ),
+          ),
+        ),
+      ],
     ),
   ),
   bottom: bottom,
@@ -118,6 +126,7 @@ AppBar subBar(
   titleSpacing: 16,
   title: Row(
     children: [
+      const _SidebarButton(),
       // A page opened beside a list (desktop) has nothing to go back to;
       // on a flip phone's outer display the rail has the back button.
       if (back && _canGoBack(context) && !coverScreen(context)) ...[
@@ -214,6 +223,40 @@ Widget? _moreCrumbs(BuildContext context, String title) {
       ),
     ],
   );
+}
+
+/// Hides and shows the desktop sidebar, at the start of the toolbar.
+class _SidebarButton extends StatelessWidget {
+  const _SidebarButton();
+
+  @override
+  Widget build(BuildContext context) {
+    final toggle = sidebarToggleOf(context);
+    if (toggle == null) return const SizedBox.shrink();
+    return Padding(
+      padding: EdgeInsets.only(left: toggle.inset, right: 10),
+      child: Tooltip(
+        message: context.l10n.sidebar,
+        child: InkWell(
+          onTap: toggle.onToggle,
+          borderRadius: BorderRadius.circular(7),
+          child: SizedBox(
+            width: 30,
+            height: 28,
+            // The panel on the left, as the sidebar is.
+            child: Transform.flip(
+              flipX: true,
+              child: Icon(
+                Icons.view_sidebar_outlined,
+                size: 18,
+                color: Theme.of(context).colorScheme.onSurfaceVariant,
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
 }
 
 /// The palette's field at the end of the desktop UI's rightmost bar.

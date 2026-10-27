@@ -136,17 +136,19 @@ class _DeskDueState extends State<_DeskDue> {
         ),
         Expanded(
           child: PaneSize(
-            child:
-                picked != null &&
-                    cmid != null &&
-                    moduleTypesWithPage.contains(picked.module)
-                ? ModuleScreen(
-                    key: ValueKey(cmid),
-                    courseId: picked.courseId,
-                    cmid: cmid,
-                    title: picked.name,
-                  )
-                : const EmptyPane(),
+            child: BesideList(
+              child:
+                  picked != null &&
+                      cmid != null &&
+                      moduleTypesWithPage.contains(picked.module)
+                  ? ModuleScreen(
+                      key: ValueKey(cmid),
+                      courseId: picked.courseId,
+                      cmid: cmid,
+                      title: picked.name,
+                    )
+                  : const EmptyPane(),
+            ),
           ),
         ),
       ],
