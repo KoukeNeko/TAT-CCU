@@ -6,7 +6,13 @@ import WidgetKit
 // The app writes what they show as frames (lib/ui/home_widgets); these
 // views only pick the current frame and count the minutes left in a class.
 
+// Also built for macOS (macos/TatWidgets), where the group is the team's own
+// form, named in both Info.plists so the team ID comes from the build.
+#if os(macOS)
+private let appGroup = Bundle.main.object(forInfoDictionaryKey: "AppGroup") as? String ?? ""
+#else
 private let appGroup = "group.io.github.koukeneko.tatCcu"
+#endif
 private let log = Logger(subsystem: "io.github.koukeneko.tatCcu.TatWidgets", category: "data")
 
 // MARK: - Data
@@ -291,7 +297,7 @@ struct NextClassView: View {
       if !data.signedIn {
         Notice(icon: "graduationcap", title: data.labels.nextClass, text: data.labels.signedOut)
           .containerBackground(Tone.card.fill, for: .widget)
-      } else if family == .accessoryRectangular {
+      } else if isAccessory(family) {
         rectangular(frame.cls)
       } else {
         small(frame.cls).foregroundStyle(tone(for: frame.cls).ink)
@@ -357,10 +363,12 @@ struct TodayView: View {
         Notice(icon: "calendar", title: frame.day.date, text: data.labels.signedOut)
           .containerBackground(Tone.card.fill, for: .widget)
       } else {
-        switch family {
-        case .accessoryCircular: circular(frame, data.labels)
-        case .systemLarge: large(frame, data.labels)
-        default: medium(frame, data.labels)
+        if isAccessory(family) {
+          circular(frame, data.labels)
+        } else if family == .systemLarge {
+          large(frame, data.labels)
+        } else {
+          medium(frame, data.labels)
         }
       }
     } else {
@@ -475,9 +483,9 @@ struct DueView: View {
   var body: some View {
     if let data = entry.data, let frame = entry.frame {
       let labels = data.labels
-      if family == .accessoryCircular {
+      if isAccessory(family) {
         ZStack {
-          AccessoryWidgetBackground()
+          accessoryBackground
           VStack(spacing: 0) {
             Text(data.signedIn ? "\(frame.due.count)" : "–").font(rounded(24, .black))
             Text(labels.toDo).font(rounded(10)).opacity(0.85)
@@ -564,12 +572,37 @@ struct CountdownView: View {
 
 // MARK: - Widgets
 
+/// The lock screen's families, which macOS does not have.
+private func isAccessory(_ family: WidgetFamily) -> Bool {
+  #if os(iOS)
+  return family == .accessoryRectangular || family == .accessoryCircular
+  #else
+  return false
+  #endif
+}
+
+@ViewBuilder private var accessoryBackground: some View {
+  #if os(iOS)
+  AccessoryWidgetBackground()
+  #endif
+}
+
+#if os(iOS)
+private let nextFamilies: [WidgetFamily] = [.systemSmall, .accessoryRectangular]
+private let todayFamilies: [WidgetFamily] = [.systemMedium, .systemLarge, .accessoryCircular]
+private let dueFamilies: [WidgetFamily] = [.systemSmall, .systemMedium, .accessoryCircular]
+#else
+private let nextFamilies: [WidgetFamily] = [.systemSmall]
+private let todayFamilies: [WidgetFamily] = [.systemMedium, .systemLarge]
+private let dueFamilies: [WidgetFamily] = [.systemSmall, .systemMedium]
+#endif
+
 struct NextClassWidget: Widget {
   var body: some WidgetConfiguration {
     StaticConfiguration(kind: "NextClass", provider: Provider()) { NextClassView(entry: $0) }
       .configurationDisplayName("下一堂")
       .description("上課中與下一堂課。")
-      .supportedFamilies([.systemSmall, .accessoryRectangular])
+      .supportedFamilies(nextFamilies)
   }
 }
 
@@ -578,7 +611,7 @@ struct TodayWidget: Widget {
     StaticConfiguration(kind: "TodayClasses", provider: Provider()) { TodayView(entry: $0) }
       .configurationDisplayName("今日課表")
       .description("今天剩下的課；大尺寸另列本週到期。")
-      .supportedFamilies([.systemMedium, .systemLarge, .accessoryCircular])
+      .supportedFamilies(todayFamilies)
   }
 }
 
@@ -587,7 +620,7 @@ struct DueWidget: Widget {
     StaticConfiguration(kind: "DueSoon", provider: Provider()) { DueView(entry: $0) }
       .configurationDisplayName("待辦")
       .description("本週到期的作業與活動。")
-      .supportedFamilies([.systemSmall, .systemMedium, .accessoryCircular])
+      .supportedFamilies(dueFamilies)
   }
 }
 

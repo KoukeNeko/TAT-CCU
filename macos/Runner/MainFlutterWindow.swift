@@ -1,5 +1,6 @@
 import Cocoa
 import FlutterMacOS
+import WidgetKit
 
 class MainFlutterWindow: NSWindow {
   override func awakeFromNib() {
@@ -20,7 +21,35 @@ class MainFlutterWindow: NSWindow {
     self.minSize = NSSize(width: 390, height: 600)
 
     RegisterGeneratedPlugins(registry: flutterViewController)
+    Self.shareWithWidgets(flutterViewController.engine.binaryMessenger)
 
     super.awakeFromNib()
+  }
+
+  /// What the desktop widgets (TatWidgets) show, written where they read it;
+  /// lib/ui/home_widgets on the other end. home_widget has no macOS side.
+  private static func shareWithWidgets(_ messenger: FlutterBinaryMessenger) {
+    let channel = FlutterMethodChannel(name: "tat_ccu/widgets", binaryMessenger: messenger)
+    let group = Bundle.main.object(forInfoDictionaryKey: "AppGroup") as? String ?? ""
+    channel.setMethodCallHandler { call, result in
+      switch call.method {
+      case "save":
+        guard let args = call.arguments as? [String: String], let key = args["key"],
+          let defaults = UserDefaults(suiteName: group)
+        else {
+          return result(FlutterError(code: "save", message: "no app group \(group)", details: nil))
+        }
+        defaults.set(args["value"], forKey: key)
+        WidgetCenter.shared.reloadAllTimelines()
+        result(nil)
+      case "installed":
+        WidgetCenter.shared.getCurrentConfigurations { configs in
+          let count = (try? configs.get().count) ?? 0
+          DispatchQueue.main.async { result(count > 0) }
+        }
+      default:
+        result(FlutterMethodNotImplemented)
+      }
+    }
   }
 }

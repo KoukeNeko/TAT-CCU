@@ -2,7 +2,7 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:clock/clock.dart' as clk;
-import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:home_widget/home_widget.dart';
 
 import '../../data/repositories/app_settings.dart';
@@ -21,7 +21,8 @@ import '../core/theme.dart';
 /// frames, each shown from its `at` until the next; the native side picks
 /// the current frame and only works out the minutes left in a class.
 abstract final class HomeWidgets {
-  /// Also in both iOS targets' entitlements.
+  /// Also in both iOS targets' entitlements; macOS uses its team's form
+  /// (AppGroup in macos/Runner/Info.plist).
   static const appGroup = 'group.io.github.koukeneko.tatCcu';
 
   /// Read under this key by the native widgets.
@@ -44,11 +45,20 @@ abstract final class HomeWidgets {
     'CountdownWidget',
   ];
 
-  /// Home-screen widgets exist only on the phone platforms.
-  static bool get _supported => Platform.isIOS || Platform.isAndroid;
+  /// The phones' home screen widgets, and the desktop widgets of macOS.
+  static bool get _supported =>
+      Platform.isIOS || Platform.isAndroid || Platform.isMacOS;
 
-  static Future<bool> installed() async =>
-      _supported && (await HomeWidget.getInstalledWidgets()).isNotEmpty;
+  /// The macOS app's own channel (MainFlutterWindow.swift): home_widget
+  /// has no macOS side.
+  static const _mac = MethodChannel('tat_ccu/widgets');
+
+  static Future<bool> installed() async {
+    if (Platform.isMacOS) {
+      return await _mac.invokeMethod<bool>('installed') ?? false;
+    }
+    return _supported && (await HomeWidget.getInstalledWidgets()).isNotEmpty;
+  }
 
   /// Rewrites the frames from the cached or fresh timetable and deadlines.
   static Future<void> sync(
@@ -75,6 +85,14 @@ abstract final class HomeWidgets {
       signedIn: auth.isSignedIn,
       courseColor: (id) => tones.forCourse(id).strong,
     );
+    if (Platform.isMacOS) {
+      // Its widgets refresh on their timeline, as on iOS.
+      await _mac.invokeMethod('save', {
+        'key': dataKey,
+        'value': jsonEncode(data),
+      });
+      return;
+    }
     await HomeWidget.setAppGroupId(appGroup);
     await HomeWidget.saveWidgetData(dataKey, jsonEncode(data));
     if (Platform.isIOS) {

@@ -246,7 +246,11 @@ jobs:
             "$app/Contents/Frameworks/PDFium.framework"
           otool -D "$app/Contents/Frameworks/PDFium.framework/PDFium" | grep -q '@rpath/PDFium.framework/PDFium'
           # The entitlements as Xcode would expand them; the hardened runtime is kept by the export.
-          sed "s/\$(AppIdentifierPrefix)/$TEAM_ID./" macos/Runner/Release.entitlements > "$RUNNER_TEMP/app.entitlements"
+          expand() { sed -e "s/\$(AppIdentifierPrefix)/$TEAM_ID./" -e "s/\$(DEVELOPMENT_TEAM)/$TEAM_ID/" "$1"; }
+          expand macos/Runner/Release.entitlements > "$RUNNER_TEMP/app.entitlements"
+          expand macos/TatWidgets/TatWidgets.entitlements > "$RUNNER_TEMP/widgets.entitlements"
+          codesign -f -s - --options runtime --entitlements "$RUNNER_TEMP/widgets.entitlements" \
+            "$app/Contents/PlugIns/TatWidgets.appex"
           find "$app/Contents/Frameworks" -maxdepth 1 -name '*.framework' -exec codesign -f -s - --options runtime {} \;
           codesign -f -s - --options runtime --entitlements "$RUNNER_TEMP/app.entitlements" "$app"
           cat > "$RUNNER_TEMP/ExportOptions.plist" <<PLIST
@@ -268,6 +272,10 @@ jobs:
           xcodebuild -exportArchive \
             -archivePath "$RUNNER_TEMP/Runner.xcarchive" \
             -exportOptionsPlist "$RUNNER_TEMP/ExportOptions.plist" -exportPath "$RUNNER_TEMP/export"
+          # The desktop widgets read the app's data through this group, so both must carry it.
+          for bundle in "$RUNNER_TEMP/export/TAT CCU.app" "$RUNNER_TEMP/export/TAT CCU.app/Contents/PlugIns/TatWidgets.appex"; do
+            codesign -d --entitlements - "$bundle" 2>/dev/null | grep -q "$TEAM_ID.io.github.koukeneko.tatCcu"
+          done
       # The same archive, signed ad hoc with the sandbox entitlements, goes to the Mac App Store (mac-app-store).
       - name: Keep the archive for the Mac App Store
         if: github.event_name == 'push'
