@@ -333,6 +333,7 @@ class _TodayScreenState extends State<TodayScreen> {
                   ? slots
                   : [upcoming.slot],
               hero: hero ?? upcoming?.slot,
+              heroToday: hero != null,
               after: after,
               minute: minute,
               due: d.due,

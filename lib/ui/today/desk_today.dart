@@ -25,6 +25,7 @@ class DeskToday extends StatefulWidget {
     required this.headline,
     required this.slots,
     required this.hero,
+    required this.heroToday,
     required this.after,
     required this.minute,
     required this.due,
@@ -39,6 +40,10 @@ class DeskToday extends StatefulWidget {
 
   /// The class on now or next, lit until another is picked.
   final DeskSlot? hero;
+
+  /// Whether [hero] is today's, which counts down; else the next school
+  /// day's first.
+  final bool heroToday;
 
   /// The class after [hero] today.
   final DeskSlot? after;
@@ -170,7 +175,7 @@ class _DeskTodayState extends State<DeskToday> {
                   key: ValueKey(picked.course.id),
                   slot: picked,
                   minute: widget.minute,
-                  live: picked == widget.hero,
+                  live: widget.heroToday && picked == widget.hero,
                   after: picked == widget.hero ? widget.after : null,
                 ),
         ),

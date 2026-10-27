@@ -5,6 +5,8 @@ import 'package:provider/provider.dart';
 
 import '../../data/repositories/ecourse_repository.dart';
 import '../../l10n/l10n.dart';
+import '../core/desk_list.dart';
+import '../core/desktop_mode.dart';
 import '../core/compose_screen.dart';
 import '../core/floating_dock.dart';
 import '../core/theme.dart';
@@ -96,6 +98,45 @@ class DiscussionList extends StatelessWidget {
       fontWeight: FontWeight.w800,
       color: scheme.onSurfaceVariant,
     );
+    void open(Discussion d) => context.push(
+      '/courses/$courseId/discussions/${d.id}',
+      extra: d.subject,
+    );
+    if (desktopUi(context)) {
+      return ListView(
+        padding: EdgeInsets.fromLTRB(16, scrollPadding(context).top, 16, 32),
+        children: [
+          for (final d in discussions)
+            DeskRow(
+              leading: Icon(
+                d.pinned ? Icons.push_pin : Icons.forum_outlined,
+                size: 16,
+                color: d.pinned
+                    ? context.tones.sun.strong
+                    : scheme.onSurfaceVariant,
+              ),
+              title: d.subject,
+              excerpt: d.body.isEmpty ? null : d.body,
+              subtitle: '${d.author}・${dateLabel(d.time)}',
+              trailing: d.replies == 0
+                  ? null
+                  : Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(
+                          Icons.forum_outlined,
+                          size: 13,
+                          color: scheme.onSurfaceVariant,
+                        ),
+                        const SizedBox(width: 4),
+                        Text('${d.replies}', style: muted),
+                      ],
+                    ),
+              onTap: () => open(d),
+            ),
+        ],
+      );
+    }
     return ListView(
       padding: scrollPadding(context),
       children: [
@@ -107,10 +148,7 @@ class DiscussionList extends StatelessWidget {
               for (final (i, d) in discussions.indexed) ...[
                 if (i > 0) Divider(height: 1, color: scheme.outlineVariant),
                 InkWell(
-                  onTap: () => context.push(
-                    '/courses/$courseId/discussions/${d.id}',
-                    extra: d.subject,
-                  ),
+                  onTap: () => open(d),
                   child: Padding(
                     padding: const EdgeInsets.fromLTRB(
                       Space.l,

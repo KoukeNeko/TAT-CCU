@@ -3,6 +3,8 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../../data/repositories/ecourse_repository.dart';
+import '../core/desk_list.dart';
+import '../core/desktop_mode.dart';
 import '../core/compose_screen.dart';
 import '../core/theme.dart';
 import '../core/widgets.dart';
@@ -331,6 +333,8 @@ class _QuizBody extends StatelessWidget {
     final q = quiz;
     final l10n = context.l10n;
     final now = clk.clock.now();
+    final open = onOpen;
+    final desk = desktopUi(context) && open != null;
     final list = ListView(
       padding: scrollPadding(context),
       children: [
@@ -354,6 +358,19 @@ class _QuizBody extends StatelessWidget {
             (l10n.stepGrade, q.grade ?? '—', q.grade != null),
           ],
         ),
+        if (desk) ...[
+          const SizedBox(height: Space.l),
+          // In the page under the steps, rather than floating.
+          Align(
+            alignment: Alignment.centerLeft,
+            child: DeskButton(
+              icon: Icons.open_in_new,
+              label: l10n.openInEcourse,
+              primary: true,
+              onPressed: open,
+            ),
+          ),
+        ],
         SectionLabel(l10n.quizSettings),
         _Details(
           rows: [
@@ -377,8 +394,7 @@ class _QuizBody extends StatelessWidget {
         ],
       ],
     );
-    final open = onOpen;
-    if (open == null) return list;
+    if (open == null || desk) return list;
     // As the forum's 新討論: over the list, clear of the nav bar.
     return Stack(
       children: [
@@ -561,6 +577,14 @@ class _Details extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
+    if (desktopUi(context)) {
+      return Column(
+        children: [
+          for (final (label, value) in rows)
+            DeskLine(title: label, value: value),
+        ],
+      );
+    }
     return Card(
       color: scheme.surfaceContainerLow,
       child: Padding(
@@ -646,6 +670,19 @@ class _Text extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    if (desktopUi(context)) {
+      return Padding(
+        padding: const EdgeInsets.only(top: Space.m),
+        child: SelectableText(
+          text,
+          style: const TextStyle(
+            fontSize: 14,
+            height: 1.75,
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+      );
+    }
     return Card(
       color: Theme.of(context).colorScheme.surfaceContainerLow,
       child: Padding(
@@ -668,6 +705,11 @@ class FileList extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
+    if (desktopUi(context)) {
+      return Column(
+        children: [for (final f in files) _FileRow(file: f, detail: detail(f))],
+      );
+    }
     return Card(
       color: scheme.surfaceContainerLow,
       clipBehavior: Clip.antiAlias,
@@ -717,6 +759,29 @@ class _FileRowState extends State<_FileRow> {
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
+    final trailing = _saving
+        ? const SizedBox.square(
+            dimension: 18,
+            child: CircularProgressIndicator(strokeWidth: 2),
+          )
+        : Icon(
+            Icons.download_rounded,
+            size: 18,
+            color: scheme.onSurfaceVariant,
+          );
+    if (desktopUi(context)) {
+      return DeskRow(
+        leading: Icon(
+          Icons.insert_drive_file_outlined,
+          size: 16,
+          color: scheme.onSurfaceVariant,
+        ),
+        title: widget.file.name,
+        subtitle: widget.detail,
+        trailing: trailing,
+        onTap: _saving ? null : _open,
+      );
+    }
     return ListTile(
       leading: _FileIcon(
         name: widget.file.name,

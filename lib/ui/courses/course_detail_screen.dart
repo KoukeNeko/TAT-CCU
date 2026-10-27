@@ -6,6 +6,8 @@ import 'package:provider/provider.dart';
 
 import '../../data/repositories/ecourse_repository.dart';
 import '../../domain/models/course.dart';
+import '../core/desk_list.dart';
+import '../core/desktop_mode.dart';
 import '../core/theme.dart';
 import '../core/widgets.dart';
 import '../today/due_screen.dart';
@@ -97,6 +99,9 @@ class CourseDetailScreen extends StatelessWidget {
                   open != null ? context.go(path) : context.push(path);
               final firstDue = summary.due.firstOrNull;
               final cover = coverScreen(context);
+              if (desktopUi(context) && !cover) {
+                return _desk(context, course, summary, firstDue, show);
+              }
               return ListView(
                 padding: scrollPadding(context, top: cover ? Space.s : pageTop),
                 children: [
@@ -183,6 +188,134 @@ class CourseDetailScreen extends StatelessWidget {
           ),
         ),
       ),
+    );
+  }
+}
+
+extension on CourseDetailScreen {
+  /// design/round-25: the course as a list column, its parts as rows that
+  /// open beside it.
+  Widget _desk(
+    BuildContext context,
+    Course course,
+    _Summary summary,
+    DueItem? firstDue,
+    void Function(String path) show,
+  ) {
+    final l10n = context.l10n;
+    final scheme = Theme.of(context).colorScheme;
+    final tones = context.tones;
+    final base = '/courses/$courseId';
+    final next = summary.current
+        ? nextClassLabel(course, clk.clock.now(), l10n)
+        : null;
+    final faint = TextStyle(
+      fontSize: 12,
+      fontWeight: FontWeight.w800,
+      color: scheme.onSurfaceVariant,
+    );
+    Widget lead(String text, [Color? color]) => SizedBox(
+      width: 52,
+      child: Text(
+        text,
+        maxLines: 1,
+        overflow: TextOverflow.ellipsis,
+        style: faint.copyWith(color: color, fontSize: 13),
+      ),
+    );
+    Widget part(String path, IconData icon, String title, String detail) =>
+        DeskRow(
+          leading: Icon(icon, size: 16, color: scheme.onSurfaceVariant),
+          title: title,
+          selected: open == path,
+          trailing: Text(detail, style: faint.copyWith(fontSize: 11)),
+          onTap: () => show(path),
+        );
+    return ListView(
+      padding: EdgeInsets.only(top: scrollPadding(context).top),
+      children: [
+        Padding(
+          padding: const EdgeInsets.fromLTRB(
+            Space.l,
+            Space.s,
+            Space.l,
+            Space.m,
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                context.courseName(course),
+                style: const TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.w800,
+                  height: 1.3,
+                ),
+              ),
+              const SizedBox(height: 2),
+              Text(
+                [?course.room, ...course.teachers.take(1)].join('・'),
+                style: faint.copyWith(fontSize: 13),
+              ),
+              if (next != null) ...[
+                const SizedBox(height: Space.s),
+                DeskTag(l10n.nextClassAt(next)),
+              ],
+            ],
+          ),
+        ),
+        DeskRow(
+          leading: lead(
+            firstDue == null ? '0' : timeLeft(l10n, firstDue.due),
+            tones.peach.strong,
+          ),
+          title: firstDue == null
+              ? l10n.nothingDue
+              : l10n.nameDue(firstDue.name),
+          onTap: firstDue == null ? null : () => openDueItem(context, firstDue),
+        ),
+        DeskRow(
+          leading: lead('${summary.posts.length}', tones.sun.strong),
+          title: l10n.announcementsUnit,
+          onTap: () => show('$base/announcements'),
+        ),
+        DeskRow(
+          leading: lead(summary.total ?? '-'),
+          title: l10n.currentGrade,
+          onTap: () => show('$base/grades'),
+        ),
+        if (summary.due.isNotEmpty) ...[
+          DeskGroup(l10n.toDo, trailing: Text('${summary.due.length}')),
+          for (final d in summary.due)
+            DeskRow(
+              leading: lead(timeLeft(l10n, d.due), tones.peach.strong),
+              title: d.name,
+              subtitle:
+                  '${weekdayName(context, d.due.weekday)} '
+                  '${monthDayTime(d.due)}',
+              onTap: () => openDueItem(context, d),
+            ),
+        ],
+        DeskGroup(l10n.courseSection),
+        part(
+          '$base/contents',
+          Icons.folder_outlined,
+          l10n.allSections,
+          l10n.sectionCount(summary.sections),
+        ),
+        part(
+          '$base/announcements',
+          Icons.campaign_outlined,
+          l10n.announcements,
+          l10n.postCount(summary.posts.length),
+        ),
+        part(
+          '$base/grades',
+          Icons.grading_outlined,
+          l10n.grades,
+          l10n.itemCount(summary.grades.length),
+        ),
+      ],
     );
   }
 }
@@ -634,7 +767,9 @@ class _SectionListState extends State<_SectionList> {
         child: Builder(
           builder: (context) => SingleChildScrollView(
             controller: _scroll,
-            padding: scrollPadding(context),
+            padding: desktopUi(context)
+                ? EdgeInsets.fromLTRB(16, scrollPadding(context).top, 16, 32)
+                : scrollPadding(context),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
@@ -670,19 +805,24 @@ class _SectionListState extends State<_SectionList> {
                       ),
                     ),
                   ),
-                  Card(
-                    color: scheme.surfaceContainerLow,
-                    clipBehavior: Clip.antiAlias,
-                    child: Column(
-                      children: [
-                        for (final (j, m) in s.modules.indexed) ...[
-                          if (j > 0)
-                            Divider(height: 1, color: scheme.outlineVariant),
-                          _ModuleRow(courseId: widget.courseId, module: m),
+                  if (desktopUi(context))
+                    // Rows straight under their section, as in Mail.
+                    for (final m in s.modules)
+                      _ModuleRow(courseId: widget.courseId, module: m)
+                  else
+                    Card(
+                      color: scheme.surfaceContainerLow,
+                      clipBehavior: Clip.antiAlias,
+                      child: Column(
+                        children: [
+                          for (final (j, m) in s.modules.indexed) ...[
+                            if (j > 0)
+                              Divider(height: 1, color: scheme.outlineVariant),
+                            _ModuleRow(courseId: widget.courseId, module: m),
+                          ],
                         ],
-                      ],
+                      ),
                     ),
-                  ),
                 ],
               ],
             ),
@@ -728,6 +868,44 @@ class _ModuleRow extends StatelessWidget {
         : null;
     final overdue = due != null && due.isBefore(clk.clock.now());
     final path = modulePath(courseId, module);
+    final open = path != null
+        ? () => context.push(path, extra: module.name)
+        : module.url == null
+        ? null
+        : () => openExternal(module.url!);
+    if (desktopUi(context)) {
+      return DeskRow(
+        leading: Container(
+          width: 28,
+          height: 28,
+          decoration: BoxDecoration(
+            color: scheme.surfaceContainerHigh,
+            borderRadius: BorderRadius.circular(7),
+          ),
+          child: Icon(
+            _moduleIcons[module.type] ?? Icons.extension_outlined,
+            size: 15,
+            color: tone.strong,
+          ),
+        ),
+        title: module.name,
+        trailing: detail == null
+            ? null
+            : Text(
+                detail,
+                style: TextStyle(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w800,
+                  color: overdue
+                      ? scheme.onSurfaceVariant
+                      : due != null
+                      ? tones.peach.strong
+                      : scheme.onSurfaceVariant,
+                ),
+              ),
+        onTap: open,
+      );
+    }
     return InkWell(
       onTap: path != null
           ? () => context.push(path, extra: module.name)
@@ -823,6 +1001,22 @@ class GradeList extends StatelessWidget {
   Widget build(BuildContext context) {
     if (lines.isEmpty) return EmptyState(context.l10n.noGradeItems);
     final scheme = Theme.of(context).colorScheme;
+    if (desktopUi(context)) {
+      return ListView(
+        padding: EdgeInsets.fromLTRB(32, scrollPadding(context).top, 32, 32),
+        children: [
+          for (final l in lines)
+            DeskLine(
+              title: l.name,
+              // Ungraded items repeat `-` (or `錯誤`) in both fields.
+              detail: l.percent.isEmpty || l.percent == l.grade
+                  ? null
+                  : l.percent,
+              value: l.grade,
+            ),
+        ],
+      );
+    }
     return ListView.separated(
       padding: scrollPadding(context),
       itemCount: lines.length,

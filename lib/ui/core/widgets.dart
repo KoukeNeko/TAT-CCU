@@ -729,17 +729,35 @@ class SectionLabel extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final style = theme.textTheme.titleSmall?.copyWith(
-      fontWeight: FontWeight.w800,
-      color: theme.colorScheme.onSurfaceVariant,
-    );
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(
-        Space.xs,
-        sectionAbove,
-        Space.xs,
-        sectionBelow,
-      ),
+    final desk = desktopUi(context);
+    final style = desk
+        // design/round-25: a small heading over a rule.
+        ? TextStyle(
+            fontSize: 12,
+            fontWeight: FontWeight.w800,
+            color: theme.colorScheme.onSurfaceVariant,
+          )
+        : theme.textTheme.titleSmall?.copyWith(
+            fontWeight: FontWeight.w800,
+            color: theme.colorScheme.onSurfaceVariant,
+          );
+    return Container(
+      margin: desk ? const EdgeInsets.only(top: Space.xxl) : null,
+      decoration: desk
+          ? BoxDecoration(
+              border: Border(
+                bottom: BorderSide(color: theme.colorScheme.outlineVariant),
+              ),
+            )
+          : null,
+      padding: desk
+          ? const EdgeInsets.only(bottom: Space.xs)
+          : const EdgeInsets.fromLTRB(
+              Space.xs,
+              sectionAbove,
+              Space.xs,
+              sectionBelow,
+            ),
       // One height with or without a button, so sections line up.
       child: SizedBox(
         height: 24,
@@ -806,11 +824,20 @@ EdgeInsets scrollPadding(
   // Both bars float: the nav bar below and the glass app bar above arrive
   // as media padding when the body extends behind them.
   final inset = MediaQuery.paddingOf(context);
+  final width = MediaQuery.sizeOf(context).width;
+  if (desktopUi(context) && width >= splitLayout) {
+    // design/round-25: from the page's left edge, as in Mail, up to a
+    // readable width.
+    const margin = 32.0;
+    return EdgeInsets.fromLTRB(
+      margin + startInset(context),
+      top + inset.top,
+      math.max(margin, width - margin - maxWidth) + endInset(context),
+      Space.xxl + inset.bottom,
+    );
+  }
   // A wide area centers one readable column.
-  final side = math.max(
-    pageMargin,
-    (MediaQuery.sizeOf(context).width - maxWidth) / 2,
-  );
+  final side = math.max(pageMargin, (width - maxWidth) / 2);
   return EdgeInsets.fromLTRB(
     side + startInset(context),
     top + inset.top,

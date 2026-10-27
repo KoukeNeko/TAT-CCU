@@ -45,6 +45,7 @@ class DeskRow extends StatefulWidget {
     required this.title,
     this.leading,
     this.subtitle,
+    this.excerpt,
     this.trailing,
     this.selected = false,
     this.dimmed = false,
@@ -54,6 +55,9 @@ class DeskRow extends StatefulWidget {
   final Widget? leading, trailing;
   final String title;
   final String? subtitle;
+
+  /// Two lines of the item's text between the title and [subtitle].
+  final String? excerpt;
   final bool selected;
 
   /// Read, or already over: the title steps back.
@@ -115,6 +119,21 @@ class _DeskRowState extends State<DeskRow> {
                             : scheme.onSurface,
                       ),
                     ),
+                    if (widget.excerpt case final excerpt?)
+                      Padding(
+                        padding: const EdgeInsets.only(top: 2, bottom: 3),
+                        child: Text(
+                          excerpt,
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                          style: TextStyle(
+                            fontSize: 12,
+                            height: 1.45,
+                            fontWeight: FontWeight.w600,
+                            color: muted,
+                          ),
+                        ),
+                      ),
                     if (widget.subtitle case final subtitle?)
                       Text(
                         subtitle,
