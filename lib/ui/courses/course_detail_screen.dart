@@ -251,7 +251,8 @@ class _CourseBar extends StatefulWidget implements PreferredSizeWidget {
   final ValueListenable<bool> titled;
 
   @override
-  Size get preferredSize => const Size.fromHeight(kToolbarHeight);
+  // An AppBar's own, which the Scaffold sizes from the theme's bar height.
+  Size get preferredSize => AppBar().preferredSize;
 
   @override
   State<_CourseBar> createState() => _CourseBarState();
