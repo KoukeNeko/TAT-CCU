@@ -41,7 +41,7 @@ void main() {
   });
 
   test('posts keep their parent and attachments', () async {
-    final posts = await _repo({
+    final repo = _repo({
       'posts': [
         {
           'id': 1,
@@ -54,7 +54,8 @@ void main() {
             {
               'filename': 'hw3.zip',
               'filesize': 2048,
-              'fileurl': 'https://example.test/pluginfile.php/1/hw3.zip',
+              // A post's attachment says `url`, outside webservice/.
+              'url': 'https://example.test/pluginfile.php/1/hw3.zip',
               'timemodified': 1760000000,
             },
           ],
@@ -68,9 +69,14 @@ void main() {
           'author': {'fullname': '同學'},
         },
       ],
-    }).discussionPosts(42);
+    });
+    final posts = await repo.discussionPosts(42);
     expect(posts.map((p) => p.parent), [0, 1]);
     expect(posts.first.attachments.single.name, 'hw3.zip');
+    expect(
+      repo.fileUrl(posts.first.attachments.single.url),
+      'https://example.test/webservice/pluginfile.php/1/hw3.zip?token=t',
+    );
     expect(posts.last.attachments, isEmpty);
     expect(posts.last.author, '同學');
   });

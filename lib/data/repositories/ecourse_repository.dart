@@ -728,11 +728,15 @@ class EcourseRepository {
     );
   }
 
-  /// Files under `webservice/pluginfile.php` need the token to download.
+  /// Files under `webservice/pluginfile.php` need the token to download;
+  /// a plain `pluginfile.php` link (a forum post's) is moved under it.
   String fileUrl(String url) {
     final uri = Uri.parse(url);
     return uri
         .replace(
+          path: uri.path.startsWith('/pluginfile.php')
+              ? '/webservice${uri.path}'
+              : uri.path,
           queryParameters: {...uri.queryParameters, 'token': _client.token},
         )
         .toString();
@@ -771,7 +775,8 @@ DateTime? _date(Object? s) => (s as num? ?? 0) == 0 ? null : _ts(s);
 ModuleFile _file(Map f) => (
   name: '${f['filename']}',
   size: (f['filesize'] as num?)?.toInt() ?? 0,
-  url: '${f['fileurl']}',
+  // Forum posts name it `url`, the other functions `fileurl`.
+  url: '${f['fileurl'] ?? f['url']}',
   modified: _ts(f['timemodified']),
 );
 
