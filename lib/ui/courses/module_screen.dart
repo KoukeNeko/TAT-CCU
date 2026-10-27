@@ -1,7 +1,6 @@
 import 'package:clock/clock.dart' as clk;
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:url_launcher/url_launcher.dart';
 
 import '../../data/repositories/ecourse_repository.dart';
 import '../core/compose_screen.dart';
@@ -11,6 +10,7 @@ import '../../l10n/l10n.dart';
 import 'forum_screen.dart';
 import '../core/campus_web_screen.dart';
 import '../core/glass_dialog.dart';
+import '../core/pdf_viewer.dart';
 
 /// Module types with a page of their own; others open on eCourse2.
 const moduleTypesWithPage = {'assign', 'quiz', 'folder', 'resource', 'forum'};
@@ -667,8 +667,6 @@ class FileList extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final repo = context.read<EcourseRepository>();
-    final tones = context.tones;
     final scheme = Theme.of(context).colorScheme;
     return Card(
       color: scheme.surfaceContainerLow,
@@ -677,27 +675,66 @@ class FileList extends StatelessWidget {
         children: [
           for (final (i, f) in files.indexed) ...[
             if (i > 0) Divider(height: 1, color: scheme.outlineVariant),
-            ListTile(
-              leading: _FileIcon(name: f.name, tones: tones, scheme: scheme),
-              title: Text(
-                f.name,
-                style: const TextStyle(fontWeight: FontWeight.w800),
-              ),
-              subtitle: Text(detail(f)),
-              trailing: Icon(
-                Icons.download_rounded,
-                color: scheme.onSurfaceVariant,
-              ),
-              // In-app browser: the token in the URL stays out of Safari's
-              // history.
-              onTap: () => launchUrl(
-                Uri.parse(repo.fileUrl(f.url)),
-                mode: LaunchMode.inAppBrowserView,
-              ),
-            ),
+            _FileRow(file: f, detail: detail(f)),
           ],
         ],
       ),
+    );
+  }
+}
+
+/// Downloads its file and shows it in the system's viewer.
+class _FileRow extends StatefulWidget {
+  const _FileRow({required this.file, required this.detail});
+
+  final ModuleFile file;
+  final String detail;
+
+  @override
+  State<_FileRow> createState() => _FileRowState();
+}
+
+class _FileRowState extends State<_FileRow> {
+  var _saving = false;
+
+  Future<void> _open() async {
+    setState(() => _saving = true);
+    try {
+      final file = await context.read<EcourseRepository>().download(
+        widget.file,
+      );
+      if (mounted) await showFile(context, file, widget.file.name);
+    } catch (_) {
+      if (mounted) {
+        ScaffoldMessenger.of(context)
+            .showSnackBar(SnackBar(content: Text(context.l10n.loadFailed)));
+      }
+    } finally {
+      if (mounted) setState(() => _saving = false);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    return ListTile(
+      leading: _FileIcon(
+        name: widget.file.name,
+        tones: context.tones,
+        scheme: scheme,
+      ),
+      title: Text(
+        widget.file.name,
+        style: const TextStyle(fontWeight: FontWeight.w800),
+      ),
+      subtitle: Text(widget.detail),
+      trailing: _saving
+          ? const SizedBox.square(
+              dimension: 22,
+              child: CircularProgressIndicator(strokeWidth: 2.5),
+            )
+          : Icon(Icons.download_rounded, color: scheme.onSurfaceVariant),
+      onTap: _saving ? null : _open,
     );
   }
 }

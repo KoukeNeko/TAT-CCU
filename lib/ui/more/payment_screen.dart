@@ -113,7 +113,7 @@ class _PaymentScreenState extends State<PaymentScreen>
     // macOS hands out its temporary folder before creating it.
     await file.parent.create(recursive: true);
     await file.writeAsBytes(bytes, flush: true);
-    if (mounted) await showPdfFile(context, file, pdf.title);
+    if (mounted) await showFile(context, file, pdf.title);
   }
 
   /// A statement answers `pdf`; a new read also clears the chosen month.

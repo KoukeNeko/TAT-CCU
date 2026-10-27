@@ -3,7 +3,6 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:path_provider/path_provider.dart';
-import 'package:share_plus/share_plus.dart';
 
 import '../../l10n/l10n.dart';
 import '../core/auto_refresh.dart';
@@ -172,7 +171,6 @@ class _SoftwareScreenState extends State<SoftwareScreen>
 
   Future<void> _onMessage(Map<String, dynamic> message) async {
     if (message['kind'] != 'file') return received(message);
-    final l10n = context.l10n;
     final name = _fetchingName;
     _fetching.value = null;
     if (message['tooBig'] == true) return _openSite();
@@ -186,13 +184,7 @@ class _SoftwareScreenState extends State<SoftwareScreen>
     final file = File('${dir.path}/$fileName');
     await file.writeAsBytes(base64Decode('${message['data']}'));
     if (!mounted) return;
-    if (fileName.toLowerCase().endsWith('.pdf')) {
-      await showPdfFile(context, file, name);
-    } else {
-      await SharePlus.instance.share(
-        ShareParams(files: [XFile(file.path)], title: l10n.campusSoftware),
-      );
-    }
+    await showFile(context, file, name);
   }
 
   String _fetchingName = '';

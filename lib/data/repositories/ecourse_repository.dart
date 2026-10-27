@@ -1,3 +1,8 @@
+import 'dart:io';
+
+import 'package:http/http.dart' as http;
+import 'package:path_provider/path_provider.dart';
+
 import '../../domain/models/course.dart';
 import '../services/html_text.dart';
 import '../services/moodle_client.dart';
@@ -740,6 +745,29 @@ class EcourseRepository {
           queryParameters: {...uri.queryParameters, 'token': _client.token},
         )
         .toString();
+  }
+
+  /// Saves [file] where the system's viewer can open it, under its own name.
+  Future<File> download(ModuleFile file) async {
+    final dir = Directory('${(await getTemporaryDirectory()).path}/files');
+    await dir.create(recursive: true);
+    // The name comes from eCourse2; it must not leave the folder.
+    final out = File(
+      '${dir.path}/${file.name.replaceAll(RegExp(r'[/\\]'), '_')}',
+    );
+    final client = http.Client();
+    try {
+      final response = await client.send(
+        http.Request('GET', Uri.parse(fileUrl(file.url))),
+      );
+      if (response.statusCode != 200) {
+        throw http.ClientException('HTTP ${response.statusCode}');
+      }
+      await response.stream.pipe(out.openWrite());
+      return out;
+    } finally {
+      client.close();
+    }
   }
 
   /// Needs the real user id: without it Moodle asks for every user's grades,

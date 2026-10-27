@@ -16,19 +16,24 @@ const _pdfPreview = MethodChannel('tatccu/pdf_preview');
 final _androidFonts = PdfFontManager(resolvers: const [])
     .prepare(fontPaths: const ['/system/fonts']);
 
-/// Shows a saved PDF the way each system does. The school's PDFs leave their
-/// CJK fonts out, which the system's own viewers fill in.
-Future<void> showPdfFile(BuildContext context, File file, String title) async {
+/// Shows a saved file the way each system does. The school's PDFs leave
+/// their CJK fonts out, which the system's own viewers fill in.
+Future<void> showFile(BuildContext context, File file, String title) async {
   if (Platform.isIOS) {
-    // Quick Look, with its own share button.
+    // Quick Look, for PDFs and Office files alike, with its own share button.
     return _pdfPreview.invokeMethod('show', {
       'path': file.path,
       'title': title,
     });
   }
-  // Preview on macOS, the default viewer on Windows.
+  // Preview or the file's own app on macOS, the default viewer on Windows.
   if (!Platform.isAndroid) {
     await launchUrl(Uri.file(file.path));
+    return;
+  }
+  // Android has no viewer to hand a file to, so other apps open it.
+  if (!file.path.toLowerCase().endsWith('.pdf')) {
+    await SharePlus.instance.share(ShareParams(files: [XFile(file.path)]));
     return;
   }
   await _androidFonts;

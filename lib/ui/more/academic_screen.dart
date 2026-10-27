@@ -339,7 +339,7 @@ class _Ticket extends StatelessWidget {
   final VoidCallback? onPrint;
 
   void _open(BuildContext context, Certificate c) =>
-      showPdfFile(context, c.file, context.l10n.enrollmentCertificate);
+      showFile(context, c.file, context.l10n.enrollmentCertificate);
 
   void _share(BuildContext context, Certificate c) {
     final box = context.findRenderObject() as RenderBox?;
