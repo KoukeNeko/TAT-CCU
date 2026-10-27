@@ -647,5 +647,6 @@
   "paletteHint": "Go to a course, task or page",
   "palettePages": "Pages",
   "paletteSelect": "Select",
-  "openCourse": "Open course"
+  "openCourse": "Open course",
+  "within14Days": "Next 14 days"
 }

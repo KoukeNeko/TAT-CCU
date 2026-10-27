@@ -3,6 +3,8 @@ import 'package:flutter/material.dart';
 
 import '../../../data/services/school_calendar.dart';
 import '../../../l10n/l10n.dart';
+import '../../core/desk_list.dart';
+import '../../core/desktop_mode.dart';
 import '../../core/theme.dart';
 import '../../core/widgets.dart';
 import 'tools_screen.dart';
@@ -33,6 +35,104 @@ class CountdownScreen extends StatelessWidget {
     }
 
     final first = upcoming.firstOrNull;
+    if (desktopUi(context) && first != null) {
+      final muted = TextStyle(
+        fontSize: 12,
+        fontWeight: FontWeight.w800,
+        color: scheme.onSurfaceVariant,
+      );
+      return Scaffold(
+        extendBodyBehindAppBar: true,
+        appBar: subBar(context, l10n.toolCountdown),
+        body: Builder(
+          builder: (context) => ListView(
+            padding: scrollPadding(context),
+            children: [
+              Text(
+                l10n.toolCountdown,
+                style: const TextStyle(
+                  fontSize: 26,
+                  fontWeight: FontWeight.w800,
+                ),
+              ),
+              const SizedBox(height: 18),
+              Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: Space.xl,
+                  vertical: 18,
+                ),
+                decoration: BoxDecoration(
+                  border: Border.all(color: scheme.outlineVariant),
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    Text('${first.title}・${range(first)}', style: muted),
+                    Padding(
+                      padding: const EdgeInsets.only(top: 8, bottom: 16),
+                      child: Text.rich(
+                        TextSpan(
+                          text: daysTo(first.start) <= 0
+                              ? l10n.countdownToday
+                              : '${daysTo(first.start)}',
+                          children: [
+                            if (daysTo(first.start) > 0)
+                              TextSpan(
+                                text: ' ${l10n.daysUnit}',
+                                style: TextStyle(
+                                  fontSize: 15,
+                                  color: scheme.onSurfaceVariant,
+                                ),
+                              ),
+                          ],
+                        ),
+                        style: const TextStyle(
+                          fontSize: 40,
+                          fontWeight: FontWeight.w800,
+                          height: 1.1,
+                        ),
+                      ),
+                    ),
+                    if (term != null) ...[
+                      Row(
+                        children: [
+                          Text(
+                            l10n.termWeek(term.week, term.weeks),
+                            style: muted,
+                          ),
+                          const Spacer(),
+                          Text(
+                            '${(term.progress * 100).round()}%',
+                            style: muted,
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 6),
+                      DeskBar(value: term.progress, color: t.lilac.strong),
+                    ],
+                  ],
+                ),
+              ),
+              const SizedBox(height: 22),
+              DeskSection(
+                title: l10n.countdownUpcoming,
+                children: [
+                  for (final (i, d) in upcoming.take(12).indexed)
+                    DeskLine(
+                      leading: DeskStripe(t.sun.strong),
+                      title: d.title,
+                      detail: range(d),
+                      value: until(d),
+                      valueColor: i == 0 ? null : scheme.onSurfaceVariant,
+                    ),
+                ],
+              ),
+            ],
+          ),
+        ),
+      );
+    }
     return Scaffold(
       extendBodyBehindAppBar: true,
       appBar: subBar(context, l10n.toolCountdown),

@@ -1,5 +1,6 @@
 import 'dart:math' as math;
 
+import 'package:clock/clock.dart' as clk;
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
@@ -66,7 +67,7 @@ class _DeskTodayState extends State<DeskToday> {
     final l10n = context.l10n;
     final tones = context.tones;
     final scheme = Theme.of(context).colorScheme;
-    final now = DateTime.now();
+    final now = clk.clock.now();
     final picked = _picked ?? widget.hero ?? widget.slots.firstOrNull;
     final courses = {for (final s in widget.slots) s.course.id: s.course};
     final faint = TextStyle(
@@ -108,9 +109,19 @@ class _DeskTodayState extends State<DeskToday> {
             l10n.dueThisWeek,
             trailing: GestureDetector(
               onTap: () => context.push('/today/due'),
-              child: Text(
-                '${widget.due.length}',
-                style: TextStyle(color: scheme.primary),
+              child: MouseRegion(
+                cursor: SystemMouseCursors.click,
+                child: Text.rich(
+                  TextSpan(
+                    text: '${l10n.itemCount(widget.due.length)}・',
+                    children: [
+                      TextSpan(
+                        text: l10n.viewAll,
+                        style: TextStyle(color: scheme.primary),
+                      ),
+                    ],
+                  ),
+                ),
               ),
             ),
           ),
@@ -143,13 +154,31 @@ class _DeskTodayState extends State<DeskToday> {
           DeskGroup(l10n.unread, trailing: Text('${widget.unread}')),
           for (final n in widget.latest)
             DeskRow(
-              leading: Icon(
-                Icons.forum_outlined,
-                size: 16,
-                color: scheme.onSurfaceVariant,
+              leading: Container(
+                width: 28,
+                height: 28,
+                decoration: BoxDecoration(
+                  color: scheme.surfaceContainerHigh,
+                  borderRadius: BorderRadius.circular(7),
+                ),
+                child: Icon(
+                  Icons.forum_outlined,
+                  size: 15,
+                  color: scheme.onSurfaceVariant,
+                ),
               ),
               title: n.subject,
-              subtitle: dateTimeLabel(context, n.time),
+              subtitle: n.text,
+              trailing: Text(
+                DateUtils.isSameDay(n.time, now)
+                    ? clock(n.time.hour * 60 + n.time.minute)
+                    : monthDay(n.time),
+                style: TextStyle(
+                  fontSize: 11,
+                  fontWeight: FontWeight.w800,
+                  color: scheme.onSurfaceVariant,
+                ),
+              ),
               onTap: n.url == null
                   ? null
                   : () {
@@ -163,17 +192,15 @@ class _DeskTodayState extends State<DeskToday> {
     return Row(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        SizedBox(
-          width: paneWidth,
-          child: list,
-        ),
+        SizedBox(width: paneWidth, child: list),
         VerticalDivider(width: 1, color: scheme.outlineVariant),
         Expanded(
           child: picked == null
               ? const SizedBox.shrink()
-              : _CourseBeside(
+              : DeskCourse(
                   key: ValueKey(picked.course.id),
-                  slot: picked,
+                  course: picked.course,
+                  session: picked.session,
                   minute: widget.minute,
                   live: widget.heroToday && picked == widget.hero,
                   after: picked == widget.hero ? widget.after : null,
@@ -184,18 +211,22 @@ class _DeskTodayState extends State<DeskToday> {
   }
 }
 
-/// The picked class's course: its time, the latest announcements and the
-/// grades so far.
-class _CourseBeside extends StatefulWidget {
-  const _CourseBeside({
+/// A course beside a list (首頁, 課程): its class time, the latest
+/// announcements and the grades so far.
+class DeskCourse extends StatefulWidget {
+  const DeskCourse({
     super.key,
-    required this.slot,
-    required this.minute,
-    required this.live,
-    required this.after,
+    required this.course,
+    this.session,
+    this.minute = 0,
+    this.live = false,
+    this.after,
   });
 
-  final DeskSlot slot;
+  final Course course;
+
+  /// The class picked, or the course's first.
+  final ClassSession? session;
   final int minute;
 
   /// The class on now or next, which counts down.
@@ -203,13 +234,13 @@ class _CourseBeside extends StatefulWidget {
   final DeskSlot? after;
 
   @override
-  State<_CourseBeside> createState() => _CourseBesideState();
+  State<DeskCourse> createState() => _DeskCourseState();
 }
 
-class _CourseBesideState extends State<_CourseBeside> {
+class _DeskCourseState extends State<DeskCourse> {
   late final Future<(List<Discussion>, List<GradeLine>)> _data = () async {
     final repo = context.read<EcourseRepository>();
-    final id = widget.slot.course.id;
+    final id = widget.course.id;
     return (await repo.announcements(id), await repo.gradeItems(id));
   }();
 
@@ -217,10 +248,10 @@ class _CourseBesideState extends State<_CourseBeside> {
   Widget build(BuildContext context) {
     final l10n = context.l10n;
     final scheme = Theme.of(context).colorScheme;
-    final tone = context.tones.forCourse(widget.slot.course.id);
-    final course = widget.slot.course;
-    final session = widget.slot.session;
-    final on = widget.live && session.start <= widget.minute;
+    final course = widget.course;
+    final tone = context.tones.forCourse(course.id);
+    final session = widget.session;
+    final on = session != null && widget.live && session.start <= widget.minute;
     final muted = TextStyle(
       fontSize: 13,
       fontWeight: FontWeight.w700,
@@ -255,10 +286,15 @@ class _CourseBesideState extends State<_CourseBeside> {
             if (course.room case final room?) Text(room, style: muted),
             if (course.teachers.isNotEmpty)
               Text(course.teachers.first, style: muted),
-            Text('${clock(session.start)}–${clock(session.end)}', style: muted),
+            if (session != null)
+              Text(
+                '${weekdayName(context, session.weekday)} '
+                '${clock(session.start)}–${clock(session.end)}',
+                style: muted,
+              ),
           ],
         ),
-        if (widget.live) ...[
+        if (widget.live && session != null) ...[
           const SizedBox(height: Space.xl),
           DeskCountdown(
             color: tone.strong,
@@ -309,10 +345,8 @@ class _CourseBesideState extends State<_CourseBeside> {
                 if (posts.isNotEmpty) ...[
                   Expanded(
                     child: DeskSection(
-                      title: l10n.announcements,
-                      action: posts.isEmpty
-                          ? null
-                          : l10n.postCount(posts.length),
+                      title: l10n.latestPost,
+                      action: '${l10n.viewAll} ${l10n.postCount(posts.length)}',
                       onAction: () =>
                           context.go('/courses/${course.id}/announcements'),
                       children: [

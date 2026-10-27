@@ -4,8 +4,11 @@ import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 
 import '../../data/repositories/ecourse_repository.dart';
+import '../core/desk_list.dart';
+import '../core/desktop_mode.dart';
 import '../core/theme.dart';
 import '../core/widgets.dart';
+import '../courses/course_detail_screen.dart';
 import '../courses/module_screen.dart';
 import '../../l10n/l10n.dart';
 
@@ -16,6 +19,13 @@ class DueScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final repo = context.read<EcourseRepository>();
+    if (desktopUi(context) && listBeside(context)) {
+      return Loader<List<DueItem>>.watch(
+        bar: _deskBar,
+        watch: () => repo.watch((repo) => repo.dueSoon()),
+        builder: (context, items) => _DeskDue(items: items),
+      );
+    }
     return Scaffold(
       extendBodyBehindAppBar: true,
       appBar: subBar(context, context.l10n.toDo),
@@ -31,6 +41,115 @@ class DueScreen extends StatelessWidget {
           );
         },
       ),
+    );
+  }
+}
+
+AppBar _deskBar(BuildContext context) => deskCrumbBar(
+  context,
+  parent: context.l10n.navToday,
+  path: '/today',
+  title: context.l10n.toDo,
+);
+
+/// design/round-25 待辦: every item in a list, the picked one's page beside
+/// it.
+class _DeskDue extends StatefulWidget {
+  const _DeskDue({required this.items});
+
+  final List<DueItem> items;
+
+  @override
+  State<_DeskDue> createState() => _DeskDueState();
+}
+
+class _DeskDueState extends State<_DeskDue> {
+  var _picked = 0;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = context.l10n;
+    final tones = context.tones;
+    final scheme = Theme.of(context).colorScheme;
+    final now = clk.clock.now();
+    final items = widget.items;
+    final picked = items.elementAtOrNull(_picked);
+    final cmid = int.tryParse(
+      Uri.tryParse(picked?.url ?? '')?.queryParameters['id'] ?? '',
+    );
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        SizedBox(
+          width: listWidthOf(context),
+          child: LeadingPane(
+            child: PaneSize(
+              child: Scaffold(
+                appBar: _deskBar(context),
+                body: items.isEmpty
+                    ? EmptyState(l10n.nothingDueSoon)
+                    : ListView(
+                        padding: EdgeInsets.zero,
+                        children: [
+                          DeskGroup(
+                            l10n.within14Days,
+                            trailing: Text(l10n.itemCount(items.length)),
+                          ),
+                          for (final (i, item) in items.indexed)
+                            DeskRow(
+                              leading: SizedBox(
+                                width: 46,
+                                child: Text(
+                                  timeLeft(l10n, item.due),
+                                  style: TextStyle(
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.w800,
+                                    // Within two days, as on a phone.
+                                    color: item.due.difference(now).inHours < 48
+                                        ? tones.peach.strong
+                                        : tones.sun.strong,
+                                  ),
+                                ),
+                              ),
+                              title: item.name,
+                              subtitle:
+                                  '${context.courseNameOf(item.course)}・'
+                                  '${dateTimeLabel(context, item.due)}',
+                              trailing: DeskStripe(
+                                tones.forCourse(item.courseId).strong,
+                              ),
+                              selected: i == _picked,
+                              onTap: () => setState(() => _picked = i),
+                            ),
+                        ],
+                      ),
+              ),
+            ),
+          ),
+        ),
+        Padding(
+          // Under the bars, so the two read as one toolbar.
+          padding: EdgeInsets.only(
+            top: MediaQuery.paddingOf(context).top + desktopBarHeight,
+          ),
+          child: VerticalDivider(width: 1, color: scheme.outlineVariant),
+        ),
+        Expanded(
+          child: PaneSize(
+            child:
+                picked != null &&
+                    cmid != null &&
+                    moduleTypesWithPage.contains(picked.module)
+                ? ModuleScreen(
+                    key: ValueKey(cmid),
+                    courseId: picked.courseId,
+                    cmid: cmid,
+                    title: picked.name,
+                  )
+                : const EmptyPane(),
+          ),
+        ),
+      ],
     );
   }
 }

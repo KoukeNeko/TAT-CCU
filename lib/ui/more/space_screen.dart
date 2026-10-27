@@ -13,6 +13,8 @@ import '../../l10n/l10n.dart';
 import '../core/campus_systems.dart';
 import '../core/campus_session.dart';
 import '../core/campus_web_screen.dart';
+import '../core/desk_list.dart';
+import '../core/desktop_mode.dart';
 import '../core/theme.dart';
 import '../core/widgets.dart';
 
@@ -346,6 +348,33 @@ class _Pass extends StatelessWidget {
         ),
       ],
     );
+    final code = Stack(
+      alignment: Alignment.center,
+      children: [
+        ImageFiltered(
+          enabled: renewing,
+          imageFilter: ImageFilter.blur(sigmaX: 6, sigmaY: 6),
+          child: Opacity(
+            opacity: renewing ? 0.45 : 1,
+            child: Image.memory(
+              qr,
+              gaplessPlayback: true,
+              filterQuality: FilterQuality.none,
+              semanticLabel: l10n.scanToCheckIn,
+            ),
+          ),
+        ),
+        if (renewing)
+          Text(
+            l10n.refreshing,
+            style: const TextStyle(
+              color: Color(0xFF22191A),
+              fontWeight: FontWeight.w900,
+            ),
+          ),
+      ],
+    );
+    if (desktopUi(context)) return _desk(context, code);
     return Material(
       color: card,
       shape: RoundedRectangleBorder(
@@ -411,32 +440,7 @@ class _Pass extends StatelessWidget {
                     color: Colors.white,
                     borderRadius: BorderRadius.circular(Corners.inset),
                   ),
-                  child: Stack(
-                    alignment: Alignment.center,
-                    children: [
-                      ImageFiltered(
-                        enabled: renewing,
-                        imageFilter: ImageFilter.blur(sigmaX: 6, sigmaY: 6),
-                        child: Opacity(
-                          opacity: renewing ? 0.45 : 1,
-                          child: Image.memory(
-                            qr,
-                            gaplessPlayback: true,
-                            filterQuality: FilterQuality.none,
-                            semanticLabel: l10n.scanToCheckIn,
-                          ),
-                        ),
-                      ),
-                      if (renewing)
-                        Text(
-                          l10n.refreshing,
-                          style: const TextStyle(
-                            color: Color(0xFF22191A),
-                            fontWeight: FontWeight.w900,
-                          ),
-                        ),
-                    ],
-                  ),
+                  child: code,
                 ),
                 const SizedBox(height: 12),
                 Row(
@@ -459,6 +463,96 @@ class _Pass extends StatelessWidget {
                 ),
               ],
             ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// design/round-25 space: the pass as a bordered box, its facts and
+  /// refresh at the left and the door code at the right.
+  Widget _desk(BuildContext context, Widget code) {
+    final l10n = context.l10n;
+    final scheme = Theme.of(context).colorScheme;
+    Widget field(String label, String value) => Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          label,
+          style: TextStyle(
+            fontSize: 12,
+            fontWeight: FontWeight.w700,
+            color: scheme.onSurfaceVariant,
+          ),
+        ),
+        Text(
+          value,
+          style: const TextStyle(
+            fontSize: 18,
+            fontWeight: FontWeight.w800,
+            fontFeatures: [FontFeature.tabularFigures()],
+          ),
+        ),
+      ],
+    );
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 20),
+      decoration: BoxDecoration(
+        border: Border.all(color: scheme.outlineVariant),
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Row(
+        children: [
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    const Icon(Icons.door_front_door_outlined, size: 18),
+                    const SizedBox(width: Space.s),
+                    Text(
+                      l10n.studySpace,
+                      style: const TextStyle(
+                        fontSize: 20,
+                        fontWeight: FontWeight.w800,
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: Space.l),
+                Row(
+                  children: [
+                    if (open.isNotEmpty) ...[
+                      field(l10n.openHours, open),
+                      const SizedBox(width: 36),
+                    ],
+                    field(
+                      l10n.validFor,
+                      renewing ? l10n.refreshing : clock(left),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 18),
+                DeskButton(
+                  icon: Icons.refresh,
+                  label: l10n.refresh,
+                  onPressed: renewing ? null : onRenew,
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(width: Space.xxl),
+          Container(
+            width: 196,
+            height: 196,
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              // Scanners need dark modules on white, in dark mode too.
+              color: const Color(0xFFF4F1EE),
+              borderRadius: BorderRadius.circular(10),
+            ),
+            child: code,
           ),
         ],
       ),
@@ -534,6 +628,37 @@ class _Places extends StatelessWidget {
     final tones = context.tones;
     final scheme = Theme.of(context).colorScheme;
     final colors = [tones.lilac, tones.mint, tones.peach, tones.sun];
+    if (desktopUi(context)) {
+      // design/round-25 space: a line a place, its free seats first.
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          for (final s in spaces)
+            DeskLine(
+              leading: SizedBox(
+                width: 56,
+                child: Text(
+                  '${s.free}',
+                  textAlign: TextAlign.right,
+                  style: const TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.w800,
+                    fontFeatures: [FontFeature.tabularFigures()],
+                  ),
+                ),
+              ),
+              title: s.name,
+              detail: s.floors.isEmpty ? null : s.floors,
+              value: '${context.l10n.bookSpace} ↗',
+              onTap: () => openCampusPage(
+                context,
+                'https://$_host/pwaspace/space/${s.type}',
+                s.name,
+              ),
+            ),
+        ],
+      );
+    }
     // Same height for every card, whatever the name's length.
     return IntrinsicHeight(
       child: Row(

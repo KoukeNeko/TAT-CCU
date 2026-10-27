@@ -1,12 +1,18 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
+import 'package:provider/provider.dart';
 
+import '../../data/repositories/ecourse_repository.dart';
 import '../../data/services/demo_data.dart';
 import '../../l10n/l10n.dart';
 import '../core/auto_refresh.dart';
 import '../core/campus_session.dart';
+import '../core/desk_list.dart';
+import '../core/desktop_mode.dart';
 import '../core/theme.dart';
 import '../core/widgets.dart';
 import '../../data/services/ecourse_web.dart';
+import 'course_detail_screen.dart';
 
 /// An attendance activity (design/round-11 course-modules-screens): the
 /// attendance rate as the hero, then every session's status and points.
@@ -27,12 +33,29 @@ class _AttendanceScreenState extends State<AttendanceScreen>
 
   Attendance? get _data => json == null ? null : attendanceOf(json!);
 
+  /// The route's course, for the desktop UI's path and heading.
+  late final _courseId = int.parse(
+    GoRouterState.of(context).pathParameters['id']!,
+  );
+  late final _name = widget.title != null
+      ? Future.value(widget.title)
+      : moduleName(context.read<EcourseRepository>(), _courseId, widget.cmid);
+
   @override
   Widget build(BuildContext context) {
     final data = _data;
     return CampusSession(
       key: session,
       title: widget.title ?? '',
+      titleChild: desktopUi(context)
+          ? FutureBuilder(
+              future: _name,
+              builder: (context, name) => CourseCrumbs(
+                courseId: _courseId,
+                trail: [context.l10n.allSections, name.data ?? ''],
+              ),
+            )
+          : null,
       entry: ecourseEntry,
       host: ecourseHost,
       loadOnStart: false,
@@ -69,6 +92,7 @@ class _AttendanceScreenState extends State<AttendanceScreen>
       for (final s in data.sessions)
         if (s.status.isEmpty) s,
     ];
+    if (desktopUi(context)) return _desk(context, data, counts, taken, pending);
     Widget list(List<AttendanceSession> sessions) => Card(
       color: scheme.surfaceContainerLow,
       clipBehavior: Clip.antiAlias,
@@ -94,6 +118,200 @@ class _AttendanceScreenState extends State<AttendanceScreen>
           list(pending),
         ],
         if (savedAt case final time?) UpdatedAt(time),
+      ],
+    );
+  }
+
+  /// design/round-25: the module's head, the rate and counts in one box,
+  /// then taken and coming sessions side by side, when it was read below.
+  Widget _desk(
+    BuildContext context,
+    Attendance data,
+    Map<String, int> counts,
+    List<AttendanceSession> taken,
+    List<AttendanceSession> pending,
+  ) {
+    final l10n = context.l10n;
+    final scheme = Theme.of(context).colorScheme;
+    final muted = TextStyle(
+      fontSize: 12,
+      fontWeight: FontWeight.w700,
+      color: scheme.onSurfaceVariant,
+    );
+    final line = BorderSide(color: scheme.outlineVariant);
+    Widget session(AttendanceSession s) {
+      final tone = _statusTone(context, s.status);
+      final date = s.date;
+      return Container(
+        padding: const EdgeInsets.symmetric(vertical: Space.s),
+        decoration: BoxDecoration(border: Border(bottom: line)),
+        child: Row(
+          children: [
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    date == null
+                        ? s.description
+                        : '${date.month}/${date.day} '
+                              '${weekdayName(context, date.weekday)}',
+                    style: TextStyle(
+                      fontSize: 13,
+                      fontWeight: s.status.isEmpty
+                          ? FontWeight.w700
+                          : FontWeight.w800,
+                      color: s.status.isEmpty ? scheme.onSurfaceVariant : null,
+                    ),
+                  ),
+                  Text(s.time, style: muted),
+                ],
+              ),
+            ),
+            if (s.status.isNotEmpty) DeskTag(s.status, color: tone?.strong),
+          ],
+        ),
+      );
+    }
+
+    Widget column(String title, List<AttendanceSession> sessions) => Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        SectionLabel(title, detail: '${sessions.length}'),
+        for (final s in sessions) session(s),
+      ],
+    );
+    final rate = data.rate?.replaceAll('%', ' %');
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Expanded(
+          child: ListView(
+            padding: scrollPadding(context),
+            children: [
+              FutureBuilder(
+                future: _name,
+                builder: (context, name) => CoursePageHead(
+                  courseId: _courseId,
+                  kind: l10n.takeAttendance,
+                  title: name.data ?? '',
+                ),
+              ),
+              const SizedBox(height: 18),
+              Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 18,
+                  vertical: Space.l,
+                ),
+                decoration: BoxDecoration(
+                  border: Border.fromBorderSide(line),
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: Row(
+                  children: [
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          rate ?? '-',
+                          style: const TextStyle(
+                            fontSize: 30,
+                            fontWeight: FontWeight.w800,
+                            height: 1.1,
+                            fontFeatures: [FontFeature.tabularFigures()],
+                          ),
+                        ),
+                        Text(
+                          [
+                            l10n.attendanceRate,
+                            if (data.taken case final n?)
+                              '$n ${l10n.attendanceTakenUnit}',
+                          ].join('・'),
+                          style: muted,
+                        ),
+                      ],
+                    ),
+                    if (counts.isNotEmpty) ...[
+                      const SizedBox(width: 28),
+                      Container(
+                        padding: const EdgeInsets.only(left: 28),
+                        decoration: BoxDecoration(border: Border(left: line)),
+                        child: Row(
+                          spacing: 22,
+                          children: [
+                            for (final MapEntry(:key, :value) in counts.entries)
+                              Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    '$value',
+                                    style: const TextStyle(
+                                      fontSize: 17,
+                                      fontWeight: FontWeight.w800,
+                                    ),
+                                  ),
+                                  Row(
+                                    spacing: 6,
+                                    children: [
+                                      Container(
+                                        width: 7,
+                                        height: 7,
+                                        decoration: BoxDecoration(
+                                          color:
+                                              _statusTone(
+                                                context,
+                                                key,
+                                              )?.strong ??
+                                              scheme.onSurfaceVariant,
+                                          borderRadius: BorderRadius.circular(
+                                            2,
+                                          ),
+                                        ),
+                                      ),
+                                      Text(key, style: muted),
+                                    ],
+                                  ),
+                                ],
+                              ),
+                          ],
+                        ),
+                      ),
+                    ],
+                    const Spacer(),
+                    if (data.points case final points?)
+                      Text(
+                        l10n.attendancePoints(points),
+                        style: const TextStyle(
+                          fontSize: 17,
+                          fontWeight: FontWeight.w800,
+                        ),
+                      ),
+                  ],
+                ),
+              ),
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Expanded(child: column(l10n.attendanceSessions, taken)),
+                  const SizedBox(width: 28),
+                  Expanded(child: column(l10n.attendanceNotTaken, pending)),
+                ],
+              ),
+            ],
+          ),
+        ),
+        if (savedAt case final time?)
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 10),
+            decoration: BoxDecoration(border: Border(top: line)),
+            child: Text(
+              l10n.updatedAt(
+                '${time.month}/${time.day} '
+                '${clock(time.hour * 60 + time.minute)}',
+              ),
+              style: muted,
+            ),
+          ),
       ],
     );
   }

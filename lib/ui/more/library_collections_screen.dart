@@ -3,6 +3,8 @@ import 'package:go_router/go_router.dart';
 
 import '../../data/services/primo_client.dart';
 import '../../l10n/l10n.dart';
+import '../core/desk_list.dart';
+import '../core/desktop_mode.dart';
 import '../core/theme.dart';
 import '../core/widgets.dart';
 import 'library_search_screen.dart';
@@ -20,53 +22,88 @@ class LibraryCollectionsScreen extends StatelessWidget {
       body: Builder(
         builder: (context) => Loader(
           load: PrimoClient().collections,
-          builder: (context, collections) => GridView.count(
-            padding: scrollPadding(context),
-            crossAxisCount: 2,
-            mainAxisSpacing: 8,
-            crossAxisSpacing: 8,
-            childAspectRatio: 1.5,
-            children: [
-              for (final (i, c) in collections.indexed)
-                ToneBlock(
-                  tone: tones.cycle[i % tones.cycle.length],
-                  radius: Corners.row,
-                  padding: cardPadding,
-                  onTap: () => context.push(
-                    '/more/library/collection/${c.id}',
-                    extra: c.name,
-                  ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text(
-                        c.name,
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
-                        style: const TextStyle(
-                          fontSize: 15,
-                          fontWeight: FontWeight.w900,
+          builder: (context, collections) => desktopUi(context)
+              ? _desk(context, collections)
+              : GridView.count(
+                  padding: scrollPadding(context),
+                  crossAxisCount: 2,
+                  mainAxisSpacing: 8,
+                  crossAxisSpacing: 8,
+                  childAspectRatio: 1.5,
+                  children: [
+                    for (final (i, c) in collections.indexed)
+                      ToneBlock(
+                        tone: tones.cycle[i % tones.cycle.length],
+                        radius: Corners.row,
+                        padding: cardPadding,
+                        onTap: () => context.push(
+                          '/more/library/collection/${c.id}',
+                          extra: c.name,
+                        ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Text(
+                              c.name,
+                              maxLines: 2,
+                              overflow: TextOverflow.ellipsis,
+                              style: const TextStyle(
+                                fontSize: 15,
+                                fontWeight: FontWeight.w900,
+                              ),
+                            ),
+                            Text(
+                              c.description,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: const TextStyle(
+                                fontSize: 11,
+                                fontWeight: FontWeight.w800,
+                              ),
+                            ),
+                          ],
                         ),
                       ),
-                      Text(
-                        c.description,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: const TextStyle(
-                          fontSize: 11,
-                          fontWeight: FontWeight.w800,
-                        ),
-                      ),
-                    ],
-                  ),
+                  ],
                 ),
-            ],
-          ),
         ),
       ),
     );
   }
+}
+
+/// design/round-25 library-collections: a line a collection.
+Widget _desk(BuildContext context, List<LibraryCollection> collections) {
+  final scheme = Theme.of(context).colorScheme;
+  final muted = scheme.onSurfaceVariant;
+  return ListView(
+    padding: scrollPadding(context),
+    children: [
+      SectionLabel(
+        context.l10n.collections,
+        detail: context.l10n.itemCount(collections.length),
+      ),
+      for (final c in collections)
+        DeskLine(
+          leading: Container(
+            width: 28,
+            height: 28,
+            decoration: BoxDecoration(
+              color: scheme.surfaceContainerHigh,
+              borderRadius: BorderRadius.circular(7),
+            ),
+            child: Icon(Icons.folder_outlined, size: 15, color: muted),
+          ),
+          title: c.name,
+          detail: c.description.isEmpty ? null : c.description,
+          value: '›',
+          valueColor: muted,
+          onTap: () =>
+              context.push('/more/library/collection/${c.id}', extra: c.name),
+        ),
+    ],
+  );
 }
 
 /// One collection's books (screen 8). Nested collections such as 新進圖書

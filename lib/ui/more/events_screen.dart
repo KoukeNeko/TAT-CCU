@@ -11,6 +11,8 @@ import '../../data/repositories/campus_cache.dart';
 import '../../l10n/l10n.dart';
 import '../core/auto_refresh.dart';
 import '../core/campus_session.dart';
+import '../core/desk_list.dart';
+import '../core/desktop_mode.dart';
 import '../core/theme.dart';
 import '../core/widgets.dart';
 import '../../data/services/events_data.dart';
@@ -437,19 +439,24 @@ class _EventsScreenState extends State<EventsScreen> with AutoRefresh {
         for (final MapEntry(key: day, value: events) in groups.entries) ...[
           SectionLabel(
             '${day.month}/${day.day} ${weekdayName(context, day.weekday)}',
+            detail: desktopUi(context) ? '${events.length}' : null,
           ),
-          Card(
-            color: Theme.of(context).colorScheme.surfaceContainerLow,
-            clipBehavior: Clip.antiAlias,
-            child: Column(
-              children: [
-                for (final (i, e) in events.indexed) ...[
-                  if (i > 0) const Divider(height: 1),
-                  EventRow(event: e, query: _query, onTap: () => _open(e)),
+          if (desktopUi(context))
+            for (final e in events)
+              EventRow(event: e, query: _query, onTap: () => _open(e))
+          else
+            Card(
+              color: Theme.of(context).colorScheme.surfaceContainerLow,
+              clipBehavior: Clip.antiAlias,
+              child: Column(
+                children: [
+                  for (final (i, e) in events.indexed) ...[
+                    if (i > 0) const Divider(height: 1),
+                    EventRow(event: e, query: _query, onTap: () => _open(e)),
+                  ],
                 ],
-              ],
+              ),
             ),
-          ),
         ],
         if (!searching && _savedAt != null) UpdatedAt(_savedAt!),
       ],
@@ -598,7 +605,7 @@ class EventThumb extends StatelessWidget {
       ),
     );
     return ClipRRect(
-      borderRadius: BorderRadius.circular(14),
+      borderRadius: BorderRadius.circular(desktopUi(context) ? 7 : 14),
       child: SizedBox(
         width: width,
         height: height,
@@ -639,6 +646,18 @@ class EventRow extends StatelessWidget {
         ? ''
         : '${clock(start.hour * 60 + start.minute)}'
               '${end == null ? '' : '–${clock(end.hour * 60 + end.minute)}'}';
+    final detail = [time, event.place].where((s) => s.isNotEmpty).join('・');
+    if (desktopUi(context)) {
+      // design/round-25 events: a line with a square thumbnail.
+      return DeskLine(
+        leading: EventThumb(event: event, width: 40, height: 40),
+        title: event.title,
+        detail: detail,
+        value: label,
+        valueColor: tone.strong,
+        onTap: onTap,
+      );
+    }
     const titleStyle = TextStyle(fontSize: 14, fontWeight: FontWeight.w900);
     final at = query == null ? -1 : event.title.indexOf(query!);
     return InkWell(
@@ -677,7 +696,7 @@ class EventRow extends StatelessWidget {
                   ),
                   const SizedBox(height: 4),
                   Text(
-                    [time, event.place].where((s) => s.isNotEmpty).join('・'),
+                    detail,
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                     style: TextStyle(
@@ -834,6 +853,10 @@ class _MyEventsChip extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final tone = context.tones.lilac;
+    final label = [context.l10n.myEvents, ?count?.toString()].join(' ');
+    if (desktopUi(context)) {
+      return BarChip(label: label, selected: true, onTap: onTap);
+    }
     return Material(
       color: tone.fill,
       shape: const StadiumBorder(),
@@ -847,7 +870,7 @@ class _MyEventsChip extends StatelessWidget {
             mainAxisSize: MainAxisSize.min,
             children: [
               Text(
-                [context.l10n.myEvents, ?count?.toString()].join(' '),
+                label,
                 style: TextStyle(
                   color: tone.ink,
                   fontSize: 14,
@@ -924,6 +947,123 @@ class MyEventsScreen extends StatelessWidget {
         data == null ? const SizedBox.shrink() : _build(context, data),
   );
 
+  void _open(BuildContext context, SchoolEvent e) => context.push(
+    '/more/events/detail',
+    extra: (event: e, onChanged: onChanged),
+  );
+
+  /// design/round-25 my-events: the next event in a box, the counts as
+  /// figures, then signed-up and past events as lines.
+  Widget _desk(BuildContext context, EventsData data, SchoolEvent? next) {
+    final l10n = context.l10n;
+    final scheme = Theme.of(context).colorScheme;
+    final muted = scheme.onSurfaceVariant;
+    final byId = {for (final e in data.events) e.id: e};
+    List<Widget> lines(List<({String id, String title})> rows) => [
+      if (rows.isEmpty)
+        DeskLine(title: l10n.noEventRecords)
+      else
+        for (final r in rows)
+          if (byId[r.id] case final e?)
+            EventRow(event: e, onTap: () => _open(context, e))
+          else
+            DeskLine(title: r.title),
+    ];
+    Widget figure(String value, String label) => Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          value,
+          style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w800),
+        ),
+        Text(
+          label,
+          style: TextStyle(
+            fontSize: 12,
+            fontWeight: FontWeight.w700,
+            color: muted,
+          ),
+        ),
+      ],
+    );
+    return ListView(
+      padding: scrollPadding(context),
+      children: [
+        if (next != null) ...[
+          GestureDetector(
+            onTap: () => _open(context, next),
+            child: MouseRegion(
+              cursor: SystemMouseCursors.click,
+              child: Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 14,
+                ),
+                decoration: BoxDecoration(
+                  border: Border.all(color: scheme.outlineVariant),
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: Row(
+                  children: [
+                    EventThumb(event: next, width: 48, height: 48),
+                    const SizedBox(width: 14),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            l10n.nextSignedUp,
+                            style: TextStyle(
+                              fontSize: 12,
+                              fontWeight: FontWeight.w800,
+                              color: muted,
+                            ),
+                          ),
+                          Text(
+                            next.title,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: const TextStyle(
+                              fontSize: 15,
+                              fontWeight: FontWeight.w800,
+                            ),
+                          ),
+                          Text(
+                            [
+                              if (next.start case final start?)
+                                dateTimeLabel(context, start),
+                              next.place,
+                            ].where((s) => s.isNotEmpty).join('・'),
+                            style: TextStyle(
+                              fontWeight: FontWeight.w700,
+                              color: muted,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+          const SizedBox(height: 18),
+        ],
+        Row(
+          children: [
+            figure('${data.mine.length}', l10n.signedUp),
+            const SizedBox(width: 40),
+            figure('${data.attended}', l10n.eventsAttended(data.hours)),
+          ],
+        ),
+        SectionLabel(l10n.signedUp, detail: '${data.mine.length}'),
+        ...lines(data.mine),
+        SectionLabel(l10n.pastEvents, detail: '${data.past.length}'),
+        ...lines(data.past),
+      ],
+    );
+  }
+
   Widget _build(BuildContext context, EventsData data) {
     final l10n = context.l10n;
     final tones = context.tones;
@@ -973,65 +1113,67 @@ class MyEventsScreen extends StatelessWidget {
       extendBodyBehindAppBar: true,
       appBar: subBar(context, l10n.myEvents),
       body: Builder(
-        builder: (context) => ListView(
-          padding: scrollPadding(context),
-          children: [
-            if (next != null) ...[
-              _NextCard(
-                event: next,
-                onTap: () => context.push(
-                  '/more/events/detail',
-                  extra: (event: next, onChanged: onChanged),
-                ),
-              ),
-              const SizedBox(height: rowGap),
-            ],
-            Row(
-              children: [
-                for (final (i, (tone, value, label)) in [
-                  (tones.lilac, '${data.mine.length}', l10n.signedUp),
-                  (
-                    tones.mint,
-                    '${data.attended}',
-                    l10n.eventsAttended(data.hours),
-                  ),
-                ].indexed) ...[
-                  if (i > 0) const SizedBox(width: rowGap),
-                  Expanded(
-                    child: ToneBlock(
-                      tone: tone,
-                      radius: Corners.row,
-                      padding: cardPadding,
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            value,
-                            style: const TextStyle(
-                              fontSize: 26,
-                              fontWeight: FontWeight.w900,
-                            ),
-                          ),
-                          Text(
-                            label,
-                            style: const TextStyle(
-                              fontSize: 12,
-                              fontWeight: FontWeight.w900,
-                            ),
-                          ),
-                        ],
+        builder: (context) => desktopUi(context)
+            ? _desk(context, data, next)
+            : ListView(
+                padding: scrollPadding(context),
+                children: [
+                  if (next != null) ...[
+                    _NextCard(
+                      event: next,
+                      onTap: () => context.push(
+                        '/more/events/detail',
+                        extra: (event: next, onChanged: onChanged),
                       ),
                     ),
+                    const SizedBox(height: rowGap),
+                  ],
+                  Row(
+                    children: [
+                      for (final (i, (tone, value, label)) in [
+                        (tones.lilac, '${data.mine.length}', l10n.signedUp),
+                        (
+                          tones.mint,
+                          '${data.attended}',
+                          l10n.eventsAttended(data.hours),
+                        ),
+                      ].indexed) ...[
+                        if (i > 0) const SizedBox(width: rowGap),
+                        Expanded(
+                          child: ToneBlock(
+                            tone: tone,
+                            radius: Corners.row,
+                            padding: cardPadding,
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  value,
+                                  style: const TextStyle(
+                                    fontSize: 26,
+                                    fontWeight: FontWeight.w900,
+                                  ),
+                                ),
+                                Text(
+                                  label,
+                                  style: const TextStyle(
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.w900,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ],
+                    ],
                   ),
+                  SectionLabel(l10n.signedUp),
+                  group(data.mine),
+                  SectionLabel(l10n.pastEvents),
+                  group(data.past),
                 ],
-              ],
-            ),
-            SectionLabel(l10n.signedUp),
-            group(data.mine),
-            SectionLabel(l10n.pastEvents),
-            group(data.past),
-          ],
-        ),
+              ),
       ),
     );
   }

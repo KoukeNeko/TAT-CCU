@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 
 import '../../data/services/demo_data.dart';
 import '../../data/services/html_text.dart';
+import '../core/desk_list.dart';
 import '../core/desktop_mode.dart';
 import '../core/auto_refresh.dart';
 import '../core/campus_session.dart';
@@ -209,103 +210,155 @@ class _Hub extends StatelessWidget {
       (sum, c) => sum + (num.tryParse(_text(c['Credit'])) ?? 0),
     );
     final apps = s.applications;
+    // What is read in-app: its colour, figure, name, detail and records.
+    final read = <(Tone, IconData, String, String, String, VoidCallback)>[
+      (
+        t.lilac,
+        Icons.menu_book_outlined,
+        l10n.courseCountShort(courses.length),
+        l10n.selectionQuery,
+        l10n.thisSemesterCredits(_num(credits)),
+        () => _push(context, l10n.selectionQuery, [
+          for (final c in courses)
+            (
+              title: _text(c['SemesterCourseName']),
+              detail: [
+                _text(c['SemCourseTime']),
+                _text(c['ClassRoom']),
+                _text(c['Teacher']),
+                if (_text(c['IsStopName']) != '正常開課') _text(c['IsStopName']),
+              ].where((v) => v.isNotEmpty).join('・'),
+              trailing: l10n.typeCredits(
+                _text(c['ChooseName']),
+                _text(c['Credit']),
+              ),
+            ),
+        ]),
+      ),
+      (
+        t.peach,
+        Icons.refresh,
+        '${s.changes.length}',
+        l10n.courseChanges,
+        l10n.schoolwideChanges,
+        () => _push(context, l10n.courseChanges, [
+          for (final c in s.changes)
+            (
+              title: _text(c['SemesterCourseName']),
+              detail:
+                  '${_text(c['OriginalTime'])} ${_text(c['OriginalClassRoom'])}'
+                  ' → ${_text(c['CurrentTime'])} ${_text(c['CurrentClassRoom'])}',
+              trailing: _text(c['ChangeTypeName']),
+            ),
+        ]),
+      ),
+      (
+        t.mint,
+        Icons.assignment_outlined,
+        '${apps.length}',
+        l10n.myApplications,
+        apps.isEmpty
+            ? l10n.applicationsHint
+            : {for (final (kind, _) in apps) kind}
+                  .map(
+                    (k) =>
+                        l10n.kindCount(k, apps.where((a) => a.$1 == k).length),
+                  )
+                  .join('、'),
+        () => _push(context, l10n.myApplications, [
+          for (final (kind, r) in apps)
+            (
+              title: _text(r['SemesterCourseName'] ?? kind),
+              detail: [
+                kind,
+                _text(r['ACADYear']),
+                _text(r['SemesterName']),
+              ].where((v) => v.isNotEmpty).join('・'),
+              trailing: _text(r['SignState']),
+            ),
+        ]),
+      ),
+      (
+        t.identity[2],
+        Icons.school_outlined,
+        '${s.programs.length}',
+        l10n.programs,
+        l10n.programsDetail,
+        () => _push(context, l10n.programs, [
+          for (final p in s.programs)
+            (
+              title: _text(p['StudyCourseCategoryName']),
+              detail: _text(p['StudyCourseOfficeName']),
+              trailing: _text(p['NewYear']),
+            ),
+        ]),
+      ),
+    ];
+    final desk = desktopUi(context);
     return PullRefresh(
       onRefresh: onRefresh,
       child: ListView(
         padding: scrollPadding(context),
         children: [
           SectionLabel(l10n.viewInApp),
-          _Bar(
-            tone: t.lilac,
-            value: l10n.courseCountShort(courses.length),
-            title: l10n.selectionQuery,
-            detail: l10n.thisSemesterCredits(_num(credits)),
-            onTap: () => _push(context, l10n.selectionQuery, [
-              for (final c in courses)
-                (
-                  title: _text(c['SemesterCourseName']),
-                  detail: [
-                    _text(c['SemCourseTime']),
-                    _text(c['ClassRoom']),
-                    _text(c['Teacher']),
-                    if (_text(c['IsStopName']) != '正常開課')
-                      _text(c['IsStopName']),
-                  ].where((v) => v.isNotEmpty).join('・'),
-                  trailing: l10n.typeCredits(
-                    _text(c['ChooseName']),
-                    _text(c['Credit']),
+          if (desk)
+            // design/round-25 iccu: two boxes across, the programs' only an
+            // arrow; the counts read as records.
+            GridView(
+              shrinkWrap: true,
+              padding: const EdgeInsets.only(top: Space.m),
+              physics: const NeverScrollableScrollPhysics(),
+              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                crossAxisCount: 2,
+                mainAxisExtent: 62,
+                mainAxisSpacing: 10,
+                crossAxisSpacing: 10,
+              ),
+              children: [
+                for (final (i, (_, icon, value, title, detail, onTap))
+                    in read.indexed)
+                  _DeskBlock(
+                    icon: icon,
+                    title: title,
+                    detail: detail,
+                    value: switch (i) {
+                      0 => value,
+                      3 => '›',
+                      _ => l10n.recordCount(int.parse(value)),
+                    },
+                    onTap: onTap,
                   ),
-                ),
-            ]),
-          ),
-          _Bar(
-            tone: t.peach,
-            value: '${s.changes.length}',
-            title: l10n.courseChanges,
-            detail: l10n.schoolwideChanges,
-            onTap: () => _push(context, l10n.courseChanges, [
-              for (final c in s.changes)
-                (
-                  title: _text(c['SemesterCourseName']),
-                  detail:
-                      '${_text(c['OriginalTime'])} ${_text(c['OriginalClassRoom'])}'
-                      ' → ${_text(c['CurrentTime'])} ${_text(c['CurrentClassRoom'])}',
-                  trailing: _text(c['ChangeTypeName']),
-                ),
-            ]),
-          ),
-          _Bar(
-            tone: t.mint,
-            value: '${apps.length}',
-            title: l10n.myApplications,
-            detail: apps.isEmpty
-                ? l10n.applicationsHint
-                : {for (final (kind, _) in apps) kind}
-                      .map(
-                        (k) => l10n.kindCount(
-                          k,
-                          apps.where((a) => a.$1 == k).length,
-                        ),
-                      )
-                      .join('、'),
-            onTap: () => _push(context, l10n.myApplications, [
-              for (final (kind, r) in apps)
-                (
-                  title: _text(r['SemesterCourseName'] ?? kind),
-                  detail: [
-                    kind,
-                    _text(r['ACADYear']),
-                    _text(r['SemesterName']),
-                  ].where((v) => v.isNotEmpty).join('・'),
-                  trailing: _text(r['SignState']),
-                ),
-            ]),
-          ),
-          _Bar(
-            tone: t.identity[2],
-            value: '${s.programs.length}',
-            title: l10n.programs,
-            detail: l10n.programsDetail,
-            onTap: () => _push(context, l10n.programs, [
-              for (final p in s.programs)
-                (
-                  title: _text(p['StudyCourseCategoryName']),
-                  detail: _text(p['StudyCourseOfficeName']),
-                  trailing: _text(p['NewYear']),
-                ),
-            ]),
-          ),
+              ],
+            )
+          else
+            for (final (tone, _, value, title, detail, onTap) in read)
+              _Bar(
+                tone: tone,
+                value: value,
+                title: title,
+                detail: detail,
+                onTap: onTap,
+              ),
           SectionLabel(l10n.onSchoolWebsite),
-          GridView.count(
-            // Four across on a desktop, as tiles a pointer picks from.
-            crossAxisCount: desktopUi(context) ? 4 : 2,
+          GridView(
             shrinkWrap: true,
             // A nested GridView otherwise pads itself by the screen insets.
-            padding: EdgeInsets.only(top: desktopUi(context) ? Space.m : 0),
+            padding: EdgeInsets.only(top: desk ? Space.m : 0),
             physics: const NeverScrollableScrollPhysics(),
-            mainAxisSpacing: 8,
-            crossAxisSpacing: 8,
-            childAspectRatio: desktopUi(context) ? 2.4 : 2.6,
+            // Four across on a desktop, as tiles a pointer picks from.
+            gridDelegate: desk
+                ? const SliverGridDelegateWithFixedCrossAxisCount(
+                    crossAxisCount: 4,
+                    mainAxisExtent: 38,
+                    mainAxisSpacing: 8,
+                    crossAxisSpacing: 8,
+                  )
+                : const SliverGridDelegateWithFixedCrossAxisCount(
+                    crossAxisCount: 2,
+                    mainAxisSpacing: 8,
+                    crossAxisSpacing: 8,
+                    childAspectRatio: 2.6,
+                  ),
             children: [
               for (final MapEntry(key: path, value: name) in _seasonal.entries)
                 _WebTile(
@@ -401,6 +454,86 @@ class _Bar extends StatelessWidget {
   }
 }
 
+/// A box of what iCCU shows, two across (design/round-25 iccu).
+class _DeskBlock extends StatelessWidget {
+  const _DeskBlock({
+    required this.icon,
+    required this.title,
+    required this.detail,
+    required this.value,
+    required this.onTap,
+  });
+
+  final IconData icon;
+  final String title, detail, value;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    return GestureDetector(
+      onTap: onTap,
+      child: MouseRegion(
+        cursor: SystemMouseCursors.click,
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 14),
+          decoration: BoxDecoration(
+            border: Border.all(color: scheme.outlineVariant),
+            borderRadius: BorderRadius.circular(10),
+          ),
+          child: Row(
+            children: [
+              Container(
+                width: 28,
+                height: 28,
+                decoration: BoxDecoration(
+                  color: scheme.surfaceContainerHigh,
+                  borderRadius: BorderRadius.circular(7),
+                ),
+                child: Icon(icon, size: 15, color: scheme.onSurfaceVariant),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      title,
+                      style: const TextStyle(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w800,
+                      ),
+                    ),
+                    Text(
+                      detail,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w700,
+                        color: scheme.onSurfaceVariant,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(width: 12),
+              Text(
+                value,
+                style: const TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.w800,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
 class _WebTile extends StatelessWidget {
   const _WebTile({
     required this.title,
@@ -415,6 +548,44 @@ class _WebTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
+    if (desktopUi(context)) {
+      // design/round-25 iccu: a bordered tile, its state at the end.
+      final faint = TextStyle(
+        fontSize: closed ? 11 : 12,
+        fontWeight: FontWeight.w800,
+        color: scheme.onSurfaceVariant,
+      );
+      return GestureDetector(
+        onTap: onTap,
+        child: MouseRegion(
+          cursor: SystemMouseCursors.click,
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 12),
+            decoration: BoxDecoration(
+              border: Border.all(color: scheme.outlineVariant),
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: Row(
+              children: [
+                Expanded(
+                  child: Text(
+                    title,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w800,
+                      color: closed ? scheme.onSurfaceVariant : null,
+                    ),
+                  ),
+                ),
+                Text(closed ? context.l10n.notOpen : '↗', style: faint),
+              ],
+            ),
+          ),
+        ),
+      );
+    }
     return Opacity(
       opacity: closed ? 0.55 : 1,
       child: Material(
@@ -486,6 +657,18 @@ class _RecordsScreen extends StatelessWidget {
       body: Builder(
         builder: (context) => rows.isEmpty
             ? EmptyState(context.l10n.noData)
+            : desktopUi(context)
+            ? ListView(
+                padding: scrollPadding(context),
+                children: [
+                  for (final r in rows)
+                    DeskLine(
+                      title: r.title,
+                      detail: r.detail.isEmpty ? null : r.detail,
+                      value: r.trailing.isEmpty ? null : r.trailing,
+                    ),
+                ],
+              )
             : ListView(
                 padding: scrollPadding(context),
                 children: [

@@ -11,14 +11,21 @@ import '../core/compose_screen.dart';
 import '../core/floating_dock.dart';
 import '../core/theme.dart';
 import '../core/widgets.dart';
+import 'course_detail_screen.dart';
 import 'module_screen.dart';
 
 /// A forum's discussions (design/round-11 course-modules-screens): pinned
 /// ones marked, each with a two-line excerpt, author, date and replies.
 class ForumBody extends StatefulWidget {
-  const ForumBody({super.key, required this.courseId, required this.forumId});
+  const ForumBody({
+    super.key,
+    required this.courseId,
+    required this.forumId,
+    required this.title,
+  });
 
   final int courseId, forumId;
+  final String title;
 
   @override
   State<ForumBody> createState() => _ForumBodyState();
@@ -48,32 +55,46 @@ class _ForumBodyState extends State<ForumBody> {
   @override
   Widget build(BuildContext context) {
     final repo = context.read<EcourseRepository>();
+    final desk = desktopUi(context);
+    // Only where eCourse2 lets this student post; a news forum does not.
+    final start = FutureBuilder(
+      future: _canStart,
+      builder: (context, can) => can.data != true
+          ? const SizedBox.shrink()
+          : desk
+          ? DeskButton(
+              icon: Icons.add,
+              label: context.l10n.newDiscussion,
+              primary: true,
+              onPressed: _start,
+            )
+          : FloatingAction(
+              onPressed: _start,
+              icon: Icons.add,
+              label: context.l10n.newDiscussion,
+            ),
+    );
+    final list = Loader<List<Discussion>>.watch(
+      key: ValueKey(_version),
+      watch: () => repo.watch((repo) => repo.discussions(widget.forumId)),
+      builder: (context, discussions) => discussions.isEmpty
+          ? EmptyState(context.l10n.noDiscussions)
+          : DiscussionList(
+              courseId: widget.courseId,
+              kind: context.l10n.msgForum,
+              title: widget.title,
+              discussions: discussions,
+              action: desk ? start : null,
+            ),
+    );
+    if (desk) return list;
     return Stack(
       children: [
-        Loader<List<Discussion>>.watch(
-          key: ValueKey(_version),
-          watch: () => repo.watch((repo) => repo.discussions(widget.forumId)),
-          builder: (context, discussions) => discussions.isEmpty
-              ? EmptyState(context.l10n.noDiscussions)
-              : DiscussionList(
-                  courseId: widget.courseId,
-                  discussions: discussions,
-                ),
-        ),
-        // Only where eCourse2 lets this student post; a news forum does not.
+        list,
         Positioned(
           right: pageMargin,
           bottom: MediaQuery.paddingOf(context).bottom + 16,
-          child: FutureBuilder(
-            future: _canStart,
-            builder: (context, can) => can.data != true
-                ? const SizedBox.shrink()
-                : FloatingAction(
-                    onPressed: _start,
-                    icon: Icons.add,
-                    label: context.l10n.newDiscussion,
-                  ),
-          ),
+          child: start,
         ),
       ],
     );
@@ -84,11 +105,20 @@ class DiscussionList extends StatelessWidget {
   const DiscussionList({
     super.key,
     required this.courseId,
+    required this.kind,
+    required this.title,
     required this.discussions,
+    this.action,
   });
 
   final int courseId;
+
+  /// The page's kind and name, heading the list on a desktop.
+  final String kind, title;
   final List<Discussion> discussions;
+
+  /// On a desktop, under the heading, such as 新增討論.
+  final Widget? action;
 
   @override
   Widget build(BuildContext context) {
@@ -103,17 +133,35 @@ class DiscussionList extends StatelessWidget {
       extra: d.subject,
     );
     if (desktopUi(context)) {
+      // The rows pad themselves; the heading lines up with their text.
       return ListView(
         padding: EdgeInsets.fromLTRB(16, scrollPadding(context).top, 16, 32),
         children: [
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 0, 16, 14),
+            child: CoursePageHead(
+              courseId: courseId,
+              kind: kind,
+              title: title,
+              meta: [(context.l10n.postCount(discussions.length), null)],
+            ),
+          ),
+          if (action case final action?)
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 2, 16, 16),
+              child: Align(alignment: Alignment.centerLeft, child: action),
+            ),
           for (final d in discussions)
             DeskRow(
-              leading: Icon(
-                d.pinned ? Icons.push_pin : Icons.forum_outlined,
-                size: 16,
-                color: d.pinned
-                    ? context.tones.sun.strong
-                    : scheme.onSurfaceVariant,
+              leading: SizedBox(
+                width: 16,
+                child: d.pinned
+                    ? Icon(
+                        Icons.push_pin_outlined,
+                        size: 15,
+                        color: context.tones.sun.strong,
+                      )
+                    : null,
               ),
               title: d.subject,
               excerpt: d.body.isEmpty ? null : d.body,
@@ -274,9 +322,20 @@ class _DiscussionScreenState extends State<DiscussionScreen> {
   @override
   Widget build(BuildContext context) {
     final repo = context.read<EcourseRepository>();
+    final desk = desktopUi(context);
+    // Opened from a course rather than a notification: its path leads back.
+    final courseId = int.tryParse(
+      GoRouterState.of(context).pathParameters['id'] ?? '',
+    );
     return Scaffold(
       extendBodyBehindAppBar: true,
-      appBar: subBar(context, widget.title ?? ''),
+      appBar: subBar(
+        context,
+        widget.title ?? '',
+        titleChild: desk && courseId != null
+            ? CourseCrumbs(courseId: courseId, trail: [widget.title ?? ''])
+            : null,
+      ),
       body: Loader<List<ForumPost>>.watch(
         key: ValueKey(_version),
         watch: () =>
@@ -284,6 +343,7 @@ class _DiscussionScreenState extends State<DiscussionScreen> {
         builder: (context, posts) {
           if (posts.isEmpty) return EmptyState(context.l10n.noDiscussions);
           final [first, ...replies] = posts;
+          if (desk) return _desk(context, first, replies);
           return Stack(
             children: [
               Positioned.fill(
@@ -349,6 +409,50 @@ class _DiscussionScreenState extends State<DiscussionScreen> {
   }
 }
 
+extension on _DiscussionScreenState {
+  /// design/round-25: the opening post and each reply in a box, replies
+  /// indented, the field to reply below the page.
+  Widget _desk(BuildContext context, ForumPost first, List<ForumPost> replies) {
+    final scheme = Theme.of(context).colorScheme;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Expanded(
+          child: ListView(
+            padding: scrollPadding(context),
+            children: [
+              _Post(post: first, lead: true, onReply: () => _reply(first)),
+              if (replies.isNotEmpty) ...[
+                SectionLabel(context.l10n.replyCount(replies.length)),
+                for (final p in replies)
+                  Padding(
+                    padding: const EdgeInsets.only(left: 28, top: Space.s),
+                    child: _Post(
+                      post: p,
+                      lead: false,
+                      onReply: () => _reply(p),
+                    ),
+                  ),
+              ],
+            ],
+          ),
+        ),
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 12),
+          decoration: BoxDecoration(
+            border: Border(top: BorderSide(color: scheme.outlineVariant)),
+          ),
+          child: ComposeBar(
+            hint: context.l10n.replyToThread,
+            onTap: () => _reply(first),
+            inline: true,
+          ),
+        ),
+      ],
+    );
+  }
+}
+
 class _Post extends StatelessWidget {
   const _Post({required this.post, required this.lead, required this.onReply});
 
@@ -362,6 +466,7 @@ class _Post extends StatelessWidget {
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
     final tone = context.tones.lilac;
+    if (desktopUi(context)) return _desk(context, scheme, tone);
     final ink = lead ? tone.ink : scheme.onSurface;
     return Card(
       color: lead ? tone.fill : scheme.surfaceContainerLow,
@@ -457,6 +562,97 @@ class _Post extends StatelessWidget {
             ),
           ],
         ),
+      ),
+    );
+  }
+
+  /// design/round-25: a bordered box; the opening post carries its subject,
+  /// a reply its author on one line with the text indented under it.
+  Widget _desk(BuildContext context, ColorScheme scheme, Tone tone) {
+    final muted = TextStyle(
+      fontSize: 12,
+      fontWeight: FontWeight.w700,
+      color: scheme.onSurfaceVariant,
+    );
+    const prose = TextStyle(
+      fontSize: 13,
+      height: 1.75,
+      fontWeight: FontWeight.w700,
+    );
+    final avatar = CircleAvatar(
+      radius: 12,
+      backgroundColor: lead ? tone.fill : scheme.surfaceContainerHigh,
+      foregroundColor: lead ? tone.ink : scheme.onSurfaceVariant,
+      child: Text(
+        post.author.characters.firstOrNull ?? '',
+        style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w800),
+      ),
+    );
+    final name = Text(
+      post.author,
+      style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w800),
+    );
+    final time = Text(dateTimeLabel(context, post.time), style: muted);
+    final reply = DeskButton(
+      icon: Icons.reply,
+      label: context.l10n.reply,
+      onPressed: onReply,
+    );
+    return Container(
+      margin: lead ? const EdgeInsets.only(top: Space.m) : null,
+      padding: lead
+          ? const EdgeInsets.symmetric(horizontal: 18, vertical: Space.l)
+          : const EdgeInsets.symmetric(horizontal: Space.l, vertical: 11),
+      decoration: BoxDecoration(
+        border: Border.all(color: scheme.outlineVariant),
+        borderRadius: BorderRadius.circular(10),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            spacing: 10,
+            children: [
+              avatar,
+              if (lead)
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [name, time],
+                )
+              else ...[
+                name,
+                time,
+              ],
+              const Spacer(),
+              reply,
+            ],
+          ),
+          if (lead && post.subject.isNotEmpty)
+            Padding(
+              padding: const EdgeInsets.only(top: Space.m),
+              child: Text(
+                post.subject,
+                style: const TextStyle(
+                  fontSize: 19,
+                  fontWeight: FontWeight.w800,
+                  height: 1.3,
+                ),
+              ),
+            ),
+          if (post.body.isNotEmpty)
+            Padding(
+              padding: EdgeInsets.only(top: Space.xs, left: lead ? 0 : 34),
+              child: SelectableText(post.body, style: prose),
+            ),
+          if (post.attachments.isNotEmpty)
+            Padding(
+              padding: const EdgeInsets.only(top: Space.s),
+              child: FileList(
+                files: post.attachments,
+                detail: (f) => fileSize(f.size),
+              ),
+            ),
+        ],
       ),
     );
   }

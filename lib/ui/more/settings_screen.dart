@@ -14,6 +14,8 @@ import '../../data/services/response_cache.dart';
 import '../../data/services/folder_stats.dart';
 import '../../data/repositories/campus_cache.dart';
 import '../../l10n/l10n.dart';
+import '../core/desk_list.dart';
+import '../core/desktop_mode.dart';
 import '../core/theme.dart';
 import '../home_widgets/home_widgets.dart';
 import '../core/widgets.dart';
@@ -37,6 +39,7 @@ class SettingsScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final l10n = context.l10n;
     final settings = context.watch<AppSettings>();
+    if (desktopUi(context)) return _desk(context, settings);
     return Scaffold(
       extendBodyBehindAppBar: true,
       appBar: subBar(context, l10n.settings),
@@ -118,6 +121,176 @@ class SettingsScreen extends StatelessWidget {
   }
 }
 
+/// design/round-25 settings: two columns, appearance, version and the
+/// demo account at the left, notifications and saved data at the right.
+Widget _desk(BuildContext context, AppSettings settings) {
+  final l10n = context.l10n;
+  final options = languageOptions(context);
+  final auth = context.watch<EcourseAuthRepository>();
+  final left = [
+    SectionLabel(l10n.appearance),
+    const SizedBox(height: 10),
+    Row(
+      spacing: Space.s,
+      children: [
+        for (final (mode, label) in [
+          (ThemeMode.system, l10n.followSystem),
+          (ThemeMode.light, l10n.themeLight),
+          (ThemeMode.dark, l10n.themeDark),
+        ])
+          Expanded(
+            child: _ThemeCard(
+              mode: mode,
+              label: label,
+              selected: settings.themeMode == mode,
+              onTap: () => settings.setThemeMode(mode),
+            ),
+          ),
+      ],
+    ),
+    const SizedBox(height: 18),
+    _SetRow(
+      top: true,
+      title: l10n.themeColors,
+      trailing: DeskSegment(
+        labels: [l10n.themeDefault, l10n.themeWallpaper],
+        selected: settings.seed != null ? 1 : 0,
+        disabled: {if (settings.wallpaperColor == null) 1},
+        onChanged: (i) => settings.setWallpaperColors(i == 1),
+      ),
+    ),
+    _SetRow(
+      title: l10n.language,
+      trailing: DeskSegment(
+        labels: [for (final (_, label) in options) label],
+        selected: options.indexWhere(
+          (o) => o.$1 == settings.locale?.languageCode,
+        ),
+        onChanged: (i) => settings.setLocale(
+          options[i].$1 == null ? null : Locale(options[i].$1!),
+        ),
+      ),
+    ),
+    const _Version(),
+    SectionLabel(l10n.aboutApp),
+    _SetRow(
+      title: l10n.demoMode,
+      detail: l10n.demoModeDetail,
+      trailing: DeskToggle(value: auth.isDemo, onChanged: auth.setDemo),
+    ),
+  ];
+  final right = [
+    SectionLabel(l10n.notifications),
+    const _Notifications(),
+    const _SavedData(),
+  ];
+  return Scaffold(
+    extendBodyBehindAppBar: true,
+    appBar: subBar(context, l10n.settings),
+    body: Builder(
+      builder: (context) => ListView(
+        padding: scrollPadding(context),
+        children: [
+          Text(
+            l10n.settings,
+            style: const TextStyle(fontSize: 26, fontWeight: FontWeight.w800),
+          ),
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: left,
+                ),
+              ),
+              const SizedBox(width: 28),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: right,
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    ),
+  );
+}
+
+/// A setting in the desktop UI: its name over a detail, the control at
+/// the end, on a rule.
+class _SetRow extends StatelessWidget {
+  const _SetRow({
+    required this.title,
+    this.detail,
+    this.trailing,
+    this.onTap,
+    this.top = false,
+  });
+
+  final String title;
+  final String? detail;
+  final Widget? trailing;
+  final VoidCallback? onTap;
+
+  /// A rule above as well, where no heading stands over it.
+  final bool top;
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    final rule = BorderSide(color: scheme.outlineVariant);
+    return GestureDetector(
+      behavior: HitTestBehavior.opaque,
+      onTap: onTap,
+      child: MouseRegion(
+        cursor: onTap == null ? MouseCursor.defer : SystemMouseCursors.click,
+        child: Container(
+          constraints: const BoxConstraints(minHeight: 45),
+          padding: const EdgeInsets.symmetric(vertical: Space.s),
+          decoration: BoxDecoration(
+            border: Border(top: top ? rule : BorderSide.none, bottom: rule),
+          ),
+          child: Row(
+            children: [
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      title,
+                      style: const TextStyle(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w800,
+                        fontFeatures: [FontFeature.tabularFigures()],
+                      ),
+                    ),
+                    if (detail case final detail?)
+                      Text(
+                        detail,
+                        style: TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w700,
+                          color: scheme.onSurfaceVariant,
+                        ),
+                      ),
+                  ],
+                ),
+              ),
+              if (trailing case final trailing?) ...[
+                const SizedBox(width: 10),
+                trailing,
+              ],
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
 class _ThemeCard extends StatelessWidget {
   const _ThemeCard({
     required this.mode,
@@ -145,6 +318,48 @@ class _ThemeCard extends StatelessWidget {
         ],
       ),
     };
+    if (desktopUi(context)) {
+      return GestureDetector(
+        onTap: onTap,
+        child: MouseRegion(
+          cursor: SystemMouseCursors.click,
+          child: Column(
+            children: [
+              Container(
+                height: 62,
+                decoration: BoxDecoration(
+                  border: Border.all(
+                    color: selected ? scheme.primary : scheme.outlineVariant,
+                    width: 2,
+                  ),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(6),
+                  // The phone's preview, its top in view.
+                  child: OverflowBox(
+                    alignment: Alignment.topCenter,
+                    maxHeight: 96,
+                    child: preview,
+                  ),
+                ),
+              ),
+              const SizedBox(height: 6),
+              Text(
+                label,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: TextStyle(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w800,
+                  color: selected ? scheme.onSurface : scheme.onSurfaceVariant,
+                ),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
     return Material(
       color: scheme.surfaceContainerLow,
       shape: RoundedRectangleBorder(
@@ -303,6 +518,50 @@ class _Notifications extends StatelessWidget {
       value: value,
       onChanged: onChanged,
     );
+    if (desktopUi(context)) {
+      Widget row(
+        String title,
+        String detail,
+        bool value,
+        ValueChanged<bool> onChanged,
+      ) => _SetRow(
+        title: title,
+        detail: detail,
+        trailing: DeskToggle(value: value, onChanged: onChanged),
+      );
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          row(
+            l10n.notifyDue,
+            l10n.notifyDueDetail,
+            settings.notifyDue,
+            (on) => _set(context, due: on),
+          ),
+          row(
+            l10n.notifyClass,
+            l10n.notifyClassDetail,
+            settings.notifyClass,
+            (on) => _set(context, classes: on),
+          ),
+          row(
+            l10n.notifyNews,
+            l10n.notifyNewsDetail,
+            settings.notifyNews,
+            (on) => _set(context, news: on),
+          ),
+          const SizedBox(height: 10),
+          Align(
+            alignment: Alignment.centerLeft,
+            child: DeskButton(
+              icon: Icons.notifications_none,
+              label: l10n.notifyTest,
+              onPressed: () => _sendTest(context),
+            ),
+          ),
+        ],
+      );
+    }
     return Card(
       color: Theme.of(context).colorScheme.surfaceContainerLow,
       clipBehavior: Clip.antiAlias,
@@ -374,6 +633,47 @@ class _SavedDataState extends State<_SavedData> {
       ].join('・'),
       _ => l10n.noData,
     };
+    if (desktopUi(context)) {
+      final scheme = Theme.of(context).colorScheme;
+      return FutureBuilder(
+        future: _stats,
+        builder: (context, snapshot) {
+          final stats = snapshot.data;
+          String describeDesk(FolderStats s) => switch (s.latest) {
+            final latest? when s.files > 0 => [
+              l10n.savedItems(s.files),
+              l10n.updatedAt(monthDayTime(latest)),
+            ].join('・'),
+            _ => l10n.noData,
+          };
+          return Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              SectionLabel(
+                l10n.savedData,
+                detail: stats == null
+                    ? null
+                    : fileSize(stats.$1.bytes + stats.$2.bytes),
+              ),
+              for (final (title, s) in [
+                ('eCourse2', stats?.$1),
+                (l10n.campusSystems, stats?.$2),
+              ])
+                _SetRow(
+                  title: title,
+                  detail: s == null ? '' : describeDesk(s),
+                  trailing: Icon(
+                    Icons.chevron_right,
+                    size: 16,
+                    color: scheme.outline,
+                  ),
+                  onTap: () => context.push('/more/settings/saved'),
+                ),
+            ],
+          );
+        },
+      );
+    }
     return Card(
       color: Theme.of(context).colorScheme.surfaceContainerLow,
       clipBehavior: Clip.antiAlias,
@@ -447,6 +747,49 @@ class _VersionState extends State<_Version> {
               : update
               ? (l10n.versionUpdatable, l10n.versionCurrent(current))
               : (l10n.versionChecked, l10n.versionLatest);
+          if (desktopUi(context)) {
+            return Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                SectionLabel(l10n.version),
+                _SetRow(
+                  title: (update ? latest.version : current) ?? '',
+                  detail: [status, ?note].join('・'),
+                  trailing: update
+                      ? DeskButton(
+                          label: l10n.update,
+                          primary: true,
+                          onPressed: () => launchUrl(
+                            latest.url,
+                            mode: LaunchMode.externalApplication,
+                          ),
+                        )
+                      : DeskButton(
+                          icon: Icons.refresh,
+                          label: l10n.checkUpdate,
+                          onPressed: checking
+                              ? null
+                              : () => setState(() => _check = latestRelease()),
+                        ),
+                ),
+                if (update && latest.notes.isNotEmpty)
+                  Padding(
+                    padding: const EdgeInsets.only(top: Space.s),
+                    child: Text(
+                      [
+                        l10n.whatsNewIn(latest.version),
+                        ...latest.notes,
+                      ].join('\n'),
+                      style: mute.copyWith(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w700,
+                        height: 1.6,
+                      ),
+                    ),
+                  ),
+              ],
+            );
+          }
           return Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [

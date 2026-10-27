@@ -6,6 +6,8 @@ import '../core/campus_systems.dart';
 import '../core/auto_refresh.dart';
 import '../core/campus_session.dart';
 import '../core/campus_web_screen.dart';
+import '../core/desk_list.dart';
+import '../core/desktop_mode.dart';
 import '../core/theme.dart';
 import '../core/widgets.dart';
 
@@ -144,6 +146,7 @@ class _Body extends StatelessWidget {
       scheme.onSurfaceVariant,
     );
     int count(_Status s) => requests.where((r) => r.status == s).length;
+    if (desktopUi(context)) return _desk(context, count);
     return ListView(
       padding: scrollPadding(context),
       children: [
@@ -228,6 +231,102 @@ class _Body extends StatelessWidget {
           ),
         ),
         if (savedAt case final time?) UpdatedAt(time),
+      ],
+    );
+  }
+
+  /// design/round-25 leave: the counts as figures, the requests as lines,
+  /// then the school website.
+  Widget _desk(BuildContext context, int Function(_Status) count) {
+    final l10n = context.l10n;
+    final tones = context.tones;
+    final scheme = Theme.of(context).colorScheme;
+    final muted = scheme.onSurfaceVariant;
+    return ListView(
+      padding: scrollPadding(context),
+      children: [
+        Row(
+          children: [
+            for (final (status, label, color) in [
+              (_Status.approved, l10n.leaveApproved, null),
+              (_Status.pending, l10n.leavePending, tones.sun.strong),
+              (_Status.cancelled, l10n.leaveCancelled, null),
+            ]) ...[
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    '${count(status)}',
+                    style: TextStyle(
+                      fontSize: 22,
+                      fontWeight: FontWeight.w800,
+                      color: color,
+                    ),
+                  ),
+                  Text(
+                    label,
+                    style: TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w700,
+                      color: muted,
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(width: 40),
+            ],
+          ],
+        ),
+        SectionLabel(
+          l10n.myLeaves,
+          detail: requests.isEmpty ? null : l10n.recordCount(requests.length),
+        ),
+        if (requests.isEmpty)
+          Padding(
+            padding: const EdgeInsets.symmetric(vertical: 40),
+            child: Text(
+              l10n.noLeaves,
+              textAlign: TextAlign.center,
+              style: TextStyle(fontWeight: FontWeight.w700, color: muted),
+            ),
+          ),
+        for (final r in requests)
+          DeskLine(
+            title: '${r.date}・${r.kind}',
+            detail: r.number,
+            value: switch (r.status) {
+              _Status.approved => l10n.leaveApproved,
+              _Status.pending => l10n.leavePending,
+              _Status.cancelled => l10n.leaveCancelled,
+            },
+            valueColor: switch (r.status) {
+              _Status.approved => tones.mint.strong,
+              _Status.pending => tones.sun.strong,
+              _Status.cancelled => muted,
+            },
+          ),
+        SectionLabel(l10n.onSchoolWebsite),
+        for (final (title, url) in [
+          (l10n.applyLeave, _apply),
+          (l10n.cancelLeave, _cancel),
+        ])
+          DeskLine(
+            leading: Container(
+              width: 28,
+              height: 28,
+              decoration: BoxDecoration(
+                color: scheme.surfaceContainerHigh,
+                borderRadius: BorderRadius.circular(7),
+              ),
+              child: Icon(Icons.open_in_new, size: 15, color: muted),
+            ),
+            title: title,
+            value: '↗',
+            valueColor: muted,
+            onTap: () => openCampusPage(context, url, title),
+          ),
+        if (savedAt case final time?)
+          Align(alignment: Alignment.centerLeft, child: UpdatedAt(time)),
       ],
     );
   }

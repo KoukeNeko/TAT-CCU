@@ -145,12 +145,13 @@ class _MessagesScreenState extends State<MessagesScreen> {
     curve: Curves.easeOutQuart,
   );
 
-  Future<void> _openMail(int id, MailFolder folder) async {
+  Future<void> _openMail(int id, MailFolder folder, int courseId) async {
     void gone() => setState(() => _open = null);
     if (folder == MailFolder.sent || folder == MailFolder.drafts) {
       final page = MailScreen(
         id: id,
         folder: folder,
+        courseId: courseId,
         onGone: _wide ? gone : null,
       );
       if (_wide) return _show(id, page);
@@ -172,6 +173,7 @@ class _MessagesScreenState extends State<MessagesScreen> {
         MailScreen(
           id: id,
           folder: folder,
+          courseId: courseId,
           onUnread: () => setState(() {
             _unread[id] = true;
             _open = null;
@@ -286,7 +288,16 @@ class _MessagesScreenState extends State<MessagesScreen> {
       appBar: topBar(
         l10n.navMessages,
         actions: [
-          if (inBar)
+          if (inBar && desktopUi(context))
+            Padding(
+              padding: const EdgeInsets.only(right: Space.l),
+              child: DeskButton(
+                icon: Icons.edit_outlined,
+                label: l10n.compose,
+                onPressed: _compose,
+              ),
+            )
+          else if (inBar)
             Padding(
               padding: const EdgeInsets.only(right: Space.l),
               child: IconButton(
@@ -365,7 +376,7 @@ class _MessagesScreenState extends State<MessagesScreen> {
               time: m.time,
               unread: !mine && (_unread[m.id] ?? m.unread),
               selected: m.id == _open,
-              onTap: () => _openMail(m.id, folder),
+              onTap: () => _openMail(m.id, folder, m.courseId),
             );
           }
 
@@ -668,22 +679,37 @@ class _MessageRow extends StatelessWidget {
             color: scheme.surfaceContainerHigh,
             borderRadius: BorderRadius.circular(7),
           ),
-          child: Icon(icon, size: 15, color: tone.strong),
+          child: Icon(icon, size: 15, color: scheme.onSurfaceVariant),
         ),
         title: item.title,
         subtitle: item.detail.isEmpty ? null : item.detail,
         dimmed: !item.unread,
         selected: item.selected,
         onTap: item.onTap,
-        trailing: Text(
-          today
-              ? clock(item.time.hour * 60 + item.time.minute)
-              : monthDay(item.time),
-          style: TextStyle(
-            fontSize: 11,
-            fontWeight: FontWeight.w800,
-            color: item.unread ? t.sun.strong : scheme.onSurfaceVariant,
-          ),
+        trailing: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            if (item.unread)
+              Container(
+                width: 7,
+                height: 7,
+                margin: const EdgeInsets.only(right: 6),
+                decoration: BoxDecoration(
+                  color: scheme.primary,
+                  shape: BoxShape.circle,
+                ),
+              ),
+            Text(
+              today
+                  ? clock(item.time.hour * 60 + item.time.minute)
+                  : monthDay(item.time),
+              style: TextStyle(
+                fontSize: 11,
+                fontWeight: FontWeight.w800,
+                color: scheme.onSurfaceVariant,
+              ),
+            ),
+          ],
         ),
       );
     }
@@ -788,11 +814,15 @@ class MailScreen extends StatefulWidget {
     super.key,
     required this.id,
     this.folder = MailFolder.inbox,
+    this.courseId,
     this.onUnread,
     this.onGone,
   });
 
   final int id;
+
+  /// Its course, whose colour marks it beside the list.
+  final int? courseId;
 
   /// Where it was opened from: sent mail has nothing to mark or reply to,
   /// a draft is edited instead, and one in the trash is restored.
@@ -910,7 +940,59 @@ class _MailScreenState extends State<MailScreen> {
               tooltip: tip,
               icon: Icon(icon),
               onPressed: busy ? null : onTap,
+              // The toolbar's 30 by 28 beside the list on a desktop.
+              iconSize: desk ? 16 : null,
+              color: desk ? scheme.onSurfaceVariant : null,
+              padding: desk ? EdgeInsets.zero : null,
+              constraints: desk
+                  ? const BoxConstraints.tightFor(width: 30, height: 28)
+                  : null,
             );
+        final actions = Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            if (_folder != MailFolder.drafts && _folder != MailFolder.trash)
+              button(
+                starred ? l10n.unstarMail : l10n.starMail,
+                starred ? Icons.star_rounded : Icons.star_outline_rounded,
+                () => _run(MailAction.star),
+              ),
+            if (!sent && _folder != MailFolder.trash)
+              button(
+                l10n.markUnread,
+                Icons.mark_email_unread_outlined,
+                () async {
+                  try {
+                    await repo.markMailUnread(widget.id);
+                    if (widget.onUnread != null) {
+                      widget.onUnread!();
+                    } else if (context.mounted) {
+                      Navigator.of(context).pop(true);
+                    }
+                  } catch (e) {
+                    if (context.mounted) showSendError(context, e);
+                  }
+                },
+              ),
+            switch (_folder) {
+              MailFolder.drafts => button(
+                l10n.discardDraft,
+                Icons.delete_outline,
+                () => _run(MailAction.discard),
+              ),
+              MailFolder.trash => button(
+                l10n.restoreMail,
+                Icons.restore_from_trash_outlined,
+                () => _run(MailAction.delete),
+              ),
+              _ => button(
+                l10n.delete,
+                Icons.delete_outline,
+                () => _run(MailAction.delete),
+              ),
+            },
+          ],
+        );
         return CampusSession(
           key: _session,
           title: '',
@@ -921,51 +1003,8 @@ class _MailScreenState extends State<MailScreen> {
           onMessage: (message) {
             if (message['kind'] == 'mail') _received(message, starred);
           },
-          action: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              if (_folder != MailFolder.drafts && _folder != MailFolder.trash)
-                button(
-                  starred ? l10n.unstarMail : l10n.starMail,
-                  starred ? Icons.star_rounded : Icons.star_outline_rounded,
-                  () => _run(MailAction.star),
-                ),
-              if (!sent && _folder != MailFolder.trash)
-                button(
-                  l10n.markUnread,
-                  Icons.mark_email_unread_outlined,
-                  () async {
-                    try {
-                      await repo.markMailUnread(widget.id);
-                      if (widget.onUnread != null) {
-                        widget.onUnread!();
-                      } else if (context.mounted) {
-                        Navigator.of(context).pop(true);
-                      }
-                    } catch (e) {
-                      if (context.mounted) showSendError(context, e);
-                    }
-                  },
-                ),
-              switch (_folder) {
-                MailFolder.drafts => button(
-                  l10n.discardDraft,
-                  Icons.delete_outline,
-                  () => _run(MailAction.discard),
-                ),
-                MailFolder.trash => button(
-                  l10n.restoreMail,
-                  Icons.restore_from_trash_outlined,
-                  () => _run(MailAction.delete),
-                ),
-                _ => button(
-                  l10n.delete,
-                  Icons.delete_outline,
-                  () => _run(MailAction.delete),
-                ),
-              },
-            ],
-          ),
+          // Beside the list on a desktop they stand by the message instead.
+          action: desk ? null : actions,
           // Builder: insets have to come from inside the session's Scaffold,
           // where the glass app bar is part of the top padding.
           child: Builder(
@@ -987,34 +1026,93 @@ class _MailScreenState extends State<MailScreen> {
                         ? scrollPadding(context)
                         : scrollPadding(context).copyWith(bottom: 16),
                     children: [
-                      Text(
-                        m.course,
-                        style: TextStyle(
-                          color: scheme.onSurfaceVariant,
-                          fontWeight: FontWeight.w800,
+                      if (desk)
+                        Row(
+                          children: [
+                            if (widget.courseId case final id?) ...[
+                              Container(
+                                width: 8,
+                                height: 8,
+                                decoration: BoxDecoration(
+                                  color: context.tones.forCourse(id).strong,
+                                  borderRadius: BorderRadius.circular(3),
+                                ),
+                              ),
+                              const SizedBox(width: Space.s),
+                            ],
+                            Expanded(
+                              child: Text(
+                                [
+                                  m.course,
+                                  l10n.mail,
+                                ].where((s) => s.isNotEmpty).join('・'),
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  color: scheme.onSurfaceVariant,
+                                  fontWeight: FontWeight.w700,
+                                ),
+                              ),
+                            ),
+                            if (canReply)
+                              DeskButton(
+                                icon: Icons.reply,
+                                label: _folder == MailFolder.drafts
+                                    ? l10n.editDraft
+                                    : l10n.reply,
+                                onPressed: busy ? null : () => _write(m),
+                              ),
+                            actions,
+                          ],
+                        )
+                      else
+                        Text(
+                          m.course,
+                          style: TextStyle(
+                            color: scheme.onSurfaceVariant,
+                            fontWeight: FontWeight.w800,
+                          ),
                         ),
-                      ),
-                      const SizedBox(height: 6),
+                      SizedBox(height: desk ? Space.s : 6),
                       SelectableText(
                         _subject(l10n, m.subject),
-                        style: const TextStyle(
-                          fontSize: 24,
-                          fontWeight: FontWeight.w900,
+                        style: TextStyle(
+                          fontSize: desk ? 26 : 24,
+                          fontWeight: desk ? FontWeight.w800 : FontWeight.w900,
                           height: 1.25,
                         ),
                       ),
-                      const SizedBox(height: 8),
-                      Text(
-                        [
-                          sent ? _to(l10n, m.to) : m.sender,
-                          dateTimeLabel(context, m.time),
-                        ].where((s) => s.isNotEmpty).join('・'),
-                        style: TextStyle(
-                          color: scheme.onSurfaceVariant,
-                          fontWeight: FontWeight.w700,
+                      SizedBox(height: desk ? Space.xs : 8),
+                      if (desk)
+                        Wrap(
+                          spacing: Space.l,
+                          children: [
+                            for (final text in [
+                              sent ? _to(l10n, m.to) : m.sender,
+                              dateTimeLabel(context, m.time),
+                            ])
+                              if (text.isNotEmpty)
+                                Text(
+                                  text,
+                                  style: TextStyle(
+                                    fontSize: 13,
+                                    color: scheme.onSurfaceVariant,
+                                    fontWeight: FontWeight.w700,
+                                  ),
+                                ),
+                          ],
+                        )
+                      else
+                        Text(
+                          [
+                            sent ? _to(l10n, m.to) : m.sender,
+                            dateTimeLabel(context, m.time),
+                          ].where((s) => s.isNotEmpty).join('・'),
+                          style: TextStyle(
+                            color: scheme.onSurfaceVariant,
+                            fontWeight: FontWeight.w700,
+                          ),
                         ),
-                      ),
-                      const SizedBox(height: 16),
+                      SizedBox(height: desk ? 18 : 16),
                       ConstrainedBox(
                         // A readable line beside the list on a desktop.
                         constraints: BoxConstraints(
@@ -1022,25 +1120,15 @@ class _MailScreenState extends State<MailScreen> {
                         ),
                         child: SelectableText(
                           m.body,
-                          style: TextStyle(
-                            fontSize: desk ? 14 : 15,
-                            height: desk ? 1.75 : 1.7,
-                          ),
+                          style: desk
+                              ? const TextStyle(
+                                  fontSize: 13,
+                                  height: 1.75,
+                                  fontWeight: FontWeight.w700,
+                                )
+                              : const TextStyle(fontSize: 15, height: 1.7),
                         ),
                       ),
-                      if (desk && canReply) ...[
-                        const SizedBox(height: Space.l),
-                        Align(
-                          alignment: AlignmentDirectional.centerStart,
-                          child: DeskButton(
-                            icon: Icons.reply,
-                            label: _folder == MailFolder.drafts
-                                ? l10n.editDraft
-                                : l10n.reply,
-                            onPressed: busy ? null : () => _write(m),
-                          ),
-                        ),
-                      ],
                       if (m.attachments.isNotEmpty) ...[
                         SectionLabel(l10n.attachments),
                         FileList(

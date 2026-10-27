@@ -13,6 +13,8 @@ import '../../data/repositories/campus_cache.dart';
 import '../core/campus_session.dart';
 import '../core/pdf_viewer.dart';
 import '../core/campus_web_screen.dart';
+import '../core/desk_list.dart';
+import '../core/desktop_mode.dart';
 import '../core/theme.dart';
 import '../core/widgets.dart';
 import '../../l10n/l10n.dart';
@@ -191,6 +193,102 @@ class _AcademicScreenState extends State<AcademicScreen> {
     );
   }
 
+  /// design/round-25 academic: each certificate a box with its actions,
+  /// then the record as label and value, then the website.
+  Widget _desk(
+    BuildContext context,
+    List<Certificate>? certificates,
+    _Detail? detail,
+  ) {
+    final l10n = context.l10n;
+    final scheme = Theme.of(context).colorScheme;
+    final muted = scheme.onSurfaceVariant;
+    return ListView(
+      padding: scrollPadding(context),
+      children: [
+        SectionLabel(l10n.enrollmentCertificate),
+        const SizedBox(height: Space.m),
+        if (certificates == null)
+          const Center(child: CircularProgressIndicator())
+        else
+          for (final (i, c) in [
+            if (certificates.isEmpty) null,
+            ...certificates,
+          ].indexed)
+            Padding(
+              padding: const EdgeInsets.only(bottom: 10),
+              child: _Ticket(
+                certificate: c,
+                printing: _printing,
+                onPrint: i == 0 ? _print : null,
+              ),
+            ),
+        if (_error != null)
+          Text(_error!, style: TextStyle(color: scheme.error)),
+        if (detail != null) ...[
+          SectionLabel(l10n.academicRecord),
+          for (final (label, value) in [
+            (l10n.studentNo, detail.studentNo),
+            (l10n.englishName, detail.englishName),
+            (l10n.email, detail.email),
+            (l10n.mobile, detail.mobile),
+          ])
+            Container(
+              padding: const EdgeInsets.symmetric(vertical: 9),
+              decoration: BoxDecoration(
+                border: Border(
+                  bottom: BorderSide(color: scheme.outlineVariant),
+                ),
+              ),
+              child: Row(
+                children: [
+                  SizedBox(
+                    width: 106,
+                    child: Text(
+                      label,
+                      style: TextStyle(
+                        fontWeight: FontWeight.w700,
+                        color: muted,
+                      ),
+                    ),
+                  ),
+                  Expanded(
+                    child: SelectableText(
+                      value.isEmpty ? '—' : value,
+                      style: const TextStyle(
+                        fontWeight: FontWeight.w700,
+                        fontFeatures: [FontFeature.tabularFigures()],
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+        ],
+        SectionLabel(l10n.onSchoolWebsite),
+        for (final title in [l10n.editNameContact, l10n.studentPhoto])
+          DeskLine(
+            leading: Container(
+              width: 28,
+              height: 28,
+              decoration: BoxDecoration(
+                color: scheme.surfaceContainerHigh,
+                borderRadius: BorderRadius.circular(7),
+              ),
+              child: Icon(Icons.open_in_new, size: 15, color: muted),
+            ),
+            title: title,
+            value: '↗',
+            valueColor: muted,
+            onTap: () =>
+                openCampusPage(context, _detailUrl, l10n.academicSystem),
+          ),
+        if (_savedAt case final time?)
+          Align(alignment: Alignment.centerLeft, child: UpdatedAt(time)),
+      ],
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final certificates = _certificates;
@@ -209,118 +307,131 @@ class _AcademicScreenState extends State<AcademicScreen> {
       child: Builder(
         builder: (context) => PullRefresh(
           onRefresh: () async => _session.currentState?.refresh(),
-          child: ListView(
-            padding: scrollPadding(context).copyWith(left: 0, right: 0),
-            children: [
-              SizedBox(
-                height: 520,
-                child: certificates == null
-                    ? const Center(child: CircularProgressIndicator())
-                    : _tickets(certificates),
-              ),
-              if ((certificates?.length ?? 0) > 1)
-                Padding(
-                  padding: const EdgeInsets.only(top: Space.m),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      for (var i = 0; i < certificates!.length; i++)
-                        AnimatedContainer(
-                          duration: const Duration(milliseconds: 320),
-                          curve: Curves.easeOutQuart,
-                          width: i == _page ? 20 : 6,
-                          height: 6,
-                          margin: const EdgeInsets.symmetric(horizontal: 3),
-                          decoration: BoxDecoration(
-                            color: i == _page
-                                ? scheme.onSurfaceVariant
-                                : scheme.outlineVariant,
-                            borderRadius: BorderRadius.circular(3),
-                          ),
-                        ),
-                    ],
-                  ),
-                ),
-              if (_error != null)
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(
-                    Space.l,
-                    Space.s,
-                    Space.l,
-                    0,
-                  ),
-                  child: Text(_error!, style: TextStyle(color: scheme.error)),
-                ),
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: Space.l),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
+          child: desktopUi(context)
+              ? _desk(context, certificates, detail)
+              : ListView(
+                  padding: scrollPadding(context).copyWith(left: 0, right: 0),
                   children: [
-                    if (detail != null) ...[
-                      SectionLabel(context.l10n.academicRecord),
-                      Card(
-                        color: scheme.surfaceContainerLow,
-                        child: Padding(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: Space.l,
-                          ),
-                          child: Column(
-                            children: [
-                              for (final (i, (label, value)) in [
-                                (context.l10n.studentNo, detail.studentNo),
-                                (context.l10n.englishName, detail.englishName),
-                                (context.l10n.email, detail.email),
-                                (context.l10n.mobile, detail.mobile),
-                              ].indexed) ...[
-                                if (i > 0)
-                                  Divider(
-                                    height: 1,
-                                    color: scheme.outlineVariant,
-                                  ),
-                                _Field(label, value),
-                              ],
-                            ],
-                          ),
-                        ),
-                      ),
-                    ],
-                    SectionLabel(context.l10n.onSchoolWebsite),
-                    Card(
-                      color: scheme.surfaceContainerLow,
-                      clipBehavior: Clip.antiAlias,
-                      child: Column(
-                        children: [
-                          for (final title in [
-                            context.l10n.editNameContact,
-                            context.l10n.studentPhoto,
-                          ])
-                            ListTile(
-                              title: Text(
-                                title,
-                                style: const TextStyle(
-                                  fontWeight: FontWeight.w800,
+                    SizedBox(
+                      height: 520,
+                      child: certificates == null
+                          ? const Center(child: CircularProgressIndicator())
+                          : _tickets(certificates),
+                    ),
+                    if ((certificates?.length ?? 0) > 1)
+                      Padding(
+                        padding: const EdgeInsets.only(top: Space.m),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            for (var i = 0; i < certificates!.length; i++)
+                              AnimatedContainer(
+                                duration: const Duration(milliseconds: 320),
+                                curve: Curves.easeOutQuart,
+                                width: i == _page ? 20 : 6,
+                                height: 6,
+                                margin: const EdgeInsets.symmetric(
+                                  horizontal: 3,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: i == _page
+                                      ? scheme.onSurfaceVariant
+                                      : scheme.outlineVariant,
+                                  borderRadius: BorderRadius.circular(3),
                                 ),
                               ),
-                              trailing: Icon(
-                                Icons.north_east,
-                                size: 18,
-                                color: scheme.onSurfaceVariant,
-                              ),
-                              onTap: () => openCampusPage(
-                                context,
-                                _detailUrl,
-                                context.l10n.academicSystem,
+                          ],
+                        ),
+                      ),
+                    if (_error != null)
+                      Padding(
+                        padding: const EdgeInsets.fromLTRB(
+                          Space.l,
+                          Space.s,
+                          Space.l,
+                          0,
+                        ),
+                        child: Text(
+                          _error!,
+                          style: TextStyle(color: scheme.error),
+                        ),
+                      ),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: Space.l),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          if (detail != null) ...[
+                            SectionLabel(context.l10n.academicRecord),
+                            Card(
+                              color: scheme.surfaceContainerLow,
+                              child: Padding(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: Space.l,
+                                ),
+                                child: Column(
+                                  children: [
+                                    for (final (i, (label, value)) in [
+                                      (
+                                        context.l10n.studentNo,
+                                        detail.studentNo,
+                                      ),
+                                      (
+                                        context.l10n.englishName,
+                                        detail.englishName,
+                                      ),
+                                      (context.l10n.email, detail.email),
+                                      (context.l10n.mobile, detail.mobile),
+                                    ].indexed) ...[
+                                      if (i > 0)
+                                        Divider(
+                                          height: 1,
+                                          color: scheme.outlineVariant,
+                                        ),
+                                      _Field(label, value),
+                                    ],
+                                  ],
+                                ),
                               ),
                             ),
+                          ],
+                          SectionLabel(context.l10n.onSchoolWebsite),
+                          Card(
+                            color: scheme.surfaceContainerLow,
+                            clipBehavior: Clip.antiAlias,
+                            child: Column(
+                              children: [
+                                for (final title in [
+                                  context.l10n.editNameContact,
+                                  context.l10n.studentPhoto,
+                                ])
+                                  ListTile(
+                                    title: Text(
+                                      title,
+                                      style: const TextStyle(
+                                        fontWeight: FontWeight.w800,
+                                      ),
+                                    ),
+                                    trailing: Icon(
+                                      Icons.north_east,
+                                      size: 18,
+                                      color: scheme.onSurfaceVariant,
+                                    ),
+                                    onTap: () => openCampusPage(
+                                      context,
+                                      _detailUrl,
+                                      context.l10n.academicSystem,
+                                    ),
+                                  ),
+                              ],
+                            ),
+                          ),
+                          if (_savedAt case final time?) UpdatedAt(time),
                         ],
                       ),
                     ),
-                    if (_savedAt case final time?) UpdatedAt(time),
                   ],
                 ),
-              ),
-            ],
-          ),
         ),
       ),
     );
@@ -368,6 +479,7 @@ class _Ticket extends StatelessWidget {
     final printLabel = printing
         ? l10n.generating
         : (c == null ? l10n.generate : l10n.regenerate);
+    if (desktopUi(context)) return _desk(context, c, current, printLabel);
     final buttons = <Widget>[
       if (c != null && current) ...[
         _Action(l10n.open, primary: true, onTap: () => _open(context, c)),
@@ -544,6 +656,102 @@ class _Ticket extends StatelessWidget {
               ],
             ),
           ),
+        ],
+      ),
+    );
+  }
+
+  /// design/round-25 academic: a page icon, the state, and the actions in
+  /// a row at the end.
+  Widget _desk(
+    BuildContext context,
+    Certificate? c,
+    bool current,
+    String printLabel,
+  ) {
+    final l10n = context.l10n;
+    final tones = context.tones;
+    final scheme = Theme.of(context).colorScheme;
+    final print = onPrint == null
+        ? null
+        : DeskButton(
+            icon: Icons.refresh,
+            label: printLabel,
+            primary: c == null || !current,
+            onPressed: printing ? null : onPrint,
+          );
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+      decoration: BoxDecoration(
+        border: Border.all(color: scheme.outlineVariant),
+        borderRadius: BorderRadius.circular(10),
+      ),
+      child: Row(
+        children: [
+          Container(
+            width: 38,
+            height: 48,
+            decoration: BoxDecoration(
+              color: const Color(0xFFF1E9D8),
+              borderRadius: BorderRadius.circular(5),
+            ),
+            child: const Icon(
+              Icons.description_outlined,
+              size: 18,
+              color: Color(0xFF6B5A3E),
+            ),
+          ),
+          const SizedBox(width: 14),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  l10n.enrollmentCertificate,
+                  style: const TextStyle(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w800,
+                  ),
+                ),
+                Text(
+                  c == null
+                      ? l10n.notYetThisSemester
+                      : current
+                      ? l10n.validPrinted(monthDay(c.printedAt))
+                      : l10n.expiredPrinted(monthDay(c.printedAt)),
+                  style: TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w700,
+                    color: scheme.onSurfaceVariant,
+                  ),
+                ),
+                if (c != null)
+                  Padding(
+                    padding: const EdgeInsets.only(top: 5),
+                    child: DeskTag(
+                      l10n.savedToDevice(monthDayTime(c.printedAt)),
+                      color: tones.mint.strong,
+                    ),
+                  ),
+              ],
+            ),
+          ),
+          if (c != null) ...[
+            DeskButton(
+              icon: Icons.open_in_new,
+              label: l10n.open,
+              onPressed: () => _open(context, c),
+            ),
+            if (current) ...[
+              const SizedBox(width: 6),
+              DeskButton(
+                icon: Icons.ios_share,
+                label: l10n.share,
+                onPressed: () => _share(context, c),
+              ),
+            ],
+          ],
+          if (print != null) ...[const SizedBox(width: 6), print],
         ],
       ),
     );

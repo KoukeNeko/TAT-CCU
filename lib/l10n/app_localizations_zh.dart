@@ -2208,4 +2208,7 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get openCourse => '開啟課程';
+
+  @override
+  String get within14Days => '14 天內';
 }

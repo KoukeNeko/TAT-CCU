@@ -7,6 +7,8 @@ import '../../data/services/ecourse_maintenance.dart';
 import '../../data/services/folder_stats.dart';
 import '../../data/services/response_cache.dart';
 import '../../l10n/l10n.dart';
+import '../core/desk_list.dart';
+import '../core/desktop_mode.dart';
 import '../core/theme.dart';
 import '../core/widgets.dart';
 import 'academic_screen.dart';
@@ -99,6 +101,70 @@ class _SavedDataScreenState extends State<SavedDataScreen> {
             }
             final ecourseTotal = summarize(ecourse).bytes;
             final campusTotal = summarize(campus).bytes;
+            final ecourseRows = [
+              for (final MapEntry(key: name, value: files) in byGroup.entries)
+                if (name != _other || files.isNotEmpty)
+                  (icons[name]!, name(l10n), summarize(files), true),
+            ];
+            final campusRows = [
+              for (final (key, icon, title) in campusPages)
+                (
+                  icon,
+                  title,
+                  summarize(campus.where((f) => f.name == key)),
+                  false,
+                ),
+            ];
+            if (desktopUi(context)) {
+              // design/round-25 saved: the total, then each source's rows
+              // side by side.
+              return ListView(
+                padding: scrollPadding(context),
+                children: [
+                  Text(
+                    l10n.savedData,
+                    style: const TextStyle(
+                      fontSize: 26,
+                      fontWeight: FontWeight.w800,
+                    ),
+                  ),
+                  const SizedBox(height: 18),
+                  _Total(ecourse: ecourseTotal, campus: campusTotal),
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.stretch,
+                          children: [
+                            SectionLabel(
+                              'eCourse2',
+                              action: auth.isDemo
+                                  ? null
+                                  : DeskTag(
+                                      accountLabel,
+                                      color: accountTone.strong,
+                                    ),
+                            ),
+                            _Rows(ecourseRows),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(width: 28),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.stretch,
+                          children: [
+                            SectionLabel(l10n.campusSystems),
+                            _Rows(campusRows),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              );
+            }
             return ListView(
               padding: scrollPadding(context),
               children: [
@@ -109,22 +175,9 @@ class _SavedDataScreenState extends State<SavedDataScreen> {
                       ? null
                       : StatusPill(tone: accountTone, label: accountLabel),
                 ),
-                _Rows([
-                  for (final MapEntry(key: name, value: files)
-                      in byGroup.entries)
-                    if (name != _other || files.isNotEmpty)
-                      (icons[name]!, name(l10n), summarize(files), true),
-                ]),
+                _Rows(ecourseRows),
                 SectionLabel(l10n.campusSystems),
-                _Rows([
-                  for (final (key, icon, title) in campusPages)
-                    (
-                      icon,
-                      title,
-                      summarize(campus.where((f) => f.name == key)),
-                      false,
-                    ),
-                ]),
+                _Rows(campusRows),
               ],
             );
           },
@@ -146,6 +199,81 @@ class _Total extends StatelessWidget {
     final tones = context.tones;
     final tone = tones.lilac;
     final [value, unit] = fileSize(ecourse + campus).split(' ');
+    if (desktopUi(context)) {
+      final scheme = Theme.of(context).colorScheme;
+      final muted = TextStyle(
+        fontSize: 12,
+        fontWeight: FontWeight.w800,
+        color: scheme.onSurfaceVariant,
+      );
+      final parts = [
+        (ecourse, tone.strong, 'eCourse2 ${fileSize(ecourse)}'),
+        (campus, tones.sun.strong, '${l10n.campusSystems} ${fileSize(campus)}'),
+      ];
+      return Container(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+        decoration: BoxDecoration(
+          border: Border.all(color: scheme.outlineVariant),
+          borderRadius: BorderRadius.circular(10),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(l10n.onThisDevice, style: muted),
+            const SizedBox(height: Space.xs),
+            Text(
+              '$value $unit',
+              style: const TextStyle(fontSize: 24, fontWeight: FontWeight.w800),
+            ),
+            if (ecourse + campus > 0)
+              Padding(
+                padding: const EdgeInsets.only(top: 10, bottom: Space.s),
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(4),
+                  child: SizedBox(
+                    height: 8,
+                    child: Row(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      spacing: 2,
+                      children: [
+                        for (final (bytes, color, _) in parts)
+                          if (bytes > 0)
+                            Expanded(
+                              flex: bytes,
+                              child: ColoredBox(color: color),
+                            ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+            Wrap(
+              spacing: 16,
+              children: [
+                for (final (_, color, text) in parts)
+                  Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      DecoratedBox(
+                        decoration: BoxDecoration(
+                          color: color,
+                          borderRadius: BorderRadius.circular(3),
+                        ),
+                        child: const SizedBox.square(dimension: 8),
+                      ),
+                      const SizedBox(width: 6),
+                      Text(
+                        text,
+                        style: muted.copyWith(fontWeight: FontWeight.w700),
+                      ),
+                    ],
+                  ),
+              ],
+            ),
+          ],
+        ),
+      );
+    }
     final muted = TextStyle(
       color: tone.ink.withValues(alpha: 0.85),
       fontSize: 12,
@@ -244,6 +372,26 @@ class _Rows extends StatelessWidget {
   Widget build(BuildContext context) {
     final l10n = context.l10n;
     final scheme = Theme.of(context).colorScheme;
+    if (desktopUi(context)) {
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          for (final (_, title, stats, counted) in rows)
+            DeskLine(
+              title: title,
+              detail: switch (stats.latest) {
+                final latest? => [
+                  if (counted) l10n.savedItems(stats.files),
+                  l10n.updatedAt(monthDayTime(latest)),
+                ].join('・'),
+                null => l10n.noData,
+              },
+              value: stats.files == 0 ? '—' : fileSize(stats.bytes),
+              valueColor: stats.files == 0 ? scheme.onSurfaceVariant : null,
+            ),
+        ],
+      );
+    }
     return Card(
       color: scheme.surfaceContainerLow,
       clipBehavior: Clip.antiAlias,

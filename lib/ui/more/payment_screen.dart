@@ -14,6 +14,8 @@ import '../../data/services/payment_data.dart';
 import '../../l10n/l10n.dart';
 import '../core/auto_refresh.dart';
 import '../core/campus_session.dart';
+import '../core/desk_list.dart';
+import '../core/desktop_mode.dart';
 import '../core/pdf_viewer.dart';
 import '../core/theme.dart';
 import '../core/widgets.dart';
@@ -205,19 +207,88 @@ class _PaymentScreenState extends State<PaymentScreen>
       for (final p in payments)
         if (p.date.month == month) p,
     ];
+    final chart = _ChartCard(
+      title: l10n.payReceived(_year, payments.length),
+      total: payments.fold(0, (sum, p) => sum + p.amount),
+      months: byMonth.sublist(0, lastMonth),
+      selected: month,
+      onSelect: (m) => setState(() {
+        _month = m;
+        _open = null;
+      }),
+    );
+    final incomes = [
+      for (final MapEntry(key: year, value: list)
+          in (income.entries.toList()..sort((a, b) => b.key - a.key)))
+        for (final item in list)
+          _IncomeCard(year: year, income: item, onOpen: _openPdf),
+    ];
+    if (desktopUi(context)) {
+      // design/round-25 payment: the chart across, then the month's
+      // payments beside the year's income.
+      final muted = TextStyle(
+        fontWeight: FontWeight.w700,
+        color: scheme.onSurfaceVariant,
+      );
+      return ListView(
+        padding: scrollPadding(context),
+        children: [
+          chart,
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Expanded(
+                flex: 13,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    SectionLabel(
+                      l10n.payMonth(month),
+                      detail: shown.isEmpty
+                          ? null
+                          : '${l10n.recordCount(shown.length)}・'
+                                '${_show(shown.fold(0, (sum, p) => sum + p.amount))}',
+                    ),
+                    if (shown.isEmpty)
+                      Padding(
+                        padding: const EdgeInsets.symmetric(vertical: Space.xl),
+                        child: Text(l10n.payNone, style: muted),
+                      ),
+                    for (final p in shown) _PaymentRow(payment: p, open: true),
+                  ],
+                ),
+              ),
+              const SizedBox(width: 28),
+              Expanded(
+                flex: 10,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    SectionLabel(l10n.incomeTitle),
+                    if (incomes.isEmpty)
+                      Padding(
+                        padding: const EdgeInsets.symmetric(vertical: Space.xl),
+                        child: Text(l10n.incomeNone, style: muted),
+                      ),
+                    for (final card in incomes)
+                      Padding(
+                        padding: const EdgeInsets.only(top: Space.m),
+                        child: card,
+                      ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          if (savedAt case final time?)
+            Align(alignment: Alignment.centerLeft, child: UpdatedAt(time)),
+        ],
+      );
+    }
     return ListView(
       padding: scrollPadding(context),
       children: [
-        _ChartCard(
-          title: l10n.payReceived(_year, payments.length),
-          total: payments.fold(0, (sum, p) => sum + p.amount),
-          months: byMonth.sublist(0, lastMonth),
-          selected: month,
-          onSelect: (m) => setState(() {
-            _month = m;
-            _open = null;
-          }),
-        ),
+        chart,
         SectionLabel(l10n.payMonth(month)),
         if (shown.isEmpty)
           Padding(
@@ -250,7 +321,7 @@ class _PaymentScreenState extends State<PaymentScreen>
             ),
           ),
         SectionLabel(l10n.incomeTitle),
-        if (income.values.every((list) => list.isEmpty))
+        if (incomes.isEmpty)
           Padding(
             padding: const EdgeInsets.symmetric(vertical: Space.xxl),
             child: Text(
@@ -259,13 +330,11 @@ class _PaymentScreenState extends State<PaymentScreen>
               style: Theme.of(context).textTheme.titleMedium,
             ),
           ),
-        for (final MapEntry(key: year, value: list)
-            in (income.entries.toList()..sort((a, b) => b.key - a.key)))
-          for (final item in list)
-            Padding(
-              padding: const EdgeInsets.only(bottom: rowGap),
-              child: _IncomeCard(year: year, income: item, onOpen: _openPdf),
-            ),
+        for (final card in incomes)
+          Padding(
+            padding: const EdgeInsets.only(bottom: rowGap),
+            child: card,
+          ),
         if (savedAt case final time?) UpdatedAt(time),
       ],
     );
@@ -295,6 +364,7 @@ class _ChartCard extends StatelessWidget {
     final tone = context.tones.lilac;
     final light = Theme.of(context).brightness == Brightness.light;
     final top = months.fold(0, (a, b) => b > a ? b : a);
+    if (desktopUi(context)) return _desk(context, top);
     return ToneBlock(
       tone: tone,
       radius: Corners.card,
@@ -381,18 +451,111 @@ class _ChartCard extends StatelessWidget {
       ),
     );
   }
+
+  /// design/round-25 payment: a bordered box, the year's total at the
+  /// right, thin bars over a rule with the chosen month lit.
+  Widget _desk(BuildContext context, int top) {
+    final scheme = Theme.of(context).colorScheme;
+    final sun = context.tones.sun.strong;
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+      decoration: BoxDecoration(
+        border: Border.all(color: scheme.outlineVariant),
+        borderRadius: BorderRadius.circular(10),
+      ),
+      child: Column(
+        children: [
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.baseline,
+            textBaseline: TextBaseline.alphabetic,
+            children: [
+              Expanded(
+                child: Text(
+                  title,
+                  style: const TextStyle(fontWeight: FontWeight.w800),
+                ),
+              ),
+              Text(
+                _show(total),
+                style: const TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.w800,
+                  fontFeatures: [FontFeature.tabularFigures()],
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          Container(
+            height: 110,
+            decoration: BoxDecoration(
+              border: Border(bottom: BorderSide(color: scheme.outlineVariant)),
+            ),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.end,
+              children: [
+                for (final (i, amount) in months.indexed)
+                  Expanded(
+                    child: GestureDetector(
+                      behavior: HitTestBehavior.opaque,
+                      onTap: () => onSelect(i + 1),
+                      child: Align(
+                        alignment: Alignment.bottomCenter,
+                        child: Container(
+                          width: 30,
+                          height: amount == 0 || top == 0
+                              ? 2
+                              : 110 * amount / top,
+                          decoration: BoxDecoration(
+                            color: amount == 0
+                                ? scheme.outline
+                                : i + 1 == selected
+                                ? sun
+                                : sun.withValues(alpha: 0.4),
+                            borderRadius: BorderRadius.circular(
+                              amount == 0 ? 1 : 3,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 4),
+          Row(
+            children: [
+              for (var m = 1; m <= months.length; m++)
+                Expanded(
+                  child: Text(
+                    '$m',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      fontSize: 11,
+                      fontWeight: FontWeight.w700,
+                      color: m == selected
+                          ? scheme.onSurface
+                          : scheme.onSurfaceVariant,
+                    ),
+                  ),
+                ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
 }
 
 class _PaymentRow extends StatelessWidget {
-  const _PaymentRow({
-    required this.payment,
-    required this.open,
-    required this.onTap,
-  });
+  const _PaymentRow({required this.payment, required this.open, this.onTap});
 
   final Payment payment;
   final bool open;
-  final VoidCallback onTap;
+
+  /// Opens or closes the details; null on a desktop, where they show.
+  final VoidCallback? onTap;
 
   @override
   Widget build(BuildContext context) {
@@ -404,6 +567,57 @@ class _PaymentRow extends StatelessWidget {
       fontWeight: FontWeight.w700,
       color: scheme.onSurfaceVariant,
     );
+    if (desktopUi(context)) {
+      // design/round-25 payment: the case and account under the title.
+      return Container(
+        padding: const EdgeInsets.symmetric(vertical: 10),
+        decoration: BoxDecoration(
+          border: Border(bottom: BorderSide(color: scheme.outlineVariant)),
+        ),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    p.note.isEmpty ? p.unit : p.note,
+                    style: const TextStyle(fontWeight: FontWeight.w800),
+                  ),
+                  Text(
+                    [
+                      '${l10n.payCase} ${p.id}',
+                      if (p.handler.isNotEmpty)
+                        '${l10n.payHandler} ${p.handler}',
+                    ].join('・'),
+                    style: muted,
+                  ),
+                  if (p.account.isNotEmpty || p.invoice.isNotEmpty)
+                    Text(
+                      [
+                        if (p.account.isNotEmpty)
+                          '${l10n.payAccount} ${_masked(p.account)}',
+                        if (p.invoice.isNotEmpty)
+                          '${l10n.payInvoice} ${p.invoice}',
+                      ].join('・'),
+                      style: muted,
+                    ),
+                ],
+              ),
+            ),
+            const SizedBox(width: Space.m),
+            Text(
+              _show(p.amount),
+              style: const TextStyle(
+                fontWeight: FontWeight.w800,
+                fontFeatures: [FontFeature.tabularFigures()],
+              ),
+            ),
+          ],
+        ),
+      );
+    }
     return InkWell(
       onTap: onTap,
       child: Padding(
@@ -508,6 +722,7 @@ class _IncomeCard extends StatelessWidget {
       title,
       '$year-${i.format}-$path',
     );
+    if (desktopUi(context)) return _desk(context, open);
     Widget figure(String label, int value) => Expanded(
       child: Container(
         padding: const EdgeInsets.symmetric(
@@ -640,6 +855,107 @@ class _IncomeCard extends StatelessWidget {
             ),
           ],
         ),
+      ),
+    );
+  }
+
+  /// design/round-25 payment: the year's net large, its parts as lines,
+  /// and the two statements.
+  Widget _desk(
+    BuildContext context,
+    void Function(String path, String key, String title) open,
+  ) {
+    final l10n = context.l10n;
+    final scheme = Theme.of(context).colorScheme;
+    final muted = scheme.onSurfaceVariant;
+    final i = income;
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+      decoration: BoxDecoration(
+        border: Border.all(color: scheme.outlineVariant),
+        borderRadius: BorderRadius.circular(10),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Text(
+            [
+              l10n.incomeYear(year),
+              _formatNames[i.format] ?? i.format,
+            ].join('・'),
+            style: TextStyle(
+              fontSize: 12,
+              fontWeight: FontWeight.w800,
+              color: muted,
+            ),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            _show(i.net),
+            style: const TextStyle(
+              fontSize: 24,
+              fontWeight: FontWeight.w800,
+              fontFeatures: [FontFeature.tabularFigures()],
+            ),
+          ),
+          Text(
+            l10n.incomeNet,
+            style: TextStyle(fontWeight: FontWeight.w700, color: muted),
+          ),
+          const SizedBox(height: Space.s),
+          for (final (label, value) in [
+            (l10n.incomeGross, i.gross),
+            (l10n.incomeTax, i.tax),
+            (l10n.incomePension, i.pension),
+          ])
+            Container(
+              padding: const EdgeInsets.symmetric(vertical: 7),
+              decoration: BoxDecoration(
+                border: Border(
+                  bottom: BorderSide(color: scheme.outlineVariant),
+                ),
+              ),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: Text(
+                      label,
+                      style: TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w700,
+                        color: muted,
+                      ),
+                    ),
+                  ),
+                  Text(
+                    grouped(value),
+                    style: const TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w800,
+                      fontFeatures: [FontFeature.tabularFigures()],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          const SizedBox(height: 12),
+          Wrap(
+            spacing: 6,
+            runSpacing: 6,
+            children: [
+              DeskButton(
+                icon: Icons.description_outlined,
+                label: l10n.incomeDetail,
+                onPressed: () => open('taxDetail', 'proCd', l10n.incomeDetail),
+              ),
+              DeskButton(
+                icon: Icons.print_outlined,
+                label: l10n.incomeWithholding,
+                onPressed: () => open('tax', 'pro_cd', l10n.incomeWithholding),
+              ),
+            ],
+          ),
+        ],
       ),
     );
   }

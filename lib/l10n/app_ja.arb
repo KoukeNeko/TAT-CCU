@@ -647,5 +647,6 @@
   "paletteHint": "コース、課題、ページへ移動",
   "palettePages": "ページ",
   "paletteSelect": "選択",
-  "openCourse": "コースを開く"
+  "openCourse": "コースを開く",
+  "within14Days": "14 日以内"
 }

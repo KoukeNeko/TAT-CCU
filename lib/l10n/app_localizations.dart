@@ -3975,6 +3975,12 @@ abstract class AppLocalizations {
   /// In zh, this message translates to:
   /// **'開啟課程'**
   String get openCourse;
+
+  /// No description provided for @within14Days.
+  ///
+  /// In zh, this message translates to:
+  /// **'14 天內'**
+  String get within14Days;
 }
 
 class _AppLocalizationsDelegate

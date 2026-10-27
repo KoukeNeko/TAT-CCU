@@ -4,6 +4,8 @@ import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../l10n/l10n.dart';
+import '../core/desk_list.dart';
+import '../core/desktop_mode.dart';
 import '../core/floating_dock.dart';
 import '../core/theme.dart';
 import '../core/widgets.dart';
@@ -11,6 +13,25 @@ import '../../data/repositories/dorm_repair_data.dart';
 import '../core/campus_systems.dart';
 import '../core/segment_switch.dart';
 import '../core/glass_dialog.dart';
+
+/// design/round-25: a desktop page's title, with its stage and buttons.
+Widget _deskHead(
+  BuildContext context,
+  String title, {
+  bool stage = false,
+  List<Widget> actions = const [],
+}) => Row(
+  spacing: 10,
+  children: [
+    Text(
+      title,
+      style: const TextStyle(fontSize: 26, fontWeight: FontWeight.w800),
+    ),
+    if (stage) DeskTag(pageStages['0011']!, color: context.tones.peach.strong),
+    const Spacer(),
+    ...actions,
+  ],
+);
 
 /// Design round-11 dorm-repair R1-A: past requests, then a full-page form
 /// with the site's four fields (alpha).
@@ -22,6 +43,56 @@ class DormRepairScreen extends StatelessWidget {
     final l10n = context.l10n;
     final scheme = Theme.of(context).colorScheme;
     final store = DormRepairStore.instance;
+    if (desktopUi(context)) {
+      return Scaffold(
+        extendBodyBehindAppBar: true,
+        appBar: subBar(
+          context,
+          l10n.drTitle,
+          action: const SchoolSiteButton('0011'),
+        ),
+        body: ListenableBuilder(
+          listenable: store,
+          builder: (context, _) {
+            final requests = store.requests;
+            return ListView(
+              padding: scrollPadding(context),
+              children: [
+                _deskHead(
+                  context,
+                  l10n.drTitle,
+                  stage: true,
+                  actions: [
+                    DeskButton(
+                      icon: Icons.add,
+                      label: l10n.drRequest,
+                      primary: true,
+                      onPressed: () => context.push('/more/dorm-repair/new'),
+                    ),
+                  ],
+                ),
+                SectionLabel(
+                  l10n.drHistory,
+                  detail: l10n.savedItems(requests.length),
+                ),
+                if (requests.isEmpty)
+                  DeskLine(title: l10n.drNone)
+                else
+                  for (final r in requests)
+                    DeskLine(
+                      leading: const DeskIcon(Icons.build_outlined),
+                      title: r.memo,
+                      detail:
+                          '${r.date.month}/${r.date.day} '
+                          '${weekdayName(context, r.date.weekday)}'
+                          '・${r.room}',
+                    ),
+              ],
+            );
+          },
+        ),
+      );
+    }
     return Scaffold(
       extendBodyBehindAppBar: true,
       appBar: subBar(
@@ -196,6 +267,147 @@ class _DormRepairFormScreenState extends State<DormRepairFormScreen> {
         ],
       ),
     );
+    if (desktopUi(context)) {
+      Widget deskField(String label, Widget child) => Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        spacing: 6,
+        children: [
+          Text(label, style: labelStyle),
+          child,
+        ],
+      );
+      return Scaffold(
+        extendBodyBehindAppBar: true,
+        appBar: subBar(
+          context,
+          l10n.drRequest,
+          action: const SchoolSiteButton('0011'),
+        ),
+        body: Builder(
+          builder: (context) => ListView(
+            padding: scrollPadding(context),
+            children: [
+              _deskHead(
+                context,
+                l10n.drRequest,
+                actions: [
+                  DeskButton(label: l10n.cancel, onPressed: context.pop),
+                  DeskButton(
+                    icon: Icons.send_outlined,
+                    label: l10n.submit,
+                    primary: true,
+                    onPressed: _valid ? _submit : null,
+                  ),
+                ],
+              ),
+              const SizedBox(height: Space.xl),
+              Align(
+                alignment: Alignment.centerLeft,
+                child: ConstrainedBox(
+                  constraints: const BoxConstraints(maxWidth: 520),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    spacing: 14,
+                    children: [
+                      deskField(
+                        l10n.drRoom,
+                        TextField(
+                          controller: _room,
+                          maxLength: 6,
+                          textCapitalization: TextCapitalization.characters,
+                          autocorrect: false,
+                          inputFormatters: [
+                            FilteringTextInputFormatter.allow(
+                              RegExp(r'[0-9A-Za-z-]'),
+                            ),
+                          ],
+                          onChanged: (_) => setState(() {}),
+                          decoration: InputDecoration(
+                            hintText: l10n.drRoomHint,
+                            counterText: '',
+                            errorText:
+                                room.isEmpty || roomPattern.hasMatch(room)
+                                ? null
+                                : l10n.drRoomInvalid,
+                          ),
+                        ),
+                      ),
+                      deskField(
+                        'E-mail',
+                        TextField(
+                          controller: _email,
+                          maxLength: 50,
+                          keyboardType: TextInputType.emailAddress,
+                          autocorrect: false,
+                          onChanged: (_) => setState(() {}),
+                          decoration: InputDecoration(
+                            hintText: l10n.drEmailHint,
+                            counterText: '',
+                            errorText:
+                                email.isEmpty || emailPattern.hasMatch(email)
+                                ? null
+                                : l10n.drEmailInvalid,
+                          ),
+                        ),
+                      ),
+                      deskField(
+                        l10n.drMemo,
+                        TextField(
+                          controller: _memo,
+                          maxLength: 255,
+                          minLines: 5,
+                          maxLines: 5,
+                          onChanged: (_) => setState(() {}),
+                          decoration: InputDecoration(
+                            hintText: l10n.drMemoHint,
+                            counterText: '',
+                          ),
+                        ),
+                      ),
+                      deskField(
+                        l10n.drPresence,
+                        Align(
+                          alignment: Alignment.centerLeft,
+                          child: DeskSegment(
+                            labels: [l10n.drNoNeed, l10n.drNeed],
+                            selected: _needPresence ? 1 : 0,
+                            onChanged: (i) =>
+                                setState(() => _needPresence = i == 1),
+                          ),
+                        ),
+                      ),
+                      GestureDetector(
+                        behavior: HitTestBehavior.opaque,
+                        onTap: () => setState(() => _remember = !_remember),
+                        child: Row(
+                          spacing: Space.s,
+                          children: [
+                            SizedBox.square(
+                              dimension: 16,
+                              child: Checkbox(
+                                value: _remember,
+                                onChanged: (v) =>
+                                    setState(() => _remember = v ?? false),
+                              ),
+                            ),
+                            Text(
+                              l10n.drRemember,
+                              style: const TextStyle(
+                                fontWeight: FontWeight.w700,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
     return Scaffold(
       extendBodyBehindAppBar: true,
       appBar: subBar(

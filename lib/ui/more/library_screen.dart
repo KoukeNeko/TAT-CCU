@@ -10,10 +10,13 @@ import '../../l10n/l10n.dart';
 import '../core/auto_refresh.dart';
 import '../core/campus_session.dart';
 import '../core/campus_web_screen.dart';
+import '../core/desk_list.dart';
+import '../core/desktop_mode.dart';
 import '../core/theme.dart';
 import '../core/glass_sheet.dart';
 import '../core/widgets.dart';
 import '../core/glass_dialog.dart';
+import 'library_search_screen.dart';
 
 const _host = 'ccu.primo.exlibrisgroup.com';
 const _vid = '886CCU_INST:886CCU_INST';
@@ -235,6 +238,7 @@ class _Body extends StatelessWidget {
     final now = clk.clock.now();
     final today = DateTime(now.year, now.month, now.day);
     int daysTo(DateTime due) => due.difference(today).inDays;
+    if (desktopUi(context)) return _desk(context, daysTo);
     return ListView(
       padding: scrollPadding(context),
       children: [
@@ -306,6 +310,166 @@ class _Body extends StatelessWidget {
           ),
         ),
         if (savedAt case final time?) UpdatedAt(time),
+      ],
+    );
+  }
+
+  /// design/round-25 library: the next due date and ready holds side by
+  /// side, then loans and holds as lines with their spines.
+  Widget _desk(BuildContext context, int Function(DateTime) daysTo) {
+    final l10n = context.l10n;
+    final tones = context.tones;
+    final scheme = Theme.of(context).colorScheme;
+    final muted = scheme.onSurfaceVariant;
+    final ready = [
+      for (final h in holds)
+        if (h.ready) h,
+    ];
+    Widget box(String label, String big, String? note, [Color? color]) =>
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+          decoration: BoxDecoration(
+            border: Border.all(color: scheme.outlineVariant),
+            borderRadius: BorderRadius.circular(10),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                label,
+                style: TextStyle(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w800,
+                  color: muted,
+                ),
+              ),
+              const SizedBox(height: 4),
+              Text(
+                big,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: TextStyle(
+                  fontSize: 28,
+                  fontWeight: FontWeight.w800,
+                  height: 1.2,
+                  color: color,
+                ),
+              ),
+              if (note != null && note.isNotEmpty)
+                Text(
+                  note,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(fontWeight: FontWeight.w700, color: muted),
+                ),
+            ],
+          ),
+        );
+    final Widget due;
+    if (loans.isEmpty) {
+      due = box(l10n.onLoan, l10n.noLoans, null);
+    } else {
+      final first = loans.first;
+      final days = daysTo(first.due);
+      final sameDay = loans.where((l) => l.due == first.due).length;
+      due = box(
+        days < 0 ? l10n.loansOverdue : l10n.loansNextDue,
+        '${days.abs()} ${l10n.unitDays}',
+        '${l10n.loanDue(monthDay(first.due))}・'
+            '${sameDay == 1 ? first.title : l10n.bookCount(sameDay)}',
+        days < 0 ? tones.peach.strong : null,
+      );
+    }
+    return ListView(
+      padding: scrollPadding(context),
+      children: [
+        IntrinsicHeight(
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Expanded(flex: 5, child: due),
+              if (ready.isNotEmpty) ...[
+                const SizedBox(width: 10),
+                Expanded(
+                  flex: 4,
+                  child: box(
+                    l10n.holds,
+                    l10n.holdsReady(ready.length),
+                    [
+                      ready.first.pickup,
+                      if (ready.first.until case final d?)
+                        l10n.heldUntil(monthDay(d)),
+                    ].where((s) => s.isNotEmpty).join('・'),
+                    tones.mint.strong,
+                  ),
+                ),
+              ],
+            ],
+          ),
+        ),
+        if (loans.isNotEmpty) ...[
+          SectionLabel(
+            '${l10n.onLoan}・${l10n.bookCount(loans.length)}',
+            action: DeskButton(
+              icon: Icons.refresh,
+              label: l10n.renewAll,
+              onPressed: onRenewAll,
+            ),
+          ),
+          for (final (i, loan) in loans.indexed)
+            DeskLine(
+              leading: BookSpine(index: i),
+              title: loan.title,
+              detail: [
+                loan.author,
+                l10n.loanDue(monthDay(loan.due)),
+              ].where((s) => s.isNotEmpty).join('・'),
+              value: switch (daysTo(loan.due)) {
+                < 0 && final d => l10n.daysOverdue(-d),
+                0 => l10n.dueToday,
+                final d => l10n.loanDaysLeft(d),
+              },
+              valueColor: daysTo(loan.due) < 0 ? tones.peach.strong : null,
+              onTap: () => _showRenew(context, loan, daysTo(loan.due), onRenew),
+            ),
+        ],
+        if (holds.isNotEmpty) ...[
+          SectionLabel('${l10n.holds}・${l10n.recordCount(holds.length)}'),
+          for (final (i, hold) in holds.indexed)
+            DeskLine(
+              leading: BookSpine(index: loans.length + i),
+              title: hold.title,
+              detail: [
+                if (hold.status.isNotEmpty) hold.status,
+                if (hold.ready && hold.pickup.isNotEmpty) hold.pickup,
+              ].join('・'),
+              value: hold.ready ? l10n.holdReady : l10n.holdWaiting,
+              valueColor: hold.ready ? tones.mint.strong : tones.sun.strong,
+              onTap: () => _confirmCancel(context, hold, onCancel),
+            ),
+        ],
+        SectionLabel(l10n.onSchoolWebsite),
+        DeskLine(
+          leading: Container(
+            width: 28,
+            height: 28,
+            decoration: BoxDecoration(
+              color: scheme.surfaceContainerHigh,
+              borderRadius: BorderRadius.circular(7),
+            ),
+            child: Icon(Icons.open_in_new, size: 15, color: muted),
+          ),
+          title: l10n.loansAndRenewals,
+          value: '↗',
+          valueColor: muted,
+          onTap: () => openCampusPage(
+            context,
+            '$_accountUrl&section=loans',
+            l10n.loansAndRenewals,
+          ),
+        ),
+        if (savedAt case final time?)
+          Align(alignment: Alignment.centerLeft, child: UpdatedAt(time)),
       ],
     );
   }

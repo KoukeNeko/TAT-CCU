@@ -6,6 +6,8 @@ import '../../data/services/primo_client.dart';
 import '../../l10n/l10n.dart';
 import '../core/campus_session.dart';
 import '../core/campus_web_screen.dart';
+import '../core/desk_list.dart';
+import '../core/desktop_mode.dart';
 import '../core/theme.dart';
 import '../core/glass_sheet.dart';
 import '../core/widgets.dart';
@@ -812,6 +814,7 @@ class _RecordListState extends State<RecordList> {
     final total = _total;
     final more = total != null && _records.length < total;
     if (total == null && _loading) return const LoadingView();
+    final desk = desktopUi(context);
     return NotificationListener<ScrollNotification>(
       onNotification: (n) {
         if (more && n.metrics.extentAfter < 400) _more();
@@ -839,10 +842,13 @@ class _RecordListState extends State<RecordList> {
               ),
             ),
           for (final (i, r) in _records.indexed)
-            Padding(
-              padding: const EdgeInsets.only(bottom: Space.s),
-              child: RecordRow(record: r, index: i),
-            ),
+            if (desk)
+              RecordRow(record: r, index: i)
+            else
+              Padding(
+                padding: const EdgeInsets.only(bottom: Space.s),
+                child: RecordRow(record: r, index: i),
+              ),
           if (_error != null)
             Center(
               child: TextButton(onPressed: _more, child: Text(l10n.retry)),
@@ -917,6 +923,30 @@ class BookCover extends StatelessWidget {
   }
 }
 
+/// A book's spine in a desktop list (design/round-25): a coloured bar
+/// with a band near its top.
+class BookSpine extends StatelessWidget {
+  const BookSpine({super.key, required this.index});
+
+  final int index;
+
+  @override
+  Widget build(BuildContext context) {
+    final cycle = context.tones.cycle;
+    return Container(
+      width: 12,
+      height: 36,
+      padding: const EdgeInsets.only(top: 6),
+      alignment: Alignment.topCenter,
+      decoration: BoxDecoration(
+        color: cycle[index % cycle.length].strong,
+        borderRadius: BorderRadius.circular(2),
+      ),
+      child: Container(height: 3, color: const Color(0x44000000)),
+    );
+  }
+}
+
 class RecordRow extends StatelessWidget {
   const RecordRow({super.key, required this.record, required this.index});
 
@@ -938,6 +968,23 @@ class RecordRow extends StatelessWidget {
       fontWeight: FontWeight.w700,
       color: scheme.onSurfaceVariant,
     );
+    void open() => context.push(
+      '/more/library/record',
+      extra: (record: record, index: index),
+    );
+    if (desktopUi(context)) {
+      return DeskLine(
+        leading: BookSpine(index: index),
+        title: record.title,
+        detail: [
+          record.author,
+          record.year,
+        ].where((s) => s.isNotEmpty).join('・'),
+        value: pill?.$2,
+        valueColor: pill?.$1.strong,
+        onTap: open,
+      );
+    }
     return Material(
       color: scheme.surfaceContainerLow,
       shape: RoundedRectangleBorder(
@@ -945,10 +992,7 @@ class RecordRow extends StatelessWidget {
       ),
       clipBehavior: Clip.antiAlias,
       child: InkWell(
-        onTap: () => context.push(
-          '/more/library/record',
-          extra: (record: record, index: index),
-        ),
+        onTap: open,
         child: Padding(
           padding: const EdgeInsets.all(Space.m),
           child: Row(

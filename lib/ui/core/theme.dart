@@ -418,6 +418,10 @@ const desktopBarHeight = 52.0;
 /// height title bars with 15 px titles, and controls sized for a mouse.
 ThemeData desktopTheme(ThemeData theme) => theme.copyWith(
   visualDensity: VisualDensity.compact,
+  // Text fields type at the desktop UI's 13–14 px.
+  textTheme: theme.textTheme.copyWith(
+    bodyLarge: theme.textTheme.bodyLarge?.copyWith(fontSize: 14),
+  ),
   // Ruled boxes and pointer-sized buttons in place of the phone's soft
   // cards and pills.
   cardTheme: theme.cardTheme.copyWith(

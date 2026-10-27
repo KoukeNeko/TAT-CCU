@@ -81,7 +81,11 @@ class ModuleScreen extends StatelessWidget {
                 module: module!,
               ),
             ),
-            'forum' => ForumBody(courseId: courseId, forumId: module!.instance),
+            'forum' => ForumBody(
+              courseId: courseId,
+              forumId: module!.instance,
+              title: module.name,
+            ),
             'quiz' => Loader<Quiz>.watch(
               watch: () =>
                   repo.watch((repo) => repo.quiz(courseId, module!.instance)),
@@ -95,7 +99,7 @@ class ModuleScreen extends StatelessWidget {
                     : () => openCampusPage(context, module.url!, module.name),
               ),
             ),
-            _ => _FilesBody(files: module!.files),
+            _ => _FilesBody(courseId: courseId, module: module!),
           },
         ),
       ),
@@ -625,17 +629,73 @@ class _QuizBody extends StatelessWidget {
 }
 
 class _FilesBody extends StatelessWidget {
-  const _FilesBody({required this.files});
+  const _FilesBody({required this.courseId, required this.module});
 
-  final List<ModuleFile> files;
+  final int courseId;
+  final Module module;
 
   @override
   Widget build(BuildContext context) {
+    final files = module.files;
     if (files.isEmpty) return EmptyState(context.l10n.noFiles);
     final latest = files
         .map((f) => f.modified)
         .reduce((a, b) => a.isAfter(b) ? a : b);
     final total = files.fold(0, (sum, f) => sum + f.size);
+    final list = FileList(
+      files: files,
+      detail: (f) =>
+          context.l10n.fileUpdated(fileSize(f.size), monthDay(f.modified)),
+    );
+    if (desktopUi(context)) {
+      // design/round-25: the module's head, three figures, then the files.
+      final scheme = Theme.of(context).colorScheme;
+      Widget stat(String value, String label) => Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            value,
+            style: const TextStyle(
+              fontSize: 22,
+              fontWeight: FontWeight.w800,
+              fontFeatures: [FontFeature.tabularFigures()],
+            ),
+          ),
+          Text(
+            label,
+            style: TextStyle(
+              fontSize: 12,
+              fontWeight: FontWeight.w700,
+              color: scheme.onSurfaceVariant,
+            ),
+          ),
+        ],
+      );
+      return ListView(
+        padding: scrollPadding(context),
+        children: [
+          CoursePageHead(courseId: courseId, title: module.name),
+          const SizedBox(height: 18),
+          Row(
+            children: [
+              stat('${files.length}', context.l10n.filesLabel),
+              const SizedBox(width: 44),
+              stat(fileSize(total), context.l10n.total),
+              const SizedBox(width: 44),
+              stat(monthDay(latest), context.l10n.lastUpdated),
+            ],
+          ),
+          const SizedBox(height: Space.xxl),
+          Align(
+            alignment: Alignment.topLeft,
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 720),
+              child: list,
+            ),
+          ),
+        ],
+      );
+    }
     return ListView(
       padding: scrollPadding(context),
       children: [
@@ -649,11 +709,7 @@ class _FilesBody extends StatelessWidget {
           ],
         ),
         const SizedBox(height: 12),
-        FileList(
-          files: files,
-          detail: (f) =>
-              context.l10n.fileUpdated(fileSize(f.size), monthDay(f.modified)),
-        ),
+        list,
       ],
     );
   }

@@ -7,6 +7,8 @@ import '../../data/repositories/ecourse_auth_repository.dart';
 import '../../l10n/l10n.dart';
 import '../core/floating_dock.dart';
 import '../core/campus_session.dart';
+import '../core/desk_list.dart';
+import '../core/desktop_mode.dart';
 import '../core/theme.dart';
 import '../core/glass_sheet.dart';
 import '../core/widgets.dart';
@@ -134,7 +136,8 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
                 child: _body(context),
               ),
             ),
-            Positioned(left: 0, right: 0, bottom: 0, child: _dock(context)),
+            if (!desktopUi(context))
+              Positioned(left: 0, right: 0, bottom: 0, child: _dock(context)),
           ],
         ),
       ),
@@ -142,10 +145,16 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
   }
 
   Widget _dock(BuildContext context) {
+    final (label, onPressed, tone) = _signUpAction(context);
+    return DockButton(onPressed: onPressed, tone: tone, child: Text(label));
+  }
+
+  /// What the page's one button does for the event's status.
+  (String, VoidCallback?, Tone?) _signUpAction(BuildContext context) {
     final l10n = context.l10n;
     final tones = context.tones;
     final e = _event;
-    final (label, onPressed, tone) = switch (statusOf(e, clk.clock.now())) {
+    return switch (statusOf(e, clk.clock.now())) {
       EventStatus.open => (
         l10n.signUp,
         _fresh && _form != null ? _signUp : null,
@@ -169,7 +178,6 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
       EventStatus.full => (l10n.eventFull, null, null),
       EventStatus.closed => (l10n.signUpClosed, null, null),
     };
-    return DockButton(onPressed: onPressed, tone: tone, child: Text(label));
   }
 
   Widget _body(BuildContext context) {
@@ -219,6 +227,9 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
           : '${dateTimeLabel(context, start)} – ${dateTimeLabel(context, end)}';
     }
 
+    if (desktopUi(context)) {
+      return _desk(context, when(), quota?.$1);
+    }
     final title = Padding(
       padding: const EdgeInsets.fromLTRB(pageMargin, 0, pageMargin, Space.s),
       child: Column(
@@ -387,6 +398,108 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
                 ),
               ],
             ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  /// design/round-25 event-detail: the poster as a banner, the title with
+  /// its state, the facts as label and value, the introduction, and the
+  /// sign-up button below.
+  Widget _desk(BuildContext context, String when, String? quota) {
+    final l10n = context.l10n;
+    final scheme = Theme.of(context).colorScheme;
+    final muted = scheme.onSurfaceVariant;
+    final e = _event;
+    final (pillTone, pill) = eventPill(context, e, clk.clock.now());
+    final (label, onPressed, _) = _signUpAction(context);
+    return ListView(
+      padding: scrollPadding(context),
+      children: [
+        if (e.image case final url?) ...[
+          GestureDetector(
+            onTap: () => context.push('/more/events/poster', extra: url),
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(12),
+              child: SizedBox(height: 150, child: EventPoster(url: url)),
+            ),
+          ),
+          const SizedBox(height: 18),
+        ],
+        Wrap(
+          spacing: 10,
+          runSpacing: 6,
+          crossAxisAlignment: WrapCrossAlignment.center,
+          children: [
+            SelectableText(
+              e.title,
+              style: const TextStyle(
+                fontSize: 26,
+                fontWeight: FontWeight.w800,
+                height: 1.25,
+              ),
+            ),
+            DeskTag(pill, color: pillTone.strong),
+          ],
+        ),
+        const SizedBox(height: 14),
+        for (final (label, value) in [
+          (l10n.eventDate, when),
+          (l10n.eventPlace, e.place),
+          (l10n.eventCategory, e.category),
+          (l10n.eventOrganizer, e.organizer),
+          (l10n.eventContact, e.contact),
+        ].where((r) => r.$2.isNotEmpty))
+          Container(
+            padding: const EdgeInsets.symmetric(vertical: 9),
+            decoration: BoxDecoration(
+              border: Border(bottom: BorderSide(color: scheme.outlineVariant)),
+            ),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                SizedBox(
+                  width: 106,
+                  child: Text(
+                    label,
+                    style: TextStyle(fontWeight: FontWeight.w700, color: muted),
+                  ),
+                ),
+                Expanded(
+                  child: SelectableText(
+                    value,
+                    style: const TextStyle(fontWeight: FontWeight.w700),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        if (e.intro.isNotEmpty) ...[
+          SectionLabel(l10n.eventIntro, detail: quota),
+          const SizedBox(height: 10),
+          Align(
+            alignment: Alignment.centerLeft,
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 34 * 13),
+              child: SelectableText(
+                e.intro,
+                style: TextStyle(
+                  height: 1.75,
+                  fontWeight: FontWeight.w700,
+                  color: scheme.onSurface.withValues(alpha: 0.85),
+                ),
+              ),
+            ),
+          ),
+        ],
+        const SizedBox(height: 18),
+        Align(
+          alignment: Alignment.centerLeft,
+          child: DeskButton(
+            label: label,
+            primary: !e.signedUp && onPressed != null,
+            onPressed: onPressed,
           ),
         ),
       ],

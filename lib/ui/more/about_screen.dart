@@ -8,6 +8,8 @@ import 'package:http/http.dart' as http;
 import 'package:package_info_plus/package_info_plus.dart';
 
 import '../../l10n/l10n.dart';
+import '../core/desk_list.dart';
+import '../core/desktop_mode.dart';
 import '../core/theme.dart';
 import '../core/widgets.dart';
 import 'more_screen.dart';
@@ -30,6 +32,7 @@ class AboutScreen extends StatelessWidget {
     final l10n = context.l10n;
     final t = context.tones;
     final top = MediaQuery.paddingOf(context).top;
+    if (desktopUi(context)) return _desk(context);
     return AnnotatedRegion<SystemUiOverlayStyle>(
       // Dark status bar icons over the light poster.
       value: SystemUiOverlayStyle.dark,
@@ -181,6 +184,102 @@ class AboutScreen extends StatelessWidget {
   }
 }
 
+/// design/round-25 about: the logo on a quiet poster, then the
+/// contributors and the project side by side.
+Widget _desk(BuildContext context) {
+  final l10n = context.l10n;
+  final scheme = Theme.of(context).colorScheme;
+  return Scaffold(
+    extendBodyBehindAppBar: true,
+    appBar: subBar(context, l10n.about),
+    body: Builder(
+      builder: (context) => ListView(
+        padding: scrollPadding(context),
+        children: [
+          Container(
+            padding: const EdgeInsets.only(top: 30, bottom: 26),
+            decoration: BoxDecoration(
+              border: Border.all(color: scheme.outlineVariant),
+              borderRadius: BorderRadius.circular(12),
+              gradient: LinearGradient(
+                begin: Alignment.topCenter,
+                end: Alignment.bottomCenter,
+                colors: [_blue.withValues(alpha: 0.1), Colors.transparent],
+              ),
+            ),
+            child: Column(
+              children: [
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(12),
+                  child: Image.asset('assets/logo.png', width: 48, height: 48),
+                ),
+                const SizedBox(height: 12),
+                const Text(
+                  'TAT CCU',
+                  style: TextStyle(fontSize: 26, fontWeight: FontWeight.w800),
+                ),
+                FutureBuilder(
+                  future: PackageInfo.fromPlatform(),
+                  builder: (context, info) => Text(
+                    switch (info.data) {
+                      final i? => '${i.version}（${i.buildNumber}）',
+                      null => '',
+                    },
+                    style: TextStyle(
+                      fontWeight: FontWeight.w700,
+                      color: scheme.onSurfaceVariant,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Expanded(child: _Contributors()),
+              const SizedBox(width: 28),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    SectionLabel(l10n.project),
+                    DeskLine(
+                      leading: const DeskIcon(Icons.code),
+                      title: 'GitHub',
+                      detail: _repo,
+                      value: '↗',
+                      valueColor: scheme.outline,
+                      onTap: () => openExternal('https://github.com/$_repo'),
+                    ),
+                    DeskLine(
+                      leading: const DeskIcon(Icons.palette_outlined),
+                      title: l10n.designLanguage,
+                      value: '›',
+                      valueColor: scheme.outline,
+                      onTap: () => context.push('/more/design'),
+                    ),
+                    DeskLine(
+                      leading: const DeskIcon(Icons.description_outlined),
+                      title: l10n.openSourceLicenses,
+                      value: '›',
+                      valueColor: scheme.outline,
+                      onTap: () => showLicensePage(
+                        context: context,
+                        applicationName: 'TAT CCU',
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    ),
+  );
+}
+
 typedef _Contributor = ({String login, String avatar, int commits});
 
 /// Who has committed to the repo, from GitHub's public contributors list
@@ -220,6 +319,47 @@ class _ContributorsState extends State<_Contributors> {
       future: _load,
       builder: (context, snap) {
         final people = snap.data;
+        if (desktopUi(context)) {
+          return Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              SectionLabel(
+                l10n.contributors,
+                detail: people == null ? null : '${people.length}',
+              ),
+              if (snap.hasError)
+                DeskLine(
+                  title: l10n.loadFailed,
+                  value: l10n.retry,
+                  valueColor: scheme.primary,
+                  onTap: () => setState(() => _load = _fetchContributors()),
+                )
+              else
+                for (final p in people ?? <_Contributor>[])
+                  DeskLine(
+                    leading: CircleAvatar(
+                      radius: 12,
+                      backgroundColor: _blue,
+                      foregroundColor: _paper,
+                      foregroundImage: p.avatar.isEmpty
+                          ? null
+                          : NetworkImage(p.avatar),
+                      child: Text(
+                        p.login[0].toUpperCase(),
+                        style: const TextStyle(
+                          fontSize: 11,
+                          fontWeight: FontWeight.w800,
+                        ),
+                      ),
+                    ),
+                    title: p.login,
+                    value: l10n.commitCount(p.commits),
+                    valueColor: scheme.outline,
+                    onTap: () => openExternal('https://github.com/${p.login}'),
+                  ),
+            ],
+          );
+        }
         return Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [

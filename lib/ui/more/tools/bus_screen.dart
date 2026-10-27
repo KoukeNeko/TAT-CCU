@@ -6,6 +6,8 @@ import 'package:url_launcher/url_launcher.dart';
 
 import '../../../data/services/bus_timetable.dart';
 import '../../../l10n/l10n.dart';
+import '../../core/desk_list.dart';
+import '../../core/desktop_mode.dart';
 import '../../core/theme.dart';
 import '../../core/widgets.dart';
 
@@ -66,10 +68,40 @@ class _BusScreenState extends State<BusScreen> {
             final next = nextDepartures(timetable.trips, now)
               ..sort((a, b) => a.at.compareTo(b.at));
             final scheme = Theme.of(context).colorScheme;
+            final desk = desktopUi(context);
+            // design/round-25 bus: the first route stands open.
+            final openRoute =
+                _open ?? (desk ? timetable.routes.firstOrNull?.number : null);
             return ListView(
-              padding: scrollPadding(context, top: 0),
+              padding: scrollPadding(context, top: desk ? pageTop : 0),
               children: [
-                if (next.isNotEmpty) ...[
+                if (desk) ...[
+                  Text(
+                    l10n.toolBus,
+                    style: const TextStyle(
+                      fontSize: 26,
+                      fontWeight: FontWeight.w800,
+                    ),
+                  ),
+                  if (next.isNotEmpty) ...[
+                    const SizedBox(height: 18),
+                    DeskSection(
+                      title: l10n.busUpNext,
+                      children: [
+                        for (final (i, d) in next.indexed)
+                          _NextRow(
+                            departure: d,
+                            now: now,
+                            tone: tones[d.trip.route]!,
+                            first: i == 0,
+                          ),
+                      ],
+                    ),
+                    const SizedBox(height: 22),
+                  ],
+                  DeskSection(title: l10n.busRoutes, children: const []),
+                  const SizedBox(height: 10),
+                ] else if (next.isNotEmpty) ...[
                   SectionLabel(l10n.busUpNext),
                   Card(
                     color: scheme.surfaceContainerLow,
@@ -89,10 +121,10 @@ class _BusScreenState extends State<BusScreen> {
                     ),
                   ),
                 ],
-                SectionLabel(l10n.busRoutes),
+                if (!desk) SectionLabel(l10n.busRoutes),
                 for (final route in timetable.routes)
                   Padding(
-                    padding: const EdgeInsets.only(bottom: rowGap),
+                    padding: EdgeInsets.only(bottom: desk ? Space.s : rowGap),
                     child: _RouteCard(
                       route: route,
                       timetable: timetable,
@@ -102,10 +134,12 @@ class _BusScreenState extends State<BusScreen> {
                       ],
                       now: now,
                       tone: tones[route.number]!,
-                      open: _open == route.number,
+                      open: openRoute == route.number,
+                      // '' once the first route is closed: none stands open.
                       onToggle: () => setState(
-                        () =>
-                            _open = _open == route.number ? null : route.number,
+                        () => _open = openRoute == route.number
+                            ? ''
+                            : route.number,
                       ),
                       onLive: () => launchUrl(
                         Uri.parse('$_livePage?rno=${route.code}'),
@@ -124,7 +158,7 @@ class _BusScreenState extends State<BusScreen> {
 
 /// How long until [at]: minutes within the hour, hours within the day,
 /// else the date, as (value, unit).
-List<String> _countdown(BuildContext context, DateTime at, DateTime now) {
+List<String> busCountdown(BuildContext context, DateTime at, DateTime now) {
   final l10n = context.l10n;
   final days = DateUtils.dateOnly(at)
       .difference(DateUtils.dateOnly(now))
@@ -155,11 +189,15 @@ class _NextRow extends StatelessWidget {
     required this.departure,
     required this.now,
     required this.tone,
+    this.first = false,
   });
 
   final ({BusTrip trip, DateTime at}) departure;
   final DateTime now;
   final Tone tone;
+
+  /// The soonest, its countdown lit in the desktop UI.
+  final bool first;
 
   @override
   Widget build(BuildContext context) {
@@ -167,6 +205,68 @@ class _NextRow extends StatelessWidget {
     final trip = departure.trip;
     final at = departure.at;
     final today = DateUtils.isSameDay(at, now);
+    if (desktopUi(context)) {
+      final muted = TextStyle(
+        fontSize: 12,
+        fontWeight: FontWeight.w800,
+        color: scheme.onSurfaceVariant,
+      );
+      return Opacity(
+        opacity: today ? 1 : 0.55,
+        child: Container(
+          padding: const EdgeInsets.symmetric(vertical: 10),
+          decoration: BoxDecoration(
+            border: Border(bottom: BorderSide(color: scheme.outlineVariant)),
+          ),
+          child: Row(
+            children: [
+              _RouteBadge(number: trip.route, tone: tone),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      trip.direction,
+                      style: const TextStyle(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w800,
+                      ),
+                    ),
+                    Text(
+                      '${trip.stop}${context.l10n.busDepartsShort}',
+                      style: muted.copyWith(fontWeight: FontWeight.w700),
+                    ),
+                  ],
+                ),
+              ),
+              Text(
+                today
+                    ? clock(at.hour * 60 + at.minute)
+                    : _when(context, at, now),
+                style: const TextStyle(
+                  fontSize: 13,
+                  fontWeight: FontWeight.w800,
+                  fontFeatures: [FontFeature.tabularFigures()],
+                ),
+              ),
+              SizedBox(
+                width: 78,
+                child: today
+                    ? Text(
+                        busCountdown(context, at, now).join(' '),
+                        textAlign: TextAlign.right,
+                        style: first
+                            ? muted.copyWith(color: context.tones.mint.strong)
+                            : muted,
+                      )
+                    : null,
+              ),
+            ],
+          ),
+        ),
+      );
+    }
     return Opacity(
       opacity: today ? 1 : 0.55,
       child: Padding(
@@ -214,7 +314,7 @@ class _NextRow extends StatelessWidget {
                 ),
                 if (today)
                   Text(
-                    _countdown(context, at, now).join(' '),
+                    busCountdown(context, at, now).join(' '),
                     style: TextStyle(
                       fontSize: 12,
                       fontWeight: FontWeight.w700,
@@ -238,6 +338,26 @@ class _RouteBadge extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    if (desktopUi(context)) {
+      return Container(
+        constraints: const BoxConstraints(minWidth: 52),
+        height: 24,
+        padding: const EdgeInsets.symmetric(horizontal: 6),
+        alignment: Alignment.center,
+        decoration: BoxDecoration(
+          color: tone.strong.withValues(alpha: 0.16),
+          borderRadius: BorderRadius.circular(6),
+        ),
+        child: Text(
+          number,
+          style: TextStyle(
+            color: tone.strong,
+            fontSize: 12,
+            fontWeight: FontWeight.w800,
+          ),
+        ),
+      );
+    }
     return Container(
       constraints: const BoxConstraints(minWidth: 52),
       height: 38,
@@ -298,7 +418,7 @@ class _RouteCard extends StatelessWidget {
         ? l10n.busNoTrips
         : [
             for (final d in next)
-              '${d.trip.direction} ${_countdown(context, d.at, now).join(' ')}',
+              '${d.trip.direction} ${busCountdown(context, d.at, now).join(' ')}',
           ].join('・');
     final fares = timetable.fares.where((f) => f.route == route.number);
     final note = timetable.notes[route.number];
@@ -307,6 +427,86 @@ class _RouteCard extends StatelessWidget {
       fontWeight: FontWeight.w800,
       color: scheme.onSurfaceVariant,
     );
+    if (desktopUi(context)) {
+      return Container(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+        decoration: BoxDecoration(
+          border: Border.all(color: scheme.outlineVariant),
+          borderRadius: BorderRadius.circular(10),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            GestureDetector(
+              behavior: HitTestBehavior.opaque,
+              onTap: onToggle,
+              child: MouseRegion(
+                cursor: SystemMouseCursors.click,
+                child: Row(
+                  children: [
+                    _RouteBadge(number: route.number, tone: tone),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: Text(
+                        route.name,
+                        style: const TextStyle(fontWeight: FontWeight.w800),
+                      ),
+                    ),
+                    if (open)
+                      DeskButton(
+                        icon: Icons.directions_bus_outlined,
+                        label: '${l10n.busLive} ↗',
+                        onPressed: onLive,
+                      )
+                    else
+                      Icon(
+                        Icons.chevron_right,
+                        size: 16,
+                        color: scheme.outline,
+                      ),
+                  ],
+                ),
+              ),
+            ),
+            if (open) ...[
+              if (next.isEmpty)
+                Padding(
+                  padding: const EdgeInsets.only(top: Space.m),
+                  child: Text(summary, style: muted),
+                ),
+              for (final d in next) ...[
+                const SizedBox(height: Space.m),
+                Text(
+                  l10n.busDirectionFrom(d.trip.direction, d.trip.stop),
+                  style: muted,
+                ),
+                const SizedBox(height: 6),
+                _DayChips(
+                  trips: [
+                    for (final t in timetable.trips)
+                      if (t.route == route.number &&
+                          t.direction == d.trip.direction &&
+                          runsOn(t, DateUtils.dateOnly(d.at)))
+                        t,
+                  ],
+                  next: d.trip,
+                  passed: DateUtils.isSameDay(d.at, now),
+                  now: now,
+                  tone: tone,
+                ),
+              ],
+              if (fares.isNotEmpty || note != null) const SizedBox(height: 12),
+              if (fares.isNotEmpty)
+                Text(
+                  '${l10n.busFares}　${[for (final f in fares) '${f.stop} NT\$ ${f.full}／${f.half}'].join('、')}',
+                  style: muted.copyWith(fontWeight: FontWeight.w700),
+                ),
+              if (note != null) Text(note, style: muted),
+            ],
+          ],
+        ),
+      );
+    }
     return Material(
       color: scheme.surfaceContainerLow,
       shape: RoundedRectangleBorder(
@@ -495,6 +695,26 @@ class _DayChips extends StatelessWidget {
     final scheme = Theme.of(context).colorScheme;
     final minute = now.hour * 60 + now.minute;
     final times = [for (final t in trips) t.time]..sort();
+    if (desktopUi(context)) {
+      return Wrap(
+        spacing: 4,
+        runSpacing: 4,
+        children: [
+          for (final time in times)
+            if (passed && time <= minute && time != next.time)
+              _deskTime(time, scheme.outline, null, scheme.outlineVariant)
+            else if (time == next.time)
+              _deskTime(time, scheme.onSurface, deskSelection(scheme), null)
+            else
+              _deskTime(
+                time,
+                scheme.onSurface,
+                scheme.surfaceContainerHigh,
+                null,
+              ),
+        ],
+      );
+    }
     return Wrap(
       spacing: 6,
       runSpacing: 6,
@@ -530,4 +750,26 @@ class _DayChips extends StatelessWidget {
       ],
     );
   }
+
+  Widget _deskTime(int time, Color ink, Color? fill, Color? edge) => Container(
+    height: 22,
+    padding: const EdgeInsets.symmetric(horizontal: 7),
+    decoration: BoxDecoration(
+      color: fill,
+      border: edge == null ? null : Border.all(color: edge),
+      borderRadius: BorderRadius.circular(5),
+    ),
+    child: Center(
+      widthFactor: 1,
+      child: Text(
+        clock(time),
+        style: TextStyle(
+          color: ink,
+          fontSize: 12,
+          fontWeight: FontWeight.w800,
+          fontFeatures: const [FontFeature.tabularFigures()],
+        ),
+      ),
+    ),
+  );
 }

@@ -2198,4 +2198,7 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get openCourse => 'コースを開く';
+
+  @override
+  String get within14Days => '14 日以内';
 }

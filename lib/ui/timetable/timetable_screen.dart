@@ -166,18 +166,39 @@ class _TimetableScreenState extends State<TimetableScreen> with AutoRefresh {
                   ),
                   const SizedBox(width: 8),
                 ],
-                IconButton(
-                  tooltip: context.l10n.searchCourses,
-                  style: IconButton.styleFrom(
-                    backgroundColor: Theme.of(context)
-                        .colorScheme
-                        .surfaceContainer,
+                if (semesters.isNotEmpty && desktopUi(context))
+                  Padding(
+                    padding: const EdgeInsets.only(right: Space.s),
+                    child: _SemesterMenu(
+                      semesters: semesters,
+                      selected: semester,
+                      counts: {
+                        for (final s in semesters)
+                          s: all.where((c) => c.semester == s).length,
+                      },
+                      onSelected: _pickSemester,
+                    ),
                   ),
-                  onPressed: () => context.push('/courses'),
-                  icon: const Icon(Icons.search),
-                ),
-                const SizedBox(width: 8),
-                if (semesters.isNotEmpty)
+                if (desktopUi(context))
+                  DeskButton(
+                    icon: Icons.search,
+                    label: context.l10n.searchCourses,
+                    onPressed: () => context.push('/courses'),
+                  )
+                else ...[
+                  IconButton(
+                    tooltip: context.l10n.searchCourses,
+                    style: IconButton.styleFrom(
+                      backgroundColor: Theme.of(context)
+                          .colorScheme
+                          .surfaceContainer,
+                    ),
+                    onPressed: () => context.push('/courses'),
+                    icon: const Icon(Icons.search),
+                  ),
+                  const SizedBox(width: 8),
+                ],
+                if (semesters.isNotEmpty && !desktopUi(context))
                   Padding(
                     padding: const EdgeInsets.only(right: Space.l),
                     child: _SemesterMenu(
@@ -383,13 +404,26 @@ class _TimetableScreenState extends State<TimetableScreen> with AutoRefresh {
           child: LayoutBuilder(
             builder: (context, box) {
               final page = scrollPadding(context, maxWidth: double.infinity);
-              // The panel takes the right edge.
-              final padding = page.copyWith(right: page.left);
+              // The panel takes the right edge; on a desktop the week keeps
+              // close to the window's (design/round-25).
+              final padding = desktopUi(context)
+                  ? EdgeInsets.fromLTRB(
+                      20,
+                      scrollPadding(context, top: 18).top,
+                      20,
+                      18,
+                    )
+                  : page.copyWith(right: page.left);
               return ListView(
                 padding: padding,
                 children: [
                   grid(
-                    fill: box.maxHeight - padding.vertical - _WeekGrid.header,
+                    fill:
+                        box.maxHeight -
+                        padding.vertical -
+                        _WeekGrid.header -
+                        // The desktop table's border.
+                        (desktopUi(context) ? 2 : 0),
                   ),
                 ],
               );
@@ -397,7 +431,7 @@ class _TimetableScreenState extends State<TimetableScreen> with AutoRefresh {
           ),
         ),
         SizedBox(
-          width: paneWidth,
+          width: desktopUi(context) ? 380 : paneWidth,
           child: desktopUi(context)
               // A column of its own, ruled off from the week.
               ? DecoratedBox(
@@ -410,9 +444,9 @@ class _TimetableScreenState extends State<TimetableScreen> with AutoRefresh {
                   ),
                   child: ListView(
                     padding: EdgeInsets.fromLTRB(
-                      Space.xxl,
-                      scrollPadding(context).top,
-                      Space.xxl,
+                      32,
+                      scrollPadding(context, top: 26).top,
+                      32,
                       Space.xxl,
                     ),
                     children: [?card],
@@ -489,6 +523,9 @@ class _WeekGrid extends StatelessWidget {
       color: scheme.onSurfaceVariant,
     );
     final hours = compact ? compactHours : 44.0;
+    if (desktopUi(context) && !compact) {
+      return _desk(context, first, last, perMinute);
+    }
     return Column(
       children: [
         // On a phone the weekdays sit in the app bar ([_WeekHeader]).
@@ -574,6 +611,144 @@ class _WeekGrid extends StatelessWidget {
           ),
         ),
       ],
+    );
+  }
+}
+
+extension on _WeekGrid {
+  /// design/round-25: the week as one ruled table, its hours lined across,
+  /// today's column lit and the time now marked in it.
+  Widget _desk(BuildContext context, int first, int last, double perMinute) {
+    final scheme = Theme.of(context).colorScheme;
+    final line = BorderSide(color: scheme.outlineVariant);
+    final now = clk.clock.now();
+    final minute = now.hour * 60 + now.minute;
+    final mute = TextStyle(
+      fontSize: 12,
+      fontWeight: FontWeight.w800,
+      color: scheme.onSurfaceVariant,
+    );
+    return Container(
+      clipBehavior: Clip.antiAlias,
+      decoration: BoxDecoration(
+        border: Border.fromBorderSide(line),
+        borderRadius: BorderRadius.circular(10),
+      ),
+      child: Column(
+        children: [
+          Container(
+            height: _WeekGrid.header,
+            decoration: BoxDecoration(border: Border(bottom: line)),
+            child: Row(
+              children: [
+                const SizedBox(width: 44),
+                for (final d in weekdays)
+                  Expanded(
+                    child: Text(
+                      '${weekdayName(context, d)} '
+                      '${now.add(Duration(days: d - now.weekday)).day}',
+                      textAlign: TextAlign.center,
+                      style: d == today
+                          ? mute.copyWith(color: scheme.primary)
+                          : mute,
+                    ),
+                  ),
+              ],
+            ),
+          ),
+          SizedBox(
+            height: (last - first) * perMinute,
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                SizedBox(
+                  width: 44,
+                  child: Stack(
+                    children: [
+                      for (var m = first; m < last; m += 60)
+                        Positioned(
+                          // Centred on its line, the first kept inside.
+                          top: math.max(2, (m - first) * perMinute - 8),
+                          right: 8,
+                          child: Text(
+                            '${m ~/ 60}',
+                            style: mute.copyWith(
+                              fontSize: 11,
+                              fontWeight: FontWeight.w700,
+                            ),
+                          ),
+                        ),
+                    ],
+                  ),
+                ),
+                for (final d in weekdays)
+                  Expanded(
+                    child: Container(
+                      decoration: BoxDecoration(
+                        color: d == today
+                            ? scheme.primary.withValues(alpha: 0.03)
+                            : null,
+                        border: Border(left: line),
+                      ),
+                      child: Stack(
+                        children: [
+                          for (var m = first; m < last; m += 60)
+                            Positioned(
+                              top: (m - first) * perMinute,
+                              left: 0,
+                              right: 0,
+                              child: Divider(
+                                height: 1,
+                                color: scheme.outlineVariant.withValues(
+                                  alpha: 0.5,
+                                ),
+                              ),
+                            ),
+                          for (final c in courses)
+                            for (final s in c.sessions)
+                              if (s.weekday == d)
+                                Positioned(
+                                  top: (s.start - first) * perMinute,
+                                  height: (s.end - s.start) * perMinute - 4,
+                                  left: 4,
+                                  right: 4,
+                                  // Classes already over this week step back.
+                                  child: Opacity(
+                                    opacity:
+                                        d < today ||
+                                            d == today && s.end <= minute
+                                        ? 0.6
+                                        : 1,
+                                    child: _WeekBlock(
+                                      slot: (course: c, session: s),
+                                      picked:
+                                          picked?.course.id == c.id &&
+                                          picked?.session.weekday == d &&
+                                          picked?.session.start == s.start,
+                                      onTap: () =>
+                                          onPick((course: c, session: s)),
+                                    ),
+                                  ),
+                                ),
+                          if (d == today && minute > first && minute < last)
+                            Positioned(
+                              top: (minute - first) * perMinute,
+                              left: 0,
+                              right: 0,
+                              height: 2,
+                              child: ColoredBox(
+                                color: context.tones.peach.strong,
+                              ),
+                            ),
+                        ],
+                      ),
+                    ),
+                  ),
+              ],
+            ),
+          ),
+        ],
+      ),
     );
   }
 }
@@ -1186,7 +1361,7 @@ extension on _FocusCard {
         const SizedBox(height: Space.s),
         Text(
           context.courseName(c),
-          style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w800),
+          style: const TextStyle(fontSize: 26, fontWeight: FontWeight.w800),
         ),
         const SizedBox(height: Space.xs),
         Wrap(
@@ -1675,6 +1850,17 @@ class _SemesterMenu extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final tone = context.tones.lilac;
+    if (desktopUi(context)) {
+      return Semantics(
+        button: true,
+        label: context.l10n.switchSemester,
+        child: DeskButton(
+          trailingIcon: Icons.expand_more,
+          label: semesterName(context, selected),
+          onPressed: () => _open(context),
+        ),
+      );
+    }
     return Semantics(
       button: true,
       label: context.l10n.switchSemester,

@@ -2330,4 +2330,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get openCourse => 'Open course';
+
+  @override
+  String get within14Days => 'Next 14 days';
 }

@@ -9,6 +9,8 @@ import '../core/auto_refresh.dart';
 import '../core/campus_session.dart';
 import '../core/campus_systems.dart';
 import '../core/campus_web_screen.dart';
+import '../core/desk_list.dart';
+import '../core/desktop_mode.dart';
 import '../core/theme.dart';
 import '../core/widgets.dart';
 
@@ -163,6 +165,17 @@ class _DormNetScreenState extends State<DormNetScreen>
         ),
       ),
     ];
+    if (desktopUi(context)) {
+      return _desk(
+        context,
+        d,
+        current: current,
+        times: times,
+        fee: fee,
+        offices: offices(),
+        news: news(),
+      );
+    }
     return ListView(
       padding: scrollPadding(context),
       children: [
@@ -383,6 +396,421 @@ class _DormNetScreenState extends State<DormNetScreen>
             ],
           ),
         ],
+        if (savedAt case final time?) UpdatedAt(time),
+      ],
+    );
+  }
+}
+
+extension on _DormNetScreenState {
+  /// design/round-25 dorm-net: the title, today's state in a ruled box, the
+  /// summary four across, then the offices, devices and fee beside the
+  /// rules, announcements and help.
+  Widget _desk(
+    BuildContext context,
+    DormNet d, {
+    required DormNetBreak? current,
+    required int times,
+    required ({bool fall, int row}) fee,
+    required List<Widget> offices,
+    required List<Widget> news,
+  }) {
+    final l10n = context.l10n;
+    final tones = context.tones;
+    final scheme = Theme.of(context).colorScheme;
+    final paid = d.applied && d.suspended == null;
+    final k = TextStyle(
+      fontSize: 12,
+      fontWeight: FontWeight.w800,
+      color: scheme.onSurfaceVariant,
+    );
+    const big = TextStyle(
+      fontSize: 24,
+      fontWeight: FontWeight.w800,
+      fontFeatures: [FontFeature.tabularFigures()],
+    );
+    final bed = switch (d.bed) {
+      final bed? => Container(
+        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+        decoration: BoxDecoration(
+          border: Border.all(color: scheme.outline),
+          borderRadius: BorderRadius.circular(5),
+        ),
+        child: Text(bed, style: const TextStyle(fontWeight: FontWeight.w800)),
+      ),
+      null => null,
+    };
+    Widget hero({
+      required List<Widget> top,
+      required List<Widget> children,
+      Color? edge,
+    }) => Container(
+      margin: const EdgeInsets.only(top: Space.l),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+      decoration: BoxDecoration(
+        color: edge?.withValues(alpha: 0.13),
+        border: Border.all(color: edge ?? scheme.outlineVariant),
+        borderRadius: BorderRadius.circular(10),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Row(spacing: Space.s, children: [...top, const Spacer(), ?bed]),
+          ...children,
+        ],
+      ),
+    );
+    final Widget state;
+    if (d.suspended case final reason?) {
+      state = hero(
+        edge: tones.peach.strong,
+        top: [
+          Text(
+            '${l10n.dormNetSuspended} · $reason',
+            style: k.copyWith(color: tones.peach.strong),
+          ),
+        ],
+        children: [
+          Row(
+            children: [
+              Expanded(
+                child: Padding(
+                  padding: const EdgeInsets.only(top: 6, bottom: 4),
+                  child: Text.rich(
+                    TextSpan(
+                      text: current != null && current.virus
+                          ? l10n.dormNetPenalty(dormNetPenaltyDays(times))
+                          : current == null
+                          ? reason
+                          : l10n.dormNetNth(times),
+                      children: [
+                        TextSpan(
+                          text:
+                              '  ${[if (current != null && current.virus) l10n.dormNetNth(times), if (current?.from case final from?) l10n.dormNetBreakSince(monthDayTime(from))].join('・')}',
+                          style: k.copyWith(fontSize: 13),
+                        ),
+                      ],
+                    ),
+                    style: big,
+                  ),
+                ),
+              ),
+              DeskButton(
+                icon: Icons.refresh,
+                label: l10n.dormNetUnsuspend,
+                primary: true,
+                onPressed: () => _site('violations', l10n.dormNetUnsuspend),
+              ),
+            ],
+          ),
+          if (current?.virus ?? false)
+            Text(
+              '${l10n.dormNetAllStopped}\n${l10n.dormNetUnsuspendHint}',
+              style: k.copyWith(fontWeight: FontWeight.w700, height: 1.6),
+            ),
+        ],
+      );
+    } else if (!d.applied) {
+      state = hero(
+        top: [Text(d.term ?? '', style: k)],
+        children: [
+          Row(
+            children: [
+              Expanded(
+                child: Padding(
+                  padding: const EdgeInsets.only(top: 6, bottom: 4),
+                  child: Text(l10n.dormNetNotApplied, style: big),
+                ),
+              ),
+              DeskButton(
+                label: '${l10n.dormNetApply} ↗',
+                primary: true,
+                onPressed: () => _site('apply', l10n.dormNetApply),
+              ),
+            ],
+          ),
+          Text(
+            [
+              if (d.lastBed case final bed?) l10n.dormNetLastBed(bed),
+              l10n.dormNetFeeUntil(
+                '${fee.fall ? 'fall' : 'spring'}${fee.row}',
+                dormNetFees[fee.row],
+              ),
+            ].join(' · '),
+            style: k.copyWith(fontWeight: FontWeight.w700),
+          ),
+        ],
+      );
+    } else {
+      final left = (dormNetDailyGiB - d.usage).clamp(0, dormNetDailyGiB);
+      state = hero(
+        top: [
+          Text(l10n.dormNetToday, style: k),
+          DeskTag(l10n.dormNetOk, color: tones.mint.strong),
+        ],
+        children: [
+          Padding(
+            padding: const EdgeInsets.only(top: 6, bottom: 10),
+            child: Text.rich(
+              TextSpan(
+                text: l10n.dormNetLeft(left.toStringAsFixed(1)),
+                children: [
+                  TextSpan(
+                    text: '  / $dormNetDailyGiB GiB',
+                    style: k.copyWith(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                ],
+              ),
+              style: big,
+            ),
+          ),
+          DeskBar(value: left / dormNetDailyGiB, color: tones.mint.strong),
+        ],
+      );
+    }
+    final tiles = !d.applied && d.suspended == null
+        ? [
+            (l10n.dormNetTraffic, '—', null, null),
+            (
+              l10n.dormNetCards,
+              '${d.cards.length} / $dormNetCards',
+              null,
+              null,
+            ),
+          ]
+        : [
+            (
+              d.term ?? l10n.dormNetTitle,
+              d.state ?? l10n.dormNetNotApplied,
+              null,
+              null,
+            ),
+            (
+              l10n.dormNetWifi,
+              '${d.wifi} / $dormNetWifi',
+              l10n.dormNetEditDevices,
+              () => _site('dashboard', l10n.dormNetEditDevices),
+            ),
+            (
+              l10n.dormNetCards,
+              '${d.cards.length} / $dormNetCards',
+              null,
+              () => _site('settings/mac', l10n.dormNetEditCards),
+            ),
+            (
+              l10n.dormNetBreaks,
+              d.breaks.isEmpty
+                  ? l10n.dormNetNone
+                  : l10n.dormNetTimes(d.breaks.length),
+              null,
+              null,
+            ),
+          ];
+    final rules = [
+      (l10n.dormNetRuleTraffic, l10n.dormNetRuleTrafficHint),
+      (l10n.dormNetRuleVirus, l10n.dormNetRuleVirusHint),
+      (l10n.dormNetRuleShare, l10n.dormNetRuleShareHint),
+      (l10n.dormNetRuleMove, l10n.dormNetRuleMoveHint),
+    ];
+    final left = [
+      if (d.suspended == null) ...offices,
+      if (paid) ...[
+        if (d.breaks.isNotEmpty) ...[
+          SectionLabel(l10n.dormNetBreaks, detail: '${d.breaks.length}'),
+          for (final b in d.breaks)
+            _Row(
+              title: b.kind,
+              detail: b.from == null
+                  ? null
+                  : b.until == null
+                  ? l10n.dormNetBreakSince(monthDayTime(b.from!))
+                  : l10n.dormNetBreakTime(
+                      monthDayTime(b.from!),
+                      monthDayTime(b.until!),
+                    ),
+              trailing: b.until == null
+                  ? _Pill(l10n.dormNetStillOff, tones.peach)
+                  : _Faint(l10n.dormNetRestored),
+            ),
+        ],
+        SectionLabel(l10n.dormNetDevices, detail: l10n.dormNetDevicesNote),
+        for (final mac in d.cards)
+          DeskLine(
+            leading: const DeskIcon(Icons.settings_ethernet),
+            title: l10n.dormNetWired,
+            detail: mac,
+          ),
+        DeskLine(
+          leading: const DeskIcon(Icons.wifi),
+          title: l10n.dormNetWifiOf(d.wifi, dormNetWifi),
+          detail: l10n.dormNetPrivateMac,
+          trailing: Icon(Icons.north_east, size: 15, color: scheme.outline),
+          onTap: () => _site('dashboard', l10n.dormNetEditDevices),
+        ),
+        SectionLabel(l10n.dormNetFee),
+        _FeeTable(fall: fee.fall, current: fee.row),
+        Wrap(
+          spacing: Space.s,
+          runSpacing: Space.s,
+          children: [
+            DeskButton(
+              icon: Icons.description_outlined,
+              label: l10n.dormNetSlip,
+              onPressed: () => _site('payment', l10n.dormNetSlip),
+            ),
+            DeskButton(
+              icon: Icons.upload_outlined,
+              label: l10n.dormNetReceipt,
+              onPressed: () => _site('upload', l10n.dormNetReceipt),
+            ),
+          ],
+        ),
+      ],
+    ];
+    final right = [
+      if (paid) ...[
+        SectionLabel(l10n.dormNetRules),
+        for (final (i, (title, body)) in rules.indexed)
+          DeskLine(
+            leading: Container(
+              width: 20,
+              height: 20,
+              alignment: Alignment.center,
+              decoration: BoxDecoration(
+                color: scheme.surfaceContainerHigh,
+                borderRadius: BorderRadius.circular(5),
+              ),
+              child: Text('${i + 1}', style: k.copyWith(fontSize: 11)),
+            ),
+            title: title,
+            detail: body,
+          ),
+      ],
+      if (paid || d.suspended == null) ...news,
+      if (paid) ...[
+        SectionLabel(l10n.dormNetHelp),
+        const SizedBox(height: 10),
+        Wrap(
+          spacing: Space.s,
+          runSpacing: Space.s,
+          children: [
+            DeskButton(
+              icon: Icons.menu_book_outlined,
+              label: l10n.dormNetTutorial,
+              onPressed: () => _web('https://www.dorm.ccu.edu.tw/tutorial'),
+            ),
+            DeskButton(
+              icon: Icons.info_outline,
+              label: l10n.dormNetFaq,
+              onPressed: () => _web('https://www.dorm.ccu.edu.tw/QA'),
+            ),
+            DeskButton(
+              icon: Icons.flag_outlined,
+              label: l10n.dormNetReport,
+              onPressed: () =>
+                  _web('https://osticket.dorm.ccu.edu.tw/open.php'),
+            ),
+          ],
+        ),
+      ],
+    ];
+    return ListView(
+      padding: scrollPadding(context),
+      children: [
+        Row(
+          spacing: 10,
+          children: [
+            Text(
+              l10n.dormNetTitle,
+              style: const TextStyle(fontSize: 26, fontWeight: FontWeight.w800),
+            ),
+            DeskTag(pageStages['0065']!, color: tones.lilac.strong),
+          ],
+        ),
+        state,
+        const SizedBox(height: 10),
+        Row(
+          spacing: Space.s,
+          children: [
+            for (final (label, value, link, onTap) in tiles)
+              Expanded(
+                child: GestureDetector(
+                  onTap: onTap,
+                  child: MouseRegion(
+                    cursor: onTap == null
+                        ? MouseCursor.defer
+                        : SystemMouseCursors.click,
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 9,
+                      ),
+                      decoration: BoxDecoration(
+                        border: Border.all(color: scheme.outlineVariant),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text.rich(
+                            TextSpan(
+                              text: label,
+                              children: [
+                                if (link != null)
+                                  TextSpan(
+                                    text: '・$link ↗',
+                                    style: TextStyle(color: scheme.primary),
+                                  ),
+                              ],
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: k.copyWith(fontWeight: FontWeight.w700),
+                          ),
+                          Text(
+                            value,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: TextStyle(
+                              fontSize: 15,
+                              fontWeight: FontWeight.w800,
+                              color: value == l10n.dormNetNone
+                                  ? scheme.onSurfaceVariant
+                                  : null,
+                              fontFeatures: const [
+                                FontFeature.tabularFigures(),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+          ],
+        ),
+        Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: left,
+              ),
+            ),
+            const SizedBox(width: 28),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: right,
+              ),
+            ),
+          ],
+        ),
         if (savedAt case final time?) UpdatedAt(time),
       ],
     );
@@ -660,19 +1088,21 @@ class _Rows extends StatelessWidget {
   final List<Widget> rows;
 
   @override
-  Widget build(BuildContext context) => Card(
-    color: Theme.of(context).colorScheme.surfaceContainerLow,
-    clipBehavior: Clip.antiAlias,
-    child: Column(
-      children: [
-        for (final (i, row) in rows.indexed) ...[
-          if (i > 0)
-            const Divider(height: 1, indent: Space.l, endIndent: Space.l),
-          row,
-        ],
-      ],
-    ),
-  );
+  Widget build(BuildContext context) => desktopUi(context)
+      ? Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: rows)
+      : Card(
+          color: Theme.of(context).colorScheme.surfaceContainerLow,
+          clipBehavior: Clip.antiAlias,
+          child: Column(
+            children: [
+              for (final (i, row) in rows.indexed) ...[
+                if (i > 0)
+                  const Divider(height: 1, indent: Space.l, endIndent: Space.l),
+                row,
+              ],
+            ],
+          ),
+        );
 }
 
 class _Row extends StatelessWidget {
@@ -697,6 +1127,22 @@ class _Row extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
+    if (desktopUi(context)) {
+      return DeskLine(
+        title: title,
+        detail: detail,
+        trailing:
+            trailing ??
+            (onTap == null
+                ? null
+                : Icon(
+                    inApp ? Icons.chevron_right : Icons.north_east,
+                    size: 15,
+                    color: scheme.outline,
+                  )),
+        onTap: onTap,
+      );
+    }
     return InkWell(
       onTap: onTap,
       child: Padding(
@@ -776,18 +1222,23 @@ class _Pill extends StatelessWidget {
   final Tone tone;
 
   @override
-  Widget build(BuildContext context) => Container(
-    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-    decoration: ShapeDecoration(color: tone.fill, shape: const StadiumBorder()),
-    child: Text(
-      text,
-      style: TextStyle(
-        color: tone.ink,
-        fontSize: 12,
-        fontWeight: FontWeight.w900,
-      ),
-    ),
-  );
+  Widget build(BuildContext context) => desktopUi(context)
+      ? DeskTag(text, color: tone.strong)
+      : Container(
+          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+          decoration: ShapeDecoration(
+            color: tone.fill,
+            shape: const StadiumBorder(),
+          ),
+          child: Text(
+            text,
+            style: TextStyle(
+              color: tone.ink,
+              fontSize: 12,
+              fontWeight: FontWeight.w900,
+            ),
+          ),
+        );
 }
 
 class _Faint extends StatelessWidget {
@@ -841,7 +1292,9 @@ class _FeeTable extends StatelessWidget {
       ],
     );
     return Padding(
-      padding: const EdgeInsets.fromLTRB(Space.l, Space.m, Space.l, Space.m),
+      padding: desktopUi(context)
+          ? const EdgeInsets.symmetric(vertical: Space.s)
+          : const EdgeInsets.fromLTRB(Space.l, Space.m, Space.l, Space.m),
       child: Table(
         columnWidths: const {
           0: FlexColumnWidth(),

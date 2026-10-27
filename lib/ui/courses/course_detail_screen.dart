@@ -790,7 +790,8 @@ class _SectionListState extends State<_SectionList> {
     if (i == _active) return;
     setState(() => _active = i);
     final chip = _chips[i].currentContext;
-    if (chip != null) {
+    // On a desktop the chips sit in the page, which must not scroll to them.
+    if (chip != null && !desktopUi(context)) {
       Scrollable.ensureVisible(
         chip,
         alignment: 0.5,
@@ -822,34 +823,33 @@ class _SectionListState extends State<_SectionList> {
     final sections = widget.sections;
     final scheme = Theme.of(context).colorScheme;
     final course = context.tones.forCourse(widget.courseId);
+    final title = CoursePart.contents.title(context.l10n);
+    final chips = [
+      for (final (i, s) in sections.indexed)
+        KeyedSubtree(
+          key: _chips[i],
+          child: BarChip(
+            label: _sectionName(context, s),
+            selected: i == _active,
+            tone: course,
+            onTap: () => _jumpTo(i),
+          ),
+        ),
+    ];
+    if (desktopUi(context)) return _desk(context, title, chips);
     return Scaffold(
       extendBodyBehindAppBar: true,
       appBar: _partBar(
         context,
         widget.courseId,
-        CoursePart.contents.title(context.l10n),
-        bottom: ChipBar(
-          children: [
-            for (final (i, s) in sections.indexed)
-              KeyedSubtree(
-                key: _chips[i],
-                child: BarChip(
-                  label: _sectionName(context, s),
-                  selected: i == _active,
-                  tone: course,
-                  onTap: () => _jumpTo(i),
-                ),
-              ),
-          ],
-        ),
+        title,
+        bottom: ChipBar(children: chips),
       ),
       body: CapsuleArea(
         child: Builder(
           builder: (context) => SingleChildScrollView(
             controller: _scroll,
-            padding: desktopUi(context)
-                ? EdgeInsets.fromLTRB(16, scrollPadding(context).top, 16, 32)
-                : scrollPadding(context),
+            padding: scrollPadding(context),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
@@ -885,24 +885,86 @@ class _SectionListState extends State<_SectionList> {
                       ),
                     ),
                   ),
-                  if (desktopUi(context))
-                    // Rows straight under their section, as in Mail.
-                    for (final m in s.modules)
-                      _ModuleRow(courseId: widget.courseId, module: m)
-                  else
-                    Card(
-                      color: scheme.surfaceContainerLow,
-                      clipBehavior: Clip.antiAlias,
-                      child: Column(
-                        children: [
-                          for (final (j, m) in s.modules.indexed) ...[
-                            if (j > 0)
-                              Divider(height: 1, color: scheme.outlineVariant),
-                            _ModuleRow(courseId: widget.courseId, module: m),
-                          ],
+                  Card(
+                    color: scheme.surfaceContainerLow,
+                    clipBehavior: Clip.antiAlias,
+                    child: Column(
+                      children: [
+                        for (final (j, m) in s.modules.indexed) ...[
+                          if (j > 0)
+                            Divider(height: 1, color: scheme.outlineVariant),
+                          _ModuleRow(courseId: widget.courseId, module: m),
                         ],
-                      ),
+                      ],
                     ),
+                  ),
+                ],
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  /// design/round-25: the course's head, the sections as chips, then each
+  /// section's rows under its heading, as in Mail.
+  Widget _desk(BuildContext context, String title, List<Widget> chips) {
+    final l10n = context.l10n;
+    final sections = widget.sections;
+    // The rows pad themselves; everything else lines up with their text.
+    const inset = EdgeInsets.symmetric(horizontal: Space.l);
+    return Scaffold(
+      extendBodyBehindAppBar: true,
+      appBar: _partBar(context, widget.courseId, title),
+      body: CapsuleArea(
+        child: Builder(
+          builder: (context) => SingleChildScrollView(
+            controller: _scroll,
+            padding: EdgeInsets.fromLTRB(
+              Space.l,
+              scrollPadding(context).top,
+              Space.l,
+              32,
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Padding(
+                  padding: inset,
+                  child: CoursePageHead(
+                    courseId: widget.courseId,
+                    kind: l10n.courseSection,
+                    title: title,
+                    meta: [
+                      (l10n.sectionCount(sections.length), null),
+                      (
+                        l10n.itemCount(
+                          sections.fold(0, (n, s) => n + s.modules.length),
+                        ),
+                        null,
+                      ),
+                    ],
+                  ),
+                ),
+                Padding(
+                  padding: inset.copyWith(top: 14),
+                  child: SingleChildScrollView(
+                    scrollDirection: Axis.horizontal,
+                    child: Row(spacing: 4, children: chips),
+                  ),
+                ),
+                for (final (i, s) in sections.indexed) ...[
+                  Padding(
+                    key: _headers[i],
+                    padding: inset,
+                    child: SectionLabel(
+                      _sectionName(context, s),
+                      detail: l10n.itemCount(s.modules.length),
+                    ),
+                  ),
+                  for (final m in s.modules)
+                    _ModuleRow(courseId: widget.courseId, module: m),
                 ],
               ],
             ),
@@ -981,10 +1043,11 @@ class _ModuleRow extends StatelessWidget {
           child: Icon(
             _moduleIcons[module.type] ?? Icons.extension_outlined,
             size: 15,
-            color: tone.strong,
+            color: scheme.onSurfaceVariant,
           ),
         ),
         title: module.name,
+        dimmed: overdue,
         trailing: detail == null
             ? null
             : Text(
@@ -992,11 +1055,7 @@ class _ModuleRow extends StatelessWidget {
                 style: TextStyle(
                   fontSize: 12,
                   fontWeight: FontWeight.w800,
-                  color: overdue
-                      ? scheme.onSurfaceVariant
-                      : due != null
-                      ? tones.peach.strong
-                      : scheme.onSurfaceVariant,
+                  color: scheme.onSurfaceVariant,
                 ),
               ),
         onTap: open,
@@ -1067,7 +1126,12 @@ class _Announcements extends StatelessWidget {
       watch: () => repo.watch((repo) => repo.announcements(courseId)),
       builder: (context, posts) => posts.isEmpty
           ? EmptyState(context.l10n.noAnnouncements)
-          : DiscussionList(courseId: courseId, discussions: posts),
+          : DiscussionList(
+              courseId: courseId,
+              kind: context.l10n.announcements,
+              title: context.l10n.announcements,
+              discussions: posts,
+            ),
     );
   }
 }
@@ -1080,36 +1144,120 @@ class _Grades extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final repo = context.read<EcourseRepository>();
-    return Loader<List<GradeLine>>.watch(
-      watch: () => repo.watch((repo) => repo.gradeItems(courseId)),
-      builder: (context, lines) => GradeList(lines: lines),
+    return Loader<(List<GradeLine>, String?)>.watch(
+      watch: () => repo.watch((repo) async {
+        final (lines, totals) = await (
+          repo.gradeItems(courseId),
+          repo.gradeOverview(),
+        ).wait;
+        return (lines, totals[courseId]);
+      }),
+      builder: (context, data) =>
+          GradeList(courseId: courseId, lines: data.$1, total: data.$2),
     );
   }
 }
 
-/// Shared by the course tab and the grades screen.
+/// A course's grade items; on a desktop as a table under the course's
+/// total.
 class GradeList extends StatelessWidget {
-  const GradeList({super.key, required this.lines});
+  const GradeList({
+    super.key,
+    required this.courseId,
+    required this.lines,
+    this.total,
+  });
 
+  final int courseId;
   final List<GradeLine> lines;
+  final String? total;
 
   @override
   Widget build(BuildContext context) {
     if (lines.isEmpty) return EmptyState(context.l10n.noGradeItems);
     final scheme = Theme.of(context).colorScheme;
     if (desktopUi(context)) {
+      final l10n = context.l10n;
+      TextStyle cell(Color color, [FontWeight weight = FontWeight.w800]) =>
+          TextStyle(
+            fontSize: 13,
+            fontWeight: weight,
+            color: color,
+            fontFeatures: const [FontFeature.tabularFigures()],
+          );
       return ListView(
-        padding: EdgeInsets.fromLTRB(32, scrollPadding(context).top, 32, 32),
+        padding: scrollPadding(context),
         children: [
-          for (final l in lines)
-            DeskLine(
-              title: l.name,
-              // Ungraded items repeat `-` (or `錯誤`) in both fields.
-              detail: l.percent.isEmpty || l.percent == l.grade
-                  ? null
-                  : l.percent,
-              value: l.grade,
+          CoursePageHead(
+            courseId: courseId,
+            kind: l10n.grades,
+            title: l10n.grades,
+            meta: [
+              (l10n.itemCount(lines.length), null),
+              if (total case final total?)
+                ('${l10n.currentGrade} $total', null),
+            ],
+          ),
+          const SizedBox(height: 18),
+          Align(
+            alignment: Alignment.topLeft,
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 720),
+              child: Column(
+                children: [
+                  for (final l in lines)
+                    Builder(
+                      builder: (context) {
+                        // Ungraded items repeat `-` (or `錯誤`) in both.
+                        final graded =
+                            l.percent.isNotEmpty && l.percent != l.grade;
+                        final muted = scheme.onSurfaceVariant;
+                        return Container(
+                          padding: const EdgeInsets.symmetric(vertical: 9),
+                          decoration: BoxDecoration(
+                            border: Border(
+                              bottom: BorderSide(color: scheme.outlineVariant),
+                            ),
+                          ),
+                          child: Row(
+                            children: [
+                              Expanded(
+                                child: Text(
+                                  l.name,
+                                  style: graded
+                                      ? cell(scheme.onSurface)
+                                      : cell(muted, FontWeight.w700),
+                                ),
+                              ),
+                              const SizedBox(width: Space.m),
+                              SizedBox(
+                                width: 90,
+                                child: Text(
+                                  graded ? l.percent : l.grade,
+                                  textAlign: TextAlign.end,
+                                  style: cell(muted),
+                                ),
+                              ),
+                              const SizedBox(width: Space.m),
+                              SizedBox(
+                                width: 70,
+                                child: Text(
+                                  l.grade,
+                                  textAlign: TextAlign.end,
+                                  style: cell(
+                                    graded ? scheme.onSurface : muted,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        );
+                      },
+                    ),
+                ],
+              ),
             ),
+          ),
         ],
       );
     }
@@ -1206,6 +1354,90 @@ class CourseCrumbs extends StatelessWidget {
     );
   }
 }
+
+/// design/round-25: the head of a page beside its course: the course and
+/// [kind] over [title], then short facts, each in its own colour or muted.
+class CoursePageHead extends StatelessWidget {
+  const CoursePageHead({
+    super.key,
+    required this.courseId,
+    required this.title,
+    this.kind,
+    this.meta = const [],
+  });
+
+  final int courseId;
+  final String title;
+  final String? kind;
+  final List<(String, Color?)> meta;
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    final muted = TextStyle(
+      fontSize: 13,
+      fontWeight: FontWeight.w700,
+      color: scheme.onSurfaceVariant,
+    );
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            Container(
+              width: 8,
+              height: 8,
+              decoration: BoxDecoration(
+                color: context.tones.forCourse(courseId).strong,
+                borderRadius: BorderRadius.circular(3),
+              ),
+            ),
+            const SizedBox(width: Space.s),
+            Expanded(
+              child: CourseNameOf(
+                courseId: courseId,
+                builder: (context, name) => Text(
+                  [?name, ?kind].join('・'),
+                  style: muted.copyWith(fontSize: 12),
+                ),
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: Space.s),
+        Text(
+          title,
+          style: const TextStyle(
+            fontSize: 26,
+            fontWeight: FontWeight.w800,
+            height: 1.25,
+          ),
+        ),
+        if (meta.isNotEmpty) ...[
+          const SizedBox(height: Space.xs),
+          Wrap(
+            spacing: Space.l,
+            children: [
+              for (final (text, color) in meta)
+                Text(text, style: muted.copyWith(color: color)),
+            ],
+          ),
+        ],
+      ],
+    );
+  }
+}
+
+/// A module's name for pages opened without it, from its course's contents.
+Future<String?> moduleName(
+  EcourseRepository repo,
+  int courseId,
+  int cmid,
+) async =>
+    [for (final s in await repo.contents(courseId)) ...s.modules]
+        .where((m) => m.id == cmid)
+        .firstOrNull
+        ?.name;
 
 /// A course's name for pages that only know its id, from the saved answer
 /// first; null until it is known.

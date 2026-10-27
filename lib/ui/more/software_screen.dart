@@ -9,6 +9,8 @@ import '../core/auto_refresh.dart';
 import '../core/campus_session.dart';
 import '../core/campus_systems.dart';
 import '../core/campus_web_screen.dart';
+import '../core/desk_list.dart';
+import '../core/desktop_mode.dart';
 import '../core/pdf_viewer.dart';
 import '../core/theme.dart';
 import '../core/widgets.dart';
@@ -350,6 +352,7 @@ class _CategoryPage extends StatelessWidget {
       for (final i in items)
         if (!i.link && !_opensHere(i)) i,
     ];
+    if (desktopUi(context)) return _desk(context, here, installers);
     return LayoutBuilder(
       builder: (context, box) {
         final wide = box.maxWidth >= 760;
@@ -421,6 +424,62 @@ class _CategoryPage extends StatelessWidget {
           ],
         );
       },
+    );
+  }
+
+  /// design/round-25 software: what opens here, then the installers, each
+  /// a line with its downloads.
+  Widget _desk(BuildContext context, List<_Item> here, List<_Item> installers) {
+    final l10n = context.l10n;
+    final scheme = Theme.of(context).colorScheme;
+    final muted = scheme.onSurfaceVariant;
+    Widget icon(IconData icon) => Container(
+      width: 28,
+      height: 28,
+      decoration: BoxDecoration(
+        color: scheme.surfaceContainerHigh,
+        borderRadius: BorderRadius.circular(7),
+      ),
+      child: Icon(icon, size: 15, color: muted),
+    );
+    String detail(_Item i) =>
+        [i.os, i.version].where((s) => s.isNotEmpty).join('・');
+    return ListView(
+      padding: scrollPadding(context),
+      children: [
+        if (here.isNotEmpty) ...[
+          SectionLabel(l10n.swHere, detail: l10n.swHereHint),
+          for (final i in here)
+            DeskLine(
+              leading: fetching == i.id
+                  ? const SizedBox.square(
+                      dimension: 28,
+                      child: Padding(
+                        padding: EdgeInsets.all(6),
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      ),
+                    )
+                  : icon(Icons.description_outlined),
+              title: i.name,
+              detail: detail(i).isEmpty ? null : detail(i),
+              value: l10n.swDownloads(i.count),
+              valueColor: muted,
+              onTap: fetching == null || i.link ? () => onAct(i) : null,
+            ),
+        ],
+        if (installers.isNotEmpty) ...[
+          SectionLabel(l10n.swInstallers, detail: l10n.swOnSite),
+          for (final i in installers)
+            DeskLine(
+              leading: icon(Icons.album_outlined),
+              title: i.name,
+              detail: detail(i).isEmpty ? null : detail(i),
+              value: l10n.swDownloads(i.count),
+              valueColor: muted,
+              onTap: onSite,
+            ),
+        ],
+      ],
     );
   }
 }

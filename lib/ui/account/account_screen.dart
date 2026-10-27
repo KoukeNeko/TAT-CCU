@@ -6,6 +6,8 @@ import '../../data/repositories/ecourse_auth_repository.dart';
 import '../../data/services/cas_credentials.dart';
 import '../core/theme.dart';
 import '../core/campus_web_screen.dart';
+import '../core/desk_list.dart';
+import '../core/desktop_mode.dart';
 import '../core/widgets.dart';
 import '../core/campus_systems.dart';
 import '../../l10n/l10n.dart';
@@ -68,6 +70,8 @@ class _AccountScreenState extends State<AccountScreen> {
             '$_ecourseName${_time(context.l10n, _ecourseCheckedAt)}',
           )
         : context.l10n.signedInUnverified;
+
+    if (desktopUi(context)) return _desk(context, ecourse);
 
     return Scaffold(
       extendBodyBehindAppBar: true,
@@ -133,6 +137,175 @@ class _AccountScreenState extends State<AccountScreen> {
               ],
             ),
           ),
+    );
+  }
+
+  /// design/round-25 account: the two sign-ins side by side, each a box
+  /// with its state and its buttons.
+  Widget _desk(BuildContext context, EcourseAuthRepository ecourse) {
+    final l10n = context.l10n;
+    final scheme = Theme.of(context).colorScheme;
+    final ok = ecourse.isSignedIn && _ecourseError == null;
+    final muted = TextStyle(
+      fontSize: 12,
+      fontWeight: FontWeight.w700,
+      color: scheme.onSurfaceVariant,
+    );
+    Widget box({
+      required IconData icon,
+      required String title,
+      Widget? tag,
+      required List<Widget> line,
+      required List<Widget> actions,
+    }) => Container(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+      decoration: BoxDecoration(
+        border: Border.all(color: scheme.outlineVariant),
+        borderRadius: BorderRadius.circular(10),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Row(
+            children: [
+              Container(
+                width: 28,
+                height: 28,
+                decoration: BoxDecoration(
+                  color: scheme.surfaceContainerHigh,
+                  borderRadius: BorderRadius.circular(7),
+                ),
+                child: Icon(icon, size: 15, color: scheme.onSurfaceVariant),
+              ),
+              const SizedBox(width: 10),
+              Text(title, style: const TextStyle(fontWeight: FontWeight.w800)),
+              const Spacer(),
+              ?tag,
+            ],
+          ),
+          Container(
+            margin: const EdgeInsets.only(top: Space.s),
+            padding: const EdgeInsets.symmetric(vertical: 10),
+            decoration: BoxDecoration(
+              border: Border(bottom: BorderSide(color: scheme.outlineVariant)),
+            ),
+            child: Row(children: line),
+          ),
+          if (_ecourseError case final error? when title == 'eCourse2')
+            Padding(
+              padding: const EdgeInsets.only(top: Space.s),
+              child: Text(error, style: muted.copyWith(color: scheme.error)),
+            ),
+          const SizedBox(height: Space.m),
+          Wrap(spacing: Space.s, runSpacing: Space.s, children: actions),
+        ],
+      ),
+    );
+
+    final cards = [
+      box(
+        icon: Icons.menu_book_outlined,
+        title: 'eCourse2',
+        tag: ecourse.isSignedIn
+            ? DeskTag(
+                ok ? l10n.signedIn : l10n.verifyFailed,
+                color: ok ? context.tones.mint.strong : scheme.error,
+              )
+            : null,
+        line: [
+          Expanded(
+            child: Text(
+              !ecourse.isSignedIn
+                  ? l10n.signedOut
+                  : _ecourseName != null && ok
+                  ? l10n.signedInAs(_ecourseName!)
+                  : l10n.signedInUnverified,
+              style: muted,
+            ),
+          ),
+          if (_ecourseCheckedAt case final t? when ok)
+            Text(
+              l10n.verifiedAt(clock(t.hour * 60 + t.minute)),
+              style: muted.copyWith(
+                fontWeight: FontWeight.w800,
+                fontFeatures: const [FontFeature.tabularFigures()],
+              ),
+            ),
+        ],
+        actions: [
+          if (!ecourse.isSignedIn)
+            DeskButton(
+              label: l10n.signIn,
+              primary: true,
+              onPressed: () => ecourse.setCampusOnly(false),
+            )
+          else ...[
+            DeskButton(
+              icon: Icons.check,
+              label: l10n.verify,
+              onPressed: _checking ? null : _verifyEcourse,
+            ),
+            DeskButton(
+              label: l10n.signOut,
+              danger: true,
+              onPressed: () => ecourse.signOut(byUser: true),
+            ),
+          ],
+        ],
+      ),
+      box(
+        icon: Icons.lock_outline,
+        title: l10n.portalCas,
+        line: [
+          Expanded(
+            child: Text(
+              [
+                l10n.sharedWithEcourse,
+                if (_casSaved) l10n.autoSignIn,
+              ].join('・'),
+              style: muted,
+            ),
+          ),
+        ],
+        actions: [
+          DeskButton(
+            icon: Icons.open_in_new,
+            label: l10n.openPortal,
+            onPressed: () => openCampusPage(context, portalHome, l10n.portal),
+          ),
+          if (_casSaved)
+            DeskButton(
+              icon: Icons.delete_outline,
+              label: l10n.deleteSavedPassword,
+              danger: true,
+              onPressed: _deleteCas,
+            ),
+        ],
+      ),
+    ];
+    return Scaffold(
+      extendBodyBehindAppBar: true,
+      appBar: subBar(context, l10n.account),
+      body: Builder(
+        builder: (context) => ListView(
+          padding: scrollPadding(context),
+          children: [
+            Text(
+              l10n.account,
+              style: const TextStyle(fontSize: 26, fontWeight: FontWeight.w800),
+            ),
+            const SizedBox(height: Space.xl),
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Expanded(child: cards[0]),
+                const SizedBox(width: 14),
+                Expanded(child: cards[1]),
+              ],
+            ),
+          ],
+        ),
+      ),
     );
   }
 }

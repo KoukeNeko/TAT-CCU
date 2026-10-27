@@ -4,6 +4,8 @@ import 'package:go_router/go_router.dart';
 
 import '../../l10n/l10n.dart';
 import '../core/compose_screen.dart';
+import '../core/desk_list.dart';
+import '../core/desktop_mode.dart';
 import '../core/glass.dart';
 import '../core/glass_sheet.dart';
 import '../core/floating_dock.dart';
@@ -59,6 +61,7 @@ class DesignLanguageScreen extends StatelessWidget {
     final tones = context.tones;
     final scheme = Theme.of(context).colorScheme;
     void open(DesignPart p) => context.push('/more/design/${p.name}');
+    if (desktopUi(context)) return _desk(context, open);
     Widget tile(DesignPart part, Widget art, String caption, {int span = 1}) =>
         Material(
           color: scheme.surfaceContainerLow,
@@ -268,6 +271,219 @@ class DesignLanguageScreen extends StatelessWidget {
   }
 }
 
+/// design/round-25 design: three tiles across, each a picture of its part
+/// over its name.
+Widget _desk(BuildContext context, void Function(DesignPart) open) {
+  final tones = context.tones;
+  final scheme = Theme.of(context).colorScheme;
+  Widget square(double size, double radius, Color color) => Container(
+    width: size,
+    height: size,
+    decoration: BoxDecoration(
+      color: color,
+      borderRadius: BorderRadius.circular(radius),
+    ),
+  );
+  final art = {
+    DesignPart.colors: Row(
+      mainAxisSize: MainAxisSize.min,
+      spacing: 6,
+      children: [
+        for (final t in [
+          tones.lilac,
+          tones.mint,
+          tones.sun,
+          tones.peach,
+          tones.identity[2],
+        ])
+          square(30, 8, t.strong),
+      ],
+    ),
+    DesignPart.corners: Row(
+      mainAxisSize: MainAxisSize.min,
+      spacing: 10,
+      children: [
+        for (final r in [4.0, 7.0, 10.0, 14.0])
+          Container(
+            width: 40,
+            height: 40,
+            decoration: BoxDecoration(
+              border: Border.all(color: tones.lilac.strong, width: 2),
+              borderRadius: BorderRadius.circular(r),
+            ),
+          ),
+      ],
+    ),
+    DesignPart.spacing: Row(
+      mainAxisSize: MainAxisSize.min,
+      spacing: 6,
+      children: [
+        for (final w in [4.0, 8.0, 12.0, 16.0, 24.0])
+          Container(
+            width: w,
+            height: 40,
+            decoration: BoxDecoration(
+              color: tones.mint.strong.withValues(alpha: 0.8),
+              borderRadius: BorderRadius.circular(2),
+            ),
+          ),
+      ],
+    ),
+    DesignPart.type: Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        const Text(
+          '中正 Aa',
+          style: TextStyle(
+            fontSize: 36,
+            fontWeight: FontWeight.w800,
+            height: 1,
+          ),
+        ),
+        const SizedBox(height: 6),
+        Text(
+          'LINE Seed TW',
+          style: TextStyle(
+            fontSize: 12,
+            fontWeight: FontWeight.w800,
+            color: scheme.onSurfaceVariant,
+          ),
+        ),
+      ],
+    ),
+    DesignPart.components: Row(
+      mainAxisSize: MainAxisSize.min,
+      spacing: 10,
+      children: [
+        DeskButton(
+          label: context.l10n.kindCatalog,
+          primary: true,
+          onPressed: () => open(DesignPart.components),
+        ),
+        DeskToggle(value: true, onChanged: (_) {}),
+        DeskSegment(
+          labels: [context.l10n.timetableDay, context.l10n.timetableWeek],
+          selected: 0,
+          onChanged: (_) {},
+        ),
+      ],
+    ),
+    DesignPart.shapes: Row(
+      mainAxisSize: MainAxisSize.min,
+      spacing: 12,
+      children: [
+        square(40, 20, tones.peach.strong),
+        square(40, 10, tones.sun.strong),
+        CustomPaint(
+          size: const Size(60, 30),
+          painter: _Ease(tones.identity[2].strong),
+        ),
+      ],
+    ),
+  };
+  return Scaffold(
+    extendBodyBehindAppBar: true,
+    appBar: subBar(context, context.l10n.designLanguage),
+    body: Builder(
+      builder: (context) => ListView(
+        padding: scrollPadding(context),
+        children: [
+          Text(
+            context.l10n.designLanguage,
+            style: const TextStyle(fontSize: 26, fontWeight: FontWeight.w800),
+          ),
+          const SizedBox(height: Space.xl),
+          GridView.count(
+            crossAxisCount: 3,
+            shrinkWrap: true,
+            padding: EdgeInsets.zero,
+            physics: const NeverScrollableScrollPhysics(),
+            mainAxisSpacing: Space.m,
+            crossAxisSpacing: Space.m,
+            childAspectRatio: 1.3,
+            children: [
+              for (final part in DesignPart.values)
+                GestureDetector(
+                  onTap: () => open(part),
+                  child: MouseRegion(
+                    cursor: SystemMouseCursors.click,
+                    child: Container(
+                      clipBehavior: Clip.antiAlias,
+                      decoration: BoxDecoration(
+                        border: Border.all(color: scheme.outlineVariant),
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          Expanded(
+                            child: Container(
+                              color: scheme.surfaceContainerLow,
+                              alignment: Alignment.center,
+                              child: art[part],
+                            ),
+                          ),
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 14,
+                              vertical: 10,
+                            ),
+                            decoration: BoxDecoration(
+                              border: Border(
+                                top: BorderSide(color: scheme.outlineVariant),
+                              ),
+                            ),
+                            child: Row(
+                              children: [
+                                Text(
+                                  _partTitle(context, part),
+                                  style: const TextStyle(
+                                    fontWeight: FontWeight.w800,
+                                  ),
+                                ),
+                                const Spacer(),
+                                Icon(
+                                  Icons.chevron_right,
+                                  size: 16,
+                                  color: scheme.outline,
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+            ],
+          ),
+        ],
+      ),
+    ),
+  );
+}
+
+/// The motion tile's ease-out curve.
+class _Ease extends CustomPainter {
+  const _Ease(this.color);
+
+  final Color color;
+
+  @override
+  void paint(Canvas canvas, Size size) => canvas.drawPath(
+    Path()
+      ..moveTo(2, size.height - 2)
+      ..cubicTo(20, size.height - 2, 22, 2, size.width - 2, 2),
+    Paint()
+      ..color = color
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 2,
+  );
+
+  @override
+  bool shouldRepaint(_Ease old) => old.color != color;
+}
+
 /// One part of the design language in detail (L1's sections).
 class DesignPartScreen extends StatelessWidget {
   const DesignPartScreen({super.key, required this.part});
@@ -312,6 +528,28 @@ class DesignPartScreen extends StatelessWidget {
       for (final (i, w) in inLight.indexed)
         w is SectionLabel
             ? w
+            : desktopUi(context)
+            // design/round-25 design-part: light beside dark.
+            ? Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                spacing: 14,
+                children: [
+                  Expanded(
+                    child: _ModePanel(
+                      theme: light,
+                      label: context.l10n.themeLight,
+                      child: w,
+                    ),
+                  ),
+                  Expanded(
+                    child: _ModePanel(
+                      theme: dark,
+                      label: context.l10n.themeDark,
+                      child: inDark[i],
+                    ),
+                  ),
+                ],
+              )
             : Column(
                 children: [
                   _ModePanel(

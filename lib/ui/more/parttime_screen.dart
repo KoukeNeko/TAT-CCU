@@ -3,6 +3,8 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../l10n/l10n.dart';
+import '../core/desk_list.dart';
+import '../core/desktop_mode.dart';
 import '../core/floating_dock.dart';
 import '../core/theme.dart';
 import '../core/glass_sheet.dart';
@@ -10,6 +12,25 @@ import '../core/widgets.dart';
 import '../../data/repositories/parttime_data.dart';
 import '../core/campus_systems.dart';
 import '../core/glass_dialog.dart';
+
+/// design/round-25: a desktop page's title, with its stage and buttons.
+Widget _deskHead(
+  BuildContext context,
+  String title, {
+  bool stage = false,
+  List<Widget> actions = const [],
+}) => Row(
+  spacing: 10,
+  children: [
+    Text(
+      title,
+      style: const TextStyle(fontSize: 26, fontWeight: FontWeight.w800),
+    ),
+    if (stage) DeskTag(pageStages['0014']!, color: context.tones.peach.strong),
+    const Spacer(),
+    ...actions,
+  ],
+);
 
 /// Design round-11 parttime-screens: the five functions of 學習暨勞僱時數登錄
 /// on made-up data (alpha). The app bar button opens the real site.
@@ -134,6 +155,60 @@ class _ParttimeScreenState extends State<ParttimeScreen> {
       (groups[e.date] ??= []).add(e);
     }
 
+    final chips = [
+      BarChip(
+        key: _keys['month'],
+        label: _month == null ? l10n.allTime : _monthLabel(_month!),
+        selected: _month != null,
+        dropdown: true,
+        onTap: () async {
+          // A far-past date stands for every month in the menu.
+          final any = DateTime(0);
+          final m = await _pick<DateTime>('month', [
+            for (final m in months) (m, _monthLabel(m), null),
+            (any, l10n.allTime, null),
+          ], _month ?? any);
+          if (m != null) setState(() => _month = m == any ? null : m);
+        },
+      ),
+      BarChip(
+        key: _keys['state'],
+        label: stateLabel(_state),
+        selected: _state != null,
+        dropdown: true,
+        onTap: () async {
+          final s = await _pick<int>('state', [
+            for (final s in HoursState.values) (s.index, stateLabel(s), null),
+            (-1, l10n.anyStatus, null),
+          ], _state?.index ?? -1);
+          if (s != null) {
+            setState(() => _state = s < 0 ? null : HoursState.values[s]);
+          }
+        },
+      ),
+      BarChip(
+        key: _keys['unit'],
+        label: _unit ?? l10n.ptAllUnits,
+        selected: _unit != null,
+        dropdown: true,
+        onTap: () async {
+          final u = await _pick<String>('unit', [
+            for (final u in units) (u, u, null),
+            ('', l10n.ptAllUnits, null),
+          ], _unit ?? '');
+          if (u != null) setState(() => _unit = u.isEmpty ? null : u);
+        },
+      ),
+    ];
+    final select = BarChip(
+      label: selected == null ? l10n.ptSelect : l10n.ptDone,
+      selected: selected != null,
+      onTap: () => setState(() => _selected = selected == null ? {} : null),
+    );
+    if (desktopUi(context)) {
+      return _desk(context, shown, groups, chips, select, hoursIn, week);
+    }
+
     return Scaffold(
       extendBodyBehindAppBar: true,
       appBar: subBar(
@@ -142,64 +217,12 @@ class _ParttimeScreenState extends State<ParttimeScreen> {
         action: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            BarChip(
-              label: selected == null ? l10n.ptSelect : l10n.ptDone,
-              selected: selected != null,
-              onTap: () =>
-                  setState(() => _selected = selected == null ? {} : null),
-            ),
+            select,
             const SizedBox(width: 8),
             const SchoolSiteButton('0014'),
           ],
         ),
-        bottom: ChipBar(
-          children: [
-            BarChip(
-              key: _keys['month'],
-              label: _month == null ? l10n.allTime : _monthLabel(_month!),
-              selected: _month != null,
-              dropdown: true,
-              onTap: () async {
-                // A far-past date stands for every month in the menu.
-                final any = DateTime(0);
-                final m = await _pick<DateTime>('month', [
-                  for (final m in months) (m, _monthLabel(m), null),
-                  (any, l10n.allTime, null),
-                ], _month ?? any);
-                if (m != null) setState(() => _month = m == any ? null : m);
-              },
-            ),
-            BarChip(
-              key: _keys['state'],
-              label: stateLabel(_state),
-              selected: _state != null,
-              dropdown: true,
-              onTap: () async {
-                final s = await _pick<int>('state', [
-                  for (final s in HoursState.values)
-                    (s.index, stateLabel(s), null),
-                  (-1, l10n.anyStatus, null),
-                ], _state?.index ?? -1);
-                if (s != null) {
-                  setState(() => _state = s < 0 ? null : HoursState.values[s]);
-                }
-              },
-            ),
-            BarChip(
-              key: _keys['unit'],
-              label: _unit ?? l10n.ptAllUnits,
-              selected: _unit != null,
-              dropdown: true,
-              onTap: () async {
-                final u = await _pick<String>('unit', [
-                  for (final u in units) (u, u, null),
-                  ('', l10n.ptAllUnits, null),
-                ], _unit ?? '');
-                if (u != null) setState(() => _unit = u.isEmpty ? null : u);
-              },
-            ),
-          ],
-        ),
+        bottom: ChipBar(children: chips),
       ),
       body: Builder(
         builder: (context) => PinnedActionList(
@@ -346,6 +369,229 @@ class _ParttimeScreenState extends State<ParttimeScreen> {
       ),
     );
   }
+
+  /// design/round-25 parttime: the filters and the three totals under the
+  /// title, then the entries by day beside the other pages.
+  Widget _desk(
+    BuildContext context,
+    List<HoursEntry> shown,
+    Map<DateTime, List<HoursEntry>> groups,
+    List<Widget> chips,
+    Widget select,
+    double Function(HoursState) hoursIn,
+    double week,
+  ) {
+    final l10n = context.l10n;
+    final tones = context.tones;
+    final scheme = Theme.of(context).colorScheme;
+    final selected = _selected;
+    final muted = TextStyle(
+      fontSize: 12,
+      fontWeight: FontWeight.w800,
+      color: scheme.onSurfaceVariant,
+    );
+    final entries = [
+      if (shown.isEmpty)
+        Padding(
+          padding: const EdgeInsets.only(top: 12),
+          child: DeskLine(title: l10n.ptNoRecords),
+        ),
+      for (final MapEntry(key: day, value: list) in groups.entries) ...[
+        Padding(
+          padding: const EdgeInsets.only(top: 12, bottom: 2),
+          child: Text(
+            dayLabel(context, day),
+            style: muted.copyWith(fontSize: 11, color: scheme.outline),
+          ),
+        ),
+        for (final e in list)
+          _EntryRow(
+            entry: e,
+            selected: selected?.contains(e.id),
+            onTap: selected == null || e.state != HoursState.unconfirmed
+                ? null
+                : () => setState(
+                    () => selected.contains(e.id)
+                        ? selected.remove(e.id)
+                        : selected.add(e.id),
+                  ),
+          ),
+      ],
+    ];
+    return Scaffold(
+      extendBodyBehindAppBar: true,
+      appBar: subBar(
+        context,
+        l10n.ptTitle,
+        action: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            select,
+            const SizedBox(width: 8),
+            const SchoolSiteButton('0014'),
+          ],
+        ),
+      ),
+      body: Builder(
+        builder: (context) => ListView(
+          padding: scrollPadding(context),
+          children: [
+            _deskHead(
+              context,
+              selected == null
+                  ? l10n.ptTitle
+                  : l10n.ptSelected(selected.length),
+              stage: selected == null,
+              actions: [
+                if (selected == null)
+                  DeskButton(
+                    icon: Icons.add,
+                    label: l10n.ptAdd,
+                    primary: true,
+                    onPressed: () => context.push('/more/parttime/add'),
+                  )
+                else
+                  DeskButton(
+                    icon: Icons.delete_outline,
+                    label: l10n.ptDeleteCount(selected.length),
+                    primary: true,
+                    onPressed: selected.isEmpty ? null : _delete,
+                  ),
+              ],
+            ),
+            const SizedBox(height: 14),
+            // A row: the chips size to their labels.
+            Row(spacing: 6, children: chips),
+            if (selected == null) ...[
+              const SizedBox(height: 14),
+              Row(
+                spacing: Space.s,
+                children: [
+                  for (final s in HoursState.values)
+                    Expanded(
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 14,
+                          vertical: 10,
+                        ),
+                        decoration: BoxDecoration(
+                          border: Border.all(color: scheme.outlineVariant),
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          spacing: 2,
+                          children: [
+                            Row(
+                              spacing: 6,
+                              children: [
+                                Container(
+                                  width: 8,
+                                  height: 8,
+                                  decoration: BoxDecoration(
+                                    color: _statePill(context, s).$1.strong,
+                                    borderRadius: BorderRadius.circular(3),
+                                  ),
+                                ),
+                                Text(
+                                  _statePill(context, s).$2,
+                                  style: muted.copyWith(
+                                    fontWeight: FontWeight.w700,
+                                  ),
+                                ),
+                              ],
+                            ),
+                            Text.rich(
+                              TextSpan(
+                                text: _h(hoursIn(s)),
+                                children: [
+                                  TextSpan(
+                                    text: ' ${l10n.unitHours}',
+                                    style: muted,
+                                  ),
+                                ],
+                              ),
+                              style: const TextStyle(
+                                fontSize: 20,
+                                fontWeight: FontWeight.w800,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                ],
+              ),
+              const SizedBox(height: 12),
+              Row(
+                spacing: 12,
+                children: [
+                  Expanded(
+                    child: DeskBar(
+                      value: week / weeklyLimit,
+                      color: week > weeklyLimit * 0.8
+                          ? tones.peach.strong
+                          : tones.sun.strong,
+                    ),
+                  ),
+                  Text(
+                    l10n.ptWeek(_h(week), weeklyLimit),
+                    style: const TextStyle(fontWeight: FontWeight.w800),
+                  ),
+                ],
+              ),
+            ],
+            const SizedBox(height: Space.s),
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Expanded(
+                  flex: 3,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: entries,
+                  ),
+                ),
+                if (selected == null) ...[
+                  const SizedBox(width: 28),
+                  Expanded(
+                    flex: 2,
+                    child: Padding(
+                      padding: const EdgeInsets.only(top: 12),
+                      child: DeskSection(
+                        title: l10n.ptOther,
+                        children: [
+                          for (final (icon, title, path) in [
+                            (
+                              Icons.payments_outlined,
+                              l10n.ptPayroll,
+                              '/more/parttime/pay',
+                            ),
+                            (
+                              Icons.print_outlined,
+                              l10n.ptPrint,
+                              '/more/parttime/print',
+                            ),
+                          ])
+                            DeskLine(
+                              leading: DeskIcon(icon),
+                              title: title,
+                              value: '›',
+                              valueColor: scheme.outline,
+                              onTap: () => context.push(path),
+                            ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ],
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
 }
 
 class _EntryRow extends StatelessWidget {
@@ -364,6 +610,31 @@ class _EntryRow extends StatelessWidget {
     final e = entry;
     final (tone, label) = _statePill(context, e.state);
     final selectable = e.state == HoursState.unconfirmed;
+    if (desktopUi(context)) {
+      return Opacity(
+        opacity: selected != null && !selectable ? 0.45 : 1,
+        child: DeskLine(
+          leading: switch (selected) {
+            final on? => Icon(
+              on ? Icons.check_circle : Icons.radio_button_unchecked,
+              size: 18,
+              color: on ? context.tones.lilac.strong : scheme.outline,
+            ),
+            null => null,
+          },
+          title: e.work,
+          detail: [
+            if (isHoliday(e.date)) l10n.ptHoliday,
+            _span(e),
+            e.unit,
+            if (e.batch case final b?) '${l10n.ptBatch} $b',
+          ].join('・'),
+          value: l10n.ptHours(_h(hoursOf(e))),
+          trailing: DeskTag(label, color: tone.strong),
+          onTap: onTap,
+        ),
+      );
+    }
     return InkWell(
       onTap: onTap,
       child: Opacity(
@@ -592,6 +863,7 @@ class _ParttimeAddScreenState extends State<ParttimeAddScreen> {
             ),
       onTap: onTap,
     );
+    if (desktopUi(context)) return _desk(context, problem, staged);
     return Scaffold(
       extendBodyBehindAppBar: true,
       appBar: subBar(
@@ -743,6 +1015,180 @@ class _ParttimeAddScreenState extends State<ParttimeAddScreen> {
       ),
     );
   }
+
+  /// design/round-25 parttime-add: the fields in a grid, the staged
+  /// entries below; saving is the title's button.
+  Widget _desk(BuildContext context, String? problem, double staged) {
+    final l10n = context.l10n;
+    final scheme = Theme.of(context).colorScheme;
+    final label = TextStyle(
+      fontSize: 12,
+      fontWeight: FontWeight.w800,
+      color: scheme.onSurfaceVariant,
+    );
+    Widget field(String name, Widget child) => Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      spacing: 6,
+      children: [
+        Text(name, style: label),
+        child,
+      ],
+    );
+    // A field that opens a picker, drawn as a text field.
+    Widget box(List<Widget> children, VoidCallback onTap, {double? width}) =>
+        GestureDetector(
+          onTap: onTap,
+          child: MouseRegion(
+            cursor: SystemMouseCursors.click,
+            child: Container(
+              width: width,
+              height: 32,
+              padding: const EdgeInsets.symmetric(horizontal: 10),
+              decoration: BoxDecoration(
+                color: scheme.surfaceContainerLow,
+                border: Border.all(color: scheme.outlineVariant),
+                borderRadius: BorderRadius.circular(7),
+              ),
+              child: Row(children: [for (final c in children) c]),
+            ),
+          ),
+        );
+    const value = TextStyle(
+      fontWeight: FontWeight.w700,
+      fontFeatures: [FontFeature.tabularFigures()],
+    );
+    return Scaffold(
+      extendBodyBehindAppBar: true,
+      appBar: subBar(
+        context,
+        l10n.ptAdd,
+        action: const SchoolSiteButton('0014'),
+      ),
+      body: Builder(
+        builder: (context) => ListView(
+          padding: scrollPadding(context),
+          children: [
+            _deskHead(
+              context,
+              l10n.ptAdd,
+              actions: [
+                DeskButton(
+                  icon: Icons.save_outlined,
+                  label: l10n.ptSaveCount(_staged.length),
+                  primary: true,
+                  onPressed: _staged.isEmpty ? null : _save,
+                ),
+              ],
+            ),
+            const SizedBox(height: Space.xl),
+            Row(
+              spacing: 14,
+              children: [
+                Expanded(
+                  child: field(
+                    l10n.ptDate,
+                    box([
+                      Text(dayLabel(context, _date), style: value),
+                      const Spacer(),
+                      if (isHoliday(_date)) DeskTag(l10n.ptHoliday),
+                    ], _pickDate),
+                  ),
+                ),
+                Expanded(
+                  child: field(
+                    l10n.ptUnit,
+                    box([
+                      Expanded(child: Text(_unit, style: value)),
+                      Icon(Icons.expand_more, size: 16, color: scheme.outline),
+                    ], _pickUnit),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 14),
+            field(
+              l10n.ptTime,
+              Row(
+                spacing: Space.s,
+                children: [
+                  box(
+                    [Text(clock(_start), style: value)],
+                    () => _pickTime(true),
+                    width: 110,
+                  ),
+                  const Text('–'),
+                  box(
+                    [Text(clock(_end), style: value)],
+                    () => _pickTime(false),
+                    width: 110,
+                  ),
+                  if (_end > _start) ...[
+                    const SizedBox(width: 6),
+                    Text(l10n.ptHours(_h((_end - _start) / 60)), style: label),
+                  ],
+                ],
+              ),
+            ),
+            const SizedBox(height: 14),
+            field(
+              l10n.ptWork,
+              TextField(
+                controller: _work,
+                maxLength: 80,
+                onChanged: (_) => setState(() {}),
+                decoration: const InputDecoration(counterText: ''),
+              ),
+            ),
+            if (problem != null)
+              Padding(
+                padding: const EdgeInsets.only(top: Space.s),
+                child: Text(
+                  problem,
+                  style: label.copyWith(color: context.tones.peach.strong),
+                ),
+              ),
+            const SizedBox(height: 14),
+            Align(
+              alignment: Alignment.centerLeft,
+              child: DeskButton(
+                icon: Icons.add,
+                label: l10n.ptStage,
+                onPressed: problem == null && _work.text.trim().isNotEmpty
+                    ? () => setState(() {
+                        _staged.add(_draft);
+                        _work.clear();
+                      })
+                    : null,
+              ),
+            ),
+            if (_staged.isNotEmpty) ...[
+              const SizedBox(height: Space.s),
+              SectionLabel(l10n.ptStaged(_staged.length, _h(staged))),
+              for (final (i, e) in _staged.indexed)
+                DeskLine(
+                  title: e.work,
+                  detail: [
+                    dayLabel(context, e.date),
+                    if (isHoliday(e.date)) l10n.ptHoliday,
+                    _span(e),
+                    e.unit,
+                  ].join('・'),
+                  value: l10n.ptHours(_h(hoursOf(e))),
+                  leading: IconButton(
+                    tooltip: MaterialLocalizations.of(context)
+                        .deleteButtonTooltip,
+                    iconSize: 16,
+                    visualDensity: VisualDensity.compact,
+                    icon: const Icon(Icons.close),
+                    onPressed: () => setState(() => _staged.removeAt(i)),
+                  ),
+                ),
+            ],
+          ],
+        ),
+      ),
+    );
+  }
 }
 
 /// The student's own units first, then every unit, searchable.
@@ -824,42 +1270,39 @@ class _ParttimePayScreenState extends State<ParttimePayScreen> {
       for (final c in HoursStore.instance.pay)
         if ((c.year, c.month) == _month) c,
     ];
+    final monthChip = BarChip(
+      key: _key,
+      label: l10n.ptMonth(_month.$1, _month.$2),
+      selected: true,
+      dropdown: true,
+      onTap: () async {
+        final box = _key.currentContext!.findRenderObject()! as RenderBox;
+        final m = await showGlassMenu<(int, int)>(
+          context,
+          anchor: box.localToGlobal(Offset.zero) & box.size,
+          selected: _month,
+          items: [
+            for (final m in months)
+              (
+                value: m,
+                title: l10n.ptMonth(m.$1, m.$2),
+                detail: null,
+                icon: null,
+                tone: null,
+              ),
+          ],
+        );
+        if (m != null) setState(() => _month = m);
+      },
+    );
+    if (desktopUi(context)) return _desk(context, cases, monthChip);
     return Scaffold(
       extendBodyBehindAppBar: true,
       appBar: subBar(
         context,
         l10n.ptPayroll,
         action: const SchoolSiteButton('0014'),
-        bottom: ChipBar(
-          children: [
-            BarChip(
-              key: _key,
-              label: l10n.ptMonth(_month.$1, _month.$2),
-              selected: true,
-              dropdown: true,
-              onTap: () async {
-                final box =
-                    _key.currentContext!.findRenderObject()! as RenderBox;
-                final m = await showGlassMenu<(int, int)>(
-                  context,
-                  anchor: box.localToGlobal(Offset.zero) & box.size,
-                  selected: _month,
-                  items: [
-                    for (final m in months)
-                      (
-                        value: m,
-                        title: l10n.ptMonth(m.$1, m.$2),
-                        detail: null,
-                        icon: null,
-                        tone: null,
-                      ),
-                  ],
-                );
-                if (m != null) setState(() => _month = m);
-              },
-            ),
-          ],
-        ),
+        bottom: ChipBar(children: [monthChip]),
       ),
       body: Builder(
         builder: (context) => ListView(
@@ -996,6 +1439,148 @@ class _ParttimePayScreenState extends State<ParttimePayScreen> {
       ),
     );
   }
+
+  /// design/round-25 parttime-pay: each case a box, its net pay large,
+  /// then what was paid and withheld.
+  Widget _desk(BuildContext context, List<PayCase> cases, Widget monthChip) {
+    final l10n = context.l10n;
+    final scheme = Theme.of(context).colorScheme;
+    final k = TextStyle(
+      fontSize: 12,
+      fontWeight: FontWeight.w800,
+      color: scheme.onSurfaceVariant,
+    );
+    Widget card(PayCase c) => Container(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+      decoration: BoxDecoration(
+        border: Border.all(color: scheme.outlineVariant),
+        borderRadius: BorderRadius.circular(10),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Text('${c.number}・${c.kind}', style: k),
+          const SizedBox(height: 2),
+          Text(c.summary, style: const TextStyle(fontWeight: FontWeight.w800)),
+          const SizedBox(height: 12),
+          Text(l10n.ptNet, style: k),
+          Text(
+            grouped(netOf(c)),
+            style: const TextStyle(
+              fontSize: 34,
+              fontWeight: FontWeight.w800,
+              height: 1.1,
+              fontFeatures: [FontFeature.tabularFigures()],
+            ),
+          ),
+          for (final (head, total, rows) in [
+            (
+              l10n.ptGross,
+              grossOf(c),
+              [
+                (l10n.ptWage, c.wage),
+                (l10n.ptEmpLabor, c.employerLabor),
+                (l10n.ptEmpPension, c.employerPension),
+                (l10n.ptEmpHealth, c.employerHealth),
+                (l10n.ptEmpSupp, c.employerSupplement),
+              ],
+            ),
+            (
+              l10n.ptDeduct,
+              deductionsOf(c),
+              [
+                (l10n.ptTax, c.tax),
+                (l10n.ptLabor, c.labor),
+                (l10n.ptPension, c.pension),
+                (l10n.ptHealth, c.health),
+                (l10n.ptSupp, c.supplement),
+                (l10n.ptOtherDeduct, c.otherDeduction),
+              ],
+            ),
+          ]) ...[
+            const SizedBox(height: 12),
+            Container(
+              padding: const EdgeInsets.only(bottom: Space.xs),
+              decoration: BoxDecoration(
+                border: Border(
+                  bottom: BorderSide(color: scheme.outlineVariant),
+                ),
+              ),
+              child: Row(
+                children: [
+                  Text(head, style: k.copyWith(color: scheme.outline)),
+                  const Spacer(),
+                  Text(
+                    grouped(total),
+                    style: k.copyWith(color: scheme.outline),
+                  ),
+                ],
+              ),
+            ),
+            for (final (label, value) in rows)
+              Padding(
+                padding: const EdgeInsets.symmetric(vertical: 5),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: Text(
+                        label,
+                        style: TextStyle(
+                          fontWeight: FontWeight.w700,
+                          color: scheme.onSurfaceVariant,
+                        ),
+                      ),
+                    ),
+                    Text(
+                      grouped(value),
+                      style: TextStyle(
+                        fontWeight: FontWeight.w800,
+                        color: value == 0 ? scheme.outline : null,
+                        fontFeatures: const [FontFeature.tabularFigures()],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+          ],
+        ],
+      ),
+    );
+    return Scaffold(
+      extendBodyBehindAppBar: true,
+      appBar: subBar(
+        context,
+        l10n.ptPayroll,
+        action: const SchoolSiteButton('0014'),
+      ),
+      body: Builder(
+        builder: (context) => ListView(
+          padding: scrollPadding(context),
+          children: [
+            _deskHead(context, l10n.ptPayroll, actions: [monthChip]),
+            const SizedBox(height: Space.l),
+            if (cases.isEmpty) DeskLine(title: l10n.ptNoRecords),
+            for (var i = 0; i < cases.length; i += 2)
+              Padding(
+                padding: const EdgeInsets.only(bottom: 14),
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  spacing: 14,
+                  children: [
+                    Expanded(child: card(cases[i])),
+                    Expanded(
+                      child: i + 1 < cases.length
+                          ? card(cases[i + 1])
+                          : const SizedBox.shrink(),
+                    ),
+                  ],
+                ),
+              ),
+          ],
+        ),
+      ),
+    );
+  }
 }
 
 /// 列印簽到退表與批號: a unit's confirmed entries by batch; printing stays
@@ -1011,6 +1596,9 @@ class _ParttimePrintScreenState extends State<ParttimePrintScreen> {
   final _key = GlobalKey();
   var _unit = myUnits.first;
 
+  /// The batch shown in the desktop UI; the first when none is picked.
+  String? _batch;
+
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
@@ -1023,42 +1611,39 @@ class _ParttimePrintScreenState extends State<ParttimePrintScreen> {
         (batches[e.batch!] ??= []).add(e);
       }
     }
+    final unitChip = BarChip(
+      key: _key,
+      label: _unit,
+      selected: true,
+      dropdown: true,
+      onTap: () async {
+        final box = _key.currentContext!.findRenderObject()! as RenderBox;
+        final u = await showGlassMenu<String>(
+          context,
+          anchor: box.localToGlobal(Offset.zero) & box.size,
+          selected: _unit,
+          items: [
+            for (final u in myUnits)
+              (value: u, title: u, detail: null, icon: null, tone: null),
+          ],
+        );
+        if (u == null) return;
+        setState(() {
+          _unit = u;
+          _batch = null;
+        });
+      },
+    );
+    if (desktopUi(context)) {
+      return _desk(context, batches, unitChip);
+    }
     return Scaffold(
       extendBodyBehindAppBar: true,
       appBar: subBar(
         context,
         l10n.ptPrint,
         action: const SchoolSiteButton('0014'),
-        bottom: ChipBar(
-          children: [
-            BarChip(
-              key: _key,
-              label: _unit,
-              selected: true,
-              dropdown: true,
-              onTap: () async {
-                final box =
-                    _key.currentContext!.findRenderObject()! as RenderBox;
-                final u = await showGlassMenu<String>(
-                  context,
-                  anchor: box.localToGlobal(Offset.zero) & box.size,
-                  selected: _unit,
-                  items: [
-                    for (final u in myUnits)
-                      (
-                        value: u,
-                        title: u,
-                        detail: null,
-                        icon: null,
-                        tone: null,
-                      ),
-                  ],
-                );
-                if (u != null) setState(() => _unit = u);
-              },
-            ),
-          ],
-        ),
+        bottom: ChipBar(children: [unitChip]),
       ),
       body: Builder(
         builder: (context) => ListView(
@@ -1152,6 +1737,165 @@ class _ParttimePrintScreenState extends State<ParttimePrintScreen> {
                 child: Text('${l10n.ptOpenSheet} ↗'),
               ),
               const SizedBox(height: rowGap),
+            ],
+          ],
+        ),
+      ),
+    );
+  }
+
+  /// design/round-25 parttime-print: the unit's batches across, then the
+  /// picked batch's rows and the way to print it.
+  Widget _desk(
+    BuildContext context,
+    Map<String, List<HoursEntry>> batches,
+    Widget unitChip,
+  ) {
+    final l10n = context.l10n;
+    final scheme = Theme.of(context).colorScheme;
+    double hours(List<HoursEntry> list) =>
+        list.fold(0.0, (sum, e) => sum + hoursOf(e));
+    final picked = batches.containsKey(_batch)
+        ? _batch!
+        : batches.keys.firstOrNull;
+    final entries = batches[picked] ?? [];
+    final muted = TextStyle(
+      fontSize: 12,
+      fontWeight: FontWeight.w700,
+      color: scheme.onSurfaceVariant,
+    );
+    final keys = batches.keys.toList();
+    return Scaffold(
+      extendBodyBehindAppBar: true,
+      appBar: subBar(
+        context,
+        l10n.ptPrint,
+        action: const SchoolSiteButton('0014'),
+      ),
+      body: Builder(
+        builder: (context) => ListView(
+          padding: scrollPadding(context),
+          children: [
+            _deskHead(context, l10n.ptPrint, actions: [unitChip]),
+            const SizedBox(height: Space.l),
+            if (picked == null)
+              DeskLine(title: l10n.ptNoRecords)
+            else ...[
+              for (var i = 0; i < keys.length; i += 3)
+                Padding(
+                  padding: const EdgeInsets.only(bottom: Space.s),
+                  child: Row(
+                    spacing: Space.s,
+                    children: [
+                      for (var j = i; j < i + 3; j++)
+                        Expanded(
+                          child: j >= keys.length
+                              ? const SizedBox.shrink()
+                              : GestureDetector(
+                                  onTap: () => setState(() => _batch = keys[j]),
+                                  child: MouseRegion(
+                                    cursor: SystemMouseCursors.click,
+                                    child: Container(
+                                      padding: const EdgeInsets.symmetric(
+                                        horizontal: 16,
+                                        vertical: 14,
+                                      ),
+                                      decoration: BoxDecoration(
+                                        color: keys[j] == picked
+                                            ? deskSelection(scheme)
+                                            : null,
+                                        border: Border.all(
+                                          color: keys[j] == picked
+                                              ? Colors.transparent
+                                              : scheme.outlineVariant,
+                                        ),
+                                        borderRadius: BorderRadius.circular(10),
+                                      ),
+                                      child: Column(
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
+                                        spacing: 2,
+                                        children: [
+                                          Text(l10n.ptBatch, style: muted),
+                                          Text(
+                                            keys[j],
+                                            style: const TextStyle(
+                                              fontSize: 18,
+                                              fontWeight: FontWeight.w800,
+                                              fontFeatures: [
+                                                FontFeature.tabularFigures(),
+                                              ],
+                                            ),
+                                          ),
+                                          Text(
+                                            '${l10n.ptEntries(batches[keys[j]]!.length)}・'
+                                            '${l10n.ptHours(_h(hours(batches[keys[j]]!)))}',
+                                            style: muted,
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                        ),
+                    ],
+                  ),
+                ),
+              const SizedBox(height: 14),
+              SectionLabel(
+                l10n.ptSheet,
+                detail:
+                    '${l10n.ptBatch} $picked・${l10n.ptEntries(entries.length)}・'
+                    '${l10n.ptHours(_h(hours(entries)))}',
+              ),
+              for (final e in entries)
+                Container(
+                  padding: const EdgeInsets.symmetric(vertical: 10),
+                  decoration: BoxDecoration(
+                    border: Border(
+                      bottom: BorderSide(color: scheme.outlineVariant),
+                    ),
+                  ),
+                  child: Row(
+                    spacing: 10,
+                    children: [
+                      SizedBox(
+                        width: 84,
+                        child: Text(
+                          dayLabel(context, e.date),
+                          style: const TextStyle(fontWeight: FontWeight.w800),
+                        ),
+                      ),
+                      SizedBox(
+                        width: 100,
+                        child: Text(
+                          _span(e),
+                          style: muted.copyWith(fontSize: 13),
+                        ),
+                      ),
+                      Expanded(
+                        child: Text(
+                          e.work,
+                          style: const TextStyle(fontWeight: FontWeight.w800),
+                        ),
+                      ),
+                      Text(
+                        l10n.ptHours(_h(hoursOf(e))),
+                        style: const TextStyle(fontWeight: FontWeight.w800),
+                      ),
+                    ],
+                  ),
+                ),
+              const SizedBox(height: Space.l),
+              Align(
+                alignment: Alignment.centerLeft,
+                child: DeskButton(
+                  icon: Icons.print_outlined,
+                  label: '${l10n.ptOpenSheet} ↗',
+                  primary: true,
+                  onPressed: () => openSchoolSite(context, '0014'),
+                ),
+              ),
             ],
           ],
         ),

@@ -4,6 +4,8 @@ import 'package:provider/provider.dart';
 
 import '../../data/repositories/ecourse_repository.dart';
 import '../../domain/models/course.dart';
+import '../core/desk_list.dart';
+import '../core/desktop_mode.dart';
 import '../core/theme.dart';
 import '../core/widgets.dart';
 import '../../l10n/l10n.dart';
@@ -60,6 +62,7 @@ class _GradesScreenState extends State<GradesScreen> {
                     .toList();
                 if (graded.isEmpty) return EmptyState(context.l10n.noGrades);
                 final tones = context.tones;
+                if (desktopUi(context)) return _desk(context, graded, grades);
                 return ListView.separated(
                   padding: scrollPadding(context),
                   itemCount: graded.length,
@@ -106,6 +109,40 @@ class _GradesScreenState extends State<GradesScreen> {
                 );
               },
             ),
+    );
+  }
+
+  /// design/round-25 grades: a section per semester, a line per course
+  /// with its grade at the end.
+  Widget _desk(
+    BuildContext context,
+    List<Course> graded,
+    Map<int, String> grades,
+  ) {
+    final tones = context.tones;
+    final semesters = <String, List<Course>>{};
+    for (final c in graded) {
+      (semesters[c.semester] ??= []).add(c);
+    }
+    return ListView(
+      padding: scrollPadding(context),
+      children: [
+        for (final MapEntry(key: semester, value: courses)
+            in semesters.entries) ...[
+          SectionLabel(
+            semesterName(context, semester),
+            detail: context.l10n.courseCountShort(courses.length),
+          ),
+          for (final c in courses)
+            DeskLine(
+              leading: DeskStripe(tones.forCourse(c.id).strong),
+              title: context.courseName(c),
+              detail: semesterName(context, c.semester),
+              value: grades[c.id],
+              onTap: () => context.push('/courses/${c.id}'),
+            ),
+        ],
+      ],
     );
   }
 

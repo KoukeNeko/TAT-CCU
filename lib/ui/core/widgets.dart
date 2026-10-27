@@ -14,6 +14,7 @@ import 'desktop_mode.dart';
 import 'floating_dock.dart';
 import 'glass.dart';
 import 'theme.dart';
+import '../../l10n/l10n.dart';
 
 export 'format.dart';
 export 'glass_menu.dart';
@@ -144,7 +145,7 @@ AppBar subBar(
               child: child,
             ),
           ),
-          child: titleChild == null
+          child: (titleChild ?? _moreCrumbs(context, title)) == null
               ? Text(
                   title,
                   key: ValueKey(title),
@@ -158,7 +159,10 @@ AppBar subBar(
                         )
                       : null,
                 )
-              : KeyedSubtree(key: ValueKey(title), child: titleChild),
+              : KeyedSubtree(
+                  key: ValueKey(title),
+                  child: titleChild ?? _moreCrumbs(context, title)!,
+                ),
         ),
       ),
       if (action != null) _pressable(action),
@@ -166,6 +170,51 @@ AppBar subBar(
     ],
   ),
 );
+
+/// A page beside the 更多 list in the desktop UI: its bar reads
+/// 更多 › [title], the way back (design/round-25).
+Widget? _moreCrumbs(BuildContext context, String title) {
+  if (title.isEmpty ||
+      !desktopUi(context) ||
+      context.getInheritedWidgetOfExactType<ListPaneScope>()?.root != '/more') {
+    return null;
+  }
+  final scheme = Theme.of(context).colorScheme;
+  return Row(
+    children: [
+      GestureDetector(
+        onTap: () => context.go('/more'),
+        child: MouseRegion(
+          cursor: SystemMouseCursors.click,
+          child: Text(
+            context.l10n.navMore,
+            style: TextStyle(
+              fontSize: 13,
+              fontWeight: FontWeight.w700,
+              color: scheme.onSurfaceVariant,
+            ),
+          ),
+        ),
+      ),
+      Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 6),
+        child: Icon(
+          Icons.chevron_right,
+          size: 16,
+          color: scheme.onSurfaceVariant,
+        ),
+      ),
+      Flexible(
+        child: Text(
+          title,
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+          style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w800),
+        ),
+      ),
+    ],
+  );
+}
 
 /// The palette's field at the end of the desktop UI's rightmost bar.
 class _DesktopSearch extends StatelessWidget {

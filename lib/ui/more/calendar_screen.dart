@@ -40,6 +40,10 @@ const _wideRowHeight = 82.0;
 /// weekday row and the legend under it.
 const _monthChrome = 80.0;
 
+/// The same around the desktop's ruled month: its weekday row and border,
+/// and the legend.
+const _deskMonthChrome = 62.0;
+
 /// What an event is; each kind has its own color in the grid and the list.
 enum _Kind { school, assign, quiz, course, personal, site }
 
@@ -306,11 +310,17 @@ class _CalendarScreenState extends State<CalendarScreen> with AutoRefresh {
             ? context.l10n.monthTitle('${month.month}')
             : context.l10n.yearMonthTitle(month.year, '${month.month}'),
         actions: [
-          _RoundAction(
-            icon: Icons.today_outlined,
-            label: context.l10n.goToToday,
-            onTap: () => _select(_today),
-          ),
+          if (desktopUi(context))
+            DeskButton(
+              label: context.l10n.goToToday,
+              onPressed: () => _select(_today),
+            )
+          else
+            _RoundAction(
+              icon: Icons.today_outlined,
+              label: context.l10n.goToToday,
+              onTap: () => _select(_today),
+            ),
           if (!cover) ...[
             _RoundAction(
               icon: Icons.chevron_left,
@@ -346,63 +356,97 @@ class _CalendarScreenState extends State<CalendarScreen> with AutoRefresh {
                         final fold = foldOf(context);
                         final book = fold?.posture == FoldPosture.book;
                         final wide = !book && width >= splitLayout;
+                        final desk = wide && desktopUi(context);
+                        Widget grid(double row) => PageView.builder(
+                          controller: _pages,
+                          onPageChanged: (p) {
+                            setState(() => _page = p);
+                            _load(p);
+                          },
+                          itemBuilder: (context, page) => _MonthGrid(
+                            wide: wide,
+                            rowHeight: row,
+                            month: _monthOf(page),
+                            today: _today,
+                            selected: _selected,
+                            events: _months[page] ?? const [],
+                            onTap: _select,
+                          ),
+                        );
                         List<Widget> monthView(double row) => [
-                          Card(
-                            // Desktop days are cards of their own.
-                            color: wide
-                                ? Colors.transparent
-                                : scheme.surfaceContainerLow,
-                            margin: wide ? EdgeInsets.zero : null,
-                            child: Padding(
-                              padding: const EdgeInsets.fromLTRB(
-                                Space.s,
-                                Space.m,
-                                Space.s,
-                                Space.s,
+                          if (desk)
+                            // design/round-25: one ruled table.
+                            Container(
+                              clipBehavior: Clip.antiAlias,
+                              decoration: BoxDecoration(
+                                border: Border.all(
+                                  color: scheme.outlineVariant,
+                                ),
+                                borderRadius: BorderRadius.circular(10),
                               ),
                               child: Column(
                                 children: [
-                                  Row(
-                                    children: [
-                                      for (var d = 1; d <= 7; d++)
-                                        Expanded(
-                                          child: Text(
-                                            weekdayShort(context, d),
-                                            textAlign: TextAlign.center,
-                                            style: TextStyle(
-                                              fontSize: 11,
-                                              fontWeight: FontWeight.w800,
-                                              color: scheme.onSurfaceVariant,
+                                  SizedBox(
+                                    height: 30,
+                                    child: Row(
+                                      children: [
+                                        for (var d = 1; d <= 7; d++)
+                                          Expanded(
+                                            child: Text(
+                                              weekdayShort(context, d),
+                                              textAlign: TextAlign.center,
+                                              style: TextStyle(
+                                                fontSize: 12,
+                                                fontWeight: FontWeight.w800,
+                                                color: scheme.onSurfaceVariant,
+                                              ),
                                             ),
                                           ),
-                                        ),
-                                    ],
-                                  ),
-                                  const SizedBox(height: 4),
-                                  SizedBox(
-                                    height: row * 6,
-                                    child: PageView.builder(
-                                      controller: _pages,
-                                      onPageChanged: (p) {
-                                        setState(() => _page = p);
-                                        _load(p);
-                                      },
-                                      itemBuilder: (context, page) =>
-                                          _MonthGrid(
-                                            wide: wide,
-                                            rowHeight: row,
-                                            month: _monthOf(page),
-                                            today: _today,
-                                            selected: _selected,
-                                            events: _months[page] ?? const [],
-                                            onTap: _select,
-                                          ),
+                                      ],
                                     ),
                                   ),
+                                  SizedBox(height: row * 6, child: grid(row)),
                                 ],
                               ),
+                            )
+                          else
+                            Card(
+                              // Desktop days are cards of their own.
+                              color: wide
+                                  ? Colors.transparent
+                                  : scheme.surfaceContainerLow,
+                              margin: wide ? EdgeInsets.zero : null,
+                              child: Padding(
+                                padding: const EdgeInsets.fromLTRB(
+                                  Space.s,
+                                  Space.m,
+                                  Space.s,
+                                  Space.s,
+                                ),
+                                child: Column(
+                                  children: [
+                                    Row(
+                                      children: [
+                                        for (var d = 1; d <= 7; d++)
+                                          Expanded(
+                                            child: Text(
+                                              weekdayShort(context, d),
+                                              textAlign: TextAlign.center,
+                                              style: TextStyle(
+                                                fontSize: 11,
+                                                fontWeight: FontWeight.w800,
+                                                color: scheme.onSurfaceVariant,
+                                              ),
+                                            ),
+                                          ),
+                                      ],
+                                    ),
+                                    const SizedBox(height: 4),
+                                    SizedBox(height: row * 6, child: grid(row)),
+                                  ],
+                                ),
+                              ),
                             ),
-                          ),
                           _Legend(
                             month: month,
                             events: _months[_page] ?? const [],
@@ -434,8 +478,16 @@ class _CalendarScreenState extends State<CalendarScreen> with AutoRefresh {
                           context,
                           maxWidth: double.infinity,
                         );
-                        // The day panel takes the right edge.
-                        final padding = page.copyWith(right: page.left);
+                        // The day panel takes the right edge; on a desktop the
+                        // month keeps close to the window's (design/round-25).
+                        final padding = desk
+                            ? EdgeInsets.fromLTRB(
+                                20,
+                                scrollPadding(context, top: 18).top,
+                                20,
+                                18,
+                              )
+                            : page.copyWith(right: page.left);
                         // Beside the day the month fills the window's height; on
                         // a foldable it keeps the phone's rows.
                         final monthList = LayoutBuilder(
@@ -448,7 +500,9 @@ class _CalendarScreenState extends State<CalendarScreen> with AutoRefresh {
                                       _wideRowHeight,
                                       (box.maxHeight -
                                               padding.vertical -
-                                              _monthChrome) /
+                                              (desk
+                                                  ? _deskMonthChrome
+                                                  : _monthChrome)) /
                                           6,
                                     ),
                             ),
@@ -468,9 +522,9 @@ class _CalendarScreenState extends State<CalendarScreen> with AutoRefresh {
                                 ),
                                 child: ListView(
                                   padding: EdgeInsets.fromLTRB(
-                                    Space.xxl,
-                                    scrollPadding(context).top,
-                                    Space.xxl,
+                                    32,
+                                    scrollPadding(context, top: 26).top,
+                                    32,
                                     Space.xxl,
                                   ),
                                   children: [day],
@@ -525,6 +579,18 @@ class _RoundAction extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
+    if (desktopUi(context)) {
+      // The desktop toolbar's plain 30 by 28 button.
+      return IconButton(
+        tooltip: label,
+        onPressed: onTap,
+        icon: Icon(icon),
+        iconSize: 16,
+        color: scheme.onSurfaceVariant,
+        padding: EdgeInsets.zero,
+        constraints: const BoxConstraints.tightFor(width: 30, height: 28),
+      );
+    }
     return Padding(
       padding: const EdgeInsets.only(left: Space.s),
       child: Material(
@@ -599,10 +665,10 @@ class _MonthGrid extends StatelessWidget {
                             isSelected: isSelected,
                             labels: [
                               for (final s in _schoolOn(day))
-                                (s.title, _Kind.school.tone(tones)),
+                                (s.title, _Kind.school),
                               for (final e
                                   in byDay[day] ?? const <CalendarEvent>[])
-                                (e.name, _kindOf(e).tone(tones)),
+                                (e.name, _kindOf(e)),
                             ],
                             onTap: () => onTap(day),
                           );
@@ -921,11 +987,14 @@ extension on _DayEvents {
       children: [
         Text(
           '${day.month}/${day.day} ${weekdayName(context, day.weekday)}',
-          style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w800),
+          style: const TextStyle(fontSize: 26, fontWeight: FontWeight.w800),
         ),
-        if (count > 0)
+        if (count > 0 || DateUtils.isSameDay(day, clk.clock.now()))
           Text(
-            l10n.itemCount(count),
+            [
+              if (DateUtils.isSameDay(day, clk.clock.now())) l10n.today,
+              if (count > 0) l10n.itemCount(count),
+            ].join('・'),
             style: TextStyle(
               fontSize: 13,
               fontWeight: FontWeight.w700,
@@ -998,8 +1067,11 @@ class _Legend extends StatelessWidget {
       for (final e in events) _kindOf(e),
     };
     if (kinds.isEmpty) return const SizedBox.shrink();
+    final desk = desktopUi(context);
     return Padding(
-      padding: const EdgeInsets.fromLTRB(Space.s, Space.m, Space.s, 0),
+      padding: desk
+          ? const EdgeInsets.only(top: 10)
+          : const EdgeInsets.fromLTRB(Space.s, Space.m, Space.s, 0),
       child: Wrap(
         spacing: 14,
         runSpacing: 6,
@@ -1012,7 +1084,8 @@ class _Legend extends StatelessWidget {
                   DecoratedBox(
                     decoration: BoxDecoration(
                       color: k.tone(tones).strong,
-                      shape: BoxShape.circle,
+                      shape: desk ? BoxShape.rectangle : BoxShape.circle,
+                      borderRadius: desk ? BorderRadius.circular(3) : null,
                     ),
                     child: const SizedBox.square(dimension: 8),
                   ),
@@ -1021,7 +1094,7 @@ class _Legend extends StatelessWidget {
                     k.label(context.l10n),
                     style: TextStyle(
                       fontSize: 12,
-                      fontWeight: FontWeight.w800,
+                      fontWeight: desk ? FontWeight.w700 : FontWeight.w800,
                       color: scheme.onSurfaceVariant,
                     ),
                   ),
@@ -1047,13 +1120,14 @@ class _WideDayCell extends StatelessWidget {
 
   final DateTime day;
   final bool inMonth, isToday, isSelected;
-  final List<(String, Tone)> labels;
+  final List<(String, _Kind)> labels;
   final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
     final tones = context.tones;
+    if (desktopUi(context)) return _desk(context);
     return Opacity(
       opacity: inMonth ? 1 : 0.35,
       child: PressFeedback(
@@ -1089,7 +1163,10 @@ class _WideDayCell extends StatelessWidget {
                         color: isToday ? tones.lilac.strong : scheme.onSurface,
                       ),
                     ),
-                    for (final (title, tone) in labels)
+                    for (final (title, tone) in [
+                      for (final (title, kind) in labels)
+                        (title, kind.tone(tones)),
+                    ])
                       Container(
                         width: double.infinity,
                         margin: const EdgeInsets.only(top: 4),
@@ -1115,6 +1192,98 @@ class _WideDayCell extends StatelessWidget {
                       ),
                   ],
                 ),
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+extension on _WideDayCell {
+  /// design/round-25: a ruled cell; school dates stand out in their colour,
+  /// other events are plain.
+  Widget _desk(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    final school = _Kind.school.tone(context.tones);
+    final line = BorderSide(color: scheme.outlineVariant);
+    return GestureDetector(
+      behavior: HitTestBehavior.opaque,
+      onTap: onTap,
+      child: MouseRegion(
+        cursor: SystemMouseCursors.click,
+        child: Semantics(
+          button: true,
+          selected: isSelected,
+          child: Container(
+            padding: const EdgeInsets.fromLTRB(7, 6, 7, 6),
+            decoration: BoxDecoration(
+              color: isSelected ? deskSelection(scheme) : null,
+              border: Border(
+                top: line,
+                left: day.weekday == DateTime.monday ? BorderSide.none : line,
+              ),
+            ),
+            // Clips the events that do not fit without an overflow error.
+            child: SingleChildScrollView(
+              physics: const NeverScrollableScrollPhysics(),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Container(
+                    width: 22,
+                    height: 22,
+                    alignment: isToday
+                        ? Alignment.center
+                        : Alignment.centerLeft,
+                    decoration: isToday
+                        ? BoxDecoration(
+                            color: scheme.primary,
+                            shape: BoxShape.circle,
+                          )
+                        : null,
+                    child: Text(
+                      '${day.day}',
+                      style: TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w800,
+                        color: isToday
+                            ? scheme.onPrimary
+                            : inMonth
+                            ? scheme.onSurfaceVariant
+                            : scheme.onSurfaceVariant.withValues(alpha: 0.6),
+                      ),
+                    ),
+                  ),
+                  for (final (title, kind) in labels)
+                    Container(
+                      width: double.infinity,
+                      margin: const EdgeInsets.only(top: 3),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 5,
+                        vertical: 1,
+                      ),
+                      decoration: BoxDecoration(
+                        color: kind == _Kind.school
+                            ? school.strong.withValues(alpha: 0.2)
+                            : scheme.surfaceContainerHigh,
+                        borderRadius: BorderRadius.circular(4),
+                      ),
+                      child: Text(
+                        title,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: TextStyle(
+                          fontSize: 11,
+                          fontWeight: FontWeight.w800,
+                          color: kind == _Kind.school
+                              ? school.strong
+                              : scheme.onSurface,
+                        ),
+                      ),
+                    ),
+                ],
               ),
             ),
           ),

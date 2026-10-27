@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart' show ScrollCacheExtent;
 import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
 import 'package:package_info_plus/package_info_plus.dart';
@@ -257,38 +258,46 @@ class _MoreScreenState extends State<MoreScreen> with AutoRefresh {
     final cover = coverScreen(context);
     return Scaffold(
       extendBodyBehindAppBar: true,
-      appBar: topBar(
-        context.l10n.navMore,
-        actions: [
-          Padding(
-            padding: const EdgeInsets.only(right: Space.l),
-            child: cover
-                ? IconButton(
-                    tooltip: context.l10n.searchSystems,
-                    style: IconButton.styleFrom(
-                      backgroundColor: scheme.surfaceContainer,
-                    ),
-                    icon: const Icon(Icons.search),
-                    onPressed: () => setState(() {
-                      _searchOpen = !_searchOpen;
-                      if (!_searchOpen) _query = '';
-                    }),
-                  )
-                : IconButton(
-                    tooltip: context.l10n.pageStages,
-                    style: IconButton.styleFrom(
-                      backgroundColor: scheme.surfaceContainer,
-                    ),
-                    icon: const Icon(Icons.info_outline),
-                    onPressed: () => _showStages(context),
-                  ),
-          ),
-        ],
-      ),
+      // Beside a page on a desktop, that page's bar names the way here.
+      appBar: desktopUi(context) && widget.open != null
+          ? topBar('')
+          : topBar(
+              context.l10n.navMore,
+              actions: [
+                Padding(
+                  padding: const EdgeInsets.only(right: Space.l),
+                  child: cover
+                      ? IconButton(
+                          tooltip: context.l10n.searchSystems,
+                          style: IconButton.styleFrom(
+                            backgroundColor: scheme.surfaceContainer,
+                          ),
+                          icon: const Icon(Icons.search),
+                          onPressed: () => setState(() {
+                            _searchOpen = !_searchOpen;
+                            if (!_searchOpen) _query = '';
+                          }),
+                        )
+                      : IconButton(
+                          tooltip: context.l10n.pageStages,
+                          style: IconButton.styleFrom(
+                            backgroundColor: scheme.surfaceContainer,
+                          ),
+                          icon: const Icon(Icons.info_outline),
+                          onPressed: () => _showStages(context),
+                        ),
+                ),
+              ],
+            ),
       body: Builder(
         // Reads insets from inside this Scaffold, below the glass app bar.
         builder: (context) => ListView(
           padding: scrollPadding(context),
+          // All of it built beside a desktop page, so the open page's row,
+          // however low, can scroll itself into view.
+          scrollCacheExtent: desktopUi(context)
+              ? const ScrollCacheExtent.pixels(double.infinity)
+              : null,
           children: [
             // A flip phone's outer display searches from the title instead.
             if (!cover || _searchOpen)

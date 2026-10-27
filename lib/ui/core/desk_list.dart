@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 
 import 'theme.dart';
+import 'widgets.dart';
 
 /// The desktop UI's lists (design/round-25): Mail's dense rows in a list
 /// column, and the sections of the page beside it.
@@ -29,7 +31,8 @@ class DeskGroup extends StatelessWidget {
     final scheme = Theme.of(context).colorScheme;
     return Padding(
       padding: const EdgeInsets.fromLTRB(Space.l, Space.l, Space.l, 6),
-      child: DefaultTextStyle(
+      // Merged, so the app's font carries through.
+      child: DefaultTextStyle.merge(
         style: _faint(scheme),
         child: Row(children: [Text(title), const Spacer(), ?trailing]),
       ),
@@ -70,6 +73,31 @@ class DeskRow extends StatefulWidget {
 
 class _DeskRowState extends State<DeskRow> {
   var _hover = false;
+
+  @override
+  void initState() {
+    super.initState();
+    if (widget.selected) _reveal();
+  }
+
+  @override
+  void didUpdateWidget(DeskRow old) {
+    super.didUpdateWidget(old);
+    if (widget.selected && !old.selected) _reveal();
+  }
+
+  /// Scrolls the lit row into its list, as Mail keeps the open message in
+  /// view.
+  /// Neither moves a row already in view.
+  void _reveal() => WidgetsBinding.instance.addPostFrameCallback((_) {
+    if (!mounted) return;
+    for (final policy in [
+      ScrollPositionAlignmentPolicy.keepVisibleAtEnd,
+      ScrollPositionAlignmentPolicy.keepVisibleAtStart,
+    ]) {
+      Scrollable.ensureVisible(context, alignmentPolicy: policy);
+    }
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -179,10 +207,15 @@ class DeskStripe extends StatelessWidget {
 
 /// A small label in a row, such as 上課中.
 class DeskTag extends StatelessWidget {
-  const DeskTag(this.label, {super.key, this.color});
+  const DeskTag(this.label, {super.key, this.color, this.tone});
 
   final String label;
+
+  /// The label's colour on the neutral ground.
   final Color? color;
+
+  /// Fills the tag with a state's tone instead, such as 已登入 in mint.
+  final Tone? tone;
 
   @override
   Widget build(BuildContext context) {
@@ -190,12 +223,13 @@ class DeskTag extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
       decoration: BoxDecoration(
-        color: scheme.surfaceContainerHigh,
+        color: tone?.fill ?? scheme.surfaceContainerHigh,
         borderRadius: BorderRadius.circular(5),
       ),
       child: Text(
         label,
-        style: _faint(scheme).copyWith(color: color ?? scheme.onSurfaceVariant),
+        style: _faint(scheme)
+            .copyWith(color: tone?.ink ?? color ?? scheme.onSurfaceVariant),
       ),
     );
   }
@@ -262,13 +296,16 @@ class DeskLine extends StatelessWidget {
     this.value,
     this.valueColor,
     this.leading,
+    this.trailing,
     this.onTap,
   });
 
   final String title;
   final String? detail, value;
   final Color? valueColor;
-  final Widget? leading;
+
+  /// After the value, such as a status tag or a button.
+  final Widget? leading, trailing;
   final VoidCallback? onTap;
 
   @override
@@ -325,6 +362,10 @@ class DeskLine extends StatelessWidget {
                   ),
                 ),
               ],
+              if (trailing case final trailing?) ...[
+                const SizedBox(width: Space.m),
+                trailing,
+              ],
             ],
           ),
         ),
@@ -341,45 +382,67 @@ class DeskButton extends StatelessWidget {
     required this.onPressed,
     this.icon,
     this.primary = false,
+    this.danger = false,
+    this.trailingIcon,
   });
+
+  /// After the label, such as ▾ on a button that opens a menu.
+  final IconData? trailingIcon;
 
   final String label;
   final IconData? icon;
   final bool primary;
+
+  /// Undoes something, such as cancelling a sign-up: its label in red.
+  final bool danger;
   final VoidCallback? onPressed;
 
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
-    final ink = primary ? scheme.onPrimary : scheme.onSurface;
+    final ink = primary
+        ? scheme.onPrimary
+        : danger
+        ? scheme.error
+        : scheme.onSurface;
     return GestureDetector(
       onTap: onPressed,
       child: MouseRegion(
-        cursor: SystemMouseCursors.click,
-        child: Container(
-          height: 28,
-          padding: const EdgeInsets.symmetric(horizontal: Space.m),
-          decoration: BoxDecoration(
-            color: primary ? scheme.primary : scheme.surfaceContainerHigh,
-            border: primary ? null : Border.all(color: scheme.outlineVariant),
-            borderRadius: BorderRadius.circular(7),
-          ),
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              if (icon case final icon?) ...[
-                Icon(icon, size: 15, color: ink),
-                const SizedBox(width: 6),
-              ],
-              Text(
-                label,
-                style: TextStyle(
-                  fontSize: 13,
-                  fontWeight: FontWeight.w800,
-                  color: ink,
+        cursor: onPressed == null
+            ? SystemMouseCursors.forbidden
+            : SystemMouseCursors.click,
+        child: Opacity(
+          // Unavailable until something is filled in or chosen.
+          opacity: onPressed == null ? 0.45 : 1,
+          child: Container(
+            height: 28,
+            padding: const EdgeInsets.symmetric(horizontal: Space.m),
+            decoration: BoxDecoration(
+              color: primary ? scheme.primary : scheme.surfaceContainerHigh,
+              border: primary ? null : Border.all(color: scheme.outlineVariant),
+              borderRadius: BorderRadius.circular(7),
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                if (icon case final icon?) ...[
+                  Icon(icon, size: 15, color: ink),
+                  const SizedBox(width: 6),
+                ],
+                Text(
+                  label,
+                  style: TextStyle(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w800,
+                    color: ink,
+                  ),
                 ),
-              ),
-            ],
+                if (trailingIcon case final icon?) ...[
+                  const SizedBox(width: 4),
+                  Icon(icon, size: 15, color: ink),
+                ],
+              ],
+            ),
           ),
         ),
       ),
@@ -473,4 +536,191 @@ class DeskCountdown extends StatelessWidget {
       ),
     );
   }
+}
+
+/// The desktop UI's icon square at the start of a line.
+class DeskIcon extends StatelessWidget {
+  const DeskIcon(this.icon, {super.key});
+
+  final IconData icon;
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    return Container(
+      width: 28,
+      height: 28,
+      decoration: BoxDecoration(
+        color: scheme.surfaceContainerHigh,
+        borderRadius: BorderRadius.circular(7),
+      ),
+      child: Icon(icon, size: 15, color: scheme.onSurfaceVariant),
+    );
+  }
+}
+
+/// The desktop UI's thin gauge.
+class DeskBar extends StatelessWidget {
+  const DeskBar({super.key, required this.value, required this.color});
+
+  final double value;
+  final Color color;
+
+  @override
+  Widget build(BuildContext context) => ClipRRect(
+    borderRadius: BorderRadius.circular(3),
+    child: LinearProgressIndicator(
+      value: value.clamp(0, 1),
+      minHeight: 6,
+      color: color,
+      backgroundColor: Theme.of(context).colorScheme.surfaceContainerHigh,
+    ),
+  );
+}
+
+/// The desktop UI's choice of a few options on a track.
+class DeskSegment extends StatelessWidget {
+  const DeskSegment({
+    super.key,
+    required this.labels,
+    required this.selected,
+    required this.onChanged,
+    this.disabled = const {},
+  });
+
+  final List<String> labels;
+  final int selected;
+  final ValueChanged<int> onChanged;
+  final Set<int> disabled;
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    return Container(
+      padding: const EdgeInsets.all(2),
+      decoration: BoxDecoration(
+        color: scheme.surfaceContainerHigh,
+        borderRadius: BorderRadius.circular(7),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        spacing: 2,
+        children: [
+          for (final (i, label) in labels.indexed)
+            GestureDetector(
+              onTap: disabled.contains(i) ? null : () => onChanged(i),
+              child: MouseRegion(
+                cursor: disabled.contains(i)
+                    ? MouseCursor.defer
+                    : SystemMouseCursors.click,
+                child: Container(
+                  height: 24,
+                  padding: const EdgeInsets.symmetric(horizontal: 10),
+                  alignment: Alignment.center,
+                  decoration: BoxDecoration(
+                    color: i == selected ? deskSelection(scheme) : null,
+                    borderRadius: BorderRadius.circular(5),
+                  ),
+                  child: Text(
+                    label,
+                    style: TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w800,
+                      color: i == selected
+                          ? scheme.onSurface
+                          : disabled.contains(i)
+                          ? scheme.outline
+                          : scheme.onSurfaceVariant,
+                    ),
+                  ),
+                ),
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+}
+
+/// The desktop UI's switch, at a pointer's size.
+class DeskToggle extends StatelessWidget {
+  const DeskToggle({super.key, required this.value, required this.onChanged});
+
+  final bool value;
+  final ValueChanged<bool> onChanged;
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    return GestureDetector(
+      onTap: () => onChanged(!value),
+      child: MouseRegion(
+        cursor: SystemMouseCursors.click,
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 120),
+          width: 30,
+          height: 18,
+          padding: const EdgeInsets.all(2),
+          alignment: value ? Alignment.centerRight : Alignment.centerLeft,
+          decoration: BoxDecoration(
+            color: value ? scheme.primary : scheme.surfaceContainerHighest,
+            borderRadius: BorderRadius.circular(9),
+          ),
+          child: Container(
+            width: 14,
+            height: 14,
+            decoration: BoxDecoration(
+              color: value ? scheme.onPrimary : scheme.onSurface,
+              shape: BoxShape.circle,
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// A desktop bar's path: [parent], which leads to [path], then [title].
+AppBar deskCrumbBar(
+  BuildContext context, {
+  required String parent,
+  required String path,
+  required String title,
+}) {
+  final scheme = Theme.of(context).colorScheme;
+  return subBar(
+    context,
+    title,
+    back: false,
+    titleChild: Row(
+      children: [
+        GestureDetector(
+          onTap: () => context.go(path),
+          child: MouseRegion(
+            cursor: SystemMouseCursors.click,
+            child: Text(
+              parent,
+              style: TextStyle(
+                fontSize: 13,
+                fontWeight: FontWeight.w700,
+                color: scheme.onSurfaceVariant,
+              ),
+            ),
+          ),
+        ),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 6),
+          child: Icon(
+            Icons.chevron_right,
+            size: 16,
+            color: scheme.onSurfaceVariant,
+          ),
+        ),
+        Text(
+          title,
+          style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w800),
+        ),
+      ],
+    ),
+  );
 }
