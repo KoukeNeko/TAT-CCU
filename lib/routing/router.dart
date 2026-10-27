@@ -442,39 +442,44 @@ Widget _listBeside(
   Widget? first,
 }) {
   if (!listBeside(context)) return child;
-  return Row(
-    crossAxisAlignment: CrossAxisAlignment.stretch,
-    children: [
-      SizedBox(
-        width: listWidthOf(context),
-        child: LeadingPane(
-          child: Builder(
-            builder: (context) {
-              // Only the top page draws the list, under one key per navigator,
-              // so the next page takes it over with its data and scroll.
-              if (!(ModalRoute.isCurrentOf(context) ?? true)) {
-                return const SizedBox.shrink();
-              }
-              final keys = _listKeys[Navigator.of(context)] ??= {};
-              return PaneSize(key: keys[list.key] ??= GlobalKey(), child: list);
-            },
+  return ToolbarPath(
+    child: Row(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        SizedBox(
+          width: listWidthOf(context),
+          child: LeadingPane(
+            child: Builder(
+              builder: (context) {
+                // Only the top page draws the list, under one key per navigator,
+                // so the next page takes it over with its data and scroll.
+                if (!(ModalRoute.isCurrentOf(context) ?? true)) {
+                  return const SizedBox.shrink();
+                }
+                final keys = _listKeys[Navigator.of(context)] ??= {};
+                return PaneSize(
+                  key: keys[list.key] ??= GlobalKey(),
+                  child: list,
+                );
+              },
+            ),
           ),
         ),
-      ),
-      const _PaneDivider(),
-      Expanded(
-        child: atRoot && first == null
-            ? const SizedBox.shrink()
-            : PaneSize(
-                child: BesideList(
-                  child: ListPaneScope(
-                    root: root,
-                    child: atRoot ? first! : child,
+        const _PaneDivider(),
+        Expanded(
+          child: atRoot && first == null
+              ? const SizedBox.shrink()
+              : PaneSize(
+                  child: BesideList(
+                    child: ListPaneScope(
+                      root: root,
+                      child: atRoot ? first! : child,
+                    ),
                   ),
                 ),
-              ),
-      ),
-    ],
+        ),
+      ],
+    ),
   );
 }
 
@@ -496,24 +501,26 @@ class _MoreBeside extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     if (!listBeside(context)) return child;
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        SizedBox(
-          width: listWidthOf(context),
-          child: LeadingPane(
-            child: PaneSize(child: MoreScreen(open: open)),
-          ),
-        ),
-        const _PaneDivider(),
-        Expanded(
-          child: PaneSize(
-            child: BesideList(
-              child: ListPaneScope(root: '/more', child: child),
+    return ToolbarPath(
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          SizedBox(
+            width: listWidthOf(context),
+            child: LeadingPane(
+              child: PaneSize(child: MoreScreen(open: open)),
             ),
           ),
-        ),
-      ],
+          const _PaneDivider(),
+          Expanded(
+            child: PaneSize(
+              child: BesideList(
+                child: ListPaneScope(root: '/more', child: child),
+              ),
+            ),
+          ),
+        ],
+      ),
     );
   }
 }

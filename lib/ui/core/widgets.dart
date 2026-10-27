@@ -136,43 +136,55 @@ AppBar subBar(
       // A title that comes in later (the course page's, on scrolling)
       // rises and fades in with the glass rather than appearing at once.
       Expanded(
-        child: AnimatedSwitcher(
-          duration: const Duration(milliseconds: 200),
-          switchInCurve: Curves.easeOutCubic,
-          switchOutCurve: Curves.easeInCubic,
-          layoutBuilder: (current, previous) => Stack(
-            alignment: Alignment.centerLeft,
-            children: [...previous, ?current],
+        child: switch (_besideToolbarPath(context)) {
+          // Drawn across both bars by [ToolbarPath].
+          final to? => _PathToList(
+            to: to,
+            path:
+                titleChild ??
+                _moreCrumbs(context, title) ??
+                Text(title, maxLines: 1, overflow: TextOverflow.ellipsis),
           ),
-          transitionBuilder: (child, animation) => FadeTransition(
-            opacity: animation,
-            child: SlideTransition(
-              position: Tween(
-                begin: const Offset(0, 0.4),
-                end: Offset.zero,
-              ).animate(animation),
-              child: child,
+          null => AnimatedSwitcher(
+            duration: const Duration(milliseconds: 200),
+            switchInCurve: Curves.easeOutCubic,
+            switchOutCurve: Curves.easeInCubic,
+            layoutBuilder: (current, previous) => Stack(
+              alignment: Alignment.centerLeft,
+              children: [...previous, ?current],
             ),
+            transitionBuilder: (child, animation) => FadeTransition(
+              opacity: animation,
+              child: SlideTransition(
+                position: Tween(
+                  begin: const Offset(0, 0.4),
+                  end: Offset.zero,
+                ).animate(animation),
+                child: child,
+              ),
+            ),
+            child: (titleChild ?? _moreCrumbs(context, title)) == null
+                ? Text(
+                    title,
+                    key: ValueKey(title),
+                    // One line on a flip phone's outer display.
+                    maxLines: coverScreen(context) ? 1 : null,
+                    overflow: coverScreen(context)
+                        ? TextOverflow.ellipsis
+                        : null,
+                    style: coverScreen(context)
+                        ? const TextStyle(
+                            fontSize: 20,
+                            fontWeight: FontWeight.w900,
+                          )
+                        : null,
+                  )
+                : KeyedSubtree(
+                    key: ValueKey(title),
+                    child: titleChild ?? _moreCrumbs(context, title)!,
+                  ),
           ),
-          child: (titleChild ?? _moreCrumbs(context, title)) == null
-              ? Text(
-                  title,
-                  key: ValueKey(title),
-                  // One line on a flip phone's outer display.
-                  maxLines: coverScreen(context) ? 1 : null,
-                  overflow: coverScreen(context) ? TextOverflow.ellipsis : null,
-                  style: coverScreen(context)
-                      ? const TextStyle(
-                          fontSize: 20,
-                          fontWeight: FontWeight.w900,
-                        )
-                      : null,
-                )
-              : KeyedSubtree(
-                  key: ValueKey(title),
-                  child: titleChild ?? _moreCrumbs(context, title)!,
-                ),
-        ),
+        },
       ),
       if (action != null) _pressable(action),
       const _DesktopSearch(),
@@ -1130,6 +1142,107 @@ class ListPaneScope extends InheritedWidget {
 
   @override
   bool updateShouldNotify(ListPaneScope old) => old.root != root;
+}
+
+/// A list and the page beside it on a desktop, whose two bars read as one
+/// toolbar: the page's path is drawn across both, after the sidebar toggle
+/// (design/round-25).
+class ToolbarPath extends StatefulWidget {
+  const ToolbarPath({super.key, required this.child});
+
+  final Widget child;
+
+  @override
+  State<ToolbarPath> createState() => _ToolbarPathState();
+}
+
+class _ToolbarPathState extends State<ToolbarPath> {
+  // Not disposed: a leaving page clears it after its last frame.
+  final _path = ValueNotifier<Widget?>(null);
+
+  @override
+  Widget build(BuildContext context) {
+    final toggle = sidebarToggleOf(context);
+    return _ToolbarPathScope(
+      path: _path,
+      child: Stack(
+        children: [
+          widget.child,
+          Positioned(
+            // Past the toggle (_SidebarButton), short of the page's actions
+            // and search field.
+            left: 16 + (toggle == null ? 0 : toggle.inset + 40),
+            right: 320,
+            top: MediaQuery.paddingOf(context).top,
+            height: desktopBarHeight,
+            child: Align(
+              alignment: Alignment.centerLeft,
+              child: DefaultTextStyle.merge(
+                style: AppBarTheme.of(context).titleTextStyle,
+                child: ValueListenableBuilder(
+                  valueListenable: _path,
+                  builder: (context, path, _) =>
+                      path ?? const SizedBox.shrink(),
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _ToolbarPathScope extends InheritedWidget {
+  const _ToolbarPathScope({required this.path, required super.child});
+
+  final ValueNotifier<Widget?> path;
+
+  @override
+  bool updateShouldNotify(_ToolbarPathScope old) => old.path != path;
+}
+
+/// In the page's bar beside a list: where its path goes.
+ValueNotifier<Widget?>? _besideToolbarPath(BuildContext context) =>
+    context.getInheritedWidgetOfExactType<BesideList>() == null
+    ? null
+    : _toolbarPathOf(context);
+
+ValueNotifier<Widget?>? _toolbarPathOf(BuildContext context) =>
+    desktopUi(context)
+    ? context.getInheritedWidgetOfExactType<_ToolbarPathScope>()?.path
+    : null;
+
+/// In the page's bar: hands [path] to the list's bar and draws nothing.
+class _PathToList extends StatefulWidget {
+  const _PathToList({required this.to, required this.path});
+
+  final ValueNotifier<Widget?> to;
+  final Widget path;
+
+  @override
+  State<_PathToList> createState() => _PathToListState();
+}
+
+class _PathToListState extends State<_PathToList> {
+  @override
+  Widget build(BuildContext context) {
+    // After the frame: the list's bar is built in it too.
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) widget.to.value = widget.path;
+    });
+    return const SizedBox.shrink();
+  }
+
+  @override
+  void dispose() {
+    final to = widget.to;
+    final path = widget.path;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (to.value == path) to.value = null;
+    });
+    super.dispose();
+  }
 }
 
 /// Goes back a page. The first page of a nested navigator (a course, inside
