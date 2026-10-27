@@ -214,85 +214,158 @@ extension on CourseDetailScreen {
       fontWeight: FontWeight.w800,
       color: scheme.onSurfaceVariant,
     );
-    Widget lead(String text, [Color? color]) => SizedBox(
-      width: 52,
-      child: Text(
-        text,
-        maxLines: 1,
-        overflow: TextOverflow.ellipsis,
-        style: faint.copyWith(color: color, fontSize: 13),
-      ),
-    );
+    final tone = tones.forCourse(courseId);
+    // A stat: the number large, what it counts small.
+    Widget stat(String value, String label, VoidCallback? onTap, [Color? c]) =>
+        DeskRow(
+          leading: SizedBox(
+            width: 58,
+            child: Text(
+              value,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.w800,
+                color: c ?? scheme.onSurface,
+              ),
+            ),
+          ),
+          title: label,
+          dimmed: true,
+          onTap: onTap,
+        );
     Widget part(String path, IconData icon, String title, String detail) =>
         DeskRow(
-          leading: Icon(icon, size: 16, color: scheme.onSurfaceVariant),
+          leading: Container(
+            width: 28,
+            height: 28,
+            decoration: BoxDecoration(
+              color: scheme.surfaceContainerHigh,
+              borderRadius: BorderRadius.circular(7),
+            ),
+            child: Icon(icon, size: 15, color: scheme.onSurfaceVariant),
+          ),
           title: title,
           selected: open == path,
-          trailing: Text(detail, style: faint.copyWith(fontSize: 11)),
+          trailing: Text('$detail  ›', style: faint.copyWith(fontSize: 11)),
           onTap: () => show(path),
         );
+    // The page a due item opens, to light its row while it is open.
+    String? pathOf(DueItem d) => switch (int.tryParse(
+      Uri.tryParse(d.url ?? '')?.queryParameters['id'] ?? '',
+    )) {
+      final cmid? => '$base/modules/$cmid',
+      null => null,
+    };
     return ListView(
       padding: EdgeInsets.only(top: scrollPadding(context).top),
       children: [
         Padding(
           padding: const EdgeInsets.fromLTRB(
             Space.l,
-            Space.s,
+            Space.l,
             Space.l,
             Space.m,
           ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+              Row(
+                children: [
+                  Container(
+                    width: 8,
+                    height: 8,
+                    decoration: BoxDecoration(
+                      color: tone.strong,
+                      borderRadius: BorderRadius.circular(3),
+                    ),
+                  ),
+                  const SizedBox(width: Space.s),
+                  Expanded(
+                    child: Text(
+                      [?course.room, ...course.teachers.take(1)].join('・'),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: faint,
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: Space.xs),
               Text(
                 context.courseName(course),
                 style: const TextStyle(
-                  fontSize: 20,
+                  fontSize: 18,
                   fontWeight: FontWeight.w800,
                   height: 1.3,
                 ),
               ),
-              const SizedBox(height: 2),
-              Text(
-                [?course.room, ...course.teachers.take(1)].join('・'),
-                style: faint.copyWith(fontSize: 13),
-              ),
               if (next != null) ...[
                 const SizedBox(height: Space.s),
-                DeskTag(l10n.nextClassAt(next)),
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: Space.s,
+                    vertical: 3,
+                  ),
+                  decoration: BoxDecoration(
+                    color: tone.fill,
+                    borderRadius: BorderRadius.circular(5),
+                  ),
+                  child: Text(
+                    l10n.nextClassAt(next),
+                    style: TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w800,
+                      color: tone.ink,
+                    ),
+                  ),
+                ),
               ],
             ],
           ),
         ),
-        DeskRow(
-          leading: lead(
-            firstDue == null ? '0' : timeLeft(l10n, firstDue.due),
-            tones.peach.strong,
-          ),
-          title: firstDue == null
-              ? l10n.nothingDue
-              : l10n.nameDue(firstDue.name),
-          onTap: firstDue == null ? null : () => openDueItem(context, firstDue),
+        stat(
+          firstDue == null ? '0' : timeLeft(l10n, firstDue.due),
+          firstDue == null ? l10n.nothingDue : l10n.nameDue(firstDue.name),
+          firstDue == null ? null : () => openDueItem(context, firstDue),
+          tones.peach.strong,
         ),
-        DeskRow(
-          leading: lead('${summary.posts.length}', tones.sun.strong),
-          title: l10n.announcementsUnit,
-          onTap: () => show('$base/announcements'),
+        stat(
+          l10n.postCount(summary.posts.length),
+          l10n.announcements,
+          () => show('$base/announcements'),
         ),
-        DeskRow(
-          leading: lead(summary.total ?? '-'),
-          title: l10n.currentGrade,
-          onTap: () => show('$base/grades'),
+        stat(
+          summary.total ?? '-',
+          l10n.currentGrade,
+          () => show('$base/grades'),
         ),
         if (summary.due.isNotEmpty) ...[
-          DeskGroup(l10n.toDo, trailing: Text('${summary.due.length}')),
+          DeskGroup(
+            l10n.toDo,
+            trailing: Text(l10n.itemCount(summary.due.length)),
+          ),
           for (final d in summary.due)
             DeskRow(
-              leading: lead(timeLeft(l10n, d.due), tones.peach.strong),
+              leading: SizedBox(
+                width: 46,
+                child: Text(
+                  timeLeft(l10n, d.due),
+                  style: faint.copyWith(
+                    fontSize: 13,
+                    color: d.due.difference(clk.clock.now()).inHours < 48
+                        ? tones.peach.strong
+                        : tones.sun.strong,
+                  ),
+                ),
+              ),
               title: d.name,
               subtitle:
                   '${weekdayName(context, d.due.weekday)} '
                   '${monthDayTime(d.due)}',
+              selected: open != null && open == pathOf(d),
+              trailing: DeskStripe(tone.strong),
               onTap: () => openDueItem(context, d),
             ),
         ],
@@ -407,6 +480,8 @@ class _CourseBarState extends State<_CourseBar> {
         // A flip phone's outer display has no card with the name, so the
         // bar always shows it (design/round-24 flip-all).
         final shown = titled || coverScreen(context);
+        // Beside its pages on a desktop, the path in their bar names it.
+        if (desktopUi(context)) return subBar(context, '', back: false);
         return subBar(
           context,
           switch (snap.data) {
@@ -626,7 +701,7 @@ class CoursePartScreen extends StatelessWidget {
 
   Widget _plain(BuildContext context, Widget body) => Scaffold(
     extendBodyBehindAppBar: true,
-    appBar: subBar(context, part.title(context.l10n)),
+    appBar: _partBar(context, courseId, part.title(context.l10n)),
     body: body,
   );
 }
@@ -644,11 +719,15 @@ class _Contents extends StatelessWidget {
     return Loader<List<Section>>.watch(
       capsuleInBody: true,
       bar: (context) =>
-          subBar(context, CoursePart.contents.title(context.l10n)),
+          _partBar(context, courseId, CoursePart.contents.title(context.l10n)),
       watch: () => repo.watch((repo) => repo.contents(courseId)),
       builder: (context, sections) => sections.isEmpty
           ? Scaffold(
-              appBar: subBar(context, CoursePart.contents.title(context.l10n)),
+              appBar: _partBar(
+                context,
+                courseId,
+                CoursePart.contents.title(context.l10n),
+              ),
               body: CapsuleArea(child: EmptyState(context.l10n.noContents)),
             )
           : _SectionList(courseId: courseId, sections: sections),
@@ -745,8 +824,9 @@ class _SectionListState extends State<_SectionList> {
     final course = context.tones.forCourse(widget.courseId);
     return Scaffold(
       extendBodyBehindAppBar: true,
-      appBar: subBar(
+      appBar: _partBar(
         context,
+        widget.courseId,
         CoursePart.contents.title(context.l10n),
         bottom: ChipBar(
           children: [
@@ -832,6 +912,22 @@ class _SectionListState extends State<_SectionList> {
     );
   }
 }
+
+/// A course part's bar: on a desktop the path from its course.
+AppBar _partBar(
+  BuildContext context,
+  int courseId,
+  String title, {
+  PreferredSizeWidget? bottom,
+}) => desktopUi(context)
+    ? subBar(
+        context,
+        title,
+        bottom: bottom,
+        back: false,
+        titleChild: CourseCrumbs(courseId: courseId, trail: [title]),
+      )
+    : subBar(context, title, bottom: bottom);
 
 /// Moodle names the course-wide first section `General` in English.
 String _sectionName(BuildContext context, Section s) =>
@@ -1043,4 +1139,104 @@ class GradeList extends StatelessWidget {
       },
     );
   }
+}
+
+/// The desktop UI's toolbar path for a page of a course (design/round-25):
+/// the course, then [trail], the last being the page shown. The course
+/// and 全部章節 lead back to their pages.
+class CourseCrumbs extends StatelessWidget {
+  const CourseCrumbs({super.key, required this.courseId, required this.trail});
+
+  final int courseId;
+  final List<String> trail;
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    final l10n = context.l10n;
+    final muted = TextStyle(
+      fontSize: 13,
+      fontWeight: FontWeight.w700,
+      color: scheme.onSurfaceVariant,
+    );
+    Widget link(String text, String path) => GestureDetector(
+      onTap: () => context.go(path),
+      child: MouseRegion(
+        cursor: SystemMouseCursors.click,
+        child: Text(text, style: muted),
+      ),
+    );
+    final chevron = Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 6),
+      child: Icon(
+        Icons.chevron_right,
+        size: 16,
+        color: scheme.onSurfaceVariant,
+      ),
+    );
+    return CourseNameOf(
+      courseId: courseId,
+      builder: (context, name) => Row(
+        children: [
+          if (name != null) ...[link(name, '/courses/$courseId'), chevron],
+          for (final (i, step) in trail.indexed) ...[
+            if (i > 0) chevron,
+            if (i < trail.length - 1)
+              link(
+                step,
+                step == l10n.allSections
+                    ? '/courses/$courseId/contents'
+                    : '/courses/$courseId',
+              )
+            else
+              Flexible(
+                child: Text(
+                  step,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(
+                    fontSize: 15,
+                    fontWeight: FontWeight.w800,
+                  ),
+                ),
+              ),
+          ],
+        ],
+      ),
+    );
+  }
+}
+
+/// A course's name for pages that only know its id, from the saved answer
+/// first; null until it is known.
+class CourseNameOf extends StatefulWidget {
+  const CourseNameOf({
+    super.key,
+    required this.courseId,
+    required this.builder,
+  });
+
+  final int courseId;
+  final Widget Function(BuildContext context, String? name) builder;
+
+  @override
+  State<CourseNameOf> createState() => _CourseNameOfState();
+}
+
+class _CourseNameOfState extends State<CourseNameOf> {
+  late final _courses = context.read<EcourseRepository>().watch(
+    (repo) => repo.courses(),
+  );
+
+  @override
+  Widget build(BuildContext context) => StreamBuilder(
+    stream: _courses,
+    builder: (context, snap) => widget.builder(context, switch ([
+      for (final c in snap.data ?? const <Course>[])
+        if (c.id == widget.courseId) c,
+    ]) {
+      [final c, ...] => context.courseName(c),
+      _ => null,
+    }),
+  );
 }

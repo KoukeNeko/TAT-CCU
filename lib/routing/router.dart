@@ -6,6 +6,7 @@ import '../data/repositories/ecourse_auth_repository.dart';
 import '../ui/account/account_screen.dart';
 import '../ui/core/app_shell.dart';
 import '../ui/core/desktop_mode.dart';
+import '../ui/core/theme.dart';
 import '../ui/core/widgets.dart';
 import '../ui/courses/absence_screen.dart';
 import '../ui/courses/attendance_screen.dart';
@@ -460,10 +461,7 @@ Widget _listBeside(
           ),
         ),
       ),
-      VerticalDivider(
-        width: 1,
-        color: Theme.of(context).colorScheme.outlineVariant,
-      ),
+      const _PaneDivider(),
       Expanded(
         child: atRoot && first == null
             ? const SizedBox.shrink()
@@ -505,10 +503,7 @@ class _MoreBeside extends StatelessWidget {
             child: PaneSize(child: MoreScreen(open: open)),
           ),
         ),
-        VerticalDivider(
-          width: 1,
-          color: Theme.of(context).colorScheme.outlineVariant,
-        ),
+        const _PaneDivider(),
         Expanded(
           child: PaneSize(
             child: ListPaneScope(root: '/more', child: child),
@@ -517,4 +512,23 @@ class _MoreBeside extends StatelessWidget {
       ],
     );
   }
+}
+
+/// Between a list and the page beside it. On a desktop it starts under the
+/// bars, so the two bars read as one toolbar.
+class _PaneDivider extends StatelessWidget {
+  const _PaneDivider();
+
+  @override
+  Widget build(BuildContext context) => Padding(
+    padding: EdgeInsets.only(
+      top: desktopUi(context)
+          ? MediaQuery.paddingOf(context).top + desktopBarHeight
+          : 0,
+    ),
+    child: VerticalDivider(
+      width: 1,
+      color: Theme.of(context).colorScheme.outlineVariant,
+    ),
+  );
 }

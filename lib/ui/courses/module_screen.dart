@@ -9,6 +9,7 @@ import '../core/compose_screen.dart';
 import '../core/theme.dart';
 import '../core/widgets.dart';
 import '../../l10n/l10n.dart';
+import 'course_detail_screen.dart';
 import 'forum_screen.dart';
 import '../core/campus_web_screen.dart';
 import '../core/glass_dialog.dart';
@@ -55,7 +56,17 @@ class ModuleScreen extends StatelessWidget {
       ),
       builder: (context, module) => Scaffold(
         extendBodyBehindAppBar: true,
-        appBar: subBar(context, module?.name ?? ''),
+        appBar: desktopUi(context)
+            ? subBar(
+                context,
+                module?.name ?? '',
+                back: false,
+                titleChild: CourseCrumbs(
+                  courseId: courseId,
+                  trail: [context.l10n.allSections, module?.name ?? ''],
+                ),
+              )
+            : subBar(context, module?.name ?? ''),
         body: CapsuleArea(
           child: switch (module?.type) {
             null => EmptyState(context.l10n.itemNotFound),
@@ -63,8 +74,12 @@ class ModuleScreen extends StatelessWidget {
               watch: () => repo.watch(
                 (repo) => repo.assignment(courseId, module!.instance),
               ),
-              builder: (context, a) =>
-                  _AssignmentBody(assignment: a, cmid: cmid),
+              builder: (context, a) => _AssignmentBody(
+                assignment: a,
+                cmid: cmid,
+                courseId: courseId,
+                module: module!,
+              ),
             ),
             'forum' => ForumBody(courseId: courseId, forumId: module!.instance),
             'quiz' => Loader<Quiz>.watch(
@@ -72,8 +87,10 @@ class ModuleScreen extends StatelessWidget {
                   repo.watch((repo) => repo.quiz(courseId, module!.instance)),
               builder: (context, q) => _QuizBody(
                 quiz: q,
+                courseId: courseId,
+                module: module!,
                 // Taken on eCourse2, signed in through the campus web view.
-                onOpen: module!.url == null
+                onOpen: module.url == null
                     ? null
                     : () => openCampusPage(context, module.url!, module.name),
               ),
@@ -87,58 +104,230 @@ class ModuleScreen extends StatelessWidget {
 }
 
 class _AssignmentBody extends StatelessWidget {
-  const _AssignmentBody({required this.assignment, required this.cmid});
+  const _AssignmentBody({
+    required this.assignment,
+    required this.cmid,
+    required this.courseId,
+    required this.module,
+  });
 
   final Assignment assignment;
-  final int cmid;
+  final int cmid, courseId;
+  final Module module;
 
   @override
   Widget build(BuildContext context) {
     final a = assignment;
     final l10n = context.l10n;
     final now = clk.clock.now();
+    final progress = _Progress(
+      steps: [
+        (
+          l10n.stepOpens,
+          a.opens == null ? '—' : monthDay(a.opens!),
+          a.opens?.isBefore(now) ?? true,
+        ),
+        (
+          l10n.stepSubmitted,
+          a.submittedAt == null ? l10n.notSubmitted : monthDay(a.submittedAt!),
+          a.submittedAt != null,
+        ),
+        (
+          l10n.stepDue,
+          a.due == null ? '—' : monthDay(a.due!),
+          a.due?.isBefore(now) ?? false,
+        ),
+        (l10n.stepGrade, a.grade ?? '—', a.grade != null),
+      ],
+    );
+    final work = [
+      if (a.submission.isNotEmpty) ...[
+        SectionLabel(l10n.mySubmission),
+        FileList(files: a.submission, detail: (f) => monthDayTime(f.modified)),
+      ] else if (desktopUi(context)) ...[
+        SectionLabel(l10n.mySubmission),
+        const SizedBox(height: Space.m),
+        _Unsubmitted(label: l10n.notSubmitted),
+      ],
+      if (a.intro.isNotEmpty) ...[
+        SectionLabel(l10n.description),
+        _Text(a.intro),
+      ],
+      if (a.attachments.isNotEmpty) ...[
+        SectionLabel(l10n.attachments),
+        FileList(files: a.attachments, detail: (f) => fileSize(f.size)),
+      ],
+    ];
+    final comments = [
+      if (a.commentsOn case final submission?)
+        _Comments(cmid: cmid, submission: submission),
+    ];
+    if (desktopUi(context)) {
+      final due = a.due;
+      return _DeskModule(
+        courseId: courseId,
+        module: module,
+        meta: [
+          if (due != null)
+            (
+              [
+                l10n.dueOn(dateTimeLabel(context, due)),
+                if (due.isAfter(now)) timeLeft(l10n, due),
+              ].join('・'),
+              a.submittedAt == null ? context.tones.peach.strong : null,
+            ),
+          (
+            a.submittedAt == null
+                ? l10n.notSubmitted
+                : '${l10n.stepSubmitted} ${monthDay(a.submittedAt!)}',
+            null,
+          ),
+        ],
+        progress: progress,
+        left: work,
+        right: comments,
+      );
+    }
+    return ListView(
+      padding: scrollPadding(context),
+      children: [progress, ...work, ...comments],
+    );
+  }
+}
+
+/// Where the submitted files go before there are any.
+class _Unsubmitted extends StatelessWidget {
+  const _Unsubmitted({required this.label});
+
+  final String label;
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    return Container(
+      height: 48,
+      alignment: Alignment.center,
+      decoration: BoxDecoration(
+        border: Border.all(color: scheme.outlineVariant),
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: Text(
+        label,
+        style: TextStyle(
+          fontSize: 13,
+          fontWeight: FontWeight.w700,
+          color: scheme.onSurfaceVariant,
+        ),
+      ),
+    );
+  }
+}
+
+/// design/round-25: a module in the desktop UI. Its course and kind over
+/// the name, when it closes and where it stands, the way to eCourse2, the
+/// four steps as bars, then two columns.
+class _DeskModule extends StatelessWidget {
+  const _DeskModule({
+    required this.courseId,
+    required this.module,
+    required this.meta,
+    required this.progress,
+    required this.left,
+    required this.right,
+  });
+
+  final int courseId;
+  final Module module;
+
+  /// Short facts after the name, each in its own colour or muted.
+  final List<(String, Color?)> meta;
+  final Widget progress;
+  final List<Widget> left, right;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = context.l10n;
+    final scheme = Theme.of(context).colorScheme;
+    final muted = TextStyle(
+      fontSize: 13,
+      fontWeight: FontWeight.w700,
+      color: scheme.onSurfaceVariant,
+    );
+    final url = module.url;
     return ListView(
       padding: scrollPadding(context),
       children: [
-        _Progress(
-          steps: [
-            (
-              l10n.stepOpens,
-              a.opens == null ? '—' : monthDay(a.opens!),
-              a.opens?.isBefore(now) ?? true,
+        Row(
+          children: [
+            Container(
+              width: 8,
+              height: 8,
+              decoration: BoxDecoration(
+                color: context.tones.forCourse(courseId).strong,
+                borderRadius: BorderRadius.circular(3),
+              ),
             ),
-            (
-              l10n.stepSubmitted,
-              a.submittedAt == null
-                  ? l10n.notSubmitted
-                  : monthDay(a.submittedAt!),
-              a.submittedAt != null,
+            const SizedBox(width: Space.s),
+            Expanded(
+              child: CourseNameOf(
+                courseId: courseId,
+                builder: (context, name) => Text(
+                  [?name, l10n.eventLabel(module.type, '')].join('・'),
+                  style: muted.copyWith(fontSize: 12),
+                ),
+              ),
             ),
-            (
-              l10n.stepDue,
-              a.due == null ? '—' : monthDay(a.due!),
-              a.due?.isBefore(now) ?? false,
-            ),
-            (l10n.stepGrade, a.grade ?? '—', a.grade != null),
           ],
         ),
-        if (a.submission.isNotEmpty) ...[
-          SectionLabel(l10n.mySubmission),
-          FileList(
-            files: a.submission,
-            detail: (f) => monthDayTime(f.modified),
+        const SizedBox(height: Space.s),
+        SelectableText(
+          module.name,
+          style: const TextStyle(
+            fontSize: 28,
+            fontWeight: FontWeight.w800,
+            height: 1.25,
+          ),
+        ),
+        const SizedBox(height: Space.xs),
+        Wrap(
+          spacing: Space.m,
+          children: [
+            for (final (text, color) in meta)
+              Text(text, style: muted.copyWith(color: color)),
+          ],
+        ),
+        if (url != null) ...[
+          const SizedBox(height: Space.l),
+          Align(
+            alignment: Alignment.centerLeft,
+            child: DeskButton(
+              icon: Icons.open_in_new,
+              label: l10n.openInEcourse,
+              primary: true,
+              onPressed: () => openCampusPage(context, url, module.name),
+            ),
           ),
         ],
-        if (a.intro.isNotEmpty) ...[
-          SectionLabel(l10n.description),
-          _Text(a.intro),
-        ],
-        if (a.attachments.isNotEmpty) ...[
-          SectionLabel(l10n.attachments),
-          FileList(files: a.attachments, detail: (f) => fileSize(f.size)),
-        ],
-        if (a.commentsOn case final submission?)
-          _Comments(cmid: cmid, submission: submission),
+        const SizedBox(height: Space.xl),
+        progress,
+        LayoutBuilder(
+          builder: (context, box) {
+            Widget column(List<Widget> children) => Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: children,
+            );
+            if (right.isEmpty) return column(left);
+            if (box.maxWidth < 640) return column([...left, ...right]);
+            return Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Expanded(child: column(left)),
+                const SizedBox(width: 28),
+                Expanded(child: column(right)),
+              ],
+            );
+          },
+        ),
       ],
     );
   }
@@ -321,9 +510,16 @@ class _CommentsState extends State<_Comments> {
 }
 
 class _QuizBody extends StatelessWidget {
-  const _QuizBody({required this.quiz, this.onOpen});
+  const _QuizBody({
+    required this.quiz,
+    required this.courseId,
+    required this.module,
+    this.onOpen,
+  });
 
   final Quiz quiz;
+  final int courseId;
+  final Module module;
 
   /// Opens the quiz on eCourse2; its button shows once the quiz has loaded.
   final VoidCallback? onOpen;
@@ -334,67 +530,82 @@ class _QuizBody extends StatelessWidget {
     final l10n = context.l10n;
     final now = clk.clock.now();
     final open = onOpen;
-    final desk = desktopUi(context) && open != null;
-    final list = ListView(
-      padding: scrollPadding(context),
-      children: [
-        _Progress(
-          steps: [
-            (
-              l10n.stepOpens,
-              q.opens == null ? '—' : monthDay(q.opens!),
-              q.opens?.isBefore(now) ?? true,
-            ),
-            (
-              l10n.stepAttempted,
-              q.finished == null ? l10n.notAttempted : monthDay(q.finished!),
-              q.finished != null,
-            ),
-            (
-              l10n.stepCloses,
-              q.closes == null ? '—' : monthDay(q.closes!),
-              q.closes?.isBefore(now) ?? false,
-            ),
-            (l10n.stepGrade, q.grade ?? '—', q.grade != null),
-          ],
+    final progress = _Progress(
+      steps: [
+        (
+          l10n.stepOpens,
+          q.opens == null ? '—' : monthDay(q.opens!),
+          q.opens?.isBefore(now) ?? true,
         ),
-        if (desk) ...[
-          const SizedBox(height: Space.l),
-          // In the page under the steps, rather than floating.
-          Align(
-            alignment: Alignment.centerLeft,
-            child: DeskButton(
-              icon: Icons.open_in_new,
-              label: l10n.openInEcourse,
-              primary: true,
-              onPressed: open,
-            ),
-          ),
-        ],
-        SectionLabel(l10n.quizSettings),
-        _Details(
-          rows: [
-            if (q.opens != null)
-              (l10n.quizStart, dateTimeLabel(context, q.opens!)),
-            if (q.closes != null)
-              (l10n.quizEnd, dateTimeLabel(context, q.closes!)),
-            (
-              l10n.attemptsAllowed,
-              q.attempts == 0 ? l10n.unlimited : l10n.attemptCount(q.attempts),
-            ),
-            (
-              l10n.passGrade,
-              q.pass == null ? l10n.fullMarks(q.max) : '${q.pass} / ${q.max}',
-            ),
-          ],
+        (
+          l10n.stepAttempted,
+          q.finished == null ? l10n.notAttempted : monthDay(q.finished!),
+          q.finished != null,
         ),
-        if (q.intro.isNotEmpty) ...[
-          SectionLabel(l10n.description),
-          _Text(q.intro),
-        ],
+        (
+          l10n.stepCloses,
+          q.closes == null ? '—' : monthDay(q.closes!),
+          q.closes?.isBefore(now) ?? false,
+        ),
+        (l10n.stepGrade, q.grade ?? '—', q.grade != null),
       ],
     );
-    if (open == null || desk) return list;
+    final settings = <Widget>[
+      SectionLabel(l10n.quizSettings),
+      _Details(
+        rows: [
+          if (q.opens != null)
+            (l10n.quizStart, dateTimeLabel(context, q.opens!)),
+          if (q.closes != null)
+            (l10n.quizEnd, dateTimeLabel(context, q.closes!)),
+          (
+            l10n.attemptsAllowed,
+            q.attempts == 0 ? l10n.unlimited : l10n.attemptCount(q.attempts),
+          ),
+          (
+            l10n.passGrade,
+            q.pass == null ? l10n.fullMarks(q.max) : '${q.pass} / ${q.max}',
+          ),
+        ],
+      ),
+    ];
+    final intro = <Widget>[
+      if (q.intro.isNotEmpty) ...[
+        SectionLabel(l10n.description),
+        _Text(q.intro),
+      ],
+    ];
+    if (desktopUi(context)) {
+      final closes = q.closes;
+      return _DeskModule(
+        courseId: courseId,
+        module: module,
+        meta: [
+          if (closes != null)
+            (
+              [
+                '${dateTimeLabel(context, closes)} ${l10n.stepCloses}',
+                if (closes.isAfter(now)) timeLeft(l10n, closes),
+              ].join('・'),
+              null,
+            ),
+          (
+            q.finished == null
+                ? l10n.notAttempted
+                : '${l10n.stepAttempted} ${monthDay(q.finished!)}',
+            q.finished == null ? context.tones.peach.strong : null,
+          ),
+        ],
+        progress: progress,
+        left: settings,
+        right: intro,
+      );
+    }
+    final list = ListView(
+      padding: scrollPadding(context),
+      children: [progress, ...settings, ...intro],
+    );
+    if (open == null) return list;
     // As the forum's 新討論: over the list, clear of the nav bar.
     return Stack(
       children: [
@@ -462,6 +673,54 @@ class _Progress extends StatelessWidget {
     final tones = context.tones;
     final scheme = Theme.of(context).colorScheme;
     final lastDone = steps.lastIndexWhere((s) => s.$3);
+    if (desktopUi(context)) {
+      // design/round-25: a bar over each step, mint once done and lilac
+      // for the one at hand.
+      return Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          for (final (i, (label, value, done)) in steps.indexed) ...[
+            if (i > 0) const SizedBox(width: Space.s),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Container(
+                    height: 3,
+                    decoration: BoxDecoration(
+                      color: done
+                          ? tones.mint.strong
+                          : i == lastDone + 1
+                          ? scheme.primary
+                          : scheme.outlineVariant,
+                      borderRadius: BorderRadius.circular(2),
+                    ),
+                  ),
+                  const SizedBox(height: Space.s),
+                  Text(
+                    label,
+                    style: const TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w800,
+                    ),
+                  ),
+                  Text(
+                    value,
+                    style: TextStyle(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w700,
+                      color: !done && i == lastDone + 1
+                          ? tones.peach.strong
+                          : scheme.onSurfaceVariant,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ],
+      );
+    }
     return Card(
       color: scheme.surfaceContainerLow,
       child: Padding(

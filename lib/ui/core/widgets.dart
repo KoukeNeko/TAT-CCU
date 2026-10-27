@@ -101,6 +101,9 @@ AppBar subBar(
 
   /// In place of [title]'s text, such as a menu of what the page shows.
   Widget? titleChild,
+
+  /// Without the back button, where the bar's path leads back instead.
+  bool back = true,
 }) => AppBar(
   bottom: bottom,
   automaticallyImplyLeading: false,
@@ -116,7 +119,7 @@ AppBar subBar(
     children: [
       // A page opened beside a list (desktop) has nothing to go back to;
       // on a flip phone's outer display the rail has the back button.
-      if (_canGoBack(context) && !coverScreen(context)) ...[
+      if (back && _canGoBack(context) && !coverScreen(context)) ...[
         RoundBackButton(),
         const SizedBox(width: 10),
       ],
@@ -902,13 +905,13 @@ EdgeInsets scrollPadding(
   final inset = MediaQuery.paddingOf(context);
   final width = MediaQuery.sizeOf(context).width;
   if (desktopUi(context) && width >= splitLayout) {
-    // design/round-25: from the page's left edge, as in Mail, up to a
-    // readable width.
+    // design/round-25: the page fills its pane, as in Mail; long text
+    // keeps its own readable width.
     const margin = 32.0;
     return EdgeInsets.fromLTRB(
       margin + startInset(context),
       top + inset.top,
-      math.max(margin, width - margin - maxWidth) + endInset(context),
+      margin + endInset(context),
       Space.xxl + inset.bottom,
     );
   }
