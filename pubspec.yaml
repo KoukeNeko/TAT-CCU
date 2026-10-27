@@ -1,7 +1,7 @@
 name: tat_ccu
 description: "A new Flutter project."
 publish_to: 'none'
-version: 0.1.10+1
+version: 0.1.11+1
 
 environment:
   sdk: ^3.13.0
