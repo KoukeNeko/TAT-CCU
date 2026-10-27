@@ -410,3 +410,21 @@ ThemeData buildTheme(
     ),
   );
 }
+
+/// Height of the desktop UI's title bars, the macOS title bar's own.
+const desktopBarHeight = 52.0;
+
+/// [theme] for the pointer-first desktop UI (design/round-25): toolbar
+/// height title bars with 15 px titles, and controls sized for a mouse.
+ThemeData desktopTheme(ThemeData theme) => theme.copyWith(
+  visualDensity: VisualDensity.compact,
+  materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+  appBarTheme: theme.appBarTheme.copyWith(
+    toolbarHeight: desktopBarHeight,
+    titleSpacing: Space.l,
+    titleTextStyle: theme.appBarTheme.titleTextStyle?.copyWith(
+      fontSize: 15,
+      fontWeight: FontWeight.w800,
+    ),
+  ),
+);

@@ -8,6 +8,8 @@ import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
 import 'package:url_launcher/url_launcher.dart';
 
+import 'command_palette.dart';
+import 'desktop_mode.dart';
 import 'floating_dock.dart';
 import 'glass.dart';
 import 'theme.dart';
@@ -29,7 +31,10 @@ AppBar topBar(
   PreferredSizeWidget? bottom,
   List<Widget>? actions,
 }) => AppBar(
-  actions: [for (final a in actions ?? const <Widget>[]) _pressable(a)],
+  actions: [
+    for (final a in actions ?? const <Widget>[]) _pressable(a),
+    const _DesktopSearch(),
+  ],
   automaticallyImplyLeading: false,
   backgroundColor: Colors.transparent,
   scrolledUnderElevation: 0,
@@ -39,7 +44,11 @@ AppBar topBar(
     builder: (context) => Text(
       title,
       style: TextStyle(
-        fontSize: coverScreen(context) ? 20 : 34,
+        fontSize: coverScreen(context)
+            ? 20
+            : desktopUi(context)
+            ? null
+            : 34,
         fontWeight: FontWeight.w900,
       ),
     ),
@@ -149,9 +158,28 @@ AppBar subBar(
         ),
       ),
       if (action != null) _pressable(action),
+      const _DesktopSearch(),
     ],
   ),
 );
+
+/// The palette's field at the end of the desktop UI's rightmost bar.
+class _DesktopSearch extends StatelessWidget {
+  const _DesktopSearch();
+
+  @override
+  Widget build(BuildContext context) {
+    if (!desktopUi(context) ||
+        inLeadingPane(context) ||
+        MediaQuery.sizeOf(context).width < 480) {
+      return const SizedBox.shrink();
+    }
+    return const Padding(
+      padding: EdgeInsets.only(left: Space.s, right: Space.s),
+      child: PaletteField(),
+    );
+  }
+}
 
 /// The back button's feel for any app bar button: it sinks while pressed
 /// and ticks. Listens to pointers only, so the button inside still gets

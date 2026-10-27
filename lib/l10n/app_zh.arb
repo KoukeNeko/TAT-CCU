@@ -1072,5 +1072,9 @@
   "swInstallers": "安裝檔",
   "calUpcoming": "接下來",
   "calThisMonth": "本月",
-  "calNothingAhead": "沒有接下來的事項"
+  "calNothingAhead": "沒有接下來的事項",
+  "search": "搜尋",
+  "paletteHint": "前往課程、作業或頁面",
+  "palettePages": "頁面",
+  "paletteSelect": "選擇"
 }

@@ -8,6 +8,7 @@ import 'package:provider/provider.dart';
 import '../../data/repositories/ecourse_repository.dart';
 import '../../data/services/ecourse_web.dart';
 import '../core/campus_session.dart';
+import '../core/desktop_mode.dart';
 import '../core/theme.dart';
 import '../courses/course_detail_screen.dart';
 import '../courses/forum_screen.dart';
@@ -264,7 +265,7 @@ class _MessagesScreenState extends State<MessagesScreen> {
       children: [
         SizedBox(
           width: listWidthOf(context),
-          child: PaneSize(child: _feed(context)),
+          child: LeadingPane(child: PaneSize(child: _feed(context))),
         ),
         VerticalDivider(width: 1, color: outline),
         Expanded(child: detail),

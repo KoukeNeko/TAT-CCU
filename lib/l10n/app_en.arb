@@ -642,5 +642,9 @@
   "swInstallers": "Installers",
   "calUpcoming": "Upcoming",
   "calThisMonth": "This month",
-  "calNothingAhead": "Nothing coming up"
+  "calNothingAhead": "Nothing coming up",
+  "search": "Search",
+  "paletteHint": "Go to a course, task or page",
+  "palettePages": "Pages",
+  "paletteSelect": "Select"
 }

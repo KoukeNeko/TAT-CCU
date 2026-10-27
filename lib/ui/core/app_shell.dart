@@ -10,6 +10,7 @@ import 'package:provider/provider.dart';
 import '../../data/repositories/ecourse_repository.dart';
 import '../../domain/models/course.dart';
 import 'auto_refresh.dart';
+import 'desktop_mode.dart';
 import 'theme.dart';
 import 'widgets.dart';
 import '../../l10n/l10n.dart';
@@ -516,6 +517,7 @@ class _SidebarState extends State<_Sidebar> with AutoRefresh {
     if (widget.rail) return _buildRail(context);
     final scheme = Theme.of(context).colorScheme;
     final t = context.tones;
+    final desktop = desktopUi(context);
     return Container(
       width: _sidebarWidth,
       color: scheme.surfaceContainer,
@@ -560,12 +562,14 @@ class _SidebarState extends State<_Sidebar> with AutoRefresh {
                     behavior: HitTestBehavior.opaque,
                     onTap: () => _openCourse(c.id),
                     child: Container(
-                      height: 32,
+                      height: desktop ? 28 : 32,
                       decoration: BoxDecoration(
                         color: c.id == widget.course
                             ? scheme.surfaceContainerHigh
                             : null,
-                        borderRadius: BorderRadius.circular(Space.m),
+                        borderRadius: BorderRadius.circular(
+                          desktop ? 7 : Space.m,
+                        ),
                       ),
                       child: Row(
                         children: [
@@ -731,6 +735,9 @@ class _SideItem extends StatelessWidget {
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
     final sun = context.tones.sun;
+    // design/round-25: Mail's 28 px rows, a plain count for the unread.
+    final desktop = desktopUi(context);
+    final ink = selected ? scheme.onSurface : scheme.onSurfaceVariant;
     return Semantics(
       button: true,
       selected: selected,
@@ -741,33 +748,40 @@ class _SideItem extends StatelessWidget {
           behavior: HitTestBehavior.opaque,
           onTap: onTap,
           child: Container(
-            height: 38,
+            height: desktop ? 28 : 38,
             margin: const EdgeInsets.only(bottom: 2),
             padding: const EdgeInsets.symmetric(horizontal: Space.m),
             decoration: BoxDecoration(
               color: selected ? scheme.surfaceContainerHigh : null,
-              borderRadius: BorderRadius.circular(Space.m),
+              borderRadius: BorderRadius.circular(desktop ? 7 : Space.m),
             ),
             child: Row(
               children: [
                 Icon(
                   icon,
-                  size: 20,
-                  color: selected ? scheme.onSurface : scheme.onSurfaceVariant,
+                  size: desktop ? 16 : 20,
+                  color: selected && desktop ? scheme.primary : ink,
                 ),
-                const SizedBox(width: 10),
+                SizedBox(width: desktop ? 9 : 10),
                 Text(
                   label,
                   style: TextStyle(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w800,
-                    color: selected
-                        ? scheme.onSurface
-                        : scheme.onSurfaceVariant,
+                    fontSize: desktop ? 13 : 14,
+                    fontWeight: desktop ? FontWeight.w700 : FontWeight.w800,
+                    color: ink,
                   ),
                 ),
                 const Spacer(),
-                if (badge case final badge?)
+                if (badge case final badge? when desktop)
+                  Text(
+                    badge,
+                    style: TextStyle(
+                      fontSize: 11,
+                      fontWeight: FontWeight.w800,
+                      color: scheme.onSurfaceVariant,
+                    ),
+                  )
+                else if (badge case final badge?)
                   Container(
                     padding: const EdgeInsets.symmetric(
                       horizontal: 7,

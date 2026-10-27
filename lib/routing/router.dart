@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import '../data/repositories/ecourse_auth_repository.dart';
 import '../ui/account/account_screen.dart';
 import '../ui/core/app_shell.dart';
+import '../ui/core/desktop_mode.dart';
 import '../ui/core/widgets.dart';
 import '../ui/courses/absence_screen.dart';
 import '../ui/courses/attendance_screen.dart';
@@ -445,16 +446,18 @@ Widget _listBeside(
     children: [
       SizedBox(
         width: listWidthOf(context),
-        child: Builder(
-          builder: (context) {
-            // Only the top page draws the list, under one key per navigator,
-            // so the next page takes it over with its data and scroll.
-            if (!(ModalRoute.isCurrentOf(context) ?? true)) {
-              return const SizedBox.shrink();
-            }
-            final keys = _listKeys[Navigator.of(context)] ??= {};
-            return PaneSize(key: keys[list.key] ??= GlobalKey(), child: list);
-          },
+        child: LeadingPane(
+          child: Builder(
+            builder: (context) {
+              // Only the top page draws the list, under one key per navigator,
+              // so the next page takes it over with its data and scroll.
+              if (!(ModalRoute.isCurrentOf(context) ?? true)) {
+                return const SizedBox.shrink();
+              }
+              final keys = _listKeys[Navigator.of(context)] ??= {};
+              return PaneSize(key: keys[list.key] ??= GlobalKey(), child: list);
+            },
+          ),
         ),
       ),
       VerticalDivider(
@@ -498,7 +501,9 @@ class _MoreBeside extends StatelessWidget {
       children: [
         SizedBox(
           width: listWidthOf(context),
-          child: PaneSize(child: MoreScreen(open: open)),
+          child: LeadingPane(
+            child: PaneSize(child: MoreScreen(open: open)),
+          ),
         ),
         VerticalDivider(
           width: 1,

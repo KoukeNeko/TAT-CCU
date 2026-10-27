@@ -2315,4 +2315,16 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get calNothingAhead => 'Nothing coming up';
+
+  @override
+  String get search => 'Search';
+
+  @override
+  String get paletteHint => 'Go to a course, task or page';
+
+  @override
+  String get palettePages => 'Pages';
+
+  @override
+  String get paletteSelect => 'Select';
 }

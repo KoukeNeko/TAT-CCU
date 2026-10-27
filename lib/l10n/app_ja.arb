@@ -642,5 +642,9 @@
   "swInstallers": "インストーラー",
   "calUpcoming": "これから",
   "calThisMonth": "今月",
-  "calNothingAhead": "予定はありません"
+  "calNothingAhead": "予定はありません",
+  "search": "検索",
+  "paletteHint": "コース、課題、ページへ移動",
+  "palettePages": "ページ",
+  "paletteSelect": "選択"
 }

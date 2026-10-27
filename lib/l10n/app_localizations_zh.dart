@@ -2193,4 +2193,16 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get calNothingAhead => '沒有接下來的事項';
+
+  @override
+  String get search => '搜尋';
+
+  @override
+  String get paletteHint => '前往課程、作業或頁面';
+
+  @override
+  String get palettePages => '頁面';
+
+  @override
+  String get paletteSelect => '選擇';
 }

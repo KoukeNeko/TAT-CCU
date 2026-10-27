@@ -3945,6 +3945,30 @@ abstract class AppLocalizations {
   /// In zh, this message translates to:
   /// **'沒有接下來的事項'**
   String get calNothingAhead;
+
+  /// No description provided for @search.
+  ///
+  /// In zh, this message translates to:
+  /// **'搜尋'**
+  String get search;
+
+  /// No description provided for @paletteHint.
+  ///
+  /// In zh, this message translates to:
+  /// **'前往課程、作業或頁面'**
+  String get paletteHint;
+
+  /// No description provided for @palettePages.
+  ///
+  /// In zh, this message translates to:
+  /// **'頁面'**
+  String get palettePages;
+
+  /// No description provided for @paletteSelect.
+  ///
+  /// In zh, this message translates to:
+  /// **'選擇'**
+  String get paletteSelect;
 }
 
 class _AppLocalizationsDelegate

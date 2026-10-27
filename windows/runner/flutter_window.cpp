@@ -1,8 +1,22 @@
 #include "flutter_window.h"
 
 #include <optional>
+#include <string>
+
+#include <flutter/standard_method_codec.h>
 
 #include "flutter/generated_plugin_registrant.h"
+
+namespace {
+
+// A convertible folded or detached into a tablet; a PC without a touch
+// screen never counts, whatever slate mode reports.
+bool IsTablet() {
+  return GetSystemMetrics(SM_CONVERTIBLESLATEMODE) == 0 &&
+         GetSystemMetrics(SM_MAXIMUMTOUCHES) > 0;
+}
+
+}  // namespace
 
 FlutterWindow::FlutterWindow(const flutter::DartProject& project)
     : project_(project) {}
@@ -25,6 +39,18 @@ bool FlutterWindow::OnCreate() {
     return false;
   }
   RegisterPlugins(flutter_controller_->engine());
+  desktop_channel_ =
+      std::make_unique<flutter::MethodChannel<flutter::EncodableValue>>(
+          flutter_controller_->engine()->messenger(), "tat_ccu/desktop",
+          &flutter::StandardMethodCodec::GetInstance());
+  desktop_channel_->SetMethodCallHandler(
+      [](const auto& call, auto result) {
+        if (call.method_name() == "tablet") {
+          result->Success(flutter::EncodableValue(IsTablet()));
+        } else {
+          result->NotImplemented();
+        }
+      });
   SetChildContent(flutter_controller_->view()->GetNativeWindow());
 
   flutter_controller_->engine()->SetNextFrameCallback([&]() {
@@ -40,6 +66,7 @@ bool FlutterWindow::OnCreate() {
 }
 
 void FlutterWindow::OnDestroy() {
+  desktop_channel_ = nullptr;
   if (flutter_controller_) {
     flutter_controller_ = nullptr;
   }
@@ -64,6 +91,15 @@ FlutterWindow::MessageHandler(HWND hwnd, UINT const message,
   switch (message) {
     case WM_FONTCHANGE:
       flutter_controller_->engine()->ReloadSystemFonts();
+      break;
+    case WM_SETTINGCHANGE:
+      if (desktop_channel_ && lparam &&
+          std::wstring(reinterpret_cast<LPCWSTR>(lparam)) ==
+              L"ConvertibleSlateMode") {
+        desktop_channel_->InvokeMethod(
+            "tablet",
+            std::make_unique<flutter::EncodableValue>(IsTablet()));
+      }
       break;
   }
 

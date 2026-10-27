@@ -2183,4 +2183,16 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get calNothingAhead => '予定はありません';
+
+  @override
+  String get search => '検索';
+
+  @override
+  String get paletteHint => 'コース、課題、ページへ移動';
+
+  @override
+  String get palettePages => 'ページ';
+
+  @override
+  String get paletteSelect => '選択';
 }

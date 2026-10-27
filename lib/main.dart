@@ -19,6 +19,8 @@ import 'data/services/school_calendar.dart';
 import 'l10n/l10n.dart';
 import 'routing/router.dart';
 import 'ui/home_widgets/home_widgets.dart';
+import 'ui/core/command_palette.dart';
+import 'ui/core/desktop_mode.dart';
 import 'ui/core/theme.dart';
 import 'ui/core/widgets.dart';
 import 'ui/core/windows_caption.dart';
@@ -112,6 +114,7 @@ Future<void> main() async {
     await Workmanager().initialize(backgroundTask);
   }
   if (Platform.isWindows) await hideWindowsTitleBar();
+  await watchDesktopMode();
   unawaited(_remind(auth, settings));
   unawaited(_prefetch(auth));
   unawaited(_updateWidgets(auth, settings));
@@ -197,17 +200,35 @@ class _TatCcuAppState extends State<TatCcuApp> {
             );
           }
         }
-        // Japanese gets LINE Seed JP so kanji take Japanese shapes.
-        if (Localizations.localeOf(context).languageCode == 'ja') {
-          child = Theme(
-            data: buildTheme(
-              Theme.of(context).brightness,
-              fontFamily: fontJp,
-              seed: settings.seed,
-            ),
-            child: child!,
-          );
-        }
+        // Japanese gets LINE Seed JP so kanji take Japanese shapes; the
+        // desktop UI its denser bars and the ⌘K palette.
+        final ja = Localizations.localeOf(context).languageCode == 'ja';
+        child = ValueListenableBuilder(
+          valueListenable: desktopMode,
+          child: child,
+          builder: (context, desktop, child) {
+            var theme = Theme.of(context);
+            if (ja) {
+              theme = buildTheme(
+                theme.brightness,
+                fontFamily: fontJp,
+                seed: settings.seed,
+              );
+            }
+            return DesktopScope(
+              desktop: desktop,
+              child: Theme(
+                data: desktop ? desktopTheme(theme) : theme,
+                child: desktop
+                    ? CommandPaletteHotkey(
+                        navigator: _router.routerDelegate.navigatorKey,
+                        child: child!,
+                      )
+                    : child!,
+              ),
+            );
+          },
+        );
         // A tap outside a text field ends typing on phones too; Flutter only
         // does so for mice. Fields share one tap group, so moving between
         // them keeps the keyboard up.
@@ -218,7 +239,7 @@ class _TatCcuAppState extends State<TatCcuApp> {
                   onInvoke: (intent) => intent.focusNode.unfocus(),
                 ),
           },
-          child: child!,
+          child: child,
         );
         return Platform.isWindows ? WindowsCaption(child: child) : child;
       },
