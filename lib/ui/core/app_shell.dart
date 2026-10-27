@@ -1105,7 +1105,14 @@ class _CoverShell extends StatelessWidget {
               padding: media.padding.copyWith(left: room),
               viewPadding: media.viewPadding.copyWith(left: room),
             ),
-            child: shell,
+            // The rail is level with this shorter title row.
+            child: Theme(
+              data: Theme.of(context).copyWith(
+                appBarTheme: Theme.of(context).appBarTheme
+                    .copyWith(toolbarHeight: kToolbarHeight),
+              ),
+              child: shell,
+            ),
           ),
           Positioned(
             left: left,
