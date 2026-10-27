@@ -426,6 +426,9 @@ List<RouteBase> _besideList(
       route,
 ];
 
+/// The list beside each navigator's pages, by the list's own key.
+final _listKeys = Expando<Map<Key?, GlobalKey>>();
+
 Widget _listBeside(
   BuildContext context, {
   required Widget list,
@@ -442,7 +445,17 @@ Widget _listBeside(
     children: [
       SizedBox(
         width: listWidthOf(context),
-        child: PaneSize(child: list),
+        child: Builder(
+          builder: (context) {
+            // Only the top page draws the list, under one key per navigator,
+            // so the next page takes it over with its data and scroll.
+            if (!(ModalRoute.isCurrentOf(context) ?? true)) {
+              return const SizedBox.shrink();
+            }
+            final keys = _listKeys[Navigator.of(context)] ??= {};
+            return PaneSize(key: keys[list.key] ??= GlobalKey(), child: list);
+          },
+        ),
       ),
       VerticalDivider(
         width: 1,
