@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- assets/logo.png's shapes in its 1024 grid, scaled so they stay inside the
+     66dp safe zone the launcher's mask never crops. -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="1464"
+    android:viewportHeight="1464">
+    <group
+        android:translateX="217"
+        android:translateY="222">
+        <path
+            android:fillColor="#1D3F9A"
+            android:pathData="M120,300H370V360H275V720H215V360H120Z" />
+        <path
+            android:fillColor="#E33B2E"
+            android:pathData="M512,300L660,720H364Z" />
+        <path
+            android:fillColor="#F2B705"
+            android:pathData="M650,510a130,130 0,1 1,260 0a130,130 0,1 1,-260 0Z" />
+        <path
+            android:fillColor="#111111"
+            android:pathData="M650,380H910V430H805V720H755V430H650Z" />
+    </group>
+</vector>
