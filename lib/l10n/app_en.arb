@@ -646,5 +646,6 @@
   "search": "Search",
   "paletteHint": "Go to a course, task or page",
   "palettePages": "Pages",
-  "paletteSelect": "Select"
+  "paletteSelect": "Select",
+  "openCourse": "Open course"
 }

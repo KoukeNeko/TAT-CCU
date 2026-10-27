@@ -211,7 +211,7 @@ class _PaletteState extends State<_Palette> {
             final found when found.isNotEmpty => context.courseName(
               found.first,
             ),
-            _ => d.course,
+            _ => context.courseNameOf(d.course),
           },
           trailing: monthDayTime(d.due),
           open: (b) => openDueItem(b, d),

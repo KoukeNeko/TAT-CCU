@@ -2205,4 +2205,7 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get paletteSelect => '選擇';
+
+  @override
+  String get openCourse => '開啟課程';
 }

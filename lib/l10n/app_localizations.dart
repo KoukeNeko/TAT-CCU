@@ -3969,6 +3969,12 @@ abstract class AppLocalizations {
   /// In zh, this message translates to:
   /// **'選擇'**
   String get paletteSelect;
+
+  /// No description provided for @openCourse.
+  ///
+  /// In zh, this message translates to:
+  /// **'開啟課程'**
+  String get openCourse;
 }
 
 class _AppLocalizationsDelegate

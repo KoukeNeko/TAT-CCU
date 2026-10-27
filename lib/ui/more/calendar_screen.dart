@@ -9,6 +9,8 @@ import 'package:provider/provider.dart';
 
 import '../../data/repositories/ecourse_repository.dart';
 import '../../data/services/school_calendar.dart';
+import '../core/desk_list.dart';
+import '../core/desktop_mode.dart';
 import '../core/status_capsule.dart';
 import '../core/auto_refresh.dart';
 import '../core/theme.dart';
@@ -452,15 +454,37 @@ class _CalendarScreenState extends State<CalendarScreen> with AutoRefresh {
                             ),
                           ),
                         );
-                        final dayList = ListView(
-                          // The panel's own inset; the page's would center a
-                          // readable column across the whole page.
-                          padding: scrollPadding(context).copyWith(
-                            left: book ? pageMargin : 0,
-                            right: pageMargin + endInset(context),
-                          ),
-                          children: [day],
-                        );
+                        final dayList = desktopUi(context) && !book
+                            // A column of its own, ruled off from the month.
+                            ? DecoratedBox(
+                                decoration: BoxDecoration(
+                                  border: Border(
+                                    left: BorderSide(
+                                      color: Theme.of(context)
+                                          .colorScheme
+                                          .outlineVariant,
+                                    ),
+                                  ),
+                                ),
+                                child: ListView(
+                                  padding: EdgeInsets.fromLTRB(
+                                    Space.xxl,
+                                    scrollPadding(context).top,
+                                    Space.xxl,
+                                    Space.xxl,
+                                  ),
+                                  children: [day],
+                                ),
+                              )
+                            : ListView(
+                                // The panel's own inset; the page's would
+                                // center a readable column across the page.
+                                padding: scrollPadding(context).copyWith(
+                                  left: book ? pageMargin : 0,
+                                  right: pageMargin + endInset(context),
+                                ),
+                                children: [day],
+                              );
                         return Row(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: book
@@ -767,6 +791,9 @@ class _DayEvents extends StatelessWidget {
         ]..sort((a, b) => a.time.compareTo(b.time));
         final school = _schoolOn(day);
         final count = school.length + events.length;
+        if (desktopUi(context)) {
+          return _desk(context, events, school, count);
+        }
         return Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
@@ -850,7 +877,7 @@ class _DayEvents extends StatelessWidget {
                             const SizedBox(height: 2),
                             Text(
                               [
-                                e.course,
+                                context.courseNameOf(e.course),
                                 context.l10n.eventLabel(e.kind, e.action),
                               ].where((s) => s.isNotEmpty).join('・'),
                               style: const TextStyle(
@@ -873,6 +900,80 @@ class _DayEvents extends StatelessWidget {
           ],
         );
       },
+    );
+  }
+}
+
+extension on _DayEvents {
+  /// design/round-25: the day as the title, each event a line marked in
+  /// its kind's colour.
+  Widget _desk(
+    BuildContext context,
+    List<CalendarEvent> events,
+    List<SchoolDate> school,
+    int count,
+  ) {
+    final tones = context.tones;
+    final scheme = Theme.of(context).colorScheme;
+    final l10n = context.l10n;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Text(
+          '${day.month}/${day.day} ${weekdayName(context, day.weekday)}',
+          style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w800),
+        ),
+        if (count > 0)
+          Text(
+            l10n.itemCount(count),
+            style: TextStyle(
+              fontSize: 13,
+              fontWeight: FontWeight.w700,
+              color: scheme.onSurfaceVariant,
+            ),
+          ),
+        const SizedBox(height: Space.m),
+        for (final d in school)
+          DeskLine(
+            leading: DeskStripe(_Kind.school.tone(tones).strong),
+            title: d.title,
+            detail: [
+              _Kind.school.label(l10n),
+              if (d.end case final end?)
+                '${monthDay(d.start)} – ${monthDay(end)}',
+            ].join('・'),
+          ),
+        if (error != null && this.events == null)
+          Text('$error')
+        else if (this.events == null)
+          const Center(child: CircularProgressIndicator())
+        else if (count == 0)
+          Padding(
+            padding: const EdgeInsets.only(top: Space.l),
+            child: Text(
+              l10n.noEventsThisDay,
+              style: TextStyle(
+                fontWeight: FontWeight.w700,
+                color: scheme.onSurfaceVariant,
+              ),
+            ),
+          ),
+        for (final e in events)
+          DeskLine(
+            leading: DeskStripe(_kindOf(e).tone(tones).strong),
+            title: e.name,
+            detail: [
+              context.courseNameOf(e.course),
+              l10n.eventLabel(e.kind, e.action),
+            ].where((s) => s.isNotEmpty).join('・'),
+            value: clock(e.time.hour * 60 + e.time.minute),
+            onTap: e.cmid != null && e.courseId != 0
+                ? () => context.push('/courses/${e.courseId}/modules/${e.cmid}')
+                : e.url == null
+                ? null
+                : () => openExternal(e.url!),
+          ),
+      ],
     );
   }
 }

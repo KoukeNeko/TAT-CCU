@@ -2195,4 +2195,7 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get paletteSelect => '選択';
+
+  @override
+  String get openCourse => 'コースを開く';
 }

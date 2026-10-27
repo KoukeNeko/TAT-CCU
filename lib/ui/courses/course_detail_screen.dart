@@ -111,7 +111,7 @@ class CourseDetailScreen extends StatelessWidget {
                         tone: tones.peach,
                         value: firstDue == null
                             ? '0'
-                            : _left(context.l10n, firstDue.due),
+                            : timeLeft(context.l10n, firstDue.due),
                         label: firstDue == null
                             ? context.l10n.nothingDue
                             : context.l10n.nameDue(firstDue.name),
@@ -187,7 +187,8 @@ class CourseDetailScreen extends StatelessWidget {
   }
 }
 
-String _left(AppLocalizations l10n, DateTime due) {
+/// Time left until [due], in hours under a day.
+String timeLeft(AppLocalizations l10n, DateTime due) {
   final left = due.difference(clk.clock.now());
   return left.inHours < 24
       ? l10n.hoursLeft(left.inHours)

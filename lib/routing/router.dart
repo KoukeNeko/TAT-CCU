@@ -209,7 +209,7 @@ GoRouter buildRouter(EcourseAuthRepository auth) => GoRouter(
               builder: (context, _) =>
                   context.getInheritedWidgetOfExactType<ListPaneScope>() == null
                   ? const MoreScreen()
-                  : const SizedBox.shrink(),
+                  : const EmptyPane(),
               routes: [
                 GoRoute(
                   path: 'grades',

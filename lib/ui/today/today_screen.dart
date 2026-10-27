@@ -8,10 +8,12 @@ import 'package:provider/provider.dart';
 import '../../data/repositories/ecourse_repository.dart';
 import '../../domain/models/course.dart';
 import '../../domain/models/timetable.dart';
+import '../core/desktop_mode.dart';
 import '../core/theme.dart';
 import '../core/widgets.dart';
 import '../courses/attendance_scan_screen.dart';
 import '../notifications/notifications_screen.dart';
+import 'desk_today.dart';
 import 'due_screen.dart';
 import '../../l10n/l10n.dart';
 
@@ -91,7 +93,12 @@ class _TodayScreenState extends State<TodayScreen> {
   Widget build(BuildContext context) {
     final repo = context.read<EcourseRepository>();
     final now = clk.clock.now();
+    final desk =
+        desktopUi(context) &&
+        foldOf(context) == null &&
+        MediaQuery.sizeOf(context).width >= splitLayout;
     return Scaffold(
+      appBar: desk ? topBar(context.l10n.navToday) : null,
       // Edge to edge: the list itself pads past the status bar.
       body: Loader<_Today>.watch(
         watch: () => repo.watch(_load),
@@ -234,7 +241,7 @@ class _TodayScreenState extends State<TodayScreen> {
                       ? tones.peach.strong
                       : tones.forCourse(item.courseId).strong,
                   title: item.name,
-                  subtitle: item.course,
+                  subtitle: context.courseNameOf(item.course),
                   // Within a week, the weekday is enough.
                   trailing:
                       '${weekdayName(context, item.due.weekday)} '
@@ -317,6 +324,20 @@ class _TodayScreenState extends State<TodayScreen> {
                   ),
                 ],
               ),
+            );
+          }
+          if (desk) {
+            return DeskToday(
+              headline: headline,
+              slots: slots.isNotEmpty || upcoming == null
+                  ? slots
+                  : [upcoming.slot],
+              hero: hero ?? upcoming?.slot,
+              after: after,
+              minute: minute,
+              due: d.due,
+              latest: d.latest,
+              unread: d.notices + d.mail,
             );
           }
           final width = MediaQuery.sizeOf(context).width;

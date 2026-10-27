@@ -9,6 +9,7 @@ import 'package:go_router/go_router.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import 'command_palette.dart';
+import 'desk_list.dart';
 import 'desktop_mode.dart';
 import 'floating_dock.dart';
 import 'glass.dart';
@@ -458,6 +459,41 @@ class BarChip extends StatelessWidget {
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
     final tone = this.tone ?? context.tones.lilac;
+    if (desktopUi(context)) {
+      // design/round-25: a small tag, lit like a list's chosen row.
+      final ink = selected ? scheme.onSurface : scheme.onSurfaceVariant;
+      return GestureDetector(
+        onTap: onTap,
+        child: MouseRegion(
+          cursor: onTap == null ? MouseCursor.defer : SystemMouseCursors.click,
+          child: Container(
+            height: 24,
+            padding: const EdgeInsets.symmetric(horizontal: 9),
+            alignment: Alignment.center,
+            decoration: BoxDecoration(
+              color: selected
+                  ? deskSelection(scheme)
+                  : scheme.surfaceContainerHigh,
+              borderRadius: BorderRadius.circular(5),
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  label,
+                  style: TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w800,
+                    color: ink,
+                  ),
+                ),
+                if (dropdown) Icon(Icons.expand_more, size: 15, color: ink),
+              ],
+            ),
+          ),
+        ),
+      );
+    }
     final ink = selected ? tone.fill : scheme.onSurfaceVariant;
     // Sinks and ticks like the app bar's buttons.
     return PressFeedback(
@@ -924,4 +960,15 @@ bool _canGoBack(BuildContext context) {
   if (settings is Page<Object?> && settings.name == scope.root) return false;
   final i = settings is Page<Object?> ? pages.indexOf(settings) : -1;
   return i < 1 || pages[i - 1].name != scope.root;
+}
+
+/// The page beside a list before anything is opened: on a desktop, only
+/// its bar, which carries the search field.
+class EmptyPane extends StatelessWidget {
+  const EmptyPane({super.key});
+
+  @override
+  Widget build(BuildContext context) => desktopUi(context)
+      ? Scaffold(appBar: subBar(context, ''))
+      : const SizedBox.shrink();
 }

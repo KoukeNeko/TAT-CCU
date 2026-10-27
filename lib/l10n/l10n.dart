@@ -14,6 +14,13 @@ extension L10nContext on BuildContext {
   /// otherwise.
   String courseName(Course c) =>
       c.name(chinese: Localizations.localeOf(this).languageCode == 'zh');
+
+  /// [fullName] as eCourse2 joins it, in the interface language, for the
+  /// lists that carry only the name.
+  String courseNameOf(String fullName) => courseNameIn(
+    fullName,
+    chinese: Localizations.localeOf(this).languageCode == 'zh',
+  );
 }
 
 /// Strings outside the widget tree (notifications, home screen widgets):

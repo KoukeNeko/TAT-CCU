@@ -2327,4 +2327,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get paletteSelect => 'Select';
+
+  @override
+  String get openCourse => 'Open course';
 }

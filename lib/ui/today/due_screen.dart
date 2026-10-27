@@ -79,7 +79,7 @@ class DueBlock extends StatelessWidget {
                 ),
                 const SizedBox(height: 2),
                 Text(
-                  item.course,
+                  context.courseNameOf(item.course),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                   style: const TextStyle(fontSize: 12),

@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:go_router/go_router.dart';
+import 'package:clock/clock.dart' as clk;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
@@ -8,6 +9,7 @@ import 'package:provider/provider.dart';
 import '../../data/repositories/ecourse_repository.dart';
 import '../../data/services/ecourse_web.dart';
 import '../core/campus_session.dart';
+import '../core/desk_list.dart';
 import '../core/desktop_mode.dart';
 import '../core/theme.dart';
 import '../courses/course_detail_screen.dart';
@@ -223,7 +225,7 @@ class _MessagesScreenState extends State<MessagesScreen> {
     final page = _page;
     final outline = Theme.of(context).colorScheme.outlineVariant;
     final detail = _open == null || page == null
-        ? const SizedBox.shrink()
+        ? const EmptyPane()
         // Its own navigator, so replying opens in this pane.
         : PaneSize(
             child: Navigator(
@@ -513,6 +515,27 @@ class _MessagesScreenState extends State<MessagesScreen> {
     final l10n = context.l10n;
     final unread = shown.where((i) => i.unread).toList();
     final earlier = shown.where((i) => !i.unread).toList();
+    if (desktopUi(context)) {
+      return ListView(
+        padding: EdgeInsets.only(top: scrollPadding(context, top: 0).top),
+        children: [
+          ?header,
+          if (shown.isEmpty)
+            Padding(
+              padding: const EdgeInsets.only(top: 80),
+              child: Center(child: Text(empty)),
+            ),
+          for (final (label, items) in [
+            (l10n.unread, unread),
+            (l10n.earlier, earlier),
+          ])
+            if (items.isNotEmpty) ...[
+              DeskGroup(label, trailing: Text('${items.length}')),
+              for (final item in items) _MessageRow(item: item),
+            ],
+        ],
+      );
+    }
     return ListView(
       // Room for the 寫信 button over the last message.
       // The list opens with a section label, which brings its own gap.
@@ -634,6 +657,36 @@ class _MessageRow extends StatelessWidget {
         Icons.notifications_none,
       ),
     };
+    if (desktopUi(context)) {
+      final now = clk.clock.now();
+      final today = DateUtils.isSameDay(item.time, now);
+      return DeskRow(
+        leading: Container(
+          width: 28,
+          height: 28,
+          decoration: BoxDecoration(
+            color: scheme.surfaceContainerHigh,
+            borderRadius: BorderRadius.circular(7),
+          ),
+          child: Icon(icon, size: 15, color: tone.strong),
+        ),
+        title: item.title,
+        subtitle: item.detail.isEmpty ? null : item.detail,
+        dimmed: !item.unread,
+        selected: item.selected,
+        onTap: item.onTap,
+        trailing: Text(
+          today
+              ? clock(item.time.hour * 60 + item.time.minute)
+              : monthDay(item.time),
+          style: TextStyle(
+            fontSize: 11,
+            fontWeight: FontWeight.w800,
+            color: item.unread ? t.sun.strong : scheme.onSurfaceVariant,
+          ),
+        ),
+      );
+    }
     return InkWell(
       onTap: item.onTap,
       borderRadius: BorderRadius.circular(14),
@@ -844,6 +897,8 @@ class _MailScreenState extends State<MailScreen> {
     final l10n = context.l10n;
     final scheme = Theme.of(context).colorScheme;
     final sent = _folder == MailFolder.sent || _folder == MailFolder.drafts;
+    final canReply = _folder != MailFolder.sent && _folder != MailFolder.trash;
+    final desk = desktopUi(context);
     return Loader.watch(
       bar: (context) => subBar(context, ''),
       watch: () => repo.watch((repo) => repo.mailMessage(widget.id)),
@@ -920,7 +975,15 @@ class _MailScreenState extends State<MailScreen> {
                   child: ListView(
                     // The reply bar below takes the bottom inset, when there
                     // is one.
-                    padding: _folder == MailFolder.sent
+                    padding: desk
+                        // Beside the list, from its edge as in Mail.
+                        ? EdgeInsets.fromLTRB(
+                            32,
+                            scrollPadding(context).top,
+                            32,
+                            32,
+                          )
+                        : _folder == MailFolder.sent
                         ? scrollPadding(context)
                         : scrollPadding(context).copyWith(bottom: 16),
                     children: [
@@ -952,10 +1015,32 @@ class _MailScreenState extends State<MailScreen> {
                         ),
                       ),
                       const SizedBox(height: 16),
-                      SelectableText(
-                        m.body,
-                        style: const TextStyle(fontSize: 15, height: 1.7),
+                      ConstrainedBox(
+                        // A readable line beside the list on a desktop.
+                        constraints: BoxConstraints(
+                          maxWidth: desk ? 620 : double.infinity,
+                        ),
+                        child: SelectableText(
+                          m.body,
+                          style: TextStyle(
+                            fontSize: desk ? 14 : 15,
+                            height: desk ? 1.75 : 1.7,
+                          ),
+                        ),
                       ),
+                      if (desk && canReply) ...[
+                        const SizedBox(height: Space.l),
+                        Align(
+                          alignment: AlignmentDirectional.centerStart,
+                          child: DeskButton(
+                            icon: Icons.reply,
+                            label: _folder == MailFolder.drafts
+                                ? l10n.editDraft
+                                : l10n.reply,
+                            onPressed: busy ? null : () => _write(m),
+                          ),
+                        ),
+                      ],
                       if (m.attachments.isNotEmpty) ...[
                         SectionLabel(l10n.attachments),
                         FileList(
@@ -966,7 +1051,7 @@ class _MailScreenState extends State<MailScreen> {
                     ],
                   ),
                 ),
-                if (_folder != MailFolder.sent && _folder != MailFolder.trash)
+                if (canReply && !desk)
                   Padding(
                     padding: EdgeInsets.fromLTRB(
                       pageMargin,

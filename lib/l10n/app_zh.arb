@@ -1076,5 +1076,6 @@
   "search": "搜尋",
   "paletteHint": "前往課程、作業或頁面",
   "palettePages": "頁面",
-  "paletteSelect": "選擇"
+  "paletteSelect": "選擇",
+  "openCourse": "開啟課程"
 }

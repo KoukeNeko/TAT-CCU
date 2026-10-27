@@ -646,5 +646,6 @@
   "search": "検索",
   "paletteHint": "コース、課題、ページへ移動",
   "palettePages": "ページ",
-  "paletteSelect": "選択"
+  "paletteSelect": "選択",
+  "openCourse": "コースを開く"
 }

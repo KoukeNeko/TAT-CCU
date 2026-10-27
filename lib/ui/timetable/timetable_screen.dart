@@ -12,8 +12,11 @@ import '../../data/repositories/ecourse_repository.dart';
 import '../../domain/models/course.dart';
 import '../../domain/models/timetable.dart';
 import '../core/auto_refresh.dart';
+import '../core/desk_list.dart';
+import '../core/desktop_mode.dart';
 import '../core/theme.dart';
 import '../core/widgets.dart';
+import '../courses/course_detail_screen.dart';
 import '../../l10n/l10n.dart';
 import '../core/segment_switch.dart';
 
@@ -395,13 +398,33 @@ class _TimetableScreenState extends State<TimetableScreen> with AutoRefresh {
         ),
         SizedBox(
           width: paneWidth,
-          child: ListView(
-            // The panel's own inset; the page's would center a readable
-            // column across the whole page.
-            padding: scrollPadding(context)
-                .copyWith(left: 0, right: pageMargin + endInset(context)),
-            children: [?card],
-          ),
+          child: desktopUi(context)
+              // A column of its own, ruled off from the week.
+              ? DecoratedBox(
+                  decoration: BoxDecoration(
+                    border: Border(
+                      left: BorderSide(
+                        color: Theme.of(context).colorScheme.outlineVariant,
+                      ),
+                    ),
+                  ),
+                  child: ListView(
+                    padding: EdgeInsets.fromLTRB(
+                      Space.xxl,
+                      scrollPadding(context).top,
+                      Space.xxl,
+                      Space.xxl,
+                    ),
+                    children: [?card],
+                  ),
+                )
+              : ListView(
+                  // The panel's own inset; the page's would center a
+                  // readable column across the whole page.
+                  padding: scrollPadding(context)
+                      .copyWith(left: 0, right: pageMargin + endInset(context)),
+                  children: [?card],
+                ),
         ),
       ],
     );
@@ -573,6 +596,7 @@ class _WeekBlock extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final tone = context.tones.forCourse(slot.course.id);
+    if (desktopUi(context)) return _desk(context, tone);
     return PressFeedback(
       scale: 0.97,
       haptic: HapticFeedback.selectionClick,
@@ -612,6 +636,52 @@ class _WeekBlock extends StatelessWidget {
                 fontWeight: FontWeight.w900,
                 height: 1.3,
                 color: tone.fill,
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+extension on _WeekBlock {
+  /// design/round-25: a quiet block marked by its course's edge.
+  Widget _desk(BuildContext context, Tone tone) {
+    final scheme = Theme.of(context).colorScheme;
+    return GestureDetector(
+      onTap: onTap,
+      child: MouseRegion(
+        cursor: SystemMouseCursors.click,
+        child: Container(
+          padding: const EdgeInsets.fromLTRB(8, 6, 6, 6),
+          decoration: BoxDecoration(
+            color: picked ? deskSelection(scheme) : scheme.surfaceContainerHigh,
+            borderRadius: BorderRadius.circular(6),
+            border: Border(left: BorderSide(color: tone.strong, width: 3)),
+          ),
+          child: LayoutBuilder(
+            builder: (context, box) => Text.rich(
+              TextSpan(
+                text: context.courseName(slot.course),
+                children: [
+                  if (slot.course.room case final room?)
+                    TextSpan(
+                      text: '\n$room',
+                      style: TextStyle(
+                        color: scheme.onSurfaceVariant,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                ],
+              ),
+              maxLines: math.max(1, box.maxHeight ~/ (12 * 1.35)),
+              overflow: TextOverflow.clip,
+              style: TextStyle(
+                fontSize: 12,
+                fontWeight: FontWeight.w800,
+                height: 1.35,
+                color: scheme.onSurface,
               ),
             ),
           ),
@@ -911,6 +981,7 @@ class _FocusCard extends StatelessWidget {
         : now >= s.start
         ? l10n.inClass
         : '${l10n.nextClass}・${_until(l10n, s.start - now)}';
+    if (desktopUi(context)) return _deskFocus(context, label);
     final small = TextStyle(
       color: tone.ink.withValues(alpha: 0.8),
       fontSize: 11,
@@ -1070,6 +1141,106 @@ class _FocusCard extends StatelessWidget {
           ),
         ],
       ),
+    );
+  }
+}
+
+extension on _FocusCard {
+  /// design/round-25: the class's state, name and room over its countdown,
+  /// then its nearest deadline and grade as lines.
+  Widget _deskFocus(BuildContext context, String? label) {
+    final l10n = context.l10n;
+    final scheme = Theme.of(context).colorScheme;
+    final c = slot.course;
+    final s = slot.session;
+    final tone = context.tones.forCourse(c.id);
+    final now = minute;
+    final on = now != null && now >= s.start;
+    final muted = TextStyle(
+      fontSize: 13,
+      fontWeight: FontWeight.w700,
+      color: scheme.onSurfaceVariant,
+    );
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            Container(
+              width: 8,
+              height: 8,
+              decoration: BoxDecoration(
+                color: tone.strong,
+                borderRadius: BorderRadius.circular(3),
+              ),
+            ),
+            const SizedBox(width: Space.s),
+            Text(
+              label ??
+                  '${weekdayName(context, s.weekday)} '
+                      '${clock(s.start)}–${clock(s.end)}',
+              style: muted.copyWith(fontSize: 12),
+            ),
+          ],
+        ),
+        const SizedBox(height: Space.s),
+        Text(
+          context.courseName(c),
+          style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w800),
+        ),
+        const SizedBox(height: Space.xs),
+        Wrap(
+          spacing: Space.m,
+          children: [
+            if (c.room case final room?) Text(room, style: muted),
+            for (final t in c.teachers.take(1)) Text(t, style: muted),
+            Text(periodLabel(s.periods), style: muted),
+          ],
+        ),
+        if (now != null) ...[
+          const SizedBox(height: Space.l),
+          DeskCountdown(
+            color: tone.strong,
+            minutes: on ? s.end - now : s.start - now,
+            done: on ? (now - s.start) / math.max(1, s.end - s.start) : 0,
+            title: on
+                ? l10n.untilTime(clock(s.end))
+                : l10n.startsAt(clock(s.start)),
+          ),
+        ],
+        const SizedBox(height: Space.m),
+        _FactsLoader(
+          courseId: c.id,
+          shared: shared,
+          builder: (context, facts) {
+            final due = facts?.due;
+            final grade = facts?.grade == '-' ? null : facts?.grade;
+            return Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                if (due != null)
+                  DeskLine(
+                    title: due.name,
+                    detail: l10n.latestDue,
+                    value: timeLeft(l10n, due.due),
+                    valueColor: context.tones.peach.strong,
+                  ),
+                if (facts?.post case final post?)
+                  DeskLine(title: post, detail: l10n.latestPost),
+                if (grade != null)
+                  DeskLine(title: grade, detail: l10n.currentGrade),
+              ],
+            );
+          },
+        ),
+        const SizedBox(height: Space.l),
+        DeskButton(
+          icon: Icons.menu_book_outlined,
+          label: l10n.openCourse,
+          primary: true,
+          onPressed: () => context.push('/courses/${c.id}'),
+        ),
+      ],
     );
   }
 }
