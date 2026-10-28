@@ -16,6 +16,9 @@ void main() {
 
   test('a name in one language comes back whole', () {
     expect(_course('軟體分析').name(chinese: false), '軟體分析');
-    expect(_course('Operating Systems').name(chinese: true), 'Operating Systems');
+    expect(
+      _course('Operating Systems').name(chinese: true),
+      'Operating Systems',
+    );
   });
 }

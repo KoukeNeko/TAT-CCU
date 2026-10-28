@@ -360,7 +360,7 @@ class _PaletteState extends State<_Palette> {
                             hintText: l10n.paletteHint,
                             prefixIcon: const Icon(Icons.search),
                             filled: false,
-                          border: InputBorder.none,
+                            border: InputBorder.none,
                             enabledBorder: InputBorder.none,
                             focusedBorder: InputBorder.none,
                             contentPadding: const EdgeInsets.symmetric(

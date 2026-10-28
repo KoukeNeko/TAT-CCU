@@ -8,7 +8,13 @@ void main() {
 
   test('a sign-up button means open, or waitlist once places are taken', () {
     expect(
-      statusOf(event({'canSignUp': true, 'spots': [2, 20]}), now),
+      statusOf(
+        event({
+          'canSignUp': true,
+          'spots': [2, 20],
+        }),
+        now,
+      ),
       EventStatus.open,
     );
     expect(
@@ -27,14 +33,20 @@ void main() {
   test('a hidden button is closed after the period, otherwise full', () {
     expect(
       statusOf(
-        event({'spots': [48, 48], 'signUpEnd': '2026-10-18T09:00:00'}),
+        event({
+          'spots': [48, 48],
+          'signUpEnd': '2026-10-18T09:00:00',
+        }),
         now,
       ),
       EventStatus.closed,
     );
     expect(
       statusOf(
-        event({'spots': [48, 48], 'signUpEnd': '2026-10-22T09:00:00'}),
+        event({
+          'spots': [48, 48],
+          'signUpEnd': '2026-10-22T09:00:00',
+        }),
         now,
       ),
       EventStatus.full,

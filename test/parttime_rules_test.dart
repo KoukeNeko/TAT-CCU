@@ -31,9 +31,6 @@ void main() {
     final existing = [entry(monday, 10, 12)];
     expect(overlapOf(entry(monday, 11, 13), existing), isNotNull);
     expect(overlapOf(entry(monday, 12, 14), existing), isNull);
-    expect(
-      overlapOf(entry(DateTime(2026, 10, 20), 10, 12), existing),
-      isNull,
-    );
+    expect(overlapOf(entry(DateTime(2026, 10, 20), 10, 12), existing), isNull);
   });
 }
