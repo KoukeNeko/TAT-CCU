@@ -24,6 +24,7 @@ import 'ui/core/desktop_mode.dart';
 import 'ui/core/theme.dart';
 import 'ui/core/widgets.dart';
 import 'ui/core/windows_caption.dart';
+import 'ui/notifications/notifications_screen.dart';
 import 'data/repositories/dorm_repair_data.dart';
 import 'data/repositories/parttime_data.dart';
 
@@ -149,9 +150,45 @@ class _TatCcuAppState extends State<TatCcuApp> {
   late GoRouter _router = buildRouter(_auth);
 
   @override
+  void initState() {
+    super.initState();
+    Reminders.tapped.addListener(_openTapped);
+    // A notification that launched the app waits for the first frame.
+    WidgetsBinding.instance.addPostFrameCallback((_) => _openTapped());
+  }
+
+  @override
   void dispose() {
+    Reminders.tapped.removeListener(_openTapped);
     _router.dispose();
     super.dispose();
+  }
+
+  /// Opens the page of the notification the student tapped.
+  void _openTapped() {
+    final payload = Reminders.tapped.value;
+    final navigator = _router.routerDelegate.navigatorKey.currentState;
+    if (payload == null || navigator == null) return;
+    Reminders.tapped.value = null;
+    // Starts from the tab the page belongs to, not on top of whatever is
+    // open: a page already in the stack would otherwise stay in front.
+    navigator.popUntil((route) => route.isFirst);
+    if (payload.startsWith('mail:')) {
+      _router.go('/messages');
+      navigator.push(
+        MaterialPageRoute<void>(
+          builder: (_) => MailScreen(id: int.parse(payload.substring(5))),
+        ),
+      );
+    } else if (payload.startsWith('/')) {
+      _router.go(payload);
+    } else {
+      _router.go('/messages');
+      // After the tab has switched, so the page is pushed onto it.
+      WidgetsBinding.instance.addPostFrameCallback(
+        (_) => openEcourseLink(navigator.context, payload),
+      );
+    }
   }
 
   @override

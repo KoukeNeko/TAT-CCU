@@ -1,6 +1,7 @@
 import 'dart:io';
 
 import 'package:clock/clock.dart' as clk;
+import 'package:flutter/foundation.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:timezone/data/latest.dart' as tz;
@@ -28,6 +29,10 @@ class Reminders {
   /// iOS keeps at most 64 pending notifications per app.
   static const _maxPending = 60;
   static const _seenKey = 'news_seen';
+
+  /// The payload of the notification the student tapped, until the app
+  /// opens its page: a route, `mail:<id>`, or an eCourse2 link.
+  static final tapped = ValueNotifier<String?>(null);
 
   static final _plugin = FlutterLocalNotificationsPlugin();
   static const _details = NotificationDetails(
@@ -65,7 +70,12 @@ class Reminders {
               : null,
         ),
       ),
+      onDidReceiveNotificationResponse: (r) => tapped.value = r.payload,
     );
+    final launch = await _plugin.getNotificationAppLaunchDetails();
+    if (launch?.didNotificationLaunchApp ?? false) {
+      tapped.value = launch!.notificationResponse?.payload;
+    }
   }
 
   /// False when the student declined in the system prompt.
@@ -121,6 +131,7 @@ class Reminders {
         scheduledDate: tz.TZDateTime.from(r.at, tz.local),
         title: r.title,
         body: r.body,
+        payload: r.payload,
         notificationDetails: _details,
         androidScheduleMode: AndroidScheduleMode.inexactAllowWhileIdle,
       );
@@ -151,16 +162,27 @@ class Reminders {
     final fresh = [
       for (final n in notices)
         if (!n.read && seen != null && n.time.millisecondsSinceEpoch > seen)
-          (time: n.time, title: n.subject, body: n.text),
+          (
+            time: n.time,
+            title: n.subject,
+            body: n.text,
+            payload: n.url ?? '/messages',
+          ),
       for (final m in mail)
         if (m.unread && seen != null && m.time.millisecondsSinceEpoch > seen)
-          (time: m.time, title: l10n.newMailFrom(m.sender), body: m.subject),
+          (
+            time: m.time,
+            title: l10n.newMailFrom(m.sender),
+            body: m.subject,
+            payload: 'mail:${m.id}',
+          ),
     ]..sort((a, b) => a.time.compareTo(b.time));
     for (final n in fresh) {
       await _plugin.show(
         id: _newsIds + n.time.millisecondsSinceEpoch ~/ 1000 % 100000,
         title: n.title,
         body: n.body,
+        payload: n.payload,
         notificationDetails: _details,
       );
     }
@@ -197,7 +219,13 @@ class Reminders {
   }
 }
 
-typedef Reminder = ({int id, DateTime at, String title, String body});
+typedef Reminder = ({
+  int id,
+  DateTime at,
+  String title,
+  String body,
+  String? payload,
+});
 
 /// Ten minutes before [session] on the day [day] days from [now], if the
 /// session falls on that weekday and the time is still ahead. Class times
@@ -222,7 +250,7 @@ List<Reminder> remindersFor({
   required AppLocalizations l10n,
 }) {
   final chinese = l10n.localeName == 'zh';
-  final out = <({DateTime at, String title, String body})>[
+  final out = <({DateTime at, String title, String body, String? payload})>[
     if (dueOn)
       for (final d in due)
         for (final (lead, label) in [
@@ -234,6 +262,7 @@ List<Reminder> remindersFor({
               at: d.due.subtract(lead),
               title: d.name,
               body: '$label・${courseNameIn(d.course, chinese: chinese)}',
+              payload: d.url,
             ),
     if (classOn)
       for (var day = 0; day < 7; day++)
@@ -244,10 +273,11 @@ List<Reminder> remindersFor({
                 at: at,
                 title: c.name(chinese: chinese),
                 body: [l10n.reminderClass, ?c.room].join('・'),
+                payload: '/courses/${c.id}',
               ),
   ]..sort((a, b) => a.at.compareTo(b.at));
   return [
     for (final (i, r) in out.indexed)
-      (id: i + 1, at: r.at, title: r.title, body: r.body),
+      (id: i + 1, at: r.at, title: r.title, body: r.body, payload: r.payload),
   ];
 }

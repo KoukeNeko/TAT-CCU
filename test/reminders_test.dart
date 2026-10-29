@@ -46,6 +46,8 @@ void main() {
     expect(list.first.at, tz.TZDateTime(taipei, 2026, 10, 20, 10, 5));
     expect(list.first.title, '軟體分析');
     expect(list.first.body, '10 分鐘後上課・創新大樓 322');
+    // Tapping it opens the course.
+    expect(list.first.payload, '/courses/1');
     // Only today's class: next Tuesday is a week out.
     expect(list, hasLength(1));
     expect(list.map((r) => r.id), [for (var i = 1; i <= list.length; i++) i]);
@@ -62,7 +64,7 @@ void main() {
           courseId: 1,
           due: later,
           module: 'assign',
-          url: null,
+          url: 'https://ecourse2.ccu.edu.tw/mod/assign/view.php?id=7',
         ),
       ],
       now: now,
@@ -75,6 +77,11 @@ void main() {
       later.subtract(const Duration(hours: 1)),
     ]);
     expect(list.first.body, '24 小時後截止・軟體分析');
+    // Tapping it opens the assignment.
+    expect(
+      list.first.payload,
+      'https://ecourse2.ccu.edu.tw/mod/assign/view.php?id=7',
+    );
   });
 
   // A device set to Tokyo still gets the 10:15 Taiwan class at 10:05 Taiwan
