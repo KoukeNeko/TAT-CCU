@@ -1,7 +1,7 @@
 import 'dart:io';
 
+import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:flutter/widgets.dart';
 
 /// Whether the pointer-first desktop UI is shown (design/round-25): on a
 /// desktop, on an Android PC (Googlebook, ChromeOS), and on Windows unless
@@ -10,7 +10,8 @@ final desktopMode = ValueNotifier(
   Platform.isMacOS || Platform.isLinux || Platform.isWindows,
 );
 
-/// MainActivity.kt and windows/runner/flutter_window.cpp.
+/// MainActivity.kt, windows/runner/flutter_window.cpp and
+/// linux/runner/my_application.cc.
 const _channel = MethodChannel('tat_ccu/desktop');
 
 /// Asks the platform once, then follows a Windows convertible between
@@ -24,6 +25,38 @@ Future<void> watchDesktopMode() async {
   } else if (Platform.isAndroid) {
     desktopMode.value = await _channel.invokeMethod<bool>('pc') ?? false;
   }
+}
+
+/// Paints the GTK title bar in the page's color, so it reads as part of the
+/// window: [child] is shown as it is.
+class LinuxTitleBar extends StatefulWidget {
+  const LinuxTitleBar({super.key, required this.child});
+
+  final Widget child;
+
+  @override
+  State<LinuxTitleBar> createState() => _LinuxTitleBarState();
+}
+
+class _LinuxTitleBarState extends State<LinuxTitleBar> {
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    final scheme = Theme.of(context).colorScheme;
+    int rgb(Color c) => c.toARGB32() & 0xFFFFFF;
+    _channel.invokeMethod<void>('titleBar', [
+      rgb(scheme.surface),
+      rgb(scheme.onSurfaceVariant),
+      rgb(scheme.surfaceContainerHighest),
+      rgb(scheme.error),
+      rgb(scheme.onError),
+      rgb(scheme.outlineVariant),
+      scheme.brightness == Brightness.dark,
+    ]);
+  }
+
+  @override
+  Widget build(BuildContext context) => widget.child;
 }
 
 /// Carries [desktopMode] down the tree, so pages rebuild when it changes.

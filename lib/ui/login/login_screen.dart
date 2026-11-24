@@ -8,6 +8,7 @@ import '../../data/services/cas_credentials.dart';
 import '../core/app_shell.dart';
 import '../core/campus_web_screen.dart';
 import '../core/glass.dart';
+import '../core/desktop_mode.dart';
 import '../core/theme.dart';
 import '../core/widgets.dart';
 import '../more/settings_screen.dart';
@@ -171,6 +172,18 @@ class _LoginScreenState extends State<LoginScreen> {
     );
   }
 
+  /// The glass card keeps the phone's pill buttons on desktop, where the
+  /// theme's buttons are 32 px high and flat.
+  ButtonStyle? _bigButton(BuildContext context) => desktopUi(context)
+      ? ButtonStyle(
+          minimumSize: const WidgetStatePropertyAll(Size(0, 48)),
+          shape: const WidgetStatePropertyAll(StadiumBorder()),
+          textStyle: WidgetStatePropertyAll(
+            Theme.of(context).textTheme.labelLarge,
+          ),
+        )
+      : null;
+
   Widget _actions(BuildContext context) => Column(
     crossAxisAlignment: CrossAxisAlignment.stretch,
     children: [
@@ -197,11 +210,13 @@ class _LoginScreenState extends State<LoginScreen> {
         const SizedBox(height: 8),
       ],
       (_maintenance ? FilledButton.tonal : FilledButton.new)(
+        style: _bigButton(context),
         onPressed: _busy ? null : _signIn,
         child: Text(context.l10n.signInWithPortal),
       ),
       const SizedBox(height: 4),
       TextButton(
+        style: _bigButton(context),
         onPressed: _busy
             ? null
             : () => context.read<EcourseAuthRepository>().setDemo(true),

@@ -278,6 +278,7 @@ class _TatCcuAppState extends State<TatCcuApp> {
           },
           child: child,
         );
+        if (Platform.isLinux) return LinuxTitleBar(child: child);
         return Platform.isWindows ? WindowsCaption(child: child) : child;
       },
       routerConfig: _router,
